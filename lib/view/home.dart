@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'icons.dart';
 
+import '../addon_catalog.dart';
 import '../controller.dart';
+import 'addons.dart';
 import 'apps.dart';
 import 'profiles.dart';
 
@@ -44,7 +46,9 @@ class HomeView extends StatelessWidget {
               Container(),
               ProfileManagerView(controller: controller.profiles),
               AppManagerView(controller: controller.apps),
-              Container(),
+              AddonCatalogView(
+                catalogFuture: AddonCatalog.loadFromFile('addon_catalog_cache.json'),
+              ),
             ],
           ),
         ),
