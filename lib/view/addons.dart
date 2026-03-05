@@ -1,12 +1,14 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 import '../addon_catalog.dart';
 import 'widgets.dart';
+import 'icons.dart';
 
 /// Displays the addon catalog in a searchable list.
 class AddonCatalogView extends StatefulWidget {
@@ -163,7 +165,7 @@ class _AddonTile extends StatelessWidget {
           ),
         if (addon.author != null)
           Chip(
-            label: Text('By ${ellipsis(addon.author, 32)}', style: theme.textTheme.bodySmall),
+            label: Text('By ${ellipsis(addon.author!.name, 32)}', style: theme.textTheme.bodySmall),
             padding: EdgeInsets.zero,
             visualDensity: VisualDensity.compact,
             backgroundColor: theme.colorScheme.inversePrimary,
@@ -186,101 +188,166 @@ class _AddonTile extends StatelessWidget {
     );
   }
 
-  Widget _defaultIcon({ThemeData? theme, double size = 48.0}) {
-    return Icon(Icons.extension, color: Colors.black87, size: size);
-  }
-
   Widget _icon(ThemeData theme) {
-    const iconSize = 32.0;
-    final metadata = addon.primary.metadata;
-    final Uint8List? bytes = metadata?.iconBytes;
-
-    if (bytes == null) {
-      return _iconFrame(_defaultIcon(theme: theme, size: iconSize));
-    }
-
-    return _iconFrame(
-      metadata!.iconIsSvg
-          ? SvgPicture.memory(bytes, width: iconSize, height: iconSize, fit: BoxFit.contain)
-          : Image.memory(
-              bytes,
-              width: iconSize,
-              height: iconSize,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => _defaultIcon(theme: theme, size: iconSize),
-            ),
-      size: iconSize,
-    );
+    return _iconFrame(AddonIcon(addon, size: 32), size: 32);
   }
 
   void _showDetail(BuildContext context) {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      elevation: 5,
-      builder: (context) => DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.8,
-        minChildSize: 0.5,
-        maxChildSize: 0.8,
-        builder: (context, scrollController) =>
-            _AddonDetailSheet(addon: addon, scrollController: scrollController),
+      builder: (context) => Dialog(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800, maxHeight: 800),
+          child: _AddonDetailSheet(addon: addon),
+        ),
       ),
     );
   }
 }
 
-class _AddonDetailSheet extends StatelessWidget {
+class AddonIcon extends StatelessWidget {
   final Addon addon;
-  final ScrollController scrollController;
-
-  const _AddonDetailSheet({required this.addon, required this.scrollController});
+  final double size;
+  const AddonIcon(this.addon, {this.size = 48.0, super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return ListView(
-      controller: scrollController,
+    final metadata = addon.primary.metadata;
+    final Uint8List? bytes = metadata?.iconBytes;
+
+    if (bytes == null) {
+      return _defaultIcon(theme: theme, size: size);
+    }
+
+    return metadata!.iconIsSvg
+        ? SvgPicture.memory(bytes, width: size, height: size, fit: BoxFit.contain)
+        : Image.memory(
+            bytes,
+            width: size,
+            height: size,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => _defaultIcon(theme: theme, size: size),
+          );
+  }
+
+  Widget _defaultIcon({ThemeData? theme, double size = 48.0}) {
+    return Icon(Icons.extension, color: theme?.colorScheme.primary ?? Colors.black45, size: size);
+  }
+}
+
+class _AddonDetailSheet extends StatelessWidget {
+  final Addon addon;
+
+  const _AddonDetailSheet({required this.addon});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
       padding: const EdgeInsets.all(20),
-      children: [
-        Center(
-          child: Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ..._header(context),
+          Expanded(
+            child: ListView(
+              children: [
+                ..._version(theme),
+                ..._lastUpdate(theme),
+                ..._description(theme),
+                ..._tags(theme),
+                ..._people(theme),
+                ..._branches(context),
+              ],
             ),
           ),
-        ),
-        Text(addon.displayName, style: theme.textTheme.headlineSmall),
-        if (addon.version != null) ...[
-          const SizedBox(height: 4),
-          Text('Version ${addon.version}', style: theme.textTheme.bodyMedium),
         ],
-        const SizedBox(height: 8),
-        Text(addon.description, style: theme.textTheme.bodyMedium),
-        if (addon.lastUpdate != null) ...[
-          const SizedBox(height: 8),
-          Text(
-            'Last updated: ${addon.lastUpdate}',
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
-          ),
-        ],
-        _tags(theme),
-        const Divider(height: 24),
-        Text('Branches / Releases', style: theme.textTheme.titleMedium),
-        const SizedBox(height: 8),
-        ...addon.entries.map((e) => _entryCard(context, e)),
-      ],
+      ),
     );
   }
 
-  Widget _tags(ThemeData theme) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: Padding(
+  List<Widget> _description(ThemeData theme) {
+    return [Text(addon.description, style: theme.textTheme.bodyMedium)];
+  }
+
+  List<Widget> _lastUpdate(ThemeData theme) {
+    if (addon.lastUpdate != null) {
+      return [
+        const SizedBox(height: 4),
+        Text(
+          'Last updated: ${addon.lastUpdate}',
+          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
+        ),
+        const Divider(height: 24),
+      ];
+    }
+    return [];
+  }
+
+  List<Widget> _version(ThemeData theme) {
+    if (addon.version != null) {
+      return [
+        const SizedBox(height: 4),
+        Text('Version ${addon.version}', style: theme.textTheme.bodyMedium),
+      ];
+    }
+    return [];
+  }
+
+  List<Widget> _header(BuildContext context) {
+    final theme = Theme.of(context);
+    return [
+      Row(
+        children: [
+          AddonIcon(addon),
+          const SizedBox(width: 12),
+          Text(addon.displayName, style: theme.textTheme.headlineSmall),
+        ],
+      ),
+      const Divider(height: 24),
+    ];
+  }
+
+  List<Widget> _branches(BuildContext context) {
+    final theme = Theme.of(context);
+    return [
+      const Divider(height: 24),
+      Text('Branches / Releases', style: theme.textTheme.titleMedium),
+      const SizedBox(height: 8),
+      ...addon.entries.map((e) => _entryCard(context, e)),
+    ];
+  }
+
+  List<Widget> _people(ThemeData theme) {
+    final people = addon.primary.metadata?.people ?? [];
+    if (people.isEmpty) {
+      return [];
+    }
+    return [
+      const Divider(height: 24),
+      Text('Authors/Maintainers', style: theme.textTheme.titleMedium),
+      ...people.map((a) {
+        final isAuthor = a.roles.contains(AddonPersonRole.author);
+        return ListTile(
+          title: Text(a.name),
+          leading: Icon(
+            isAuthor ? Icons.person : Icons.person_outline,
+            color: isAuthor ? theme.colorScheme.primary : theme.colorScheme.secondary,
+          ),
+          trailing: Text(_rolesDisplay(a.roles), overflow: TextOverflow.ellipsis),
+          subtitle: SelectableText(a.contact ?? 'No contact', maxLines: 1),
+        );
+      }),
+    ];
+  }
+
+  List<Widget> _tags(ThemeData theme) {
+    if (addon.tags.isEmpty) {
+      return [];
+    }
+    return [
+      Padding(
         padding: const EdgeInsets.all(12),
         child: Wrap(
           spacing: 4,
@@ -296,7 +363,7 @@ class _AddonDetailSheet extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ];
   }
 
   Widget _entryCard(BuildContext context, AddonEntry entry) {
@@ -321,10 +388,27 @@ class _AddonDetailSheet extends StatelessWidget {
                 const Spacer(),
                 if (compat.isNotEmpty)
                   Chip(
-                    label: Text(compat, style: theme.textTheme.labelSmall),
+                    label: Row(
+                      children: [
+                        Icon(FreeCADIcons.freecad, size: 16),
+                        SizedBox(width: 4),
+                        Text(compat, style: theme.textTheme.labelSmall),
+                      ],
+                    ),
                     padding: EdgeInsets.zero,
                     visualDensity: VisualDensity.compact,
                   ),
+                Chip(
+                  padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                  label: Row(
+                    children: [
+                      Icon(FreeCADIcons.python, size: 16),
+                      SizedBox(width: 4),
+                      Text('Python ${addon.minPython}+', style: theme.textTheme.labelSmall),
+                    ],
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 4),
@@ -348,4 +432,16 @@ class _AddonDetailSheet extends StatelessWidget {
       ),
     );
   }
+}
+
+String _rolesDisplay(List<AddonPersonRole> roles) {
+  return roles
+      .map(
+        (e) => switch (e) {
+          AddonPersonRole.author => 'Author',
+          AddonPersonRole.maintainer => 'Maintainer',
+          AddonPersonRole.contributor => 'Contributor',
+        },
+      )
+      .join(', ');
 }

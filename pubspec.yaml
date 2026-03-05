@@ -45,6 +45,8 @@ dependencies:
   snapd: ^0.7.4
   flutter_svg: ^2.0.17
   url_launcher: ^6.3.2
+  xml: ^6.6.1
+  recase: ^4.1.0
 
 dev_dependencies:
   flutter_test:

@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:collection/collection.dart';
+import 'package:xml/xml.dart';
+import 'package:recase/recase.dart';
 
 /// A single entry (branch / release) for an addon in the catalog cache.
 class AddonEntry {
@@ -17,6 +20,7 @@ class AddonEntry {
   final AddonMetadata? metadata;
   late final Set<String> tags = metadata?.tags ?? {};
   late final String tagsDisplay = tags.take(5).map((s) => "#${s.toLowerCase()}").join(", ");
+  late final String minPython = metadata?.minPython ?? '3.10';
 
   AddonEntry({
     required this.repository,
@@ -64,13 +68,24 @@ class AddonEntry {
   }
 }
 
+enum AddonPersonRole { author, maintainer, contributor }
+
+class AddonPerson {
+  final String name;
+  final String? contact;
+  final List<AddonPersonRole> roles;
+  const AddonPerson(this.name, this.contact, [this.roles = const []]);
+}
+
 /// Parsed metadata from package_xml embedded in the catalog.
 class AddonMetadata {
   final String? displayName;
   final String? description;
   final String? version;
   final String? license;
-  final String? author;
+  final List<AddonPerson> people;
+  final AddonPerson? author;
+  final String minPython;
 
   /// Tags from the package_xml content section (e.g. 'assembly', 'bom', '3d').
   final Set<String> tags;
@@ -81,16 +96,17 @@ class AddonMetadata {
   /// Whether [iconBytes] contains SVG data (vs raster PNG/etc).
   final bool iconIsSvg;
 
-  const AddonMetadata({
+  AddonMetadata({
     this.displayName,
     this.description,
     this.version,
     this.license,
-    this.author,
     this.tags = const {},
     this.iconBytes,
     this.iconIsSvg = false,
-  });
+    this.people = const [],
+    this.minPython = '3.10',
+  }) : author = people.where((p) => p.roles.contains(AddonPersonRole.author)).firstOrNull;
 
   factory AddonMetadata.fromJson(Map<String, dynamic> json) {
     final packageXml = json['package_xml'] as String? ?? '';
@@ -107,19 +123,65 @@ class AddonMetadata {
       }
     }
 
+    final xml = _parseXml(packageXml);
+
     return AddonMetadata(
-      displayName: _extractXmlTag(packageXml, 'name'),
-      description: _extractXmlTag(packageXml, 'description'),
-      version: _extractXmlTag(packageXml, 'version'),
-      license: _extractXmlTag(packageXml, 'license'),
-      author: _extractXmlTag(packageXml, 'author'),
-      tags: _extractAllXmlTags(
-        packageXml,
-        'tag',
-      ).map((t) => t.trim().toLowerCase()).where((t) => t.isNotEmpty).toSet(),
+      displayName: _getFirstTagValue(xml, 'name'),
+      description: _getFirstTagValue(xml, 'description'),
+      version: _getFirstTagValue(xml, 'version'),
+      license: _getFirstTagValue(xml, 'license'),
+      tags: _parseTags(xml),
       iconBytes: iconBytes,
       iconIsSvg: iconIsSvg,
+      people: _parsePeople(xml),
+      minPython: _getFirstTagValue(xml, 'pythonmin') ?? '3.10',
     );
+  }
+
+  static XmlDocument? _parseXml(String? xml) {
+    if (xml == null) return null;
+    final code = xml.trim();
+    if (code.isEmpty) return null;
+    try {
+      return XmlDocument.parse(code);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static String? _getFirstTagValue(XmlDocument? doc, String tag) {
+    if (doc == null) return null;
+    return doc.findAllElements(tag).firstOrNull?.innerText.trim();
+  }
+
+  static Set<String> _parseTags(XmlDocument? doc) {
+    if (doc == null) return {};
+    return doc
+        .findAllElements('tag')
+        .map((e) => e.innerText.trim().toLowerCase())
+        .where((t) => t.isNotEmpty)
+        .toSet();
+  }
+
+  static List<AddonPerson> _parsePeople(XmlDocument? doc) {
+    if (doc == null) return const [];
+    final elements = [
+      ...doc.findAllElements('author'),
+      ...doc.findAllElements('maintainer'),
+      ...doc.findAllElements('contributor'),
+    ];
+    final elementsByName = groupBy(elements, (e) => e.innerText.trim().toUpperCase());
+    final people = elementsByName.entries.map((e) {
+      final roles = e.value.map((e) {
+        return switch (e.name.local) {
+          'author' => AddonPersonRole.author,
+          'maintainer' => AddonPersonRole.maintainer,
+          _ => AddonPersonRole.contributor,
+        };
+      }).toList();
+      return AddonPerson(e.key.titleCase, e.value.first.getAttribute("email"), roles);
+    });
+    return people.toList();
   }
 
   /// Heuristic: check if decoded bytes start with XML/SVG markers.
@@ -169,11 +231,12 @@ class Addon {
   final List<AddonEntry> entries;
   late final AddonEntry primary = entries.first;
   late final String displayName = primary.metadata?.displayName ?? id;
-  late final String? author = primary.metadata?.author;
+  late final AddonPerson? author = primary.metadata?.author;
   late final String? version = primary.metadata?.version;
   late final String? lastUpdate = primary.lastUpdateTime;
   late final Set<String> tags = primary.tags;
   late final String tagsDisplay = primary.tagsDisplay;
+  late final String minPython = primary.minPython;
   late final String description = () {
     final meta = primary.metadata?.description;
     if (meta != null && meta.isNotEmpty) return meta;
@@ -239,7 +302,7 @@ class AddonCatalog {
       results = results.where((a) {
         final byName = a.displayName.toLowerCase().contains(textQuery);
         final byDesc = a.description.toLowerCase().contains(textQuery);
-        final byAuthor = a.author != null && a.author!.toLowerCase().contains(textQuery);
+        final byAuthor = a.author != null && a.author!.name.toLowerCase().contains(textQuery);
         return byName || byDesc || byAuthor;
       });
     }
