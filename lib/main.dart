@@ -40,10 +40,13 @@ void main() async {
 
   // END TESTS
 
-  runApp(
-    MaterialApp(
-      theme: ThemeData(useMaterial3: true),
-      home: HomeView(controller: controller),
-    ),
-  );
+  // runApp(
+  //   MaterialApp(
+  //     debugShowCheckedModeBanner: false,
+  //     theme: ThemeData(useMaterial3: true),
+  //     home: HomeView(controller: controller),
+  //   ),
+  // );
+
+  runApp(HomeView(controller: controller));
 }

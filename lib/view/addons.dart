@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
@@ -176,6 +177,7 @@ class _AddonTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.all(Radius.circular(6)),
+        border: Border.all(color: Colors.grey.shade800, width: 1),
       ),
       child: Padding(
         padding: EdgeInsets.all(4),
@@ -215,11 +217,12 @@ class _AddonTile extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      elevation: 5,
       builder: (context) => DraggableScrollableSheet(
         expand: false,
-        initialChildSize: 0.5,
-        minChildSize: 0.3,
-        maxChildSize: 0.99,
+        initialChildSize: 0.8,
+        minChildSize: 0.5,
+        maxChildSize: 0.8,
         builder: (context, scrollController) =>
             _AddonDetailSheet(addon: addon, scrollController: scrollController),
       ),
@@ -265,11 +268,34 @@ class _AddonDetailSheet extends StatelessWidget {
             style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
           ),
         ],
+        _tags(theme),
         const Divider(height: 24),
         Text('Branches / Releases', style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         ...addon.entries.map((e) => _entryCard(context, e)),
       ],
+    );
+  }
+
+  Widget _tags(ThemeData theme) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Wrap(
+          spacing: 4,
+          runSpacing: 4,
+          children: [
+            ...addon.tags.map(
+              (tag) => Chip(
+                label: Text(tag, style: theme.textTheme.bodySmall),
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -302,9 +328,16 @@ class _AddonDetailSheet extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            SelectableText(
-              entry.repository,
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary),
+            GestureDetector(
+              onTap: () => launchUrl(Uri.parse(entry.repository)),
+              child: Text(
+                entry.repository,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  decoration: TextDecoration.underline,
+                  decorationColor: theme.colorScheme.primary,
+                ),
+              ),
             ),
             if (entry.note != null && entry.note!.isNotEmpty) ...[
               const SizedBox(height: 4),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 import 'icons.dart';
 
 import '../addon_catalog.dart';
@@ -7,13 +8,28 @@ import 'addons.dart';
 import 'apps.dart';
 import 'profiles.dart';
 
-class HomeView extends StatelessWidget {
+class HomeView extends StatefulWidget {
   final MainController controller;
   const HomeView({super.key, required this.controller});
 
   @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  final _themeMode = signal(ThemeMode.dark);
+
+  @override
+  void dispose() {
+    _themeMode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final mode = _themeMode.watch(context);
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
@@ -24,7 +40,7 @@ class HomeView extends StatelessWidget {
         brightness: Brightness.dark,
         colorSchemeSeed: Colors.blueGrey,
       ),
-      themeMode: ThemeMode.dark,
+      themeMode: mode,
       home: DefaultTabController(
         animationDuration: Duration.zero,
         length: 4,
@@ -32,6 +48,16 @@ class HomeView extends StatelessWidget {
           appBar: AppBar(
             leading: Icon(FreeCADIcons.freecad),
             title: const Text("FreeCAD Launcher"),
+            actions: [
+              IconButton(
+                icon: Icon(mode == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode),
+                tooltip: mode == ThemeMode.dark ? 'Switch to light mode' : 'Switch to dark mode',
+                onPressed: () {
+                  _themeMode.value = mode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+                },
+              ),
+              const SizedBox(width: 8),
+            ],
             bottom: const TabBar(
               tabs: [
                 Tab(icon: Icon(Icons.rocket_launch), text: "Launchers"),
@@ -44,8 +70,8 @@ class HomeView extends StatelessWidget {
           body: TabBarView(
             children: [
               Container(),
-              ProfileManagerView(controller: controller.profiles),
-              AppManagerView(controller: controller.apps),
+              ProfileManagerView(controller: widget.controller.profiles),
+              AppManagerView(controller: widget.controller.apps),
               AddonCatalogView(
                 catalogFuture: AddonCatalog.loadFromFile('addon_catalog_cache.json'),
               ),
