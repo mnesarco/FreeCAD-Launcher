@@ -20,6 +20,10 @@ class MainController {
   late final AddonDownloadController downloadedAddons = AddonDownloadController(db);
   late final Future<AddonCatalog> addonsCatalog = AddonCatalog.download(downloadManager);
   late final Future<AddonStatsCatalog> addonsStats = AddonStatsCatalog.download(downloadManager);
+  late final AddonUpdateCheckController addonsUpdateCheck = AddonUpdateCheckController(
+    db: db,
+    catalog: addonsCatalog,
+  );
 
   MainController(this.db);
 

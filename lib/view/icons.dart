@@ -5,16 +5,17 @@ import 'package:flutter/widgets.dart';
 class FreeCADIcons {
   static const Font_Family = "freecad-launcher-icons";
   static const Font_StartCode = 0xe000;
-  static const Font_EndCode = 0xe008;
+  static const Font_EndCode = 0xe009;
   static const IconData addon = IconData(0xe000, fontFamily: Font_Family);
   static const IconData freecad = IconData(0xe001, fontFamily: Font_Family);
-  static const IconData github_circle = IconData(0xe002, fontFamily: Font_Family);
-  static const IconData pkg_appimage = IconData(0xe003, fontFamily: Font_Family);
-  static const IconData pkg_executable = IconData(0xe004, fontFamily: Font_Family);
-  static const IconData pkg_flatpak = IconData(0xe005, fontFamily: Font_Family);
-  static const IconData pkg_snap = IconData(0xe006, fontFamily: Font_Family);
-  static const IconData pkg_system = IconData(0xe007, fontFamily: Font_Family);
-  static const IconData python = IconData(0xe008, fontFamily: Font_Family);
+  static const IconData git = IconData(0xe002, fontFamily: Font_Family);
+  static const IconData github_circle = IconData(0xe003, fontFamily: Font_Family);
+  static const IconData pkg_appimage = IconData(0xe004, fontFamily: Font_Family);
+  static const IconData pkg_executable = IconData(0xe005, fontFamily: Font_Family);
+  static const IconData pkg_flatpak = IconData(0xe006, fontFamily: Font_Family);
+  static const IconData pkg_snap = IconData(0xe007, fontFamily: Font_Family);
+  static const IconData pkg_system = IconData(0xe008, fontFamily: Font_Family);
+  static const IconData python = IconData(0xe009, fontFamily: Font_Family);
 }
 
 Map<String, IconData> AppKindIconMap = {

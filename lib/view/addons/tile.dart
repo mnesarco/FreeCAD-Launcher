@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:freecad_launcher/controller/addons.dart';
+import 'package:freecad_launcher/controller/main.dart';
 import 'package:freecad_launcher/model/addons.dart';
 import 'package:freecad_launcher/config.dart';
 import 'package:freecad_launcher/util/format.dart';
 import 'package:freecad_launcher/view/addons/icon.dart';
 import 'package:freecad_launcher/view/addons/stats.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 
 class AddonTile extends StatelessWidget {
   final Addon addon;
@@ -14,18 +17,20 @@ class AddonTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final controller = MainController.of(context);
+    final updates = controller.addonsUpdateCheck.updated.watch(context);
 
     return ListTile(
       titleAlignment: ListTileTitleAlignment.top,
       leading: _icon(theme),
-      title: Padding(padding: EdgeInsets.fromLTRB(0, 0, 0, 8), child: _title(theme)),
+      title: Padding(padding: EdgeInsets.fromLTRB(0, 0, 0, 8), child: _title(theme, updates)),
       subtitle: _subtitle(theme),
       trailing: _trailing(theme),
       onTap: () => detailWidgetBuilder == null ? null : _showDetail(context),
     );
   }
 
-  Widget _title(ThemeData theme) {
+  Widget _title(ThemeData theme, Future<Map<String, AddonUpdate>> updates) {
     final entry = addon.primary;
     final version = addon.version == null ? null : 'v${addon.version}';
     return ClipRRect(
@@ -40,6 +45,7 @@ class AddonTile extends StatelessWidget {
               maxLines: 1,
             ),
           ),
+          UpdateIndicator(addon: addon, updates: updates, size: 20),
           CuratedIndicator(addon: addon, size: 16),
           if (version != null) Text(version, overflow: TextOverflow.ellipsis),
           if (version == null && entry.lastUpdateTime != null)

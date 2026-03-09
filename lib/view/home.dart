@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:freecad_launcher/controller/addons.dart';
 import 'package:freecad_launcher/controller/main.dart';
 import 'package:freecad_launcher/view/addons/catalog.dart';
 import 'package:freecad_launcher/view/apps/apps.dart';
@@ -96,8 +97,10 @@ class _StatusBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final dm = MainController.of(context).downloadManager;
+    final controller = MainController.of(context);
+    final dm = controller.downloadManager;
     final downloads = dm.activeDownloads.watch(context);
+    final checkingUpdates = controller.addonsUpdateCheck.isChecking.watch(context);
 
     return Container(
       height: 28,
@@ -117,6 +120,7 @@ class _StatusBar extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ],
+          if (checkingUpdates) Text('Checking updates...'),
           const Spacer(),
           Text('FreeCAD Launcher', style: theme.textTheme.labelSmall),
         ],

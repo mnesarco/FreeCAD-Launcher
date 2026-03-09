@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:freecad_launcher/config.dart';
+import 'package:freecad_launcher/controller/addons.dart';
 import 'package:freecad_launcher/model/addons.dart';
 import 'dart:typed_data';
 
@@ -17,7 +18,38 @@ class CuratedIndicator extends StatelessWidget {
     final theme = Theme.of(context);
     return Tooltip(
       message: 'Reviewed/Curated',
-      child: Icon(Icons.checklist, size: 16, color: theme.colorScheme.primary),
+      child: Icon(Icons.checklist, size: size, color: theme.colorScheme.primary),
+    );
+  }
+}
+
+class UpdateIndicator extends StatelessWidget {
+  final Addon addon;
+  final Future<Map<String, AddonUpdate>> updates;
+  final double size;
+  final String? entryHash;
+  const UpdateIndicator({
+    required this.addon,
+    required this.updates,
+    this.entryHash,
+    this.size = 16.0,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hashes = entryHash == null ? addon.entries.map((e) => e.sha1).toList() : [entryHash!];
+    return FutureBuilder(
+      future: updates,
+      builder: (context, snapshot) {
+        if (snapshot.hasData && hashes.any((h) => snapshot.data!.containsKey(h))) {
+          return Tooltip(
+            message: 'Your local version can be updated',
+            child: Icon(Icons.update, size: size, color: Colors.greenAccent),
+          );
+        }
+        return Container();
+      },
     );
   }
 }

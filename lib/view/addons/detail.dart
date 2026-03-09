@@ -1,9 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:freecad_launcher/controller/addons.dart';
 import 'package:freecad_launcher/model/addons.dart';
 import 'package:freecad_launcher/config.dart';
 import 'package:freecad_launcher/controller/main.dart';
+import 'package:freecad_launcher/service/database.dart';
+import 'package:freecad_launcher/service/download.dart';
 import 'package:freecad_launcher/util/format.dart';
 import 'package:freecad_launcher/view/addons/icon.dart';
 import 'package:freecad_launcher/view/addons/stats.dart';
@@ -69,6 +72,8 @@ class AddonDetailSheet extends StatelessWidget {
 
   List<Widget> _header(BuildContext context) {
     final theme = Theme.of(context);
+    final controller = MainController.of(context);
+    final updates = controller.addonsUpdateCheck.updated.watch(context);
     return [
       Row(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -79,16 +84,25 @@ class AddonDetailSheet extends StatelessWidget {
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
             child: AddonIcon(addon),
           ),
+
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  addon.displayName,
-                  style: theme.textTheme.headlineSmall,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.start,
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    Text(
+                      addon.displayName,
+                      style: theme.textTheme.headlineSmall,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.start,
+                    ),
+                    UpdateIndicator(addon: addon, updates: updates, size: 24),
+                  ],
                 ),
                 Wrap(
                   crossAxisAlignment: WrapCrossAlignment.center,
@@ -194,6 +208,42 @@ class AddonDetailSheet extends StatelessWidget {
     ];
   }
 
+  Future<void> _upgrade(
+    AddonEntry entry,
+    AddonDownloadController downloadedAddons,
+    DownloadManager dm,
+  ) async {}
+
+  Future<void> _download(
+    AddonEntry entry,
+    AddonDownloadController downloadedAddons,
+    DownloadManager dm, {
+    int ttl = -1,
+  }) async {
+    final fileName = await dm.download(entry.downloadUrl, '${entry.sha1}.zip', ttl);
+    final file = File(fileName);
+    final downloadAt = await file.lastModified();
+    downloadedAddons.add(
+      addon.id,
+      entry.repository,
+      entry.zipUrl,
+      entry.gitRef,
+      entry.metadata?.version ?? '',
+      entry.lastUpdateTime ?? downloadAt,
+      file.uri.pathSegments.last,
+      downloadAt,
+    );
+  }
+
+  Widget _chipPythonCompat(AddonEntry entry, ThemeData theme) {
+    return Chip(
+      padding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
+      avatar: Icon(FreeCADIcons.python, size: 16),
+      label: Text('Python ${entry.minPython}+', style: theme.textTheme.labelSmall),
+    );
+  }
+
   Widget _branch(BuildContext context, AddonEntry entry) {
     final theme = Theme.of(context);
     final controller = MainController.of(context);
@@ -209,23 +259,7 @@ class AddonDetailSheet extends StatelessWidget {
     final downloadList = dm.activeDownloads.watch(context);
 
     final isDownloading = dm.isDownloading(entry.downloadUrl);
-    final action = isDownloading
-        ? null
-        : () async {
-            final fileName = await dm.download(entry.downloadUrl, '${entry.sha1}.zip');
-            final file = File(fileName);
-            final downloadAt = await file.lastModified();
-            downloadedAddons.add(
-              addon.id,
-              entry.repository,
-              entry.zipUrl,
-              entry.gitRef,
-              entry.metadata?.version ?? '',
-              entry.lastUpdateTime ?? downloadAt,
-              file.uri.pathSegments.last,
-              downloadAt,
-            );
-          };
+    final updates = controller.addonsUpdateCheck.updated.watch(context);
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -233,72 +267,112 @@ class AddonDetailSheet extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 12,
           children: [
-            Row(
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              alignment: WrapAlignment.center,
               children: [
-                FilledButton.icon(
-                  onPressed: action,
-                  icon: Icon(isDownloading ? Icons.downloading : Icons.download, size: 16),
-                  label: Text(isDownloading ? 'Downloading...' : 'Download'),
-                ),
-                if (dm.failedDownload(entry.downloadUrl)) ...[
-                  const SizedBox(width: 8),
-                  Tooltip(
-                    message: 'Error downloading the file',
-                    child: Icon(Icons.error, color: theme.colorScheme.error),
-                  ),
-                ],
-                const SizedBox(width: 8),
-                Text(entry.branchDisplayName, style: theme.textTheme.titleSmall),
-                const SizedBox(width: 8),
+                if (entry.repository.isNotEmpty) _gitRepoLink(entry),
+                Text(entry.branchDisplayName, style: theme.textTheme.titleLarge),
+                if (entry.metadata?.version != null)
+                  Text(entry.metadata!.version!, style: theme.textTheme.titleMedium),
                 Text(
                   fmtDateTime(entry.lastUpdateTime),
-                  style: theme.textTheme.titleSmall,
+                  style: theme.textTheme.titleMedium,
                   overflow: TextOverflow.ellipsis,
-                ),
-                const Spacer(),
-                if (compat.isNotEmpty)
-                  Chip(
-                    label: Row(
-                      children: [
-                        Icon(FreeCADIcons.freecad, size: 16),
-                        SizedBox(width: 4),
-                        Text(compat, style: theme.textTheme.labelSmall),
-                      ],
-                    ),
-                    padding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                Chip(
-                  padding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                  label: Row(
-                    children: [
-                      Icon(FreeCADIcons.python, size: 16),
-                      SizedBox(width: 4),
-                      Text('Python ${addon.minPython}+', style: theme.textTheme.labelSmall),
-                    ],
-                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () => launchUrl(Uri.parse(entry.repository)),
-              child: Text(
-                entry.repository,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                  decoration: TextDecoration.underline,
-                  decorationColor: theme.colorScheme.primary,
-                ),
-              ),
-            ),
             if (entry.note != null && entry.note!.isNotEmpty) ...[
-              const SizedBox(height: 4),
               Text(entry.note!, style: theme.textTheme.bodySmall),
             ],
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                if (isDownloading)
+                  Chip(label: Text('Downloading...'), avatar: CircularProgressIndicator()),
+                if (!isDownloading) _downloadActions(entry, downloadedAddons, dm, updates),
+                if (dm.failedDownload(entry.downloadUrl)) _failedDownload(theme),
+                if (compat.isNotEmpty) _freecadCompat(compat, theme),
+                _chipPythonCompat(entry, theme),
+              ],
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _downloadActions(
+    AddonEntry entry,
+    AddonDownloadController downloadedAddons,
+    DownloadManager dm,
+    Future<Map<String, AddonUpdate>> updates,
+  ) => FutureBuilder(
+    future: downloadedAddons.findBranch(addon.id, entry.gitRef),
+    builder: (context, snapshot) {
+      if (snapshot.hasError || snapshot.connectionState == ConnectionState.waiting) {
+        return Container();
+      }
+      if (snapshot.data == null) {
+        return FilledButton.icon(
+          onPressed: () async => await _download(entry, downloadedAddons, dm),
+          icon: Icon(Icons.download, size: 16),
+          label: Text('Download'),
+        );
+      }
+      return FutureBuilder(
+        future: updates,
+        builder: (context, snapshot) {
+          if (snapshot.hasError ||
+              snapshot.connectionState == ConnectionState.waiting ||
+              snapshot.data == null) {
+            return Container();
+          }
+          if (snapshot.data![entry.sha1] == null) {
+            return FilledButton.icon(
+              onPressed: () async => await _download(entry, downloadedAddons, dm, ttl: 0),
+              icon: Icon(Icons.download, size: 16),
+              label: Text('Force Re-Download'),
+            );
+          }
+          return FilledButton.icon(
+            onPressed: () async => await _upgrade(entry, downloadedAddons, dm),
+            icon: Icon(Icons.update, size: 16),
+            label: Text('Upgrade'),
+          );
+        },
+      );
+    },
+  );
+
+  Widget _failedDownload(ThemeData theme) => Tooltip(
+    message: 'Error downloading the file',
+    child: Icon(Icons.error, color: theme.colorScheme.error),
+  );
+
+  Widget _freecadCompat(String compat, ThemeData theme) {
+    return Chip(
+      avatar: Icon(FreeCADIcons.freecad, size: 16),
+      label: Text(compat, style: theme.textTheme.labelSmall),
+      padding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
+    );
+  }
+
+  Widget _gitRepoLink(AddonEntry entry) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () => launchUrl(Uri.parse(entry.repository)),
+        child: Tooltip(
+          message: 'Url: ${entry.repository}',
+          child: Icon(FreeCADIcons.git, size: 16),
         ),
       ),
     );

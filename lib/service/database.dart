@@ -98,6 +98,19 @@ class Database extends _$Database {
   // DELETE
   Future<int> deleteApp(int id) => (delete(apps)..where((t) => t.id.equals(id))).go();
   Future<int> deleteProfile(int id) => (delete(profiles)..where((t) => t.id.equals(id))).go();
+
+  Future<DownloadedAddon?> findLatestDownloadedAddon(String name, String? branch) {
+    final query = select(downloadedAddons)
+      ..where((a) => a.name.equals(name))
+      ..orderBy([(u) => OrderingTerm.desc(u.updatedAt)])
+      ..limit(1);
+    if (branch == null) {
+      query.where((a) => a.branch.isNull());
+    } else {
+      query.where((a) => a.branch.equals(branch));
+    }
+    return query.getSingleOrNull();
+  }
 }
 
 LazyDatabase _openConnection() {

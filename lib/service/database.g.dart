@@ -1225,6 +1225,9 @@ abstract class _$Database extends GeneratedDatabase {
     profiles,
     downloadedAddons,
   ];
+  @override
+  DriftDatabaseOptions get options =>
+      const DriftDatabaseOptions(storeDateTimeAsText: true);
 }
 
 typedef $$AppsTableCreateCompanionBuilder =
