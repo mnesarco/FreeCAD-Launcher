@@ -47,6 +47,10 @@ dependencies:
   url_launcher: ^6.3.2
   xml: ^6.6.1
   recase: ^4.1.0
+  crypto:
+  archive: ^4.0.9
+  collection: ^1.19.1
+  intl:
 
 dev_dependencies:
   flutter_test:

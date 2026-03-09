@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:file_selector/file_selector.dart';
-import 'package:path_provider/path_provider.dart';
-
-import '../path.dart';
+import 'package:freecad_launcher/util/path.dart';
 
 const double _labelWidth = 130;
 
@@ -208,6 +206,46 @@ class SearchField extends StatelessWidget {
         ),
         onChanged: (val) => value.value = val,
       ),
+    );
+  }
+}
+
+class WithEmblem extends StatelessWidget {
+  final Widget child;
+  final IconData? emblem;
+  final Color? backgroundColor;
+  final Color? color;
+  final double size;
+
+  const WithEmblem({
+    required this.child,
+    this.emblem,
+    this.color,
+    this.backgroundColor,
+    this.size = 12.0,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (emblem == null) return child;
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          bottom: 0,
+          right: 0,
+          child: Container(
+            padding: EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              color: backgroundColor ?? Colors.blue,
+              shape: BoxShape.circle,
+              border: Border.all(color: color ?? Colors.white, width: 1.5),
+            ),
+            child: Icon(emblem, size: size, color: color ?? Colors.white),
+          ),
+        ),
+      ],
     );
   }
 }

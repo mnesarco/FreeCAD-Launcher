@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'icons.dart';
-import 'app_form.dart';
-import 'widgets.dart';
+import '../icons.dart';
+import 'form.dart';
+import '../widgets.dart';
 
-import '../controller.dart';
-import '../database.dart';
+import '../../controller/main.dart';
+import '../../service/database.dart';
 
 class AppManagerView extends StatelessWidget {
   final AppController controller;

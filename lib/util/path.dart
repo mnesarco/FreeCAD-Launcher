@@ -57,7 +57,14 @@ class Path {
     if (other is Path) {
       return Path(p.join(str, other.toString()));
     }
+    if (other is List<String>) {
+      return Path(p.joinAll([str, ...other]));
+    }
     throw ArgumentError("Invalid type, only String and Path are allowed for / operator here.");
+  }
+
+  static Future<Path> support() async {
+    return Path((await getApplicationSupportDirectory()).path);
   }
 
   static Future<Path> home() async {
@@ -84,5 +91,12 @@ class Path {
 
   Path parent() {
     return Path(p.dirname(str));
+  }
+
+  Future<int> live() async {
+    final stat = await FileStat.stat(str);
+    if (stat.type == FileSystemEntityType.notFound) return -1;
+    final created = stat.changed; // creation time (or last status change on Linux)
+    return DateTime.now().difference(created).inSeconds;
   }
 }

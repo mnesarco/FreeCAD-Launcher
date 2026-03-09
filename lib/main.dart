@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'database.dart';
-import 'controller.dart';
+import 'service/database.dart';
+import 'controller/main.dart';
 import 'view/home.dart';
 
-import 'services.dart';
+import 'service/applications.dart';
 
 void main() async {
   Database db = Database();
@@ -47,6 +47,8 @@ void main() async {
   //     home: HomeView(controller: controller),
   //   ),
   // );
+
+  controller.apps.importInstalledApps();
 
   runApp(HomeView(controller: controller));
 }

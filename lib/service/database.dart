@@ -23,12 +23,26 @@ class Profiles extends Table {
   TextColumn get cwd => text()();
 }
 
-@DriftDatabase(tables: [Apps, Profiles])
+class DownloadedAddons extends Table {
+  TextColumn get name => text()();
+  TextColumn get repoUrl => text().nullable()();
+  TextColumn get zipUrl => text().nullable()();
+  TextColumn get branch => text().nullable()();
+  TextColumn get version => text().nullable()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get downloadedAt => dateTime()();
+  TextColumn get downloadedName => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {repoUrl, zipUrl, branch, version, updatedAt};
+}
+
+@DriftDatabase(tables: [Apps, Profiles, DownloadedAddons])
 class Database extends _$Database {
   Database() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 1;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -37,13 +51,25 @@ class Database extends _$Database {
     },
     onUpgrade: (Migrator m, int from, int to) async {
       if (from < 2) {
-        await m.createTable(profiles);
+        // Migration Code
       }
     },
   );
 
   Future<int> addApp(AppsCompanion entry) => into(apps).insert(entry);
   Future<int> addProfile(ProfilesCompanion entry) => into(profiles).insert(entry);
+  Future<int> addAddonDownload(DownloadedAddonsCompanion entry) =>
+      into(downloadedAddons).insertOnConflictUpdate(entry);
+
+  Stream<List<DownloadedAddon>> watchAddonDownloads(String addonName, String? branch) {
+    final query = select(downloadedAddons);
+    query.where((t) => t.name.equals(addonName));
+    if (branch != null) {
+      query.where((t) => t.branch.equals(branch));
+    }
+    query.orderBy([(u) => OrderingTerm.asc(u.updatedAt)]);
+    return query.watch();
+  }
 
   // READ (Watch provides a Stream for reactivity)
   Stream<List<App>> watchApps(String filter) {
@@ -77,7 +103,7 @@ class Database extends _$Database {
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dataRoot = await getApplicationSupportDirectory();
-    final folder = Directory(p.join(dataRoot.path, 'freecad_launcher'));
+    final folder = Directory(dataRoot.path);
 
     if (!await folder.exists()) await folder.create(recursive: true);
 

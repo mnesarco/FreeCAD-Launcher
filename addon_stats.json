@@ -1,0 +1,1602 @@
+{
+  "https://github.com/mark1791/3D_Printing_Tools": {
+    "pushed_at": "2024-05-27T21:47:43Z",
+    "stargazers_count": 52,
+    "forks_count": 22,
+    "open_issues_count": 7,
+    "network_count": 22,
+    "subscribers_count": 5,
+    "created_at": "2019-01-30T01:57:11Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/cadenasgmbh/3dfindit-freecad-integration": {
+    "pushed_at": "2025-11-10T13:04:56Z",
+    "stargazers_count": 31,
+    "forks_count": 9,
+    "open_issues_count": 11,
+    "network_count": 9,
+    "subscribers_count": 6,
+    "created_at": "2020-10-20T09:55:55Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/kbwbe/A2plus": {
+    "pushed_at": "2026-02-15T16:12:54Z",
+    "stargazers_count": 201,
+    "forks_count": 72,
+    "open_issues_count": 47,
+    "network_count": 72,
+    "subscribers_count": 12,
+    "created_at": "2018-06-28T16:02:17Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/GS90/addFC": {
+    "pushed_at": "2026-03-07T11:11:51Z",
+    "stargazers_count": 33,
+    "forks_count": 5,
+    "open_issues_count": 0,
+    "network_count": 5,
+    "subscribers_count": 5,
+    "created_at": "2024-05-12T19:25:58Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/FreeCAD/AddonManager": {
+    "pushed_at": "2026-02-22T22:25:39Z",
+    "stargazers_count": 9,
+    "forks_count": 19,
+    "open_issues_count": 37,
+    "network_count": 19,
+    "subscribers_count": 3,
+    "created_at": "2025-04-06T22:48:19Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/FredsFactory/FreeCAD_AirPlaneDesign": {
+    "pushed_at": "2025-11-30T15:38:53Z",
+    "stargazers_count": 104,
+    "forks_count": 21,
+    "open_issues_count": 9,
+    "network_count": 21,
+    "subscribers_count": 11,
+    "created_at": "2018-06-11T07:36:04Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/KeithSloan/OpenSCAD_Alt_Import": {
+    "pushed_at": "2026-02-24T04:22:35Z",
+    "stargazers_count": 16,
+    "forks_count": 7,
+    "open_issues_count": 10,
+    "network_count": 7,
+    "subscribers_count": 1,
+    "created_at": "2020-02-04T05:12:33Z"
+  },
+  "https://github.com/microelly2/Animation": {
+    "pushed_at": "2019-10-14T10:51:44Z",
+    "stargazers_count": 34,
+    "forks_count": 19,
+    "open_issues_count": 9,
+    "network_count": 19,
+    "subscribers_count": 9,
+    "created_at": "2014-10-25T09:49:18Z",
+    "license": "GPL-2.0"
+  },
+  "https://github.com/QuentinTournier40/AnimationFreeCAD": {
+    "pushed_at": "2025-03-03T11:00:37Z",
+    "stargazers_count": 34,
+    "forks_count": 10,
+    "open_issues_count": 10,
+    "network_count": 10,
+    "subscribers_count": 2,
+    "created_at": "2022-01-29T09:16:01Z",
+    "license": "Apache-2.0"
+  },
+  "https://github.com/furti/FreeCAD-ArchTextures": {
+    "pushed_at": "2022-02-01T15:11:07Z",
+    "stargazers_count": 34,
+    "forks_count": 15,
+    "open_issues_count": 23,
+    "network_count": 15,
+    "subscribers_count": 3,
+    "created_at": "2018-09-30T07:37:40Z",
+    "license": "MIT"
+  },
+  "https://github.com/hamish2014/FreeCAD_assembly2": {
+    "pushed_at": "2019-09-13T01:01:19Z",
+    "stargazers_count": 152,
+    "forks_count": 69,
+    "open_issues_count": 61,
+    "network_count": 69,
+    "subscribers_count": 39,
+    "created_at": "2014-11-26T07:32:42Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/AnesBenmerzoug/FreeCAD-Assembly2MuJoCo": {
+    "pushed_at": "2025-11-29T18:06:07Z",
+    "stargazers_count": 21,
+    "forks_count": 5,
+    "open_issues_count": 3,
+    "network_count": 5,
+    "subscribers_count": 2,
+    "created_at": "2025-04-19T11:50:03Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/realthunder/FreeCAD_assembly3": {
+    "pushed_at": "2025-11-08T08:58:04Z",
+    "stargazers_count": 897,
+    "forks_count": 77,
+    "open_issues_count": 334,
+    "network_count": 77,
+    "subscribers_count": 40,
+    "created_at": "2017-09-10T20:30:12Z",
+    "license": "GPL-3.0"
+  },
+  "https://codeberg.org/Zolko/Assembly4": {},
+  "https://github.com/leoheck/FreeCAD_Assembly4.1": {
+    "pushed_at": "2025-10-14T12:53:05Z",
+    "stargazers_count": 18,
+    "forks_count": 7,
+    "open_issues_count": 5,
+    "network_count": 7,
+    "subscribers_count": 5,
+    "created_at": "2025-06-23T02:52:39Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/triplus/Autoload": {
+    "pushed_at": "2020-01-30T20:39:13Z",
+    "stargazers_count": 4,
+    "forks_count": 3,
+    "open_issues_count": 0,
+    "network_count": 3,
+    "subscribers_count": 3,
+    "created_at": "2017-06-16T12:18:33Z"
+  },
+  "https://github.com/podestplatz/BCF-Plugin-FreeCAD": {
+    "pushed_at": "2024-02-09T21:19:40Z",
+    "stargazers_count": 9,
+    "forks_count": 8,
+    "open_issues_count": 6,
+    "network_count": 8,
+    "subscribers_count": 2,
+    "created_at": "2019-05-11T12:06:56Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/Chrismettal/FreeCAD-Behave-Dark-Preference-Pack": {
+    "pushed_at": "2024-08-02T10:08:18Z",
+    "stargazers_count": 11,
+    "forks_count": 5,
+    "open_issues_count": 2,
+    "network_count": 5,
+    "subscribers_count": 1,
+    "created_at": "2022-01-30T17:05:54Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/Simturb/Beltrami": {
+    "pushed_at": "2026-02-17T20:20:19Z",
+    "stargazers_count": 39,
+    "forks_count": 12,
+    "open_issues_count": 1,
+    "network_count": 12,
+    "subscribers_count": 2,
+    "created_at": "2021-05-10T14:34:51Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/APEbbers/BillOfMaterials-WB": {
+    "pushed_at": "2026-01-19T19:54:34Z",
+    "stargazers_count": 29,
+    "forks_count": 4,
+    "open_issues_count": 1,
+    "network_count": 4,
+    "subscribers_count": 1,
+    "created_at": "2023-11-05T10:06:33Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/knipknap/better-tool-library": {
+    "pushed_at": "2025-08-28T10:51:06Z",
+    "stargazers_count": 38,
+    "forks_count": 16,
+    "open_issues_count": 17,
+    "network_count": 16,
+    "subscribers_count": 3,
+    "created_at": "2023-07-15T15:52:07Z",
+    "license": "MIT"
+  },
+  "https://github.com/bimtester/bimtesterfc": {
+    "pushed_at": "2022-06-22T14:02:16Z",
+    "stargazers_count": 2,
+    "forks_count": 2,
+    "open_issues_count": 4,
+    "network_count": 2,
+    "subscribers_count": 1,
+    "created_at": "2021-01-11T23:03:35Z"
+  },
+  "https://github.com/boltsparts/boltsfc": {
+    "pushed_at": "2024-02-09T21:27:29Z",
+    "stargazers_count": 39,
+    "forks_count": 15,
+    "open_issues_count": 3,
+    "network_count": 15,
+    "subscribers_count": 4,
+    "created_at": "2017-07-02T13:37:01Z"
+  },
+  "https://github.com/sargo-devel/Cables": {
+    "pushed_at": "2026-01-19T21:06:58Z",
+    "stargazers_count": 62,
+    "forks_count": 6,
+    "open_issues_count": 7,
+    "network_count": 6,
+    "subscribers_count": 3,
+    "created_at": "2025-01-21T17:53:11Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/mnnxp/cadbaselibrary-freecad": {
+    "pushed_at": "2026-01-03T15:49:16Z",
+    "stargazers_count": 6,
+    "forks_count": 2,
+    "open_issues_count": 0,
+    "network_count": 2,
+    "subscribers_count": 2,
+    "created_at": "2023-02-10T17:18:49Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/yorikvanhavre/CADExchanger": {
+    "pushed_at": "2024-09-17T07:46:57Z",
+    "stargazers_count": 73,
+    "forks_count": 13,
+    "open_issues_count": 6,
+    "network_count": 13,
+    "subscribers_count": 6,
+    "created_at": "2017-03-25T16:12:57Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/jmwright/cadquery-freecad-module": {
+    "pushed_at": "2026-02-03T21:19:26Z",
+    "stargazers_count": 144,
+    "forks_count": 44,
+    "open_issues_count": 5,
+    "network_count": 44,
+    "subscribers_count": 11,
+    "created_at": "2014-11-22T03:17:08Z",
+    "license": "Apache-2.0"
+  },
+  "https://github.com/spanner888/CamScripts": {
+    "pushed_at": "2024-09-24T23:13:16Z",
+    "stargazers_count": 3,
+    "forks_count": 2,
+    "open_issues_count": 4,
+    "network_count": 2,
+    "subscribers_count": 1,
+    "created_at": "2024-08-23T23:51:23Z"
+  },
+  "https://github.com/jaheyns/CfdOF": {
+    "pushed_at": "2026-02-25T19:21:27Z",
+    "stargazers_count": 628,
+    "forks_count": 117,
+    "open_issues_count": 14,
+    "network_count": 117,
+    "subscribers_count": 34,
+    "created_at": "2016-12-02T13:51:31Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/qingfengxia/Cfd": {
+    "pushed_at": "2021-12-16T14:54:26Z",
+    "stargazers_count": 210,
+    "forks_count": 42,
+    "open_issues_count": 4,
+    "network_count": 42,
+    "subscribers_count": 26,
+    "created_at": "2016-09-29T20:11:50Z"
+  },
+  "https://github.com/mnesarco/Channels": {
+    "pushed_at": "2026-01-29T18:27:01Z",
+    "stargazers_count": 53,
+    "forks_count": 4,
+    "open_issues_count": 0,
+    "network_count": 4,
+    "subscribers_count": 1,
+    "created_at": "2025-04-11T19:25:58Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/triplus/CommandPanel": {
+    "pushed_at": "2019-03-18T21:45:11Z",
+    "stargazers_count": 3,
+    "forks_count": 5,
+    "open_issues_count": 1,
+    "network_count": 5,
+    "subscribers_count": 2,
+    "created_at": "2017-06-30T21:10:43Z"
+  },
+  "https://github.com/drwho495/ConstraintDesign-wb": {
+    "pushed_at": "2025-11-18T02:53:22Z",
+    "stargazers_count": 12,
+    "forks_count": 2,
+    "open_issues_count": 16,
+    "network_count": 2,
+    "subscribers_count": 2,
+    "created_at": "2025-04-13T05:14:06Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/altangarts/FreeCAD-Themes-ColorPalette": {
+    "pushed_at": "2026-02-28T01:17:40Z",
+    "stargazers_count": 8,
+    "forks_count": 2,
+    "open_issues_count": 2,
+    "network_count": 2,
+    "subscribers_count": 1,
+    "created_at": "2024-12-25T15:43:07Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/triplus/CubeMenu": {
+    "pushed_at": "2020-04-25T15:51:40Z",
+    "stargazers_count": 6,
+    "forks_count": 0,
+    "open_issues_count": 1,
+    "network_count": 0,
+    "subscribers_count": 1,
+    "created_at": "2020-02-08T14:38:34Z"
+  },
+  "https://github.com/cblt2l/FreeCAD-CuraEngine-Plugin": {
+    "pushed_at": "2021-01-02T20:05:06Z",
+    "stargazers_count": 34,
+    "forks_count": 18,
+    "open_issues_count": 8,
+    "network_count": 18,
+    "subscribers_count": 11,
+    "created_at": "2014-04-24T03:02:11Z"
+  },
+  "https://github.com/chbergmann/CurvedShapesWorkbench": {
+    "pushed_at": "2025-10-26T15:02:01Z",
+    "stargazers_count": 75,
+    "forks_count": 14,
+    "open_issues_count": 14,
+    "network_count": 14,
+    "subscribers_count": 2,
+    "created_at": "2019-06-11T18:04:30Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/tomate44/CurvesWB": {
+    "pushed_at": "2026-03-01T17:25:20Z",
+    "stargazers_count": 138,
+    "forks_count": 35,
+    "open_issues_count": 31,
+    "network_count": 35,
+    "subscribers_count": 7,
+    "created_at": "2016-08-06T11:58:50Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/easyw/Defeaturing_WB": {
+    "pushed_at": "2025-09-09T19:51:58Z",
+    "stargazers_count": 34,
+    "forks_count": 7,
+    "open_issues_count": 8,
+    "network_count": 7,
+    "subscribers_count": 1,
+    "created_at": "2018-07-02T17:08:56Z"
+  },
+  "https://github.com/MariwanJ/Design456": {
+    "pushed_at": "2025-12-31T21:20:19Z",
+    "stargazers_count": 59,
+    "forks_count": 6,
+    "open_issues_count": 4,
+    "network_count": 6,
+    "subscribers_count": 7,
+    "created_at": "2021-01-29T18:06:24Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/DualSPHysics/DesignSPHysics": {
+    "pushed_at": "2026-01-18T16:29:58Z",
+    "stargazers_count": 146,
+    "forks_count": 44,
+    "open_issues_count": 29,
+    "network_count": 44,
+    "subscribers_count": 15,
+    "created_at": "2018-07-31T10:10:23Z"
+  },
+  "https://github.com/oddtopus/dodo": {
+    "pushed_at": "2024-06-30T19:21:03Z",
+    "stargazers_count": 31,
+    "forks_count": 22,
+    "open_issues_count": 20,
+    "network_count": 22,
+    "subscribers_count": 1,
+    "created_at": "2019-03-24T08:45:11Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/dracula/freecad": {
+    "pushed_at": "2025-07-23T17:46:45Z",
+    "stargazers_count": 38,
+    "forks_count": 5,
+    "open_issues_count": 9,
+    "network_count": 5,
+    "subscribers_count": 3,
+    "created_at": "2021-03-07T13:29:22Z",
+    "license": "MIT"
+  },
+  "https://github.com/Addon-Shelter/Drawing-Dimensioning": {
+    "pushed_at": "2025-11-04T05:32:30Z",
+    "stargazers_count": 0,
+    "forks_count": 0,
+    "open_issues_count": 0,
+    "network_count": 49,
+    "subscribers_count": 0,
+    "created_at": "2025-11-03T17:02:43Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/yorikvanhavre/Draft-dxf-importer": {
+    "pushed_at": "2023-12-11T09:30:08Z",
+    "stargazers_count": 73,
+    "forks_count": 38,
+    "open_issues_count": 4,
+    "network_count": 38,
+    "subscribers_count": 6,
+    "created_at": "2013-06-22T17:19:58Z"
+  },
+  "https://github.com/mwganson/DynamicData": {
+    "pushed_at": "2025-11-26T18:46:36Z",
+    "stargazers_count": 49,
+    "forks_count": 10,
+    "open_issues_count": 23,
+    "network_count": 10,
+    "subscribers_count": 5,
+    "created_at": "2018-09-22T18:41:43Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/ovo-Tim/EasyProfileFrame": {
+    "pushed_at": "2025-04-10T23:11:41Z",
+    "stargazers_count": 13,
+    "forks_count": 3,
+    "open_issues_count": 6,
+    "network_count": 3,
+    "subscribers_count": 2,
+    "created_at": "2025-01-19T14:58:09Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/ediloren/EM-Workbench-for-FreeCAD": {
+    "pushed_at": "2024-04-12T10:32:36Z",
+    "stargazers_count": 65,
+    "forks_count": 17,
+    "open_issues_count": 6,
+    "network_count": 17,
+    "subscribers_count": 9,
+    "created_at": "2016-10-03T17:50:20Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/erroronline1/estimateWB": {
+    "pushed_at": "2026-01-23T21:13:42Z",
+    "stargazers_count": 13,
+    "forks_count": 5,
+    "open_issues_count": 1,
+    "network_count": 5,
+    "subscribers_count": 1,
+    "created_at": "2022-03-04T22:16:13Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/JMG1/ExplodedAssembly": {
+    "pushed_at": "2024-02-24T12:34:56Z",
+    "stargazers_count": 129,
+    "forks_count": 26,
+    "open_issues_count": 24,
+    "network_count": 26,
+    "subscribers_count": 17,
+    "created_at": "2016-03-13T22:11:29Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/mnesarco/FreeCAD_ExtMan": {
+    "pushed_at": "2021-12-19T14:45:20Z",
+    "stargazers_count": 10,
+    "forks_count": 3,
+    "open_issues_count": 0,
+    "network_count": 3,
+    "subscribers_count": 2,
+    "created_at": "2020-05-21T19:02:37Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/shaise/FreeCAD_FastenersWB": {
+    "pushed_at": "2026-02-19T08:52:31Z",
+    "stargazers_count": 368,
+    "forks_count": 99,
+    "open_issues_count": 78,
+    "network_count": 99,
+    "subscribers_count": 21,
+    "created_at": "2015-06-18T17:35:37Z",
+    "license": "GPL-2.0"
+  },
+  "https://github.com/heissgetraenk/fcmcua": {
+    "pushed_at": "2024-04-21T09:44:23Z",
+    "stargazers_count": 15,
+    "forks_count": 6,
+    "open_issues_count": 2,
+    "network_count": 6,
+    "subscribers_count": 2,
+    "created_at": "2023-01-03T13:41:22Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/mnesarco/FileExplorerExt": {
+    "pushed_at": "2026-02-26T16:13:11Z",
+    "stargazers_count": 4,
+    "forks_count": 1,
+    "open_issues_count": 0,
+    "network_count": 1,
+    "subscribers_count": 0,
+    "created_at": "2025-12-24T02:39:23Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/HarryvL/fcVM-workbench": {
+    "pushed_at": "2025-07-27T14:07:07Z",
+    "stargazers_count": 11,
+    "forks_count": 3,
+    "open_issues_count": 3,
+    "network_count": 3,
+    "subscribers_count": 2,
+    "created_at": "2024-01-17T16:08:41Z"
+  },
+  "https://github.com/Shkolik/Foamcut": {
+    "pushed_at": "2026-03-07T18:28:02Z",
+    "stargazers_count": 19,
+    "forks_count": 2,
+    "open_issues_count": 4,
+    "network_count": 2,
+    "subscribers_count": 2,
+    "created_at": "2024-01-12T04:52:49Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/30350n/free2ki": {
+    "pushed_at": "2025-12-28T20:11:02Z",
+    "stargazers_count": 56,
+    "forks_count": 5,
+    "open_issues_count": 0,
+    "network_count": 5,
+    "subscribers_count": 1,
+    "created_at": "2022-01-09T16:24:05Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/alekssadowski95/FreeCAD-Beginner-Assistant": {
+    "pushed_at": "2024-12-29T16:00:14Z",
+    "stargazers_count": 17,
+    "forks_count": 5,
+    "open_issues_count": 6,
+    "network_count": 5,
+    "subscribers_count": 2,
+    "created_at": "2023-12-12T18:25:23Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/looooo/freecad.gears": {
+    "pushed_at": "2026-02-14T20:53:05Z",
+    "stargazers_count": 325,
+    "forks_count": 113,
+    "open_issues_count": 77,
+    "network_count": 113,
+    "subscribers_count": 16,
+    "created_at": "2014-04-08T15:55:00Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/TzurSoffer/FreecadDiscordPresence": {
+    "pushed_at": "2025-09-23T16:23:50Z",
+    "stargazers_count": 11,
+    "forks_count": 3,
+    "open_issues_count": 0,
+    "network_count": 3,
+    "subscribers_count": 1,
+    "created_at": "2024-12-09T21:04:07Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/Reqrefusion/FreeCAD-Documentation-html": {
+    "pushed_at": "2026-03-07T23:00:04Z",
+    "stargazers_count": 2,
+    "forks_count": 1,
+    "open_issues_count": 1,
+    "network_count": 1,
+    "subscribers_count": 0,
+    "created_at": "2024-11-30T18:01:24Z",
+    "license": "GPL-2.0"
+  },
+  "https://github.com/MisterMakerNL/Freecad-Built-in-themes-beta": {
+    "pushed_at": "2024-05-21T20:36:07Z",
+    "stargazers_count": 4,
+    "forks_count": 5,
+    "open_issues_count": 1,
+    "network_count": 5,
+    "subscribers_count": 1,
+    "created_at": "2023-06-11T17:13:59Z",
+    "license": "MIT"
+  },
+  "https://github.com/zaphB/freecad.optics_design_workbench": {
+    "pushed_at": "2025-12-10T20:50:27Z",
+    "stargazers_count": 11,
+    "forks_count": 1,
+    "open_issues_count": 0,
+    "network_count": 1,
+    "subscribers_count": 1,
+    "created_at": "2024-07-17T16:28:05Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/APEbbers/FreeCAD-Ribbon": {
+    "pushed_at": "2026-02-16T19:33:40Z",
+    "stargazers_count": 95,
+    "forks_count": 12,
+    "open_issues_count": 5,
+    "network_count": 12,
+    "subscribers_count": 5,
+    "created_at": "2024-09-28T10:50:15Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/FreeCAD/FreeCAD-themes": {
+    "pushed_at": "2026-02-08T20:54:00Z",
+    "stargazers_count": 8,
+    "forks_count": 4,
+    "open_issues_count": 4,
+    "network_count": 4,
+    "subscribers_count": 10,
+    "created_at": "2024-06-24T22:09:10Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/kwahoo2/freecad-xr-workbench": {
+    "pushed_at": "2026-01-13T15:40:13Z",
+    "stargazers_count": 24,
+    "forks_count": 5,
+    "open_issues_count": 1,
+    "network_count": 5,
+    "subscribers_count": 5,
+    "created_at": "2023-07-29T18:11:22Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/Giraut/freecad_streamdeck_addon": {
+    "pushed_at": "2024-03-08T08:22:53Z",
+    "stargazers_count": 16,
+    "forks_count": 4,
+    "open_issues_count": 6,
+    "network_count": 4,
+    "subscribers_count": 5,
+    "created_at": "2024-02-25T14:01:23Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/dubstar-04/FeedsAndSpeeds": {
+    "pushed_at": "2025-12-22T09:24:59Z",
+    "stargazers_count": 45,
+    "forks_count": 11,
+    "open_issues_count": 17,
+    "network_count": 11,
+    "subscribers_count": 6,
+    "created_at": "2020-04-10T13:15:31Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/FrontISTR/FEM_FrontISTR": {
+    "pushed_at": "2025-07-28T02:47:59Z",
+    "stargazers_count": 36,
+    "forks_count": 9,
+    "open_issues_count": 0,
+    "network_count": 9,
+    "subscribers_count": 8,
+    "created_at": "2021-04-03T04:04:01Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/Serince/FEMbyGEN": {
+    "pushed_at": "2025-12-17T12:31:17Z",
+    "stargazers_count": 45,
+    "forks_count": 17,
+    "open_issues_count": 3,
+    "network_count": 23,
+    "subscribers_count": 1,
+    "created_at": "2022-07-27T11:28:08Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/oddtopus/flamingo": {
+    "pushed_at": "2019-08-19T13:30:54Z",
+    "stargazers_count": 37,
+    "forks_count": 12,
+    "open_issues_count": 7,
+    "network_count": 12,
+    "subscribers_count": 11,
+    "created_at": "2016-07-22T12:33:51Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/looooo/freecad_frame": {
+    "pushed_at": "2024-02-09T21:51:53Z",
+    "stargazers_count": 25,
+    "forks_count": 6,
+    "open_issues_count": 9,
+    "network_count": 6,
+    "subscribers_count": 3,
+    "created_at": "2015-11-23T22:20:38Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/lukh/frameforge": {
+    "pushed_at": "2026-03-07T12:47:24Z",
+    "stargazers_count": 22,
+    "forks_count": 6,
+    "open_issues_count": 40,
+    "network_count": 6,
+    "subscribers_count": 2,
+    "created_at": "2024-10-07T07:57:36Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/instancezero/in3dca-freegrid.git": {
+    "pushed_at": "2025-03-15T21:37:06Z",
+    "stargazers_count": 46,
+    "forks_count": 4,
+    "open_issues_count": 2,
+    "network_count": 4,
+    "subscribers_count": 4,
+    "created_at": "2022-07-25T19:20:23Z",
+    "license": "AGPL-3.0"
+  },
+  "https://github.com/rahix/FusedFilamentDesign": {
+    "pushed_at": "2026-03-06T13:11:59Z",
+    "stargazers_count": 205,
+    "forks_count": 5,
+    "open_issues_count": 14,
+    "network_count": 5,
+    "subscribers_count": 8,
+    "created_at": "2025-05-11T19:31:35Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/KeithSloan/GDML": {
+    "pushed_at": "2026-02-06T13:33:05Z",
+    "stargazers_count": 70,
+    "forks_count": 18,
+    "open_issues_count": 54,
+    "network_count": 18,
+    "subscribers_count": 4,
+    "created_at": "2019-11-21T17:56:40Z"
+  },
+  "https://github.com/juanvanyo/FreeCAD-GDT": {
+    "pushed_at": "2024-07-23T12:48:33Z",
+    "stargazers_count": 49,
+    "forks_count": 16,
+    "open_issues_count": 12,
+    "network_count": 16,
+    "subscribers_count": 7,
+    "created_at": "2016-12-13T11:33:47Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/triplus/Glass": {
+    "pushed_at": "2021-03-12T00:31:01Z",
+    "stargazers_count": 25,
+    "forks_count": 9,
+    "open_issues_count": 9,
+    "network_count": 9,
+    "subscribers_count": 4,
+    "created_at": "2018-11-22T14:45:05Z"
+  },
+  "https://github.com/Stu142/FreeCAD-Gridfinity-Workbench": {
+    "pushed_at": "2026-03-04T02:16:23Z",
+    "stargazers_count": 442,
+    "forks_count": 42,
+    "open_issues_count": 29,
+    "network_count": 42,
+    "subscribers_count": 9,
+    "created_at": "2024-03-18T23:26:05Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/FreeCAD/FreeCAD-Help": {
+    "pushed_at": "2024-02-27T12:13:00Z",
+    "stargazers_count": 11,
+    "forks_count": 4,
+    "open_issues_count": 9,
+    "network_count": 4,
+    "subscribers_count": 2,
+    "created_at": "2021-11-26T15:36:55Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/triplus/IconThemes": {
+    "pushed_at": "2023-11-06T16:55:08Z",
+    "stargazers_count": 19,
+    "forks_count": 5,
+    "open_issues_count": 8,
+    "network_count": 5,
+    "subscribers_count": 1,
+    "created_at": "2016-10-10T13:18:35Z"
+  },
+  "https://github.com/KeithSloan/ImportNURBS": {
+    "pushed_at": "2025-08-28T12:47:45Z",
+    "stargazers_count": 12,
+    "forks_count": 6,
+    "open_issues_count": 3,
+    "network_count": 6,
+    "subscribers_count": 1,
+    "created_at": "2020-03-23T15:31:42Z"
+  },
+  "https://github.com/jmplonka/InventorLoader": {
+    "pushed_at": "2024-12-17T15:16:36Z",
+    "stargazers_count": 154,
+    "forks_count": 20,
+    "open_issues_count": 58,
+    "network_count": 20,
+    "subscribers_count": 14,
+    "created_at": "2017-02-09T19:25:55Z",
+    "license": "GPL-2.0"
+  },
+  "https://github.com/marmni/FreeCAD-Kerkythea": {
+    "pushed_at": "2020-01-27T22:27:44Z",
+    "stargazers_count": 5,
+    "forks_count": 1,
+    "open_issues_count": 0,
+    "network_count": 1,
+    "subscribers_count": 4,
+    "created_at": "2014-12-15T19:51:53Z"
+  },
+  "https://github.com/easyw/kicadStepUpMod": {
+    "pushed_at": "2025-12-14T15:30:44Z",
+    "stargazers_count": 626,
+    "forks_count": 81,
+    "open_issues_count": 37,
+    "network_count": 81,
+    "subscribers_count": 23,
+    "created_at": "2017-09-12T08:41:47Z"
+  },
+  "https://github.com/DeepSOIC/Lattice2": {
+    "pushed_at": "2025-12-26T15:26:32Z",
+    "stargazers_count": 78,
+    "forks_count": 15,
+    "open_issues_count": 30,
+    "network_count": 15,
+    "subscribers_count": 4,
+    "created_at": "2015-11-26T18:45:55Z"
+  },
+  "https://github.com/triplus/Launcher": {
+    "pushed_at": "2019-11-23T06:23:24Z",
+    "stargazers_count": 28,
+    "forks_count": 3,
+    "open_issues_count": 8,
+    "network_count": 3,
+    "subscribers_count": 4,
+    "created_at": "2016-05-01T21:22:23Z"
+  },
+  "https://github.com/execuc/LCInterlocking": {
+    "pushed_at": "2025-12-16T19:28:27Z",
+    "stargazers_count": 180,
+    "forks_count": 34,
+    "open_issues_count": 32,
+    "network_count": 34,
+    "subscribers_count": 13,
+    "created_at": "2016-06-20T11:41:28Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/FreeCAD/FreeCAD-library": {
+    "pushed_at": "2026-02-06T17:34:51Z",
+    "stargazers_count": 1711,
+    "forks_count": 1188,
+    "open_issues_count": 25,
+    "network_count": 1188,
+    "subscribers_count": 148,
+    "created_at": "2013-07-01T14:56:20Z"
+  },
+  "https://github.com/furti/FreeCAD-Lithophane": {
+    "pushed_at": "2021-11-05T13:44:37Z",
+    "stargazers_count": 36,
+    "forks_count": 9,
+    "open_issues_count": 13,
+    "network_count": 9,
+    "subscribers_count": 5,
+    "created_at": "2018-06-05T17:28:45Z",
+    "license": "MIT"
+  },
+  "https://github.com/URJCMakerGroup/MakerWorkbench": {
+    "pushed_at": "2024-12-10T12:36:23Z",
+    "stargazers_count": 49,
+    "forks_count": 13,
+    "open_issues_count": 6,
+    "network_count": 13,
+    "subscribers_count": 2,
+    "created_at": "2020-07-24T09:04:56Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/easyw/Manipulator": {
+    "pushed_at": "2025-09-29T20:21:08Z",
+    "stargazers_count": 75,
+    "forks_count": 15,
+    "open_issues_count": 23,
+    "network_count": 15,
+    "subscribers_count": 7,
+    "created_at": "2017-10-02T13:44:25Z"
+  },
+  "https://github.com/mnesarco/MarzWorkbench": {
+    "pushed_at": "2026-03-04T23:10:13Z",
+    "stargazers_count": 116,
+    "forks_count": 25,
+    "open_issues_count": 4,
+    "network_count": 25,
+    "subscribers_count": 21,
+    "created_at": "2020-04-05T04:12:16Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/mwganson/MeshRemodel": {
+    "pushed_at": "2026-02-10T01:25:41Z",
+    "stargazers_count": 32,
+    "forks_count": 7,
+    "open_issues_count": 0,
+    "network_count": 7,
+    "subscribers_count": 3,
+    "created_at": "2019-08-18T07:23:46Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/mnesarco/FreeCAD_Utils": {
+    "pushed_at": "2026-01-26T05:58:25Z",
+    "stargazers_count": 18,
+    "forks_count": 7,
+    "open_issues_count": 1,
+    "network_count": 7,
+    "subscribers_count": 3,
+    "created_at": "2021-01-18T01:15:01Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/HakanSeven12/Modern-UI": {
+    "pushed_at": "2021-05-15T08:52:59Z",
+    "stargazers_count": 77,
+    "forks_count": 9,
+    "open_issues_count": 18,
+    "network_count": 9,
+    "subscribers_count": 6,
+    "created_at": "2020-04-07T08:26:13Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/j-wiedemann/mooc-workbench": {
+    "pushed_at": "2024-02-09T21:57:45Z",
+    "stargazers_count": 5,
+    "forks_count": 7,
+    "open_issues_count": 6,
+    "network_count": 7,
+    "subscribers_count": 0,
+    "created_at": "2019-07-12T19:08:51Z",
+    "license": "GPL-2.0"
+  },
+  "https://github.com/Francisco-Rosa/FreeCAD-Movie": {
+    "pushed_at": "2025-07-07T18:29:04Z",
+    "stargazers_count": 15,
+    "forks_count": 6,
+    "open_issues_count": 0,
+    "network_count": 6,
+    "subscribers_count": 1,
+    "created_at": "2022-12-12T22:35:32Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/triplus/NavigationIndicator": {
+    "pushed_at": "2017-06-09T14:41:43Z",
+    "stargazers_count": 3,
+    "forks_count": 1,
+    "open_issues_count": 1,
+    "network_count": 1,
+    "subscribers_count": 3,
+    "created_at": "2016-09-04T23:11:27Z"
+  },
+  "https://github.com/NikraDAP/FreeCAD-NikraDAP": {
+    "pushed_at": "2024-02-09T22:00:10Z",
+    "stargazers_count": 2,
+    "forks_count": 3,
+    "open_issues_count": 2,
+    "network_count": 3,
+    "subscribers_count": 3,
+    "created_at": "2023-02-22T08:48:53Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/j8sr0230/Nodes": {
+    "pushed_at": "2024-10-04T04:38:40Z",
+    "stargazers_count": 108,
+    "forks_count": 15,
+    "open_issues_count": 14,
+    "network_count": 15,
+    "subscribers_count": 8,
+    "created_at": "2022-08-10T18:20:40Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/microelly2/freecad-nurbs": {
+    "pushed_at": "2020-09-30T13:21:47Z",
+    "stargazers_count": 26,
+    "forks_count": 13,
+    "open_issues_count": 6,
+    "network_count": 13,
+    "subscribers_count": 11,
+    "created_at": "2016-08-01T17:20:49Z"
+  },
+  "https://github.com/FreeCAD/FreeCAD-documentation": {
+    "pushed_at": "2025-01-15T09:43:08Z",
+    "stargazers_count": 91,
+    "forks_count": 35,
+    "open_issues_count": 5,
+    "network_count": 35,
+    "subscribers_count": 9,
+    "created_at": "2021-09-03T10:18:49Z",
+    "license": "CC0-1.0"
+  },
+  "https://github.com/FreeCAD/Ondsel-Lens-Addon": {
+    "pushed_at": "2025-12-22T16:44:22Z",
+    "stargazers_count": 4,
+    "forks_count": 3,
+    "open_issues_count": 7,
+    "network_count": 14,
+    "subscribers_count": 1,
+    "created_at": "2025-06-22T17:18:19Z"
+  },
+  "https://github.com/obelisk79/OpenTheme": {
+    "pushed_at": "2026-01-26T14:53:02Z",
+    "stargazers_count": 87,
+    "forks_count": 11,
+    "open_issues_count": 49,
+    "network_count": 11,
+    "subscribers_count": 1,
+    "created_at": "2024-01-24T21:50:21Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/KeithSloan/OpenStudioWorkBench": {
+    "pushed_at": "2025-08-27T09:56:31Z",
+    "stargazers_count": 0,
+    "forks_count": 1,
+    "open_issues_count": 7,
+    "network_count": 1,
+    "subscribers_count": 1,
+    "created_at": "2025-03-28T13:33:15Z",
+    "license": "GPL-2.0"
+  },
+  "https://github.com/chbergmann/OpticsWorkbench": {
+    "pushed_at": "2025-06-01T08:17:46Z",
+    "stargazers_count": 151,
+    "forks_count": 36,
+    "open_issues_count": 7,
+    "network_count": 36,
+    "subscribers_count": 5,
+    "created_at": "2021-07-03T19:22:11Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/ebrahimraeyat/OSAFE": {
+    "pushed_at": "2026-02-05T12:13:48Z",
+    "stargazers_count": 46,
+    "forks_count": 10,
+    "open_issues_count": 3,
+    "network_count": 10,
+    "subscribers_count": 6,
+    "created_at": "2018-11-08T23:01:02Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/rkrenzler/ose-piping-workbench": {
+    "pushed_at": "2022-12-11T17:29:47Z",
+    "stargazers_count": 13,
+    "forks_count": 5,
+    "open_issues_count": 4,
+    "network_count": 6,
+    "subscribers_count": 2,
+    "created_at": "2018-02-17T09:18:36Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/gbroques/ose-3d-printer-workbench": {
+    "pushed_at": "2024-04-20T04:36:34Z",
+    "stargazers_count": 18,
+    "forks_count": 4,
+    "open_issues_count": 21,
+    "network_count": 4,
+    "subscribers_count": 2,
+    "created_at": "2020-01-26T00:24:27Z",
+    "license": "LGPL-2.1"
+  },
+  "https://codeberg.org/osh-autodoc/osh-autodoc-workbench": {},
+  "https://github.com/DeepSOIC/Part-o-magic": {
+    "pushed_at": "2026-02-24T13:03:54Z",
+    "stargazers_count": 15,
+    "forks_count": 5,
+    "open_issues_count": 27,
+    "network_count": 5,
+    "subscribers_count": 1,
+    "created_at": "2016-05-20T17:22:10Z"
+  },
+  "https://github.com/marmni/FreeCAD-PCB": {
+    "pushed_at": "2026-03-07T07:56:23Z",
+    "stargazers_count": 116,
+    "forks_count": 26,
+    "open_issues_count": 7,
+    "network_count": 26,
+    "subscribers_count": 10,
+    "created_at": "2016-01-06T21:00:47Z"
+  },
+  "https://github.com/triplus/PersistentToolbars": {
+    "pushed_at": "2018-01-10T19:26:45Z",
+    "stargazers_count": 1,
+    "forks_count": 0,
+    "open_issues_count": 0,
+    "network_count": 0,
+    "subscribers_count": 2,
+    "created_at": "2016-08-10T20:40:31Z"
+  },
+  "https://github.com/Grubuntu/PieMenu": {
+    "pushed_at": "2026-02-14T15:10:38Z",
+    "stargazers_count": 24,
+    "forks_count": 8,
+    "open_issues_count": 2,
+    "network_count": 8,
+    "subscribers_count": 4,
+    "created_at": "2024-01-13T09:30:59Z"
+  },
+  "https://github.com/joelgraff/pivy_trackers": {
+    "pushed_at": "2021-08-06T12:06:51Z",
+    "stargazers_count": 23,
+    "forks_count": 7,
+    "open_issues_count": 6,
+    "network_count": 7,
+    "subscribers_count": 7,
+    "created_at": "2019-09-19T11:08:12Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/FreeCAD/Plot": {
+    "pushed_at": "2026-01-21T00:32:00Z",
+    "stargazers_count": 14,
+    "forks_count": 11,
+    "open_issues_count": 0,
+    "network_count": 11,
+    "subscribers_count": 26,
+    "created_at": "2018-09-22T22:35:17Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/TheRaytracers/freecad-povray-render": {
+    "pushed_at": "2023-08-17T16:48:37Z",
+    "stargazers_count": 4,
+    "forks_count": 2,
+    "open_issues_count": 6,
+    "network_count": 2,
+    "subscribers_count": 2,
+    "created_at": "2020-11-30T12:05:04Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/turn211/ProDarkThemePreferencePack": {
+    "pushed_at": "2024-02-10T02:03:39Z",
+    "stargazers_count": 7,
+    "forks_count": 1,
+    "open_issues_count": 0,
+    "network_count": 1,
+    "subscribers_count": 1,
+    "created_at": "2022-05-17T20:19:13Z",
+    "license": "GPL-2.0"
+  },
+  "https://github.com/Addon-Shelter/Polyhedra": {
+    "pushed_at": "2026-01-06T04:34:45Z",
+    "stargazers_count": 0,
+    "forks_count": 0,
+    "open_issues_count": 0,
+    "network_count": 7,
+    "subscribers_count": 0,
+    "created_at": "2025-09-14T21:13:21Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/cihologramas/freecad-pyoptools": {
+    "pushed_at": "2026-02-25T16:04:14Z",
+    "stargazers_count": 24,
+    "forks_count": 6,
+    "open_issues_count": 3,
+    "network_count": 6,
+    "subscribers_count": 6,
+    "created_at": "2017-07-06T20:14:14Z",
+    "license": "GPL-3.0"
+  },
+  "https://salsa.debian.org/mess42/pyrate": {},
+  "https://github.com/EdgarJRobles/quetzal": {
+    "pushed_at": "2026-03-04T03:40:36Z",
+    "stargazers_count": 25,
+    "forks_count": 4,
+    "open_issues_count": 6,
+    "network_count": 22,
+    "subscribers_count": 4,
+    "created_at": "2020-05-03T17:12:21Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/DanMiel/QuickMeasure": {
+    "pushed_at": "2025-08-07T05:55:20Z",
+    "stargazers_count": 9,
+    "forks_count": 7,
+    "open_issues_count": 4,
+    "network_count": 7,
+    "subscribers_count": 2,
+    "created_at": "2022-10-04T18:23:40Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/microelly2/reconstruction": {
+    "pushed_at": "2017-04-23T11:22:54Z",
+    "stargazers_count": 10,
+    "forks_count": 2,
+    "open_issues_count": 3,
+    "network_count": 2,
+    "subscribers_count": 3,
+    "created_at": "2016-03-09T15:24:30Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/amrit3701/FreeCAD-Reinforcement": {
+    "pushed_at": "2026-02-22T18:00:20Z",
+    "stargazers_count": 61,
+    "forks_count": 21,
+    "open_issues_count": 60,
+    "network_count": 21,
+    "subscribers_count": 7,
+    "created_at": "2017-04-09T15:07:02Z"
+  },
+  "https://github.com/triplus/RemBench": {
+    "pushed_at": "2020-02-15T11:13:57Z",
+    "stargazers_count": 4,
+    "forks_count": 0,
+    "open_issues_count": 1,
+    "network_count": 0,
+    "subscribers_count": 1,
+    "created_at": "2020-02-14T18:21:36Z"
+  },
+  "https://github.com/FreeCAD/FreeCAD-render": {
+    "pushed_at": "2026-01-19T20:34:52Z",
+    "stargazers_count": 214,
+    "forks_count": 40,
+    "open_issues_count": 19,
+    "network_count": 40,
+    "subscribers_count": 13,
+    "created_at": "2017-12-17T20:47:35Z"
+  },
+  "https://github.com/furti/FreeCAD-Reporting": {
+    "pushed_at": "2023-12-03T03:04:06Z",
+    "stargazers_count": 18,
+    "forks_count": 6,
+    "open_issues_count": 9,
+    "network_count": 6,
+    "subscribers_count": 3,
+    "created_at": "2019-01-10T19:17:04Z",
+    "license": "MIT"
+  },
+  "https://github.com/Maaphoo/Retr3d": {
+    "pushed_at": "2018-12-17T04:56:03Z",
+    "stargazers_count": 30,
+    "forks_count": 14,
+    "open_issues_count": 10,
+    "network_count": 14,
+    "subscribers_count": 7,
+    "created_at": "2015-01-31T10:57:12Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/HakanSeven12/Road": {
+    "pushed_at": "2026-03-06T19:28:58Z",
+    "stargazers_count": 36,
+    "forks_count": 9,
+    "open_issues_count": 7,
+    "network_count": 9,
+    "subscribers_count": 3,
+    "created_at": "2025-01-01T10:03:43Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/davesrocketshop/Rocket": {
+    "pushed_at": "2026-01-29T21:02:41Z",
+    "stargazers_count": 70,
+    "forks_count": 14,
+    "open_issues_count": 8,
+    "network_count": 14,
+    "subscribers_count": 4,
+    "created_at": "2021-02-01T06:46:08Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/APEbbers/SaveAndRestore": {
+    "pushed_at": "2025-12-07T17:15:25Z",
+    "stargazers_count": 7,
+    "forks_count": 1,
+    "open_issues_count": 2,
+    "network_count": 1,
+    "subscribers_count": 1,
+    "created_at": "2025-04-23T20:27:57Z",
+    "license": "MIT"
+  },
+  "https://github.com/APEbbers/SearchBar": {
+    "pushed_at": "2025-10-11T21:06:10Z",
+    "stargazers_count": 5,
+    "forks_count": 4,
+    "open_issues_count": 7,
+    "network_count": 9,
+    "subscribers_count": 0,
+    "created_at": "2024-11-07T21:46:23Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/triplus/SelectorToolbar": {
+    "pushed_at": "2024-02-25T21:52:40Z",
+    "stargazers_count": 8,
+    "forks_count": 4,
+    "open_issues_count": 3,
+    "network_count": 4,
+    "subscribers_count": 3,
+    "created_at": "2017-03-18T21:15:13Z"
+  },
+  "https://github.com/robertmassaioli/shapestrings": {
+    "pushed_at": "2026-02-03T09:05:14Z",
+    "stargazers_count": 4,
+    "forks_count": 1,
+    "open_issues_count": 2,
+    "network_count": 1,
+    "subscribers_count": 0,
+    "created_at": "2025-12-21T11:05:37Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/shaise/FreeCAD_SheetMetal": {
+    "pushed_at": "2026-03-05T18:31:29Z",
+    "stargazers_count": 291,
+    "forks_count": 76,
+    "open_issues_count": 93,
+    "network_count": 76,
+    "subscribers_count": 11,
+    "created_at": "2015-06-12T13:56:26Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/FreeCAD/freecad.ship": {
+    "pushed_at": "2025-07-04T08:30:35Z",
+    "stargazers_count": 45,
+    "forks_count": 28,
+    "open_issues_count": 6,
+    "network_count": 28,
+    "subscribers_count": 24,
+    "created_at": "2018-11-08T19:40:38Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/triplus/ShortCuts": {
+    "pushed_at": "2023-04-18T21:30:03Z",
+    "stargazers_count": 9,
+    "forks_count": 4,
+    "open_issues_count": 9,
+    "network_count": 4,
+    "subscribers_count": 3,
+    "created_at": "2016-05-07T17:47:37Z"
+  },
+  "https://github.com/edwardvmills/Silk": {
+    "pushed_at": "2026-02-09T04:19:47Z",
+    "stargazers_count": 82,
+    "forks_count": 15,
+    "open_issues_count": 4,
+    "network_count": 15,
+    "subscribers_count": 9,
+    "created_at": "2017-05-20T22:03:17Z"
+  },
+  "https://github.com/limikael/freecad-slic3r-tools": {
+    "pushed_at": "2023-12-03T02:53:53Z",
+    "stargazers_count": 17,
+    "forks_count": 4,
+    "open_issues_count": 8,
+    "network_count": 4,
+    "subscribers_count": 2,
+    "created_at": "2019-05-08T08:15:34Z"
+  },
+  "https://github.com/luzpaz/SlopedPlanesMacro": {
+    "pushed_at": "2020-03-01T00:13:14Z",
+    "stargazers_count": 4,
+    "forks_count": 4,
+    "open_issues_count": 0,
+    "network_count": 4,
+    "subscribers_count": 3,
+    "created_at": "2017-11-14T18:11:20Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/Francisco-Rosa/Solar": {
+    "pushed_at": "2026-03-06T18:28:43Z",
+    "stargazers_count": 11,
+    "forks_count": 4,
+    "open_issues_count": 3,
+    "network_count": 4,
+    "subscribers_count": 0,
+    "created_at": "2025-07-13T22:22:43Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/MortenVajhoj/StandardBeams": {
+    "pushed_at": "2026-01-23T21:59:20Z",
+    "stargazers_count": 6,
+    "forks_count": 1,
+    "open_issues_count": 0,
+    "network_count": 1,
+    "subscribers_count": 0,
+    "created_at": "2026-01-14T16:25:06Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/ebrahimraeyat/momen": {
+    "pushed_at": "2025-01-04T07:03:09Z",
+    "stargazers_count": 8,
+    "forks_count": 4,
+    "open_issues_count": 0,
+    "network_count": 4,
+    "subscribers_count": 2,
+    "created_at": "2020-08-28T19:59:07Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/bilbaomakers/StemfieWB": {
+    "pushed_at": "2025-03-15T21:34:59Z",
+    "stargazers_count": 21,
+    "forks_count": 5,
+    "open_issues_count": 4,
+    "network_count": 5,
+    "subscribers_count": 7,
+    "created_at": "2021-07-06T18:14:36Z",
+    "license": "GPL-2.0"
+  },
+  "https://github.com/maykowsm/StructureTools": {
+    "pushed_at": "2025-09-20T00:34:47Z",
+    "stargazers_count": 27,
+    "forks_count": 11,
+    "open_issues_count": 11,
+    "network_count": 11,
+    "subscribers_count": 5,
+    "created_at": "2025-02-23T02:30:24Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/mnesarco/SvgWorkbench": {
+    "pushed_at": "2026-02-13T15:35:01Z",
+    "stargazers_count": 12,
+    "forks_count": 3,
+    "open_issues_count": 1,
+    "network_count": 3,
+    "subscribers_count": 3,
+    "created_at": "2025-02-07T17:04:09Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/FreeCAD/FreeCAD-symbols": {
+    "pushed_at": "2025-03-06T13:42:49Z",
+    "stargazers_count": 37,
+    "forks_count": 17,
+    "open_issues_count": 5,
+    "network_count": 17,
+    "subscribers_count": 29,
+    "created_at": "2015-04-21T22:14:34Z"
+  },
+  "https://github.com/triplus/TabBar": {
+    "pushed_at": "2019-03-18T21:46:17Z",
+    "stargazers_count": 9,
+    "forks_count": 3,
+    "open_issues_count": 1,
+    "network_count": 3,
+    "subscribers_count": 5,
+    "created_at": "2016-01-09T15:45:10Z"
+  },
+  "https://github.com/FreeCAD/FreeCAD-Telemetry": {
+    "pushed_at": "2026-03-01T16:17:10Z",
+    "stargazers_count": 11,
+    "forks_count": 4,
+    "open_issues_count": 7,
+    "network_count": 4,
+    "subscribers_count": 8,
+    "created_at": "2025-02-16T19:33:01Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/FC-FBXL5/Templater": {
+    "pushed_at": "2025-10-06T13:34:21Z",
+    "stargazers_count": 1,
+    "forks_count": 0,
+    "open_issues_count": 0,
+    "network_count": 0,
+    "subscribers_count": 0,
+    "created_at": "2025-06-20T14:58:35Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/mwganson/ThreadProfile": {
+    "pushed_at": "2026-01-02T18:16:08Z",
+    "stargazers_count": 67,
+    "forks_count": 14,
+    "open_issues_count": 28,
+    "network_count": 14,
+    "subscribers_count": 2,
+    "created_at": "2019-07-22T17:38:21Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/APEbbers/TitleBlock-WB": {
+    "pushed_at": "2026-01-19T19:54:42Z",
+    "stargazers_count": 3,
+    "forks_count": 0,
+    "open_issues_count": 2,
+    "network_count": 0,
+    "subscribers_count": 2,
+    "created_at": "2023-10-07T17:33:34Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/wood-galaxy/FreeCAD-Timber": {
+    "pushed_at": "2019-07-11T08:15:46Z",
+    "stargazers_count": 19,
+    "forks_count": 9,
+    "open_issues_count": 4,
+    "network_count": 9,
+    "subscribers_count": 4,
+    "created_at": "2015-09-12T10:42:00Z",
+    "license": "GPL-2.0"
+  },
+  "https://github.com/KeithSloan/toSketch": {
+    "pushed_at": "2026-01-04T14:52:35Z",
+    "stargazers_count": 17,
+    "forks_count": 3,
+    "open_issues_count": 8,
+    "network_count": 3,
+    "subscribers_count": 2,
+    "created_at": "2021-01-02T17:42:58Z",
+    "license": "GPL-2.0"
+  },
+  "https://github.com/Taack/taack-plm-freecad": {
+    "pushed_at": "2025-11-12T08:15:59Z",
+    "stargazers_count": 15,
+    "forks_count": 3,
+    "open_issues_count": 1,
+    "network_count": 3,
+    "subscribers_count": 1,
+    "created_at": "2023-02-09T02:20:37Z",
+    "license": "GPL-2.0"
+  },
+  "https://github.com/triplus/ToolbarStyle": {
+    "pushed_at": "2019-03-18T21:46:41Z",
+    "stargazers_count": 3,
+    "forks_count": 0,
+    "open_issues_count": 0,
+    "network_count": 0,
+    "subscribers_count": 1,
+    "created_at": "2018-01-31T17:26:54Z"
+  },
+  "https://github.com/Pegoku/freecad-wakatime": {
+    "pushed_at": "2025-09-24T15:21:33Z",
+    "stargazers_count": 4,
+    "forks_count": 6,
+    "open_issues_count": 1,
+    "network_count": 6,
+    "subscribers_count": 1,
+    "created_at": "2025-01-05T12:54:57Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/mnesarco/Vars": {
+    "pushed_at": "2025-09-11T14:58:41Z",
+    "stargazers_count": 14,
+    "forks_count": 2,
+    "open_issues_count": 2,
+    "network_count": 2,
+    "subscribers_count": 2,
+    "created_at": "2025-05-19T22:24:54Z",
+    "license": "LGPL-3.0"
+  },
+  "https://github.com/yorikvanhavre/WebTools": {
+    "pushed_at": "2025-09-08T14:18:58Z",
+    "stargazers_count": 25,
+    "forks_count": 18,
+    "open_issues_count": 10,
+    "network_count": 18,
+    "subscribers_count": 3,
+    "created_at": "2017-04-08T21:17:51Z"
+  },
+  "https://github.com/Palmstroemen/WB_Organizer": {
+    "pushed_at": "2025-01-20T17:17:16Z",
+    "stargazers_count": 5,
+    "forks_count": 2,
+    "open_issues_count": 4,
+    "network_count": 2,
+    "subscribers_count": 1,
+    "created_at": "2024-01-26T18:31:45Z"
+  },
+  "https://github.com/davesrocketshop/Woods.git": {
+    "pushed_at": "2026-01-06T11:46:49Z",
+    "stargazers_count": 7,
+    "forks_count": 1,
+    "open_issues_count": 1,
+    "network_count": 1,
+    "subscribers_count": 1,
+    "created_at": "2025-06-26T03:59:40Z",
+    "license": "LGPL-2.1"
+  },
+  "https://github.com/dprojects/Woodworking": {
+    "pushed_at": "2026-02-23T21:35:18Z",
+    "stargazers_count": 446,
+    "forks_count": 39,
+    "open_issues_count": 3,
+    "network_count": 39,
+    "subscribers_count": 17,
+    "created_at": "2022-02-25T19:09:51Z",
+    "license": "MIT"
+  },
+  "https://github.com/Rentlau/WorkFeature": {
+    "pushed_at": "2024-12-18T20:12:15Z",
+    "stargazers_count": 28,
+    "forks_count": 8,
+    "open_issues_count": 3,
+    "network_count": 9,
+    "subscribers_count": 13,
+    "created_at": "2015-02-15T07:37:20Z"
+  },
+  "https://github.com/Rentlau/WorkFeature-WB": {
+    "pushed_at": "2025-01-01T09:05:50Z",
+    "stargazers_count": 13,
+    "forks_count": 5,
+    "open_issues_count": 6,
+    "network_count": 5,
+    "subscribers_count": 2,
+    "created_at": "2018-01-29T05:37:57Z",
+    "license": "GPL-3.0"
+  },
+  "https://github.com/Mambix/FreeCAD-yaml-workbench": {
+    "pushed_at": "2025-09-13T02:09:27Z",
+    "stargazers_count": 11,
+    "forks_count": 3,
+    "open_issues_count": 2,
+    "network_count": 3,
+    "subscribers_count": 2,
+    "created_at": "2017-11-26T16:42:42Z",
+    "license": "LGPL-2.1"
+  }
+}

@@ -2,8 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:collection/collection.dart';
+import 'package:freecad_launcher/config.dart';
+import 'package:freecad_launcher/service/download.dart';
+import 'package:freecad_launcher/util/hashlib.dart';
 import 'package:xml/xml.dart';
 import 'package:recase/recase.dart';
+import 'package:archive/archive.dart';
 
 /// A single entry (branch / release) for an addon in the catalog cache.
 class AddonEntry {
@@ -15,12 +19,14 @@ class AddonEntry {
   final String? note;
   final String? freecadMin;
   final String? freecadMax;
-  final String? lastUpdateTime;
+  final DateTime? lastUpdateTime;
   final String? relativeCachePath;
   final AddonMetadata? metadata;
   late final Set<String> tags = metadata?.tags ?? {};
   late final String tagsDisplay = tags.take(5).map((s) => "#${s.toLowerCase()}").join(", ");
   late final String minPython = metadata?.minPython ?? '3.10';
+  late final sha1 = sha1Hash('$repository$zipUrl$gitRef${lastUpdateTime ?? ""}');
+  late final String downloadUrl = '${mainConfig.addonsDownloadBaseUrl}$relativeCachePath';
 
   AddonEntry({
     required this.repository,
@@ -46,7 +52,17 @@ class AddonEntry {
       note: json['note'] as String?,
       freecadMin: _parseVersion(json['freecad_min']),
       freecadMax: _parseVersion(json['freecad_max']),
-      lastUpdateTime: json['last_update_time'] as String?,
+      lastUpdateTime: () {
+        final str = json['last_update_time'] as String?;
+        if (str == null) {
+          return null;
+        }
+        try {
+          return DateTime.parse(str);
+        } catch (e) {
+          return null;
+        }
+      }(),
       relativeCachePath: json['relative_cache_path'] as String?,
       metadata: json['metadata'] != null
           ? AddonMetadata.fromJson(json['metadata'] as Map<String, dynamic>)
@@ -70,9 +86,11 @@ class AddonEntry {
 
 enum AddonPersonRole { author, maintainer, contributor }
 
+enum AddonContent { workbench, macro, preferencePack, bundle, other }
+
 class AddonPerson {
   final String name;
-  final String? contact;
+  final String contact;
   final List<AddonPersonRole> roles;
   const AddonPerson(this.name, this.contact, [this.roles = const []]);
 }
@@ -84,7 +102,9 @@ class AddonMetadata {
   final String? version;
   final String? license;
   final List<AddonPerson> people;
-  final AddonPerson? author;
+  late final AddonPerson? author =
+      people.where((p) => p.roles.contains(AddonPersonRole.author)).firstOrNull ??
+      people.firstOrNull;
   final String minPython;
 
   /// Tags from the package_xml content section (e.g. 'assembly', 'bom', '3d').
@@ -96,17 +116,20 @@ class AddonMetadata {
   /// Whether [iconBytes] contains SVG data (vs raster PNG/etc).
   final bool iconIsSvg;
 
+  final List<AddonContent> declaredContent;
+
   AddonMetadata({
     this.displayName,
     this.description,
     this.version,
     this.license,
+    this.declaredContent = const [],
     this.tags = const {},
     this.iconBytes,
     this.iconIsSvg = false,
     this.people = const [],
     this.minPython = '3.10',
-  }) : author = people.where((p) => p.roles.contains(AddonPersonRole.author)).firstOrNull;
+  });
 
   factory AddonMetadata.fromJson(Map<String, dynamic> json) {
     final packageXml = json['package_xml'] as String? ?? '';
@@ -135,6 +158,7 @@ class AddonMetadata {
       iconIsSvg: iconIsSvg,
       people: _parsePeople(xml),
       minPython: _getFirstTagValue(xml, 'pythonmin') ?? '3.10',
+      declaredContent: _parseContent(xml),
     );
   }
 
@@ -158,9 +182,23 @@ class AddonMetadata {
     if (doc == null) return {};
     return doc
         .findAllElements('tag')
-        .map((e) => e.innerText.trim().toLowerCase())
+        .map((e) => e.innerText.trim())
         .where((t) => t.isNotEmpty)
+        .map((t) => t.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_-\s]+'), ""))
+        .where((t) => t.isNotEmpty)
+        .map((t) => t.replaceAll(RegExp(r'\s+'), '-'))
         .toSet();
+  }
+
+  static List<AddonContent> _parseContent(XmlDocument? doc) {
+    if (doc == null) return [];
+    return [
+      if (doc.findAllElements('workbench').isNotEmpty) AddonContent.workbench,
+      if (doc.findAllElements('macro').isNotEmpty) AddonContent.macro,
+      if (doc.findAllElements('preferencepack').isNotEmpty) AddonContent.preferencePack,
+      if (doc.findAllElements('bundle').isNotEmpty) AddonContent.bundle,
+      if (doc.findAllElements('other').isNotEmpty) AddonContent.other,
+    ];
   }
 
   static List<AddonPerson> _parsePeople(XmlDocument? doc) {
@@ -179,7 +217,11 @@ class AddonMetadata {
           _ => AddonPersonRole.contributor,
         };
       }).toList();
-      return AddonPerson(e.key.titleCase, e.value.first.getAttribute("email"), roles);
+      return AddonPerson(
+        e.key.titleCase,
+        e.value.first.getAttribute("email") ?? 'No contact',
+        roles,
+      );
     });
     return people.toList();
   }
@@ -188,40 +230,6 @@ class AddonMetadata {
   static bool _looksLikeSvg(Uint8List bytes) {
     final str = String.fromCharCodes(bytes.length > 256 ? bytes.sublist(0, 256) : bytes).trimLeft();
     return str.startsWith('<?xml') || str.startsWith('<svg') || str.startsWith('<!');
-  }
-
-  /// Simple tag extractor — good enough for the flat package_xml structure.
-  static String? _extractXmlTag(String xml, String tag) {
-    final open = '<$tag';
-    final close = '</$tag>';
-    final start = xml.indexOf(open);
-    if (start == -1) return null;
-    // Skip past the opening tag (may have attributes).
-    final contentStart = xml.indexOf('>', start);
-    if (contentStart == -1) return null;
-    final end = xml.indexOf(close, contentStart);
-    if (end == -1) return null;
-    return xml.substring(contentStart + 1, end).trim();
-  }
-
-  /// Extracts all occurrences of `<tag>value</tag>` from [xml].
-  static List<String> _extractAllXmlTags(String xml, String tag) {
-    final open = '<$tag';
-    final close = '</$tag>';
-    final results = <String>[];
-    var searchFrom = 0;
-    while (true) {
-      final start = xml.indexOf(open, searchFrom);
-      if (start == -1) break;
-      final contentStart = xml.indexOf('>', start);
-      if (contentStart == -1) break;
-      final end = xml.indexOf(close, contentStart);
-      if (end == -1) break;
-      final value = xml.substring(contentStart + 1, end).trim();
-      if (value.isNotEmpty) results.add(value);
-      searchFrom = end + close.length;
-    }
-    return results;
   }
 }
 
@@ -233,7 +241,7 @@ class Addon {
   late final String displayName = primary.metadata?.displayName ?? id;
   late final AddonPerson? author = primary.metadata?.author;
   late final String? version = primary.metadata?.version;
-  late final String? lastUpdate = primary.lastUpdateTime;
+  late final DateTime? lastUpdate = primary.lastUpdateTime;
   late final Set<String> tags = primary.tags;
   late final String tagsDisplay = primary.tagsDisplay;
   late final String minPython = primary.minPython;
@@ -244,6 +252,7 @@ class Addon {
     if (note != null && note.isNotEmpty) return note;
     return '${primary.branchDisplayName} — ${primary.repository}';
   }();
+  late final List<AddonContent> declaredContent = primary.metadata?.declaredContent ?? const [];
 
   Addon({required this.id, required this.entries});
 }
@@ -253,6 +262,26 @@ class AddonCatalog {
   final List<Addon> addons;
 
   const AddonCatalog(this.addons);
+
+  static Future<AddonCatalog> download(DownloadManager downloadManager) async {
+    final cache = await downloadManager.download(
+      mainConfig.addonsCatalogUrl,
+      'addons-catalog.zip',
+      mainConfig.addonsCatalogTTL,
+    );
+    final input = InputFileStream(cache);
+    try {
+      final archive = ZipDecoder().decodeStream(input);
+      final file = archive.find('addon_catalog_cache.json');
+      if (file == null) {
+        throw Exception('addon_catalog_cache.json not found in archive');
+      }
+      final json = utf8.decode(file.readBytes()!);
+      return AddonCatalog.parseString(json);
+    } finally {
+      input.closeSync();
+    }
+  }
 
   /// Load and parse the catalog from a JSON file on disk.
   static Future<AddonCatalog> loadFromFile(String path) async {

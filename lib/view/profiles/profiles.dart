@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
-import '../controller.dart';
+import '../../controller/main.dart';
 
 class ProfileManagerView extends StatelessWidget {
   final ProfileController controller;

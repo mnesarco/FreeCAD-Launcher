@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:freecad_launcher/service/database.dart';
+import 'package:freecad_launcher/view/icons.dart';
+import 'package:freecad_launcher/view/widgets.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:file_selector/file_selector.dart';
-
-import '../database.dart';
-import 'icons.dart';
-import 'widgets.dart';
 
 /// The value returned by [AppFormDialog] on submission.
 class AppFormResult {

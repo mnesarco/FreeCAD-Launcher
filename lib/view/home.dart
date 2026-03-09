@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:freecad_launcher/controller/main.dart';
+import 'package:freecad_launcher/view/addons/catalog.dart';
+import 'package:freecad_launcher/view/apps/apps.dart';
+import 'package:freecad_launcher/view/icons.dart';
+import 'package:freecad_launcher/view/profiles/profiles.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'icons.dart';
-
-import '../addon_catalog.dart';
-import '../controller.dart';
-import 'addons.dart';
-import 'apps.dart';
-import 'profiles.dart';
 
 class HomeView extends StatefulWidget {
   final MainController controller;
@@ -22,62 +20,106 @@ class _HomeViewState extends State<HomeView> {
   @override
   void dispose() {
     _themeMode.dispose();
+    widget.controller.dispose();
     super.dispose();
+  }
+
+  AppBar _appBar(ThemeMode mode) {
+    return AppBar(
+      leading: Icon(FreeCADIcons.freecad),
+      title: const Text("FreeCAD Launcher"),
+      actions: [
+        IconButton(
+          icon: Icon(mode == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode),
+          tooltip: mode == ThemeMode.dark ? 'Switch to light mode' : 'Switch to dark mode',
+          onPressed: () {
+            _themeMode.value = mode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+          },
+        ),
+        const SizedBox(width: 8),
+      ],
+      bottom: const TabBar(
+        tabs: [
+          Tab(icon: Icon(Icons.rocket_launch), text: "Launchers"),
+          Tab(icon: Icon(Icons.folder), text: "Profiles"),
+          Tab(icon: Icon(FreeCADIcons.freecad), text: "Applications"),
+          Tab(icon: Icon(Icons.extension), text: "Addons"),
+          Tab(icon: Icon(Icons.auto_fix_high), text: "Macros"),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final mode = _themeMode.watch(context);
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        colorSchemeSeed: Colors.blueGrey,
-      ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorSchemeSeed: Colors.blueGrey,
-      ),
-      themeMode: mode,
-      home: DefaultTabController(
-        animationDuration: Duration.zero,
-        length: 4,
-        child: Scaffold(
-          appBar: AppBar(
-            leading: Icon(FreeCADIcons.freecad),
-            title: const Text("FreeCAD Launcher"),
-            actions: [
-              IconButton(
-                icon: Icon(mode == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode),
-                tooltip: mode == ThemeMode.dark ? 'Switch to light mode' : 'Switch to dark mode',
-                onPressed: () {
-                  _themeMode.value = mode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
-                },
-              ),
-              const SizedBox(width: 8),
-            ],
-            bottom: const TabBar(
-              tabs: [
-                Tab(icon: Icon(Icons.rocket_launch), text: "Launchers"),
-                Tab(icon: Icon(Icons.folder), text: "Profiles"),
-                Tab(icon: Icon(FreeCADIcons.freecad), text: "Applications"),
-                Tab(icon: Icon(Icons.extension), text: "Addons"),
+    return MainControllerScope(
+      controller: widget.controller,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          useMaterial3: true,
+          brightness: Brightness.light,
+          colorSchemeSeed: Colors.blueGrey,
+        ),
+        darkTheme: ThemeData(
+          useMaterial3: true,
+          brightness: Brightness.dark,
+          colorSchemeSeed: Colors.blueGrey,
+        ),
+        themeMode: mode,
+        home: DefaultTabController(
+          animationDuration: Duration.zero,
+          length: 5,
+          child: Scaffold(
+            appBar: _appBar(mode),
+            body: TabBarView(
+              children: [
+                Container(),
+                ProfileManagerView(controller: widget.controller.profiles),
+                AppManagerView(controller: widget.controller.apps),
+                AddonCatalogView(controller: widget.controller),
+                Container(),
               ],
             ),
-          ),
-          body: TabBarView(
-            children: [
-              Container(),
-              ProfileManagerView(controller: widget.controller.profiles),
-              AppManagerView(controller: widget.controller.apps),
-              AddonCatalogView(
-                catalogFuture: AddonCatalog.loadFromFile('addon_catalog_cache.json'),
-              ),
-            ],
+            bottomNavigationBar: _StatusBar(),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _StatusBar extends StatelessWidget {
+  const _StatusBar();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dm = MainController.of(context).downloadManager;
+    final downloads = dm.activeDownloads.watch(context);
+
+    return Container(
+      height: 28,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        border: Border(top: BorderSide(color: theme.dividerColor, width: 0.5)),
+      ),
+      child: Row(
+        children: [
+          if (downloads.isNotEmpty) ...[
+            SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2)),
+            const SizedBox(width: 8),
+            Text(
+              '${downloads.length} download${downloads.length == 1 ? '' : 's'} in progress: ${downloads.first}',
+              style: theme.textTheme.labelSmall,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          const Spacer(),
+          Text('FreeCAD Launcher', style: theme.textTheme.labelSmall),
+        ],
       ),
     );
   }

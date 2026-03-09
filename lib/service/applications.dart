@@ -1,5 +1,6 @@
 import 'dart:io';
-import 'path.dart';
+
+import 'package:freecad_launcher/util/path.dart';
 import 'package:snapd/snapd.dart';
 import 'package:path/path.dart' as p;
 
@@ -294,14 +295,6 @@ class SystemAppService extends AppService {}
 class AppImageService extends AppService {}
 
 */
-
-String _resolveWorkingDir(String exe) {
-  final file = File(exe);
-  if (file.existsSync()) {
-    return file.parent.path;
-  }
-  return Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '.';
-}
 
 Future<bool> _isExecutable(File file) async {
   final stat = await file.stat();
