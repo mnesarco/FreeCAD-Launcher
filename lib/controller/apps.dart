@@ -19,21 +19,48 @@ class AppController {
   }
 
   Future<void> importInstalledApps() async {
-    FlatpakService flatpak = FlatpakService();
-    final result = await flatpak.find();
-    switch (result) {
-      case Success(:final data):
-        final cwd = await Path.home();
-        for (final app in data) {
-          try {
-            final target = FlatpakTarget.fromString(app);
-            add('Flatpak ${target.install} ${target.version}', 'Flatpak', app, '', cwd.str);
-          } catch (ex) {
-            // Already imported
+    // -- Flatpak
+    {
+      FlatpakService flatpak = FlatpakService();
+      final result = await flatpak.find();
+      switch (result) {
+        case Success(:final data):
+          final cwd = await Path.home();
+          for (final app in data) {
+            try {
+              final target = FlatpakTarget.fromString(app);
+              add('Flatpak ${target.install} ${target.version}', 'Flatpak', app, '', cwd.str);
+            } catch (ex) {
+              // Already imported
+            }
           }
-        }
-      case _:
-      // No flatpaks
+        case _:
+        // No flatpaks
+      }
+    }
+
+    // -- Snap
+    {
+      SnapService snap = SnapService();
+      final result = await snap.find();
+      switch (result) {
+        case Success(:final data):
+          final cwd = await Path.home();
+          for (final app in data) {
+            switch (await snap.getVersion(app)) {
+              case Success(:final data):
+                try {
+                  add('Snap $data', 'Snap', app, '', cwd.str);
+                } catch (ex) {
+                  // Already imported
+                }
+              case _:
+              // Version not found
+            }
+          }
+        case _:
+        // No snaps
+      }
     }
   }
 }

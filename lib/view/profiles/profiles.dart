@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:freecad_launcher/view/widgets.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 import '../../controller/main.dart';
@@ -15,13 +16,7 @@ class ProfileManagerView extends StatelessWidget {
 
     return Column(
       children: [
-        TextField(
-          decoration: const InputDecoration(
-            hintText: 'Filter by name...',
-            prefixIcon: Icon(Icons.search),
-          ),
-          onChanged: (val) => controller.searchFilter.value = val,
-        ),
+        SearchField(value: controller.searchFilter, hintText: 'Filter by name...'),
         Expanded(
           child: state.map(
             data: (list) => ListView.builder(

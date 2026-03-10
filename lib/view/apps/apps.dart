@@ -37,6 +37,7 @@ class AppManagerView extends StatelessWidget {
     // ignore: unused_local_variable
     final search = controller.searchFilter.watch(context);
     final state = controller.items.watch(context);
+    final theme = Theme.of(context);
 
     return Column(
       children: [
@@ -46,14 +47,14 @@ class AppManagerView extends StatelessWidget {
             data: (list) => ListView.builder(
               itemCount: list.length,
               itemBuilder: (context, i) => ListTile(
-                title: Text(list[i].name),
+                title: Text(list[i].name, style: theme.textTheme.headlineSmall),
                 subtitle: Text(list[i].kind),
-                leading: Icon(appKindIcon(list[i].kind)),
+                leading: Icon(appKindIcon(list[i].kind), size: 40),
                 onTap: () => _openEditDialog(context, list[i]),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () => controller.db.deleteApp(list[i].id),
-                ),
+                // trailing: IconButton(
+                //   icon: const Icon(Icons.delete),
+                //   onPressed: () => controller.db.deleteApp(list[i].id),
+                // ),
               ),
             ),
             loading: () => const Center(child: CircularProgressIndicator()),
