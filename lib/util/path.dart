@@ -51,6 +51,9 @@ class Path {
   }
 
   Path operator /(dynamic other) {
+    if (other == null) {
+      return this;
+    }
     if (other is String) {
       return Path(p.join(str, other));
     }

@@ -24,6 +24,7 @@ class MainController {
     db: db,
     catalog: addonsCatalog,
   );
+  late final ProfileDirectoryController profileDirectoryController = ProfileDirectoryController();
 
   MainController(this.db);
 

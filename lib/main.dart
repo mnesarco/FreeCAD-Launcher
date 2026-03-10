@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'service/database.dart';
 import 'controller/main.dart';
@@ -6,6 +7,10 @@ import 'view/home.dart';
 import 'service/applications.dart';
 
 void main() async {
+  driftRuntimeOptions.defaultSerializer = const ValueSerializer.defaults(
+    serializeDateTimeValuesAsString: true,
+  );
+
   Database db = Database();
   MainController controller = MainController(db);
 

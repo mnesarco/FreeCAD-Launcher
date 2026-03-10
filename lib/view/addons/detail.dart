@@ -208,22 +208,17 @@ class AddonDetailSheet extends StatelessWidget {
     ];
   }
 
-  Future<void> _upgrade(
-    AddonEntry entry,
-    AddonDownloadController downloadedAddons,
-    DownloadManager dm,
-  ) async {}
+  Future<void> _upgrade(AddonEntry entry, MainController controller) async {}
 
-  Future<void> _download(
-    AddonEntry entry,
-    AddonDownloadController downloadedAddons,
-    DownloadManager dm, {
-    int ttl = -1,
-  }) async {
-    final fileName = await dm.download(entry.downloadUrl, '${entry.sha1}.zip', ttl);
+  Future<void> _download(AddonEntry entry, MainController controller, {int ttl = -1}) async {
+    final fileName = await controller.downloadManager.download(
+      entry.downloadUrl,
+      '${entry.sha1}.zip',
+      ttl,
+    );
     final file = File(fileName);
     final downloadAt = await file.lastModified();
-    downloadedAddons.add(
+    final download = await controller.downloadedAddons.add(
       addon.id,
       entry.repository,
       entry.zipUrl,
@@ -233,6 +228,8 @@ class AddonDetailSheet extends StatelessWidget {
       file.uri.pathSegments.last,
       downloadAt,
     );
+    final Profile p = Profile(id: 1, name: 'XXX', args: '', cwd: '');
+    await controller.profileDirectoryController.deploy(p, download);
   }
 
   Widget _chipPythonCompat(AddonEntry entry, ThemeData theme) {
@@ -296,7 +293,7 @@ class AddonDetailSheet extends StatelessWidget {
               children: [
                 if (isDownloading)
                   Chip(label: Text('Downloading...'), avatar: CircularProgressIndicator()),
-                if (!isDownloading) _downloadActions(entry, downloadedAddons, dm, updates),
+                if (!isDownloading) _downloadActions(entry, controller, updates),
                 if (dm.failedDownload(entry.downloadUrl)) _failedDownload(theme),
                 if (compat.isNotEmpty) _freecadCompat(compat, theme),
                 _chipPythonCompat(entry, theme),
@@ -310,18 +307,17 @@ class AddonDetailSheet extends StatelessWidget {
 
   Widget _downloadActions(
     AddonEntry entry,
-    AddonDownloadController downloadedAddons,
-    DownloadManager dm,
+    MainController controller,
     Future<Map<String, AddonUpdate>> updates,
   ) => FutureBuilder(
-    future: downloadedAddons.findBranch(addon.id, entry.gitRef),
+    future: controller.downloadedAddons.findBranch(addon.id, entry.gitRef),
     builder: (context, snapshot) {
       if (snapshot.hasError || snapshot.connectionState == ConnectionState.waiting) {
         return Container();
       }
       if (snapshot.data == null) {
         return FilledButton.icon(
-          onPressed: () async => await _download(entry, downloadedAddons, dm),
+          onPressed: () async => await _download(entry, controller),
           icon: Icon(Icons.download, size: 16),
           label: Text('Download'),
         );
@@ -336,13 +332,13 @@ class AddonDetailSheet extends StatelessWidget {
           }
           if (snapshot.data![entry.sha1] == null) {
             return FilledButton.icon(
-              onPressed: () async => await _download(entry, downloadedAddons, dm, ttl: 0),
+              onPressed: () async => await _download(entry, controller, ttl: 0),
               icon: Icon(Icons.download, size: 16),
               label: Text('Force Re-Download'),
             );
           }
           return FilledButton.icon(
-            onPressed: () async => await _upgrade(entry, downloadedAddons, dm),
+            onPressed: () async => await _upgrade(entry, controller),
             icon: Icon(Icons.update, size: 16),
             label: Text('Upgrade'),
           );

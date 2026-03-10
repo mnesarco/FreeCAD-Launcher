@@ -59,7 +59,7 @@ class AddonDownloadController {
 
   AddonDownloadController(this.db);
 
-  void add(
+  Future<DownloadedAddon> add(
     String name,
     String repoUrl,
     String zipUrl,
@@ -68,18 +68,18 @@ class AddonDownloadController {
     DateTime updatedAt,
     String fileName,
     DateTime downloadedAt,
-  ) {
-    db.addAddonDownload(
-      DownloadedAddonsCompanion.insert(
-        name: name,
-        repoUrl: Value.absentIfNull(repoUrl),
-        zipUrl: Value.absentIfNull(zipUrl),
-        branch: Value.absentIfNull(branch),
-        version: Value.absentIfNull(version),
-        updatedAt: updatedAt,
-        downloadedAt: downloadedAt,
-        downloadedName: fileName,
-      ),
+  ) async {
+    final value = DownloadedAddon(
+      name: name,
+      updatedAt: updatedAt,
+      downloadedAt: downloadedAt,
+      downloadedName: fileName,
+      repoUrl: repoUrl,
+      zipUrl: zipUrl,
+      branch: branch,
+      version: version,
     );
+    await db.addAddonDownload(value.toCompanion(true));
+    return value;
   }
 }
