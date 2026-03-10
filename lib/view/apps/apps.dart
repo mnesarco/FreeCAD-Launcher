@@ -44,17 +44,41 @@ class AppManagerView extends StatelessWidget {
         SearchField(value: controller.searchFilter),
         Expanded(
           child: state.map(
-            data: (list) => ListView.builder(
+            data: (list) => GridView.builder(
+              padding: EdgeInsets.all(12),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.16,
+              ),
               itemCount: list.length,
-              itemBuilder: (context, i) => ListTile(
-                title: Text(list[i].name, style: theme.textTheme.headlineSmall),
-                subtitle: Text(list[i].kind),
-                leading: Icon(appKindIcon(list[i].kind), size: 40),
-                onTap: () => _openEditDialog(context, list[i]),
-                // trailing: IconButton(
-                //   icon: const Icon(Icons.delete),
-                //   onPressed: () => controller.db.deleteApp(list[i].id),
-                // ),
+              itemBuilder: (context, i) => Hero(
+                tag: 'app-${list[i].id}',
+                child: Card(
+                  child: InkWell(
+                    onTap: () => _openEditDialog(context, list[i]),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(appKindIcon(list[i].kind), size: 64),
+                        const SizedBox(height: 8),
+                        Text(
+                          list[i].name,
+                          style: theme.textTheme.headlineSmall,
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          list[i].kind,
+                          style: theme.textTheme.bodySmall,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
             loading: () => const Center(child: CircularProgressIndicator()),
