@@ -249,3 +249,53 @@ class WithEmblem extends StatelessWidget {
     );
   }
 }
+
+class ResponsiveGrid<T> extends StatelessWidget {
+  final List<T> data;
+  final EdgeInsetsGeometry? padding;
+  final double horizontalSpacing;
+  final double verticalSpacing;
+  final double cellWidth;
+  final double cellHeight;
+  final Widget Function(BuildContext, T) builder;
+
+  const ResponsiveGrid({
+    required this.data,
+    required this.builder,
+    this.padding,
+    this.horizontalSpacing = 8.0,
+    this.verticalSpacing = 8.0,
+    this.cellHeight = 100.0,
+    this.cellWidth = 100.0,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: padding,
+      child: SizedBox(
+        width: double.infinity,
+        child: Wrap(
+          spacing: horizontalSpacing,
+          runSpacing: verticalSpacing,
+          alignment: WrapAlignment.start,
+          crossAxisAlignment: WrapCrossAlignment.start,
+          children: [
+            ...data.map((item) {
+              Widget child = builder(context, item);
+              return Hero(
+                tag: 'cell-${child.key}',
+                child: SizedBox(
+                  width: cellWidth,
+                  height: cellHeight,
+                  child: Card(child: child),
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+}
