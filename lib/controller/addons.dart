@@ -1,4 +1,3 @@
-import 'package:drift/drift.dart';
 import 'package:freecad_launcher/model/addons.dart';
 import 'package:freecad_launcher/service/database.dart';
 import 'package:signals_flutter/signals_flutter.dart';

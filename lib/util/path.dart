@@ -102,4 +102,7 @@ class Path {
     final created = stat.changed; // creation time (or last status change on Linux)
     return DateTime.now().difference(created).inSeconds;
   }
+
+  Directory asDir() => Directory(str);
+  File asFile() => File(str);
 }

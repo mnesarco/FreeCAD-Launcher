@@ -23,6 +23,13 @@ class Profiles extends Table {
   TextColumn get cwd => text()();
 }
 
+class Launchers extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().unique()();
+  late final profile = integer().references(Profiles, #id)();
+  late final app = integer().references(Apps, #id)();
+}
+
 class DownloadedAddons extends Table {
   TextColumn get name => text()();
   TextColumn get repoUrl => text().nullable()();
@@ -37,7 +44,7 @@ class DownloadedAddons extends Table {
   Set<Column<Object>> get primaryKey => {repoUrl, zipUrl, branch, version, updatedAt};
 }
 
-@DriftDatabase(tables: [Apps, Profiles, DownloadedAddons])
+@DriftDatabase(tables: [Apps, Profiles, DownloadedAddons, Launchers])
 class Database extends _$Database {
   Database() : super(_openConnection());
 
@@ -55,6 +62,9 @@ class Database extends _$Database {
       }
     },
   );
+
+  Future<App?> findAppByName(String name) =>
+      (select(apps)..where((app) => app.name.equals(name))).getSingleOrNull();
 
   Future<int> addApp(AppsCompanion entry) => into(apps).insert(entry);
   Future<int> addProfile(ProfilesCompanion entry) => into(profiles).insert(entry);

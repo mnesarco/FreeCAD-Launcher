@@ -1208,6 +1208,305 @@ class DownloadedAddonsCompanion extends UpdateCompanion<DownloadedAddon> {
   }
 }
 
+class $LaunchersTable extends Launchers
+    with TableInfo<$LaunchersTable, Launcher> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LaunchersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _profileMeta = const VerificationMeta(
+    'profile',
+  );
+  @override
+  late final GeneratedColumn<int> profile = GeneratedColumn<int>(
+    'profile',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES profiles (id)',
+    ),
+  );
+  static const VerificationMeta _appMeta = const VerificationMeta('app');
+  @override
+  late final GeneratedColumn<int> app = GeneratedColumn<int>(
+    'app',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES apps (id)',
+    ),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name, profile, app];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'launchers';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Launcher> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('profile')) {
+      context.handle(
+        _profileMeta,
+        profile.isAcceptableOrUnknown(data['profile']!, _profileMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_profileMeta);
+    }
+    if (data.containsKey('app')) {
+      context.handle(
+        _appMeta,
+        app.isAcceptableOrUnknown(data['app']!, _appMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_appMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Launcher map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Launcher(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      profile: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}profile'],
+      )!,
+      app: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}app'],
+      )!,
+    );
+  }
+
+  @override
+  $LaunchersTable createAlias(String alias) {
+    return $LaunchersTable(attachedDatabase, alias);
+  }
+}
+
+class Launcher extends DataClass implements Insertable<Launcher> {
+  final int id;
+  final String name;
+  final int profile;
+  final int app;
+  const Launcher({
+    required this.id,
+    required this.name,
+    required this.profile,
+    required this.app,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['profile'] = Variable<int>(profile);
+    map['app'] = Variable<int>(app);
+    return map;
+  }
+
+  LaunchersCompanion toCompanion(bool nullToAbsent) {
+    return LaunchersCompanion(
+      id: Value(id),
+      name: Value(name),
+      profile: Value(profile),
+      app: Value(app),
+    );
+  }
+
+  factory Launcher.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Launcher(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      profile: serializer.fromJson<int>(json['profile']),
+      app: serializer.fromJson<int>(json['app']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'profile': serializer.toJson<int>(profile),
+      'app': serializer.toJson<int>(app),
+    };
+  }
+
+  Launcher copyWith({int? id, String? name, int? profile, int? app}) =>
+      Launcher(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        profile: profile ?? this.profile,
+        app: app ?? this.app,
+      );
+  Launcher copyWithCompanion(LaunchersCompanion data) {
+    return Launcher(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      profile: data.profile.present ? data.profile.value : this.profile,
+      app: data.app.present ? data.app.value : this.app,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Launcher(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('profile: $profile, ')
+          ..write('app: $app')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, profile, app);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Launcher &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.profile == this.profile &&
+          other.app == this.app);
+}
+
+class LaunchersCompanion extends UpdateCompanion<Launcher> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<int> profile;
+  final Value<int> app;
+  const LaunchersCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.profile = const Value.absent(),
+    this.app = const Value.absent(),
+  });
+  LaunchersCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    required int profile,
+    required int app,
+  }) : name = Value(name),
+       profile = Value(profile),
+       app = Value(app);
+  static Insertable<Launcher> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<int>? profile,
+    Expression<int>? app,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (profile != null) 'profile': profile,
+      if (app != null) 'app': app,
+    });
+  }
+
+  LaunchersCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<int>? profile,
+    Value<int>? app,
+  }) {
+    return LaunchersCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      profile: profile ?? this.profile,
+      app: app ?? this.app,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (profile.present) {
+      map['profile'] = Variable<int>(profile.value);
+    }
+    if (app.present) {
+      map['app'] = Variable<int>(app.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LaunchersCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('profile: $profile, ')
+          ..write('app: $app')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$Database extends GeneratedDatabase {
   _$Database(QueryExecutor e) : super(e);
   $DatabaseManager get managers => $DatabaseManager(this);
@@ -1216,6 +1515,7 @@ abstract class _$Database extends GeneratedDatabase {
   late final $DownloadedAddonsTable downloadedAddons = $DownloadedAddonsTable(
     this,
   );
+  late final $LaunchersTable launchers = $LaunchersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1224,6 +1524,7 @@ abstract class _$Database extends GeneratedDatabase {
     apps,
     profiles,
     downloadedAddons,
+    launchers,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -1248,6 +1549,29 @@ typedef $$AppsTableUpdateCompanionBuilder =
       Value<String> kind,
       Value<String> cwd,
     });
+
+final class $$AppsTableReferences
+    extends BaseReferences<_$Database, $AppsTable, App> {
+  $$AppsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$LaunchersTable, List<Launcher>>
+  _launchersRefsTable(_$Database db) => MultiTypedResultKey.fromTable(
+    db.launchers,
+    aliasName: $_aliasNameGenerator(db.apps.id, db.launchers.app),
+  );
+
+  $$LaunchersTableProcessedTableManager get launchersRefs {
+    final manager = $$LaunchersTableTableManager(
+      $_db,
+      $_db.launchers,
+    ).filter((f) => f.app.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_launchersRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
 
 class $$AppsTableFilterComposer extends Composer<_$Database, $AppsTable> {
   $$AppsTableFilterComposer({
@@ -1286,6 +1610,31 @@ class $$AppsTableFilterComposer extends Composer<_$Database, $AppsTable> {
     column: $table.cwd,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> launchersRefs(
+    Expression<bool> Function($$LaunchersTableFilterComposer f) f,
+  ) {
+    final $$LaunchersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.launchers,
+      getReferencedColumn: (t) => t.app,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LaunchersTableFilterComposer(
+            $db: $db,
+            $table: $db.launchers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$AppsTableOrderingComposer extends Composer<_$Database, $AppsTable> {
@@ -1352,6 +1701,31 @@ class $$AppsTableAnnotationComposer extends Composer<_$Database, $AppsTable> {
 
   GeneratedColumn<String> get cwd =>
       $composableBuilder(column: $table.cwd, builder: (column) => column);
+
+  Expression<T> launchersRefs<T extends Object>(
+    Expression<T> Function($$LaunchersTableAnnotationComposer a) f,
+  ) {
+    final $$LaunchersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.launchers,
+      getReferencedColumn: (t) => t.app,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LaunchersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.launchers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$AppsTableTableManager
@@ -1365,9 +1739,9 @@ class $$AppsTableTableManager
           $$AppsTableAnnotationComposer,
           $$AppsTableCreateCompanionBuilder,
           $$AppsTableUpdateCompanionBuilder,
-          (App, BaseReferences<_$Database, $AppsTable, App>),
+          (App, $$AppsTableReferences),
           App,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool launchersRefs})
         > {
   $$AppsTableTableManager(_$Database db, $AppsTable table)
     : super(
@@ -1413,9 +1787,33 @@ class $$AppsTableTableManager
                 cwd: cwd,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) =>
+                    (e.readTable(table), $$AppsTableReferences(db, table, e)),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({launchersRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (launchersRefs) db.launchers],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (launchersRefs)
+                    await $_getPrefetchedData<App, $AppsTable, Launcher>(
+                      currentTable: table,
+                      referencedTable: $$AppsTableReferences
+                          ._launchersRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$AppsTableReferences(db, table, p0).launchersRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.app == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -1430,9 +1828,9 @@ typedef $$AppsTableProcessedTableManager =
       $$AppsTableAnnotationComposer,
       $$AppsTableCreateCompanionBuilder,
       $$AppsTableUpdateCompanionBuilder,
-      (App, BaseReferences<_$Database, $AppsTable, App>),
+      (App, $$AppsTableReferences),
       App,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool launchersRefs})
     >;
 typedef $$ProfilesTableCreateCompanionBuilder =
     ProfilesCompanion Function({
@@ -1448,6 +1846,29 @@ typedef $$ProfilesTableUpdateCompanionBuilder =
       Value<String> args,
       Value<String> cwd,
     });
+
+final class $$ProfilesTableReferences
+    extends BaseReferences<_$Database, $ProfilesTable, Profile> {
+  $$ProfilesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$LaunchersTable, List<Launcher>>
+  _launchersRefsTable(_$Database db) => MultiTypedResultKey.fromTable(
+    db.launchers,
+    aliasName: $_aliasNameGenerator(db.profiles.id, db.launchers.profile),
+  );
+
+  $$LaunchersTableProcessedTableManager get launchersRefs {
+    final manager = $$LaunchersTableTableManager(
+      $_db,
+      $_db.launchers,
+    ).filter((f) => f.profile.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_launchersRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
 
 class $$ProfilesTableFilterComposer
     extends Composer<_$Database, $ProfilesTable> {
@@ -1477,6 +1898,31 @@ class $$ProfilesTableFilterComposer
     column: $table.cwd,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> launchersRefs(
+    Expression<bool> Function($$LaunchersTableFilterComposer f) f,
+  ) {
+    final $$LaunchersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.launchers,
+      getReferencedColumn: (t) => t.profile,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LaunchersTableFilterComposer(
+            $db: $db,
+            $table: $db.launchers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ProfilesTableOrderingComposer
@@ -1529,6 +1975,31 @@ class $$ProfilesTableAnnotationComposer
 
   GeneratedColumn<String> get cwd =>
       $composableBuilder(column: $table.cwd, builder: (column) => column);
+
+  Expression<T> launchersRefs<T extends Object>(
+    Expression<T> Function($$LaunchersTableAnnotationComposer a) f,
+  ) {
+    final $$LaunchersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.launchers,
+      getReferencedColumn: (t) => t.profile,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LaunchersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.launchers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ProfilesTableTableManager
@@ -1542,9 +2013,9 @@ class $$ProfilesTableTableManager
           $$ProfilesTableAnnotationComposer,
           $$ProfilesTableCreateCompanionBuilder,
           $$ProfilesTableUpdateCompanionBuilder,
-          (Profile, BaseReferences<_$Database, $ProfilesTable, Profile>),
+          (Profile, $$ProfilesTableReferences),
           Profile,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool launchersRefs})
         > {
   $$ProfilesTableTableManager(_$Database db, $ProfilesTable table)
     : super(
@@ -1577,9 +2048,42 @@ class $$ProfilesTableTableManager
                 cwd: cwd,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ProfilesTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({launchersRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (launchersRefs) db.launchers],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (launchersRefs)
+                    await $_getPrefetchedData<
+                      Profile,
+                      $ProfilesTable,
+                      Launcher
+                    >(
+                      currentTable: table,
+                      referencedTable: $$ProfilesTableReferences
+                          ._launchersRefsTable(db),
+                      managerFromTypedResult: (p0) => $$ProfilesTableReferences(
+                        db,
+                        table,
+                        p0,
+                      ).launchersRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.profile == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -1594,9 +2098,9 @@ typedef $$ProfilesTableProcessedTableManager =
       $$ProfilesTableAnnotationComposer,
       $$ProfilesTableCreateCompanionBuilder,
       $$ProfilesTableUpdateCompanionBuilder,
-      (Profile, BaseReferences<_$Database, $ProfilesTable, Profile>),
+      (Profile, $$ProfilesTableReferences),
       Profile,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool launchersRefs})
     >;
 typedef $$DownloadedAddonsTableCreateCompanionBuilder =
     DownloadedAddonsCompanion Function({
@@ -1861,6 +2365,385 @@ typedef $$DownloadedAddonsTableProcessedTableManager =
       DownloadedAddon,
       PrefetchHooks Function()
     >;
+typedef $$LaunchersTableCreateCompanionBuilder =
+    LaunchersCompanion Function({
+      Value<int> id,
+      required String name,
+      required int profile,
+      required int app,
+    });
+typedef $$LaunchersTableUpdateCompanionBuilder =
+    LaunchersCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<int> profile,
+      Value<int> app,
+    });
+
+final class $$LaunchersTableReferences
+    extends BaseReferences<_$Database, $LaunchersTable, Launcher> {
+  $$LaunchersTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $ProfilesTable _profileTable(_$Database db) => db.profiles.createAlias(
+    $_aliasNameGenerator(db.launchers.profile, db.profiles.id),
+  );
+
+  $$ProfilesTableProcessedTableManager get profile {
+    final $_column = $_itemColumn<int>('profile')!;
+
+    final manager = $$ProfilesTableTableManager(
+      $_db,
+      $_db.profiles,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_profileTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $AppsTable _appTable(_$Database db) =>
+      db.apps.createAlias($_aliasNameGenerator(db.launchers.app, db.apps.id));
+
+  $$AppsTableProcessedTableManager get app {
+    final $_column = $_itemColumn<int>('app')!;
+
+    final manager = $$AppsTableTableManager(
+      $_db,
+      $_db.apps,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_appTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$LaunchersTableFilterComposer
+    extends Composer<_$Database, $LaunchersTable> {
+  $$LaunchersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ProfilesTableFilterComposer get profile {
+    final $$ProfilesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.profile,
+      referencedTable: $db.profiles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProfilesTableFilterComposer(
+            $db: $db,
+            $table: $db.profiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AppsTableFilterComposer get app {
+    final $$AppsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.app,
+      referencedTable: $db.apps,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AppsTableFilterComposer(
+            $db: $db,
+            $table: $db.apps,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$LaunchersTableOrderingComposer
+    extends Composer<_$Database, $LaunchersTable> {
+  $$LaunchersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ProfilesTableOrderingComposer get profile {
+    final $$ProfilesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.profile,
+      referencedTable: $db.profiles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProfilesTableOrderingComposer(
+            $db: $db,
+            $table: $db.profiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AppsTableOrderingComposer get app {
+    final $$AppsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.app,
+      referencedTable: $db.apps,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AppsTableOrderingComposer(
+            $db: $db,
+            $table: $db.apps,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$LaunchersTableAnnotationComposer
+    extends Composer<_$Database, $LaunchersTable> {
+  $$LaunchersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  $$ProfilesTableAnnotationComposer get profile {
+    final $$ProfilesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.profile,
+      referencedTable: $db.profiles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProfilesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.profiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AppsTableAnnotationComposer get app {
+    final $$AppsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.app,
+      referencedTable: $db.apps,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AppsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.apps,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$LaunchersTableTableManager
+    extends
+        RootTableManager<
+          _$Database,
+          $LaunchersTable,
+          Launcher,
+          $$LaunchersTableFilterComposer,
+          $$LaunchersTableOrderingComposer,
+          $$LaunchersTableAnnotationComposer,
+          $$LaunchersTableCreateCompanionBuilder,
+          $$LaunchersTableUpdateCompanionBuilder,
+          (Launcher, $$LaunchersTableReferences),
+          Launcher,
+          PrefetchHooks Function({bool profile, bool app})
+        > {
+  $$LaunchersTableTableManager(_$Database db, $LaunchersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LaunchersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LaunchersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LaunchersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> profile = const Value.absent(),
+                Value<int> app = const Value.absent(),
+              }) => LaunchersCompanion(
+                id: id,
+                name: name,
+                profile: profile,
+                app: app,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                required int profile,
+                required int app,
+              }) => LaunchersCompanion.insert(
+                id: id,
+                name: name,
+                profile: profile,
+                app: app,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$LaunchersTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({profile = false, app = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (profile) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.profile,
+                                referencedTable: $$LaunchersTableReferences
+                                    ._profileTable(db),
+                                referencedColumn: $$LaunchersTableReferences
+                                    ._profileTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+                    if (app) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.app,
+                                referencedTable: $$LaunchersTableReferences
+                                    ._appTable(db),
+                                referencedColumn: $$LaunchersTableReferences
+                                    ._appTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$LaunchersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$Database,
+      $LaunchersTable,
+      Launcher,
+      $$LaunchersTableFilterComposer,
+      $$LaunchersTableOrderingComposer,
+      $$LaunchersTableAnnotationComposer,
+      $$LaunchersTableCreateCompanionBuilder,
+      $$LaunchersTableUpdateCompanionBuilder,
+      (Launcher, $$LaunchersTableReferences),
+      Launcher,
+      PrefetchHooks Function({bool profile, bool app})
+    >;
 
 class $DatabaseManager {
   final _$Database _db;
@@ -1870,4 +2753,6 @@ class $DatabaseManager {
       $$ProfilesTableTableManager(_db, _db.profiles);
   $$DownloadedAddonsTableTableManager get downloadedAddons =>
       $$DownloadedAddonsTableTableManager(_db, _db.downloadedAddons);
+  $$LaunchersTableTableManager get launchers =>
+      $$LaunchersTableTableManager(_db, _db.launchers);
 }

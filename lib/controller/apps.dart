@@ -29,7 +29,10 @@ class AppController {
           for (final app in data) {
             try {
               final target = FlatpakTarget.fromString(app);
-              add('Flatpak ${target.install} ${target.version}', 'Flatpak', app, '', cwd.str);
+              final name = 'Flatpak ${target.install} ${target.version}';
+              if (await db.findAppByName(name) == null) {
+                add(name, 'Flatpak', app, '', cwd.str);
+              }
             } catch (ex) {
               // Already imported
             }
@@ -50,7 +53,10 @@ class AppController {
             switch (await snap.getVersion(app)) {
               case Success(:final data):
                 try {
-                  add('Snap $data', 'Snap', app, '', cwd.str);
+                  final name = 'Snap $data';
+                  if (await db.findAppByName(name) == null) {
+                    add('Snap $data', 'Snap', app, '', cwd.str);
+                  }
                 } catch (ex) {
                   // Already imported
                 }

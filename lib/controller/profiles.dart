@@ -18,7 +18,7 @@ class ProfileController {
 
   ProfileController(this.db);
 
-  void add(String name, String kind, String command, String args, String cwd) {
+  void add(String name, String args, String cwd) {
     db.addProfile(ProfilesCompanion.insert(name: name, args: args, cwd: cwd));
   }
 }
@@ -102,10 +102,14 @@ class ProfileDirectoryController {
       }
     }
 
-    final tmpList = await Directory(
-      tmp.str,
-    ).list(followLinks: false, recursive: false).where((e) => e is Directory).take(2).toList();
-    final unwrap = tmpList.length == 1 ? tmpList.first : Directory(tmp.str);
+    final tmpList = await tmp
+        .asDir()
+        .list(followLinks: false, recursive: false)
+        .where((e) => e is Directory)
+        .take(2)
+        .toList();
+
+    final unwrap = tmpList.length == 1 ? tmpList.first : tmp.asDir();
 
     try {
       await unwrap.rename(target.str);
@@ -127,8 +131,8 @@ class ProfileDirectoryController {
       await Directory(tmp.str).delete(recursive: true);
     }
 
-    final manifest = await deploy / '${addon.name}.json';
-    await File(manifest.str).writeAsString(jsonEncode(addon.toJson()));
+    final manifest = deploy / '${addon.name}.json';
+    await manifest.asFile().writeAsString(jsonEncode(addon.toJson()));
 
     return AddonDeployResult.installed;
   }
