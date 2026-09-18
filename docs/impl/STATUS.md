@@ -7,8 +7,8 @@
 - **Current milestone**: M1 — Foundation
 - **Active branch**: `v2`
 - **Last session**: 2026-09-18
-- **Next action**: `M1-05` paths + env builder (`domain/profiles`, `platform/paths`) with
-  per-OS unit tests (`spec 04 §4.1`).
+- **Next action**: `M1-06` `platform/process.dart` `ProcessRunner` (arg arrays, sanitized
+  env, streamed output, kill tree) with a fake process adapter.
 - **Blockers**: none
 - **In progress**: none
 - **Recently completed**:
@@ -25,6 +25,8 @@
   - M1-04 — drift schema v1: 9 tables + 8 DAOs with natural-key upserts, FK cascades, enum
     columns; 30 in-memory DAO tests; generated files committed. `build_runner`, analyze and
     all 41 tests green. DB not wired into the app yet (M1-07 `AppServices`).
+  - M1-05 — `ProfilePaths` + `LaunchEnvironment` (per-OS env matrix, python-var sanitation)
+    and `AppPaths` (real app data layout + directory creation); 11 new tests, 52 total green.
 - **Notes**:
   - Generated l10n files live in `lib/l10n/gen/` and are committed.
   - Windows/macOS runner scaffolding was generated on Linux; only CI can compile them.
@@ -38,6 +40,7 @@
 | 2026-09-18 | M1 | Prototype freeze, v2 branch, app skeleton with l10n and platform runners | M1-01, M1-02 | `lib/**`, `test/**`, `linux/**`, `windows/**`, `macos/**`, `pubspec.yaml`, `l10n.yaml` |
 | 2026-09-18 | M1 | Core primitives: Result/AppError, rotating logger with redaction, constants; runtime log path verified | M1-03 | `lib/core/**`, `lib/main.dart`, `lib/ui/shell/**`, `test/core/**` |
 | 2026-09-18 | M1 | Drift schema v1 + 8 DAOs + generated code + in-memory DAO tests | M1-04 | `lib/data/**`, `lib/domain/**`, `test/data/**`, `pubspec.yaml` |
+| 2026-09-18 | M1 | Profile paths + launch environment builder per OS + AppPaths directory setup | M1-05 | `lib/domain/profiles/**`, `lib/platform/paths.dart`, `test/domain/**`, `test/platform/**` |
 
 ## Standing notes for the next agent
 
