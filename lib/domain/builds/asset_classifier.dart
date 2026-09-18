@@ -17,6 +17,7 @@ class BuildCandidate {
     this.pythonVersion,
     this.checksumUrl,
     this.macosMinVersion,
+    this.releaseNotesUrl,
   });
 
   final String versionLabel;
@@ -32,6 +33,7 @@ class BuildCandidate {
   final String? pythonVersion;
   final String? checksumUrl;
   final int? macosMinVersion;
+  final String? releaseNotesUrl;
 
   String get id => [channel.name, versionLabel, platform.name, arch].join(':');
 }
@@ -72,6 +74,7 @@ abstract final class AssetClassifier {
           pythonVersion: _pythonFromName(asset.name),
           checksumUrl: sidecar.isEmpty ? null : sidecar.first.downloadUrl,
           macosMinVersion: _macosMinVersion(asset.name),
+          releaseNotesUrl: release.htmlUrl,
         ),
       );
     }

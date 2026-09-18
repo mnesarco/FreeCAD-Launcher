@@ -51,6 +51,76 @@ class AppLocalizationsEn extends AppLocalizations {
       'Install a stable, weekly or custom FreeCAD build to get started.';
 
   @override
+  String get versionsTabInstalled => 'Installed';
+
+  @override
+  String get versionsTabAvailable => 'Available';
+
+  @override
+  String get versionsTabCustom => 'Custom';
+
+  @override
+  String get versionsRefresh => 'Check for updates';
+
+  @override
+  String get versionsInstall => 'Install';
+
+  @override
+  String get versionsDownloading => 'Downloading…';
+
+  @override
+  String get versionsInstalling => 'Installing…';
+
+  @override
+  String get versionsCancel => 'Cancel';
+
+  @override
+  String get versionsAvailableEmptyTitle => 'No versions available';
+
+  @override
+  String get versionsAvailableEmptyMessage =>
+      'Check your connection and refresh the catalog.';
+
+  @override
+  String get versionsStaleCatalog =>
+      'Using a cached catalog; newer versions may be missing.';
+
+  @override
+  String get versionsCatalogError => 'Could not load available versions.';
+
+  @override
+  String get versionsRetry => 'Retry';
+
+  @override
+  String get versionsInstallFailed => 'Install failed';
+
+  @override
+  String get versionsRemove => 'Remove';
+
+  @override
+  String get versionsRemoveTitle => 'Remove this build?';
+
+  @override
+  String get versionsRemoveMessage =>
+      'The files will be deleted from disk. Profiles using it will stop working.';
+
+  @override
+  String get versionsRemoveConfirm => 'Remove';
+
+  @override
+  String get versionsCustomEmptyTitle => 'Custom builds';
+
+  @override
+  String get versionsCustomEmptyMessage =>
+      'Add a local archive or URL to install a custom FreeCAD version.';
+
+  @override
+  String get versionsPython => 'Python';
+
+  @override
+  String get versionsSize => 'Size';
+
+  @override
   String get addonsEmptyTitle => 'No addons installed';
 
   @override

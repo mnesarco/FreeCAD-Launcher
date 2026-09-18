@@ -45,7 +45,7 @@ covered by tests.
 | M2-04 | Download job pipeline: `.part`, progress, cancel, SHA-256 verify, cleanup | Unit tests; corrupted download rejected with no partial files | M1-06, M2-01 | M | DONE |
 | M2-05 | Extraction/install strategies per kind: AppImage copy+exec bit, zip/tar safe-extract, dmg (S2), 7z (S1) | Real Linux AppImage install verified end-to-end; zip-slip/symlink/bomb guard tests; Windows/macOS real extraction pending those OSes (CI/manual) | S1, S2, M2-04 | L | DONE |
 | M2-06 | Detect bundled Python version on install (run interpreter, parse, store) | Version shown in build detail; handles missing interpreter gracefully | M2-05 | S | DONE |
-| M2-07 | Versions UI: Installed / Available / Custom tabs, install dialog with preflight, progress, errors | Manual: install from UI on each OS; all states implemented | M1-07, M2-04, M2-05 | L | TODO |
+| M2-07 | Versions UI: Installed / Available / Custom tabs, install dialog with preflight, progress, errors | Installed + Available tabs and install orchestration done (controller tests, app runs); manual UI click-through still pending; Custom tab is filled by M2-08 | M1-07, M2-04, M2-05 | L | DONE |
 | M2-08 | Custom build import: local file / URL, trust confirmation, optional label + checksum | Manual: import user file, launch pending M3; DB + files correct | M2-05 | M | TODO |
 | M2-09 | Build delete / verify / "used by profiles" guard | Tests for guard; manual delete of unused build removes files | M2-05 | S | TODO |
 | M2-10 | Startup reconciler: mark `missing`/`broken`, block launch, offer repair | Tests with removed dirs; UI badges | M1-04 | S | TODO |

@@ -172,6 +172,138 @@ abstract class AppLocalizations {
   /// **'Install a stable, weekly or custom FreeCAD build to get started.'**
   String get versionsEmptyMessage;
 
+  /// No description provided for @versionsTabInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed'**
+  String get versionsTabInstalled;
+
+  /// No description provided for @versionsTabAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get versionsTabAvailable;
+
+  /// No description provided for @versionsTabCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get versionsTabCustom;
+
+  /// No description provided for @versionsRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get versionsRefresh;
+
+  /// No description provided for @versionsInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get versionsInstall;
+
+  /// No description provided for @versionsDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading…'**
+  String get versionsDownloading;
+
+  /// No description provided for @versionsInstalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing…'**
+  String get versionsInstalling;
+
+  /// No description provided for @versionsCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get versionsCancel;
+
+  /// No description provided for @versionsAvailableEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No versions available'**
+  String get versionsAvailableEmptyTitle;
+
+  /// No description provided for @versionsAvailableEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and refresh the catalog.'**
+  String get versionsAvailableEmptyMessage;
+
+  /// No description provided for @versionsStaleCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Using a cached catalog; newer versions may be missing.'**
+  String get versionsStaleCatalog;
+
+  /// No description provided for @versionsCatalogError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load available versions.'**
+  String get versionsCatalogError;
+
+  /// No description provided for @versionsRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get versionsRetry;
+
+  /// No description provided for @versionsInstallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Install failed'**
+  String get versionsInstallFailed;
+
+  /// No description provided for @versionsRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get versionsRemove;
+
+  /// No description provided for @versionsRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this build?'**
+  String get versionsRemoveTitle;
+
+  /// No description provided for @versionsRemoveMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The files will be deleted from disk. Profiles using it will stop working.'**
+  String get versionsRemoveMessage;
+
+  /// No description provided for @versionsRemoveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get versionsRemoveConfirm;
+
+  /// No description provided for @versionsCustomEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom builds'**
+  String get versionsCustomEmptyTitle;
+
+  /// No description provided for @versionsCustomEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a local archive or URL to install a custom FreeCAD version.'**
+  String get versionsCustomEmptyMessage;
+
+  /// No description provided for @versionsPython.
+  ///
+  /// In en, this message translates to:
+  /// **'Python'**
+  String get versionsPython;
+
+  /// No description provided for @versionsSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get versionsSize;
+
   /// No description provided for @addonsEmptyTitle.
   ///
   /// In en, this message translates to:

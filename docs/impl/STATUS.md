@@ -7,14 +7,15 @@
 - **Current milestone**: M1 — Foundation (code complete; first CI run pending a remote)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-18
-- **Next action**: `M2-07` Versions UI (Installed / Available / Custom tabs, install dialog,
-  progress, all states).
+- **Next action**: `M2-08` custom build import (local file / URL, trust confirmation, label +
+  optional checksum) filling the Custom tab.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
   - Windows `.7z` and macOS `.dmg` real extraction/install are implemented and unit-tested with
     fakes but need those OSes to verify for real (Windows CI will run once a remote exists;
     macOS needs a machine).
+  - M2-07 manual UI click-through pending (logic covered by controller tests).
 - **In progress**: none
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete. 78 tests green.
@@ -24,13 +25,13 @@
   - M2-02 — Version model + `AssetClassifier` for all naming eras; 6 fixtures.
   - M2-03 — `ReleasesCatalog` cache (TTL, ETag/304, pagination, stale fallback).
   - M2-04 — `Downloader` (`.part`, progress, cancel, SHA-256, cleanup, cache hit).
-  - M2-05 — Extractors + `BuildInstaller` (staging/atomic rename); real Linux AppImage
-    end-to-end verified (820 MB download → checksum → install → run, exit 0).
-  - M2-06 — `ProcessPythonProbe`: locates the bundled interpreter per build layout
-    (Windows `bin/python.exe`, macOS `Contents/Resources/bin/python`, extracted AppImage),
-    probes `-c "import sys; print(...)"`, prefers plain over versioned interpreters, and
-    reports graceful reasons for missing/failed probes; `BuildInstaller` now stores
-    `pythonVersion` (probe result or asset-name hint). 10 new tests, 152 total green.
+  - M2-05 — Extractors + `BuildInstaller`; real Linux AppImage end-to-end verified.
+  - M2-06 — Bundled Python detection per build layout + installer integration.
+  - M2-07 — `BuildsController` (installed watch, catalog load/filter/stale/error, install
+    orchestration with sidecar checksum, per-build progress/cancel/errors, remove) wired into
+    `AppServices` with the HTTP client, catalog, downloader and installer; Versions UI with
+    Installed/Available tabs, progress rows, stale/offline banner, retry and remove dialog;
+    `formatBytes`; 8 controller tests; app still launches. 160 tests green.
 - **Notes**:
   - Generated l10n files live in `lib/l10n/gen/` and are committed.
   - Windows/macOS runner scaffolding was generated on Linux; only CI can compile them.
@@ -56,6 +57,7 @@
 | 2026-09-18 | M2 | Download pipeline with progress, cancellation, SHA-256 verify and cleanup | M2-04 | `lib/platform/downloader.dart`, `lib/platform/checksum.dart`, `lib/core/cancellation.dart`, `test/platform/**` |
 | 2026-09-18 | M2 | Extraction/install strategies + real Linux AppImage end-to-end install | M2-05 | `lib/platform/archive_extract.dart`, `seven_zip_extractor.dart`, `dmg_extractor.dart`, `build_installer.dart`, `test/platform/**`, `test/manual/**` |
 | 2026-09-18 | M2 | Bundled Python detection per build layout, probe + installer integration | M2-06 | `lib/platform/python_probe.dart`, `lib/platform/build_installer.dart`, `test/platform/**` |
+| 2026-09-18 | M2 | Builds controller + Versions UI (Installed/Available), install orchestration | M2-07 | `lib/state/**`, `lib/ui/builds/**`, `lib/core/format.dart`, `lib/domain/builds/**`, `test/state/**`, `test/helpers/**` |
 
 ## Standing notes for the next agent
 

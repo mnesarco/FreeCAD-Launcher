@@ -6,21 +6,7 @@ import 'package:freecad_launcher/platform/checksum.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:path/path.dart' as p;
 
-class FakeDownloadSource implements DownloadSource {
-  final List<Uri> requests = [];
-  Stream<List<int>> Function()? streamFactory;
-  int? contentLength;
-  Object? error;
-
-  @override
-  Future<DownloadStream> open(Uri uri) async {
-    requests.add(uri);
-    if (error != null) {
-      throw error!;
-    }
-    return DownloadStream(bytes: streamFactory!(), contentLength: contentLength);
-  }
-}
+import '../helpers/fake_download.dart';
 
 void main() {
   late Directory cacheDirectory;
