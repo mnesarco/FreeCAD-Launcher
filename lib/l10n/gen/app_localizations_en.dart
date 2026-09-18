@@ -28,4 +28,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navSettings => 'Settings';
+
+  @override
+  String get homeEmptyTitle => 'Welcome to FreeCAD Launcher';
+
+  @override
+  String get homeEmptyMessage =>
+      'Install a FreeCAD version and create a profile to get started.';
+
+  @override
+  String get profilesEmptyTitle => 'No profiles yet';
+
+  @override
+  String get profilesEmptyMessage =>
+      'Create a profile to launch FreeCAD with its own settings, addons and Python packages.';
+
+  @override
+  String get versionsEmptyTitle => 'No FreeCAD versions installed';
+
+  @override
+  String get versionsEmptyMessage =>
+      'Install a stable, weekly or custom FreeCAD build to get started.';
+
+  @override
+  String get addonsEmptyTitle => 'No addons installed';
+
+  @override
+  String get addonsEmptyMessage =>
+      'Browse the official catalog and install workbenches into a profile.';
+
+  @override
+  String get macrosEmptyTitle => 'No macros';
+
+  @override
+  String get macrosEmptyMessage =>
+      'Install macros from the official catalog into a profile.';
+
+  @override
+  String get settingsDataDirectory => 'Data directory';
+
+  @override
+  String get settingsVersion => 'Version';
+
+  @override
+  String get settingsLicense => 'License';
 }

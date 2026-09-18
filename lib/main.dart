@@ -4,19 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:freecad_launcher/app.dart';
 import 'package:freecad_launcher/core/constants.dart';
 import 'package:freecad_launcher/core/log.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+import 'package:freecad_launcher/state/app_services.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final supportDirectory = await getApplicationSupportDirectory();
-  final logsDirectory = Directory(p.join(supportDirectory.path, 'logs'));
+  final services = await AppServices.bootstrap();
   appLogger = Logger(
     sinks: [
-      RotatingFileSink(directory: logsDirectory),
+      RotatingFileSink(directory: Directory(services.paths.logsDir)),
       const ConsoleSink(),
     ],
   );
   appLogger.info('$appName $appVersion started', tag: 'main');
-  runApp(const FreeCadLauncherApp());
+  runApp(FreeCadLauncherApp(services: services));
 }

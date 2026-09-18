@@ -135,6 +135,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings'**
   String get navSettings;
+
+  /// No description provided for @homeEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to FreeCAD Launcher'**
+  String get homeEmptyTitle;
+
+  /// No description provided for @homeEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Install a FreeCAD version and create a profile to get started.'**
+  String get homeEmptyMessage;
+
+  /// No description provided for @profilesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No profiles yet'**
+  String get profilesEmptyTitle;
+
+  /// No description provided for @profilesEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a profile to launch FreeCAD with its own settings, addons and Python packages.'**
+  String get profilesEmptyMessage;
+
+  /// No description provided for @versionsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No FreeCAD versions installed'**
+  String get versionsEmptyTitle;
+
+  /// No description provided for @versionsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Install a stable, weekly or custom FreeCAD build to get started.'**
+  String get versionsEmptyMessage;
+
+  /// No description provided for @addonsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No addons installed'**
+  String get addonsEmptyTitle;
+
+  /// No description provided for @addonsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse the official catalog and install workbenches into a profile.'**
+  String get addonsEmptyMessage;
+
+  /// No description provided for @macrosEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No macros'**
+  String get macrosEmptyTitle;
+
+  /// No description provided for @macrosEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Install macros from the official catalog into a profile.'**
+  String get macrosEmptyMessage;
+
+  /// No description provided for @settingsDataDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Data directory'**
+  String get settingsDataDirectory;
+
+  /// No description provided for @settingsVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get settingsVersion;
+
+  /// No description provided for @settingsLicense.
+  ///
+  /// In en, this message translates to:
+  /// **'License'**
+  String get settingsLicense;
 }
 
 class _AppLocalizationsDelegate

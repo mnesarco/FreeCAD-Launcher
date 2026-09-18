@@ -6,5 +6,18 @@
   "navVersions": "Versions",
   "navAddons": "Addons",
   "navMacros": "Macros",
-  "navSettings": "Settings"
+  "navSettings": "Settings",
+  "homeEmptyTitle": "Welcome to FreeCAD Launcher",
+  "homeEmptyMessage": "Install a FreeCAD version and create a profile to get started.",
+  "profilesEmptyTitle": "No profiles yet",
+  "profilesEmptyMessage": "Create a profile to launch FreeCAD with its own settings, addons and Python packages.",
+  "versionsEmptyTitle": "No FreeCAD versions installed",
+  "versionsEmptyMessage": "Install a stable, weekly or custom FreeCAD build to get started.",
+  "addonsEmptyTitle": "No addons installed",
+  "addonsEmptyMessage": "Browse the official catalog and install workbenches into a profile.",
+  "macrosEmptyTitle": "No macros",
+  "macrosEmptyMessage": "Install macros from the official catalog into a profile.",
+  "settingsDataDirectory": "Data directory",
+  "settingsVersion": "Version",
+  "settingsLicense": "License"
 }

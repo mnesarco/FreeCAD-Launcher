@@ -7,8 +7,8 @@
 - **Current milestone**: M1 — Foundation
 - **Active branch**: `v2`
 - **Last session**: 2026-09-18
-- **Next action**: `M1-07` `AppServices` + `AppScope` + sidebar shell + status bar with real
-  empty states.
+- **Next action**: `M1-08` diagnostics service (FUSE presence, Gatekeeper/quarantine, disk
+  space, permissions) with structured, unit-testable results.
 - **Blockers**: none
 - **In progress**: none
 - **Recently completed**:
@@ -29,6 +29,9 @@
     and `AppPaths` (real app data layout + directory creation); 11 new tests, 52 total green.
   - M1-06 — `ProcessRunner`/`ProcessSpec`/`IoProcessLauncher` with streamed line output,
     timeouts and kill; fake-adapter tests plus a real `/bin/echo` no-shell check; 60 total green.
+  - M1-07 — `AppServices` (paths + drift DB, `bootstrap()` creates dirs) + `AppScope`;
+    six-section shell with l10n empty states and settings showing the data directory; widget
+    tests navigate every section; runtime verified dirs created. DB opens lazily on first use.
 - **Notes**:
   - Generated l10n files live in `lib/l10n/gen/` and are committed.
   - Windows/macOS runner scaffolding was generated on Linux; only CI can compile them.
@@ -44,6 +47,7 @@
 | 2026-09-18 | M1 | Drift schema v1 + 8 DAOs + generated code + in-memory DAO tests | M1-04 | `lib/data/**`, `lib/domain/**`, `test/data/**`, `pubspec.yaml` |
 | 2026-09-18 | M1 | Profile paths + launch environment builder per OS + AppPaths directory setup | M1-05 | `lib/domain/profiles/**`, `lib/platform/paths.dart`, `test/domain/**`, `test/platform/**` |
 | 2026-09-18 | M1 | ProcessRunner with streamed output, timeouts, kill and fake-adapter tests | M1-06 | `lib/platform/process.dart`, `test/platform/process_test.dart` |
+| 2026-09-18 | M1 | AppServices/AppScope, six-section shell with l10n empty states, settings data dir | M1-07 | `lib/state/**`, `lib/ui/**`, `lib/app.dart`, `lib/main.dart`, `lib/l10n/**`, `test/app_shell_test.dart` |
 
 ## Standing notes for the next agent
 

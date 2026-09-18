@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+
 import 'package:freecad_launcher/core/constants.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
+import 'package:freecad_launcher/ui/addons/addons_view.dart';
+import 'package:freecad_launcher/ui/builds/builds_view.dart';
+import 'package:freecad_launcher/ui/home/home_view.dart';
+import 'package:freecad_launcher/ui/macros/macros_view.dart';
+import 'package:freecad_launcher/ui/profiles/profiles_view.dart';
+import 'package:freecad_launcher/ui/settings/settings_view.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -16,24 +23,42 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final sections = [
-      _Section(icon: Icons.home_outlined, selectedIcon: Icons.home, label: l10n.navHome),
+      _Section(
+        icon: Icons.home_outlined,
+        selectedIcon: Icons.home,
+        label: l10n.navHome,
+        view: const HomeView(),
+      ),
       _Section(
         icon: Icons.workspaces_outlined,
         selectedIcon: Icons.workspaces,
         label: l10n.navProfiles,
+        view: const ProfilesView(),
       ),
       _Section(
         icon: Icons.inventory_2_outlined,
         selectedIcon: Icons.inventory_2,
         label: l10n.navVersions,
+        view: const BuildsView(),
       ),
-      _Section(icon: Icons.extension_outlined, selectedIcon: Icons.extension, label: l10n.navAddons),
+      _Section(
+        icon: Icons.extension_outlined,
+        selectedIcon: Icons.extension,
+        label: l10n.navAddons,
+        view: const AddonsView(),
+      ),
       _Section(
         icon: Icons.auto_fix_high_outlined,
         selectedIcon: Icons.auto_fix_high,
         label: l10n.navMacros,
+        view: const MacrosView(),
       ),
-      _Section(icon: Icons.settings_outlined, selectedIcon: Icons.settings, label: l10n.navSettings),
+      _Section(
+        icon: Icons.settings_outlined,
+        selectedIcon: Icons.settings,
+        label: l10n.navSettings,
+        view: const SettingsView(),
+      ),
     ];
 
     return Scaffold(
@@ -53,7 +78,12 @@ class _AppShellState extends State<AppShell> {
             ],
           ),
           const VerticalDivider(width: 1),
-          Expanded(child: _SectionPlaceholder(title: sections[_selectedIndex].label)),
+          Expanded(
+            child: IndexedStack(
+              index: _selectedIndex,
+              children: [for (final section in sections) section.view],
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: const _StatusBar(),
@@ -62,24 +92,17 @@ class _AppShellState extends State<AppShell> {
 }
 
 class _Section {
-  const _Section({required this.icon, required this.selectedIcon, required this.label});
+  const _Section({
+    required this.icon,
+    required this.selectedIcon,
+    required this.label,
+    required this.view,
+  });
 
   final IconData icon;
   final IconData selectedIcon;
   final String label;
-}
-
-class _SectionPlaceholder extends StatelessWidget {
-  const _SectionPlaceholder({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(title, style: Theme.of(context).textTheme.headlineSmall),
-    );
-  }
+  final Widget view;
 }
 
 class _StatusBar extends StatelessWidget {
