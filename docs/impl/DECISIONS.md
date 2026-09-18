@@ -152,3 +152,19 @@ Template:
 - **Decision**: Add `flutter_localizations` + ARB (`lib/l10n/app_en.arb`, template English) in `M1-02`. All user-facing strings go through `AppLocalizations` from the first screen. Translations are not in scope for v0.1.
 - **Consequences**: No hardcoded user strings in UI code; CI freshness check covers generated localization files; adding a language later is data-only.
 - **Refs**: OQ-6, `../spec/02-requirements.md` NFR-9, `TASKS.md` M1-02
+
+### D-018 — Windows `.7z` extraction via bundled 7-Zip standalone (`7zr.exe`)
+- **Date**: 2026-09-18
+- **Status**: Accepted
+- **Context**: Spike S1. The real asset `FreeCAD_1.1.3-Windows-x86_64-py311.7z` (418,053,398 bytes) was inspected with 7-Zip 23.01: `Method = LZMA2:28 LZMA:20 BCJ2`, `Solid = +`, `Blocks = 2`. The pure-Dart `koni_sevenz` explicitly does not support BCJ2 and caps folder allocations at 1 GiB, so it cannot extract official FreeCAD archives. `.7z` is only needed on Windows (Linux uses AppImage, macOS uses `.dmg`). Windows' built-in `tar.exe` was considered but its 7z/BCJ2 support is not documented and cannot be relied on.
+- **Decision**: Bundle the official 7-Zip standalone console executable `third_party/7zip/7zr.exe` (x86, SHA-256 `ad4c82fadcbdf93c03b4fc440f300509c7d60c5c2f4d183e35d9d70d6957037d`, LGPL-2.1-or-later, no RAR code) and invoke it through `ProcessRunner` with argument arrays (`x -y -o<dest> <archive>`). The Windows runner copies it next to the app executable. No pure-Dart 7z dependency is used.
+- **Consequences**: +600 KB in repo and Windows bundle; `THIRD_PARTY_NOTICES.md` must list 7-Zip (M7-03); extraction progress is parsed from stdout; the pinned hash is checked in CI. Manual Windows extraction of the real archive is part of M2-05.
+- **Refs**: S1, D-014, `../spec/06-integrations.md` §4, `TASKS.md` M2-05, `third_party/7zip/README.md`
+
+### D-019 — macOS `.dmg` install via `hdiutil`
+- **Date**: 2026-09-18
+- **Status**: Accepted
+- **Context**: Spike S2. macOS FreeCAD builds ship as `.dmg` containing `FreeCAD.app`; official notarization has been unreliable (FreeCAD/FreeCAD#30621).
+- **Decision**: Install with `hdiutil attach -nobrowse -readonly -mountpoint <staging> <dmg>` → copy `FreeCAD.app` into `builds/<id>/` → `hdiutil detach <staging>` (retry with `-force` after a timeout). After copying, offer quarantine removal (`xattr -dr com.apple.quarantine <app>`) with an explanation. Launch by spawning `FreeCAD.app/Contents/MacOS/FreeCAD` directly so the profile environment is inherited. Gatekeeper state comes from the diagnostics service; if launch fails, surface right-click→Open guidance.
+- **Consequences**: No notarization assumptions. Manual macOS verification cannot be done on Linux and is folded into M2-05 acceptance.
+- **Refs**: S2, `../spec/06-integrations.md` §1.4, `TASKS.md` M2-05

@@ -7,40 +7,22 @@
 - **Current milestone**: M1 — Foundation (code complete; first CI run pending a remote)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-18
-- **Next action**: start M2 with the risk spikes: `S1` (.7z extraction strategy) and `S2`
-  (macOS `.dmg` install), then `M2-01` (GitHub releases client).
+- **Next action**: `M2-01` GitHub releases client (conditional GET/ETag, cache, rate-limit
+  headers) using the M1-10 fixtures; then `M2-02` asset classifier.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else in M1 is verified locally.
 - **In progress**: none
 - **Recently completed**:
-  - M0 — OQ-2 → `org.freecad.ext.launcher` (D-016); OQ-6 → ARB from day one (D-017); spec
-    approved; repo workflow confirmed
-  - M1-01 — prototype tagged `prototype-final`, `v2` branch created
-  - M1-02 — v2 skeleton: prototype `lib/` replaced, ARB l10n scaffold, platform runners for
-    Linux/Windows/macOS with app id `org.freecad.ext.launcher`, `http` added, `snapd`/`recase`
-    removed. Verified locally: `flutter analyze` clean, `flutter test` green (1 widget test),
-    `flutter build linux --release` succeeds. Windows/macOS builds pending M1-09 CI.
-  - M1-03 — core primitives: `Result`/`AppError`, `Logger` with rotating file sink + secret
-    redaction, constants. 10 unit tests; runtime verified: `app.log` created under
-    `~/.local/share/org.freecad.ext.launcher/logs/`.
-  - M1-04 — drift schema v1: 9 tables + 8 DAOs with natural-key upserts, FK cascades, enum
-    columns; 30 in-memory DAO tests; generated files committed. `build_runner`, analyze and
-    all 41 tests green. DB not wired into the app yet (M1-07 `AppServices`).
-  - M1-05 — `ProfilePaths` + `LaunchEnvironment` (per-OS env matrix, python-var sanitation)
-    and `AppPaths` (real app data layout + directory creation); 11 new tests, 52 total green.
-  - M1-06 — `ProcessRunner`/`ProcessSpec`/`IoProcessLauncher` with streamed line output,
-    timeouts and kill; fake-adapter tests plus a real `/bin/echo` no-shell check; 60 total green.
-  - M1-07 — `AppServices` (paths + drift DB, `bootstrap()` creates dirs) + `AppScope`;
-    six-section shell with l10n empty states and settings showing the data directory; widget
-    tests navigate every section; runtime verified dirs created. DB opens lazily on first use.
-  - M1-08 — `DiagnosticsService` (data-dir writability, Linux FUSE, macOS Gatekeeper, POSIX
-    disk space) with injectable process runner/env/device probes; Settings "Run diagnostics"
-    panel; 12 new tests, 75 total green. Known gap: disk probe is not implemented on Windows
-    yet (reports not-applicable).
-  - M1-09/M1-10 — CI workflow (Linux/Windows/macOS: deps, l10n, codegen freshness, analyze,
-    tests, release builds) validated locally; test harness (`createTestDatabase`, `FakeHttp`,
-    fixture loader, `test/fixtures/` + GitHub releases fixture); 78 total tests green.
+  - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
+    diagnostics, CI workflow, test harness). 78 tests green, analyze clean, codegen current.
+  - S1 — Real FreeCAD 1.1.3 Windows asset inspected: `LZMA2:28 LZMA:20 BCJ2`, solid, 2 blocks;
+    pure-Dart `koni_sevenz` cannot read BCJ2 → **D-018**: bundle official 7-Zip standalone
+    `third_party/7zip/7zr.exe` (sha256 pinned, LGPL) and invoke via `ProcessRunner` arg arrays.
+    Manual Windows extraction remains in M2-05.
+  - S2 — **D-019**: `.dmg` install via `hdiutil attach -readonly` → copy `FreeCAD.app` →
+    detach, quarantine removal with consent, direct binary spawn; manual macOS verification in
+    M2-05.
 - **Notes**:
   - Generated l10n files live in `lib/l10n/gen/` and are committed.
   - Windows/macOS runner scaffolding was generated on Linux; only CI can compile them.
@@ -59,6 +41,7 @@
 | 2026-09-18 | M1 | AppServices/AppScope, six-section shell with l10n empty states, settings data dir | M1-07 | `lib/state/**`, `lib/ui/**`, `lib/app.dart`, `lib/main.dart`, `lib/l10n/**`, `test/app_shell_test.dart` |
 | 2026-09-18 | M1 | Diagnostics service + settings panel; shared fake process helper | M1-08 | `lib/platform/diagnostics.dart`, `lib/ui/settings/**`, `test/platform/**`, `test/helpers/**` |
 | 2026-09-18 | M1 | CI workflow + test harness (DB helper, FakeHttp, fixtures) | M1-09, M1-10 | `.github/workflows/ci.yml`, `test/helpers/**`, `test/fixtures/**` |
+| 2026-09-18 | M2 | Spikes S1/S2: real FreeCAD `.7z` inspected, bundled 7zr.exe + license, `.dmg` design | S1, S2 | `third_party/7zip/**`, `docs/impl/DECISIONS.md` |
 
 ## Standing notes for the next agent
 
