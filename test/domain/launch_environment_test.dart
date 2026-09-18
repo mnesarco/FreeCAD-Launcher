@@ -94,4 +94,29 @@ void main() {
     expect(env.containsKey('PythonPath'), isFalse);
     expect(env.containsKey('Virtual_Env'), isFalse);
   });
+
+  test('enables AppImage extract-and-run only on linux when requested', () {
+    final linux = LaunchEnvironment.build(
+      platform: BuildPlatform.linux,
+      paths: posixPaths,
+      inherited: const {},
+      appImageExtractAndRun: true,
+    );
+    expect(linux['APPIMAGE_EXTRACT_AND_RUN'], '1');
+
+    final macos = LaunchEnvironment.build(
+      platform: BuildPlatform.macos,
+      paths: posixPaths,
+      inherited: const {},
+      appImageExtractAndRun: true,
+    );
+    expect(macos.containsKey('APPIMAGE_EXTRACT_AND_RUN'), isFalse);
+
+    final linuxWithout = LaunchEnvironment.build(
+      platform: BuildPlatform.linux,
+      paths: posixPaths,
+      inherited: const {},
+    );
+    expect(linuxWithout.containsKey('APPIMAGE_EXTRACT_AND_RUN'), isFalse);
+  });
 }

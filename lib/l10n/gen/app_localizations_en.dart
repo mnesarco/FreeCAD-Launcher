@@ -98,6 +98,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get versionsRemove => 'Remove';
 
   @override
+  String get versionsVerify => 'Verify files';
+
+  @override
+  String get versionsRemoveFailed => 'Could not remove the build';
+
+  @override
+  String get versionsStatusMissing => 'Missing';
+
+  @override
+  String get versionsStatusBroken => 'Broken';
+
+  @override
+  String get versionsVerifyOk => 'Files verified';
+
+  @override
+  String get versionsVerifyMissing => 'Build files are missing';
+
+  @override
+  String get versionsVerifyBroken => 'Build files are broken or corrupted';
+
+  @override
   String get versionsRemoveTitle => 'Remove this build?';
 
   @override
@@ -113,6 +134,37 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get versionsCustomEmptyMessage =>
       'Add a local archive or URL to install a custom FreeCAD version.';
+
+  @override
+  String get versionsCustomSource => 'File path or URL';
+
+  @override
+  String get versionsCustomLabel => 'Version label (optional)';
+
+  @override
+  String get versionsCustomChecksum => 'SHA-256 (optional)';
+
+  @override
+  String get versionsCustomChooseFile => 'Choose file…';
+
+  @override
+  String get versionsCustomImport => 'Import';
+
+  @override
+  String get versionsCustomTrustTitle => 'Import this build?';
+
+  @override
+  String get versionsCustomTrustMessage =>
+      'Custom builds are not verified against the official catalog. Only import files you trust.';
+
+  @override
+  String get versionsCustomTrustConfirm => 'Import';
+
+  @override
+  String get versionsCustomImported => 'Build imported';
+
+  @override
+  String get versionsCustomFailed => 'Import failed';
 
   @override
   String get versionsPython => 'Python';

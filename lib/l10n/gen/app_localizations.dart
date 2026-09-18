@@ -262,6 +262,48 @@ abstract class AppLocalizations {
   /// **'Remove'**
   String get versionsRemove;
 
+  /// No description provided for @versionsVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify files'**
+  String get versionsVerify;
+
+  /// No description provided for @versionsRemoveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove the build'**
+  String get versionsRemoveFailed;
+
+  /// No description provided for @versionsStatusMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing'**
+  String get versionsStatusMissing;
+
+  /// No description provided for @versionsStatusBroken.
+  ///
+  /// In en, this message translates to:
+  /// **'Broken'**
+  String get versionsStatusBroken;
+
+  /// No description provided for @versionsVerifyOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Files verified'**
+  String get versionsVerifyOk;
+
+  /// No description provided for @versionsVerifyMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Build files are missing'**
+  String get versionsVerifyMissing;
+
+  /// No description provided for @versionsVerifyBroken.
+  ///
+  /// In en, this message translates to:
+  /// **'Build files are broken or corrupted'**
+  String get versionsVerifyBroken;
+
   /// No description provided for @versionsRemoveTitle.
   ///
   /// In en, this message translates to:
@@ -291,6 +333,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a local archive or URL to install a custom FreeCAD version.'**
   String get versionsCustomEmptyMessage;
+
+  /// No description provided for @versionsCustomSource.
+  ///
+  /// In en, this message translates to:
+  /// **'File path or URL'**
+  String get versionsCustomSource;
+
+  /// No description provided for @versionsCustomLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Version label (optional)'**
+  String get versionsCustomLabel;
+
+  /// No description provided for @versionsCustomChecksum.
+  ///
+  /// In en, this message translates to:
+  /// **'SHA-256 (optional)'**
+  String get versionsCustomChecksum;
+
+  /// No description provided for @versionsCustomChooseFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose file…'**
+  String get versionsCustomChooseFile;
+
+  /// No description provided for @versionsCustomImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get versionsCustomImport;
+
+  /// No description provided for @versionsCustomTrustTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import this build?'**
+  String get versionsCustomTrustTitle;
+
+  /// No description provided for @versionsCustomTrustMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom builds are not verified against the official catalog. Only import files you trust.'**
+  String get versionsCustomTrustMessage;
+
+  /// No description provided for @versionsCustomTrustConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get versionsCustomTrustConfirm;
+
+  /// No description provided for @versionsCustomImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Build imported'**
+  String get versionsCustomImported;
+
+  /// No description provided for @versionsCustomFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed'**
+  String get versionsCustomFailed;
 
   /// No description provided for @versionsPython.
   ///

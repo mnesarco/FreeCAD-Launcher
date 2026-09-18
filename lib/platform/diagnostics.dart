@@ -61,6 +61,10 @@ class DiagnosticsService {
     return DiagnosticsReport(results);
   }
 
+  Future<bool> fuseAvailable() async {
+    return (await checkFuse()).status == DiagnosticStatus.ok;
+  }
+
   Future<DiagnosticResult> checkDataDirectory() async {
     final probe = File(p.join(paths.dataRoot, '.write-test-$pid'));
     try {

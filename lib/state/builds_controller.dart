@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:path/path.dart' as p;
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import 'package:freecad_launcher/core/cancellation.dart';
 import 'package:freecad_launcher/core/errors.dart';
@@ -14,6 +16,15 @@ import 'package:freecad_launcher/platform/build_installer.dart';
 import 'package:freecad_launcher/platform/checksum.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
+
+class CustomImportException implements Exception {
+  const CustomImportException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
 
 enum InstallStage { downloading, verifying, installing }
 
@@ -71,6 +82,55 @@ class BuildsController {
     _buildsSubscription ??= _database.buildsDao.watchAll().listen(
       (builds) => installedBuilds.value = builds,
     );
+    unawaited(reconcile());
+  }
+
+  Future<void> reconcile() async {
+    final builds = await _database.buildsDao.getAll();
+    for (final build in builds) {
+      final status = _statusFor(build);
+      if (status != build.status) {
+        await _database.buildsDao.updateStatus(build.id, status);
+      }
+    }
+  }
+
+  BuildStatus _statusFor(Build build) {
+    final executable = File(build.localPath);
+    if (build.kind == BuildKind.custom) {
+      return executable.existsSync() ? BuildStatus.installed : BuildStatus.missing;
+    }
+    final directory = Directory(_paths.buildDir(build.id));
+    if (!directory.existsSync()) {
+      return BuildStatus.missing;
+    }
+    if (!executable.existsSync()) {
+      return BuildStatus.broken;
+    }
+    return BuildStatus.installed;
+  }
+
+  Future<Result<BuildStatus>> verify(String buildId) async {
+    final build = await _database.buildsDao.getById(buildId);
+    if (build == null) {
+      return const Err(AppError(message: 'Build not found'));
+    }
+
+    var status = _statusFor(build);
+    var verified = build.verified;
+    final expected = build.sha256;
+    if (status == BuildStatus.installed && expected != null && build.kind == BuildKind.appimage) {
+      final actual = await sha256File(build.localPath);
+      verified = actual == expected;
+      if (!verified) {
+        status = BuildStatus.broken;
+      }
+    }
+
+    await _database.buildsDao.save(
+      build.copyWith(status: status, verified: verified, updatedAt: _clock()),
+    );
+    return Ok(status);
   }
 
   Future<void> loadCatalog({bool forceRefresh = false}) async {
@@ -185,12 +245,171 @@ class BuildsController {
     _tokens[candidate.id]?.cancel();
   }
 
-  Future<void> remove(String buildId) async {
-    await _database.buildsDao.deleteById(buildId);
-    final buildDirectory = Directory(_paths.buildDir(buildId));
-    if (buildDirectory.existsSync()) {
-      buildDirectory.deleteSync(recursive: true);
+  Future<Result<void>> remove(String buildId) async {
+    final build = await _database.buildsDao.getById(buildId);
+    if (build == null) {
+      return const Err(AppError(message: 'Build not found'));
     }
+
+    final profileCount = await _database.profilesDao.countByBuild(buildId);
+    if (profileCount > 0) {
+      return Err(
+        AppError(
+          message: 'This build is used by $profileCount profile(s)',
+          detail: 'Remove or reassign those profiles first.',
+        ),
+      );
+    }
+
+    await _database.buildsDao.deleteById(buildId);
+    if (build.kind != BuildKind.custom) {
+      final buildDirectory = Directory(_paths.buildDir(buildId));
+      if (buildDirectory.existsSync()) {
+        buildDirectory.deleteSync(recursive: true);
+      }
+    }
+    return const Ok(null);
+  }
+
+  Future<Result<Build>> importCustom({
+    required String source,
+    String? versionLabel,
+    String? sha256,
+    String? fileName,
+    BuildKind? kind,
+  }) async {
+    final trimmed = source.trim();
+    if (trimmed.isEmpty) {
+      return const Err(AppError(message: 'Enter a file path or URL'));
+    }
+
+    final isUrl = trimmed.startsWith('http://') || trimmed.startsWith('https://');
+    final resolvedKind = kind ?? kindFromName(fileName ?? trimmed);
+    final buildId = 'custom:${const Uuid().v4()}';
+    final token = CancellationToken();
+    _tokens[buildId] = token;
+    _setProgress(buildId, const InstallProgress(stage: InstallStage.downloading, fraction: 0));
+
+    try {
+      var effectiveSha = sha256?.trim().toLowerCase();
+      if (effectiveSha != null && effectiveSha.isEmpty) {
+        effectiveSha = null;
+      }
+
+      final String executablePath;
+      final int sizeBytes;
+      String? pythonVersion;
+      final String assetName = fileName ??
+          (isUrl ? Uri.parse(trimmed).path.split('/').last : p.basename(trimmed));
+
+      if (resolvedKind == BuildKind.custom) {
+        if (isUrl) {
+          throw const CustomImportException(
+            'A custom executable must be a local file, not a URL',
+          );
+        }
+        final file = File(trimmed);
+        if (!file.existsSync()) {
+          throw CustomImportException('File not found: $trimmed');
+        }
+        if (effectiveSha != null && await sha256File(file.path) != effectiveSha) {
+          throw const ChecksumMismatchException(
+            expected: 'the provided checksum',
+            actual: 'the file content',
+          );
+        }
+        executablePath = file.path;
+        sizeBytes = await file.length();
+      } else {
+        String archivePath;
+        if (isUrl) {
+          final download = await _downloader.download(
+            uri: Uri.parse(trimmed),
+            fileName: fileName ?? Uri.parse(trimmed).path.split('/').last,
+            expectedSha256: effectiveSha,
+            cancellationToken: token,
+          );
+          archivePath = download.path;
+          effectiveSha = download.sha256;
+        } else {
+          final file = File(trimmed);
+          if (!file.existsSync()) {
+            throw CustomImportException('File not found: $trimmed');
+          }
+          archivePath = file.path;
+          final actual = await sha256File(file.path);
+          if (effectiveSha != null && actual != effectiveSha) {
+            throw ChecksumMismatchException(expected: effectiveSha, actual: actual);
+          }
+          effectiveSha ??= actual;
+        }
+
+        _setProgress(buildId, const InstallProgress(stage: InstallStage.installing));
+        final installed = await _installer.install(
+          InstallRequest(
+            buildId: buildId,
+            kind: resolvedKind,
+            archivePath: archivePath,
+            assetName: assetName,
+            pythonVersionHint: null,
+          ),
+        );
+        executablePath = installed.executablePath;
+        sizeBytes = installed.sizeBytes;
+        pythonVersion = installed.pythonVersion;
+      }
+
+      final label = (versionLabel != null && versionLabel.trim().isNotEmpty)
+          ? versionLabel.trim()
+          : assetName.split('.').first;
+      final now = _clock();
+      final build = Build(
+        id: buildId,
+        kind: resolvedKind,
+        version: label,
+        channel: BuildChannel.custom,
+        platform: _platform,
+        arch: _arch,
+        sourceUrl: isUrl ? trimmed : null,
+        assetName: assetName,
+        localPath: executablePath,
+        sha256: effectiveSha,
+        verified: effectiveSha != null,
+        pythonVersion: pythonVersion,
+        sizeBytes: sizeBytes,
+        status: BuildStatus.installed,
+        releaseNotesUrl: null,
+        installedAt: now,
+        updatedAt: now,
+      );
+      await _database.buildsDao.save(build);
+      return Ok(build);
+    } on Object catch (error) {
+      final appError = error is AppError ? error : AppError.from(error, retryable: true);
+      installErrors.value = {...installErrors.value, buildId: appError};
+      return Err(appError);
+    } finally {
+      _tokens.remove(buildId);
+      installProgress.value = {...installProgress.value}..remove(buildId);
+    }
+  }
+
+  static BuildKind kindFromName(String name) {
+    final lower = name.toLowerCase();
+    if (lower.endsWith('.appimage')) {
+      return BuildKind.appimage;
+    }
+    if (lower.endsWith('.dmg')) {
+      return BuildKind.dmg;
+    }
+    if (lower.endsWith('.7z') ||
+        lower.endsWith('.zip') ||
+        lower.endsWith('.tar.gz') ||
+        lower.endsWith('.tgz') ||
+        lower.endsWith('.tar')) {
+      return BuildKind.archive;
+    }
+    return BuildKind.custom;
   }
 
   void clearInstallError(String buildId) {

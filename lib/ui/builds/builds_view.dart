@@ -1,3 +1,4 @@
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
@@ -5,6 +6,7 @@ import 'package:freecad_launcher/core/format.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/asset_classifier.dart';
+import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/builds_controller.dart';
@@ -111,6 +113,18 @@ class _InstalledBuildTile extends StatelessWidget {
             label: Text(buildInfo.channel.name),
             visualDensity: VisualDensity.compact,
           ),
+          if (buildInfo.status != BuildStatus.installed) ...[
+            const SizedBox(width: 8),
+            Chip(
+              avatar: const Icon(Icons.warning_amber_outlined, size: 16),
+              label: Text(
+                buildInfo.status == BuildStatus.missing
+                    ? l10n.versionsStatusMissing
+                    : l10n.versionsStatusBroken,
+              ),
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
         ],
       ),
       subtitle: Column(
@@ -125,12 +139,43 @@ class _InstalledBuildTile extends StatelessWidget {
           ),
         ],
       ),
-      trailing: IconButton(
-        icon: const Icon(Icons.delete_outline),
-        tooltip: l10n.versionsRemove,
-        onPressed: () => _confirmRemove(context, controller, buildInfo),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.verified_outlined),
+            tooltip: l10n.versionsVerify,
+            onPressed: () => _verify(context, controller, buildInfo),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: l10n.versionsRemove,
+            onPressed: () => _confirmRemove(context, controller, buildInfo),
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> _verify(
+    BuildContext context,
+    BuildsController controller,
+    Build build,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final result = await controller.verify(build.id);
+    if (!context.mounted) {
+      return;
+    }
+    final message = result.fold(
+      (status) => switch (status) {
+        BuildStatus.installed => l10n.versionsVerifyOk,
+        BuildStatus.missing => l10n.versionsVerifyMissing,
+        BuildStatus.broken => l10n.versionsVerifyBroken,
+      },
+      (error) => error.toString(),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _confirmRemove(
@@ -156,8 +201,18 @@ class _InstalledBuildTile extends StatelessWidget {
         ],
       ),
     );
-    if (confirmed ?? false) {
-      await controller.remove(build.id);
+    if (!(confirmed ?? false)) {
+      return;
+    }
+    final result = await controller.remove(build.id);
+    if (!context.mounted) {
+      return;
+    }
+    final error = result.errorOrNull;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${l10n.versionsRemoveFailed}: $error')),
+      );
     }
   }
 }
@@ -314,16 +369,139 @@ class _AvailableBuildTile extends StatelessWidget {
   }
 }
 
-class _CustomTab extends StatelessWidget {
+class _CustomTab extends StatefulWidget {
   const _CustomTab();
+
+  @override
+  State<_CustomTab> createState() => _CustomTabState();
+}
+
+class _CustomTabState extends State<_CustomTab> {
+  final TextEditingController _sourceController = TextEditingController();
+  final TextEditingController _labelController = TextEditingController();
+  final TextEditingController _checksumController = TextEditingController();
+  bool _importing = false;
+
+  @override
+  void dispose() {
+    _sourceController.dispose();
+    _labelController.dispose();
+    _checksumController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickFile() async {
+    const typeGroup = XTypeGroup(
+      label: 'FreeCAD builds',
+      extensions: ['AppImage', '7z', 'zip', 'dmg', 'tgz', 'tar', 'gz'],
+    );
+    final file = await openFile(acceptedTypeGroups: const [typeGroup]);
+    if (file != null && mounted) {
+      setState(() => _sourceController.text = file.path);
+    }
+  }
+
+  Future<void> _import() async {
+    final l10n = AppLocalizations.of(context);
+    final controller = AppScope.of(context).builds;
+    final source = _sourceController.text.trim();
+    if (source.isEmpty) {
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.versionsCustomTrustTitle),
+        content: Text('$source\n\n${l10n.versionsCustomTrustMessage}'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.versionsCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.versionsCustomTrustConfirm),
+          ),
+        ],
+      ),
+    );
+    if (!(confirmed ?? false) || !mounted) {
+      return;
+    }
+
+    setState(() => _importing = true);
+    final result = await controller.importCustom(
+      source: source,
+      versionLabel: _labelController.text,
+      sha256: _checksumController.text,
+    );
+    if (!mounted) {
+      return;
+    }
+    setState(() => _importing = false);
+
+    final messenger = ScaffoldMessenger.of(context);
+    result.fold(
+      (build) {
+        _sourceController.clear();
+        _labelController.clear();
+        _checksumController.clear();
+        messenger.showSnackBar(
+          SnackBar(content: Text('${l10n.versionsCustomImported}: ${build.version}')),
+        );
+      },
+      (error) => messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.versionsCustomFailed}: $error')),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return EmptyState(
-      icon: Icons.add_link_outlined,
-      title: l10n.versionsCustomEmptyTitle,
-      message: l10n.versionsCustomEmptyMessage,
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        TextField(
+          controller: _sourceController,
+          decoration: InputDecoration(
+            labelText: l10n.versionsCustomSource,
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.folder_open),
+              tooltip: l10n.versionsCustomChooseFile,
+              onPressed: _importing ? null : _pickFile,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _labelController,
+          decoration: InputDecoration(labelText: l10n.versionsCustomLabel),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _checksumController,
+          decoration: InputDecoration(labelText: l10n.versionsCustomChecksum),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            FilledButton.icon(
+              onPressed: _importing ? null : _import,
+              icon: _importing
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.add),
+              label: Text(l10n.versionsCustomImport),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -98,6 +98,28 @@ void main() {
     expect(result.detail, contains('/dev/fuse'));
   });
 
+  test('fuseAvailable mirrors the fuse check', () async {
+    final binDirectory = Directory(p.join(tempDirectory.path, 'bin'))..createSync();
+    File(p.join(binDirectory.path, 'fusermount3')).writeAsStringSync('');
+
+    expect(
+      await buildService(
+        platform: BuildPlatform.linux,
+        environment: {'PATH': binDirectory.path},
+        fuseDevice: true,
+      ).fuseAvailable(),
+      isTrue,
+    );
+    expect(
+      await buildService(
+        platform: BuildPlatform.linux,
+        environment: {'PATH': tempDirectory.path},
+        fuseDevice: false,
+      ).fuseAvailable(),
+      isFalse,
+    );
+  });
+
   test('gatekeeper check is not applicable outside macos', () async {
     final result = await buildService(platform: BuildPlatform.linux).checkGatekeeper();
 

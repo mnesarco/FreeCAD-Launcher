@@ -46,10 +46,10 @@ covered by tests.
 | M2-05 | Extraction/install strategies per kind: AppImage copy+exec bit, zip/tar safe-extract, dmg (S2), 7z (S1) | Real Linux AppImage install verified end-to-end; zip-slip/symlink/bomb guard tests; Windows/macOS real extraction pending those OSes (CI/manual) | S1, S2, M2-04 | L | DONE |
 | M2-06 | Detect bundled Python version on install (run interpreter, parse, store) | Version shown in build detail; handles missing interpreter gracefully | M2-05 | S | DONE |
 | M2-07 | Versions UI: Installed / Available / Custom tabs, install dialog with preflight, progress, errors | Installed + Available tabs and install orchestration done (controller tests, app runs); manual UI click-through still pending; Custom tab is filled by M2-08 | M1-07, M2-04, M2-05 | L | DONE |
-| M2-08 | Custom build import: local file / URL, trust confirmation, optional label + checksum | Manual: import user file, launch pending M3; DB + files correct | M2-05 | M | TODO |
-| M2-09 | Build delete / verify / "used by profiles" guard | Tests for guard; manual delete of unused build removes files | M2-05 | S | TODO |
-| M2-10 | Startup reconciler: mark `missing`/`broken`, block launch, offer repair | Tests with removed dirs; UI badges | M1-04 | S | TODO |
-| M2-11 | Linux FUSE detection + `APPIMAGE_EXTRACT_AND_RUN=1` fallback wiring (spec spike S6) | Manual on FUSE-less system; no crash | M1-08 | S | TODO |
+| M2-08 | Custom build import: local file / URL, trust confirmation, optional label + checksum | Controller tests cover file/URL/executable/missing; Custom tab form with trust dialog; manual click-through pending | M2-05 | M | DONE |
+| M2-09 | Build delete / verify / "used by profiles" guard | Tests cover blocked delete, hash verify, missing/broken; UI verify + remove feedback | M2-05 | S | DONE |
+| M2-10 | Startup reconciler: mark `missing`/`broken`, block launch, offer repair | Tests with removed dirs; status badges in Installed tab; launch blocking lands in M3 | M1-04 | S | DONE |
+| M2-11 | Linux FUSE detection + `APPIMAGE_EXTRACT_AND_RUN=1` fallback wiring (spec spike S6) | `fuseAvailable()` + launch env flag tested; manual FUSE-less launch pending (M3-04) | M1-08 | S | DONE |
 
 Exit: stable FreeCAD installs from catalog and launches by hand on Linux, Windows, macOS;
 corrupted download rejected; rate-limit/offline paths verified.

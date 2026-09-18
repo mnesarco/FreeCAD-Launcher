@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
@@ -259,9 +260,166 @@ void main() {
     await database.buildsDao.save(sampleBuild(id: 'build-1'));
     final controller = buildController();
 
-    await controller.remove('build-1');
+    final result = await controller.remove('build-1');
 
+    expect(result.isOk, isTrue);
     expect(await database.buildsDao.getById('build-1'), isNull);
     expect(buildDirectory.existsSync(), isFalse);
+  });
+
+  test('remove is blocked while profiles use the build', () async {
+    final buildDirectory = Directory(paths.buildDir('build-1'))..createSync(recursive: true);
+    await database.buildsDao.save(sampleBuild(id: 'build-1'));
+    await database.profilesDao.save(sampleProfile(buildId: 'build-1'));
+    final controller = buildController();
+
+    final result = await controller.remove('build-1');
+
+    expect(result.isErr, isTrue);
+    expect(result.errorOrNull!.message, contains('used by 1 profile'));
+    expect(await database.buildsDao.getById('build-1'), isNotNull);
+    expect(buildDirectory.existsSync(), isTrue);
+  });
+
+  test('verify confirms a matching AppImage hash', () async {
+    final buildDirectory = Directory(paths.buildDir('build-1'))..createSync(recursive: true);
+    final executable = File(p.join(buildDirectory.path, 'FreeCAD.AppImage'))
+      ..writeAsStringSync('data');
+    await database.buildsDao.save(
+      sampleBuild(id: 'build-1').copyWith(
+        localPath: executable.path,
+        sha256: Value(sha256OfBytes(utf8.encode('data'))),
+      ),
+    );
+    final controller = buildController();
+
+    final result = await controller.verify('build-1');
+
+    expect(result.valueOrNull, BuildStatus.installed);
+    final stored = (await database.buildsDao.getById('build-1'))!;
+    expect(stored.verified, isTrue);
+    expect(stored.status, BuildStatus.installed);
+  });
+
+  test('verify marks a hash mismatch as broken', () async {
+    final buildDirectory = Directory(paths.buildDir('build-1'))..createSync(recursive: true);
+    final executable = File(p.join(buildDirectory.path, 'FreeCAD.AppImage'))
+      ..writeAsStringSync('tampered');
+    await database.buildsDao.save(
+      sampleBuild(id: 'build-1').copyWith(
+        localPath: executable.path,
+        sha256: Value(sha256OfBytes(utf8.encode('data'))),
+      ),
+    );
+    final controller = buildController();
+
+    final result = await controller.verify('build-1');
+
+    expect(result.valueOrNull, BuildStatus.broken);
+    expect((await database.buildsDao.getById('build-1'))!.verified, isFalse);
+  });
+
+  test('verify marks missing files', () async {
+    await database.buildsDao.save(sampleBuild(id: 'build-1'));
+    final controller = buildController();
+
+    final result = await controller.verify('build-1');
+
+    expect(result.valueOrNull, BuildStatus.missing);
+  });
+
+  test('reconcile marks missing and broken builds', () async {
+    final buildDirectory = Directory(paths.buildDir('build-1'))..createSync(recursive: true);
+    final executable = File(p.join(buildDirectory.path, 'FreeCAD.AppImage'))
+      ..writeAsStringSync('');
+    await database.buildsDao.save(
+      sampleBuild(id: 'build-1').copyWith(localPath: executable.path),
+    );
+    await database.buildsDao.save(
+      sampleBuild(id: 'build-2', version: '1.1.4').copyWith(
+        localPath: p.join(paths.buildDir('build-2'), 'FreeCAD.AppImage'),
+      ),
+    );
+    final controller = buildController();
+
+    await controller.reconcile();
+    expect((await database.buildsDao.getById('build-1'))!.status, BuildStatus.installed);
+    expect((await database.buildsDao.getById('build-2'))!.status, BuildStatus.missing);
+
+    executable.deleteSync();
+    await controller.reconcile();
+    expect((await database.buildsDao.getById('build-1'))!.status, BuildStatus.broken);
+  });
+
+  test('imports a local AppImage as a custom build', () async {
+    final sourceFile = File(p.join(tempDirectory.path, 'MyBuild.AppImage'))
+      ..writeAsStringSync('data');
+    final installer = FakeInstaller();
+    final controller = buildController(installer: installer);
+
+    final result = await controller.importCustom(
+      source: sourceFile.path,
+      versionLabel: 'My Build',
+      kind: BuildKind.appimage,
+    );
+
+    expect(result.isOk, isTrue);
+    final build = result.valueOrNull!;
+    expect(build.channel, BuildChannel.custom);
+    expect(build.version, 'My Build');
+    expect(build.kind, BuildKind.appimage);
+    expect(build.localPath, '/data/builds/x/FreeCAD');
+    expect(build.sha256, sha256OfBytes(utf8.encode('data')));
+    expect(build.verified, isTrue);
+    expect(installer.requests, hasLength(1));
+    expect(await database.buildsDao.getById(build.id), isNotNull);
+  });
+
+  test('imports a URL archive with a checksum', () async {
+    final data = utf8.encode('data');
+    final expected = sha256OfBytes(data);
+    final source = FakeDownloadSourceWithResponses(
+      (uri) async => DownloadStream(bytes: bytesStream(data), contentLength: data.length),
+    );
+    final installer = FakeInstaller();
+    final controller = buildController(source: source, installer: installer);
+
+    final result = await controller.importCustom(
+      source: 'https://example.invalid/FreeCAD.7z',
+      fileName: 'FreeCAD.7z',
+      sha256: expected,
+      kind: BuildKind.archive,
+    );
+
+    expect(result.isOk, isTrue);
+    expect(source.requests.single.toString(), 'https://example.invalid/FreeCAD.7z');
+    expect(result.valueOrNull!.sourceUrl, 'https://example.invalid/FreeCAD.7z');
+    expect(result.valueOrNull!.verified, isTrue);
+    expect(installer.requests.single.archivePath, p.join(paths.downloadsCacheDir, 'FreeCAD.7z'));
+  });
+
+  test('registers a custom executable without installing', () async {
+    final executable = File(p.join(tempDirectory.path, 'my-freecad'))..writeAsStringSync('bin');
+    final installer = FakeInstaller();
+    final controller = buildController(installer: installer);
+
+    final result = await controller.importCustom(source: executable.path);
+
+    expect(result.isOk, isTrue);
+    expect(result.valueOrNull!.kind, BuildKind.custom);
+    expect(result.valueOrNull!.localPath, executable.path);
+    expect(result.valueOrNull!.verified, isFalse);
+    expect(installer.requests, isEmpty);
+  });
+
+  test('import fails for a missing local file', () async {
+    final controller = buildController();
+
+    final result = await controller.importCustom(
+      source: p.join(tempDirectory.path, 'missing.AppImage'),
+    );
+
+    expect(result.isErr, isTrue);
+    expect(await database.buildsDao.getAll(), isEmpty);
   });
 }

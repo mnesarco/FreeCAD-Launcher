@@ -13,6 +13,7 @@ abstract final class LaunchEnvironment {
     required BuildPlatform platform,
     required ProfilePaths paths,
     required Map<String, String> inherited,
+    bool appImageExtractAndRun = false,
   }) {
     final env = <String, String>{};
     for (final entry in inherited.entries) {
@@ -23,6 +24,10 @@ abstract final class LaunchEnvironment {
 
     env['FREECAD_USER_HOME'] = paths.root;
     env['FREECAD_USER_TEMP'] = paths.temp;
+
+    if (platform == BuildPlatform.linux && appImageExtractAndRun) {
+      env['APPIMAGE_EXTRACT_AND_RUN'] = '1';
+    }
 
     switch (platform) {
       case BuildPlatform.linux:
