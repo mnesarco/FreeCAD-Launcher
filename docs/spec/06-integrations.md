@@ -1,0 +1,166 @@
+# 06 — Integrations
+
+All facts below were verified against live GitHub APIs and the FreeCAD source as of
+2026-09-18. The stable release referenced is `1.1.3` (published 2026-07-25).
+
+## 1. GitHub releases (FreeCAD builds)
+
+### 1.1 Endpoints
+
+| Purpose | Endpoint |
+|---|---|
+| Latest stable | `GET https://api.github.com/repos/FreeCAD/FreeCAD/releases/latest` |
+| All releases (paged) | `GET https://api.github.com/repos/FreeCAD/FreeCAD/releases?per_page=100&page=N` |
+| Single tag | `GET https://api.github.com/repos/FreeCAD/FreeCAD/releases/tags/<tag>` |
+| Legacy full bundles | `GET https://api.github.com/repos/FreeCAD/FreeCAD-Bundle/releases` (archived repo) |
+| Asset download | `https://github.com/FreeCAD/FreeCAD/releases/download/<tag>/<asset>` |
+
+Implementation uses conditional requests (`If-None-Match`) and caches the payload. Note:
+unauthenticated 304 responses still consume a small amount of rate limit; avoid polling.
+
+### 1.2 Rate limits
+
+- Unauthenticated: **60 requests/hour/IP** (verified `x-ratelimit-limit: 60`).
+- Authenticated: **5,000 requests/hour**.
+- Strategy: 6-hour TTL for catalog refreshes, ETag-aware requests, respect
+  `X-RateLimit-Remaining`/`X-RateLimit-Reset`, surface the remaining count in Settings,
+  optional PAT (classic, no scopes needed for public repos) to lift the limit (OQ-3).
+- Do not call `/rate_limit` in loops (it is free, but pointless); read response headers.
+
+### 1.3 Channel and asset classification
+
+Asset names have evolved. Classification must use regex over exact names, not assumptions.
+
+| Channel | Tag pattern | Pre-release flag | Assets |
+|---|---|---|---|
+| `stable` | semver `X.Y.Z` | false | see below |
+| `weekly` | `weekly-YYYY.MM.DD` | true | `FreeCAD_weekly-...` |
+| `weekly` rolling | `weeklies` | true | Linux only |
+| `legacy` | `0.XX.Y` and `1.0.x` | false | varies, see gaps |
+
+Asset patterns (current era, 1.1.x):
+
+- Linux: `FreeCAD_<ver>-Linux-(x86_64|aarch64)-py<py>.AppImage` (+ `.zsync`, `-SHA256.txt`)
+- Windows: `FreeCAD_<ver>-Windows-x86_64-py<py>.7z` (portable) and `...-installer.exe` (ignored)
+- macOS: `FreeCAD_<ver>-macOS-(arm64|x86_64)-py<py>.dmg`
+
+Older naming (must still parse for `legacy`):
+
+- 1.0.x: `FreeCAD_1.0.2-conda-Linux-x86_64-py311.AppImage`, `...-conda-Windows-x86_64-py311.7z`,
+  `...-conda-Windows-x86_64-installer-1.exe`, `...-conda-macOS-arm64-py311.dmg`
+- 0.21.2: `FreeCAD-0.21.2-Linux-x86_64.AppImage`, `FreeCAD-0.21.2-Windows_x86_64.7z`,
+  `FreeCAD-0.21.2-macOS-{arm64,intel-x86_64}.dmg`
+- 0.20.x: `FreeCAD-0.20.0-Linux-x86_64.AppImage`, `FreeCAD-0.20.0-WIN-x64-portable-1.zip`,
+  `FreeCAD-0.20.0-macOS-x86_64.dmg`
+- 0.19.x: full bundles also on `FreeCAD/FreeCAD-Bundle` releases (e.g. tag `0.19`)
+
+Known gaps: 0.19.4 has no Linux/macOS binaries on either repo; the catalog must hide
+unsupported combinations rather than link to 404s.
+
+Weekly notes:
+
+- Weekly builds moved to `FreeCAD/FreeCAD` (tag `weekly-YYYY.MM.DD`, published most
+  Wednesdays); `FreeCAD/FreeCAD-Bundle` is archived and only holds old `weekly-builds`.
+- The rolling `weeklies` tag provides generic Linux AppImages with zsync updates.
+- Weekly builds are development-quality; the UI must label them clearly and never auto-install.
+
+### 1.4 Integrity
+
+- Assets ship a sidecar `<asset>-SHA256.txt`. Download it first when present, parse the hex
+  digest, verify after download; block install on mismatch.
+- macOS builds are signed by "The FreeCAD project association AISBL" in CI, but notarization
+  has been unreliable (open issue FreeCAD/FreeCAD#30621: `spctl` can reject with unnotarized
+  or invalid-signature errors). Strategy: install `.app` to a user-writable directory, offer
+  quarantine removal with explanation, and surface the right-click→Open fallback in diagnostics.
+- Windows builds bundle MSVC/UCRT DLLs; no separate redistributable requirement was found for
+  current conda bundles.
+- Linux AppImages are type-2 (FUSE 2). When FUSE is unavailable, use
+  `APPIMAGE_EXTRACT_AND_RUN=1`; diagnostics check `/dev/fuse` and `fusermount` and explain
+  `libfuse2`/`libfuse2t64` alternatives.
+
+### 1.5 Version ordering
+
+- Stable/legacy: semver compare (`1.1.3 > 1.1.2 > 1.0.2 > 0.21.2`).
+- Weekly: compare tag dates (`weekly-2026.09.16`), all weeklies sort above any stable only
+  within the weekly channel; channels are never mixed in one update suggestion.
+- Build identity = `(channel, version, platform, arch)`; two builds of the same version from
+  different channels are distinct.
+
+## 2. Addon catalog
+
+The existing [`addon_index_spec.md`](../../addon_index_spec.md) remains authoritative for the
+cache format. Integration rules for v2:
+
+- **Source**: `https://addons.freecad.org/addon_catalog_cache.zip` (single JSON inside),
+  cached with a 6-hour TTL and offline fallback.
+- **Stats** (optional): `addon_stats.json` for download counts/stars; failure is non-fatal.
+- **Install**: use the entry's `zip_url` (repo archive). If absent, combine the configured
+  `mainConfig.addonsDownloadBaseUrl` with `relative_cache_path`.
+- **Branch choice**: entries are per-branch; prefer the user's explicit `git_ref`, else the
+  first entry whose `freecad_min`/`freecad_max` brackets the profile's version, else the first.
+- **Placement**: extract to `<profile>/Mod/<AddonId>` (matches FreeCAD's AddonManager).
+- **Update detection**: compare installed `catalogLastUpdate`/package version against the
+  catalog entry; show update, never auto-apply.
+- **Requirements**: if the archive has `requirements.txt`, offer the pip flow (FR-4.7/FR-6).
+- **Safety**: safe-extract with zip-slip and symlink guards; reject entries with absolute paths;
+  cap uncompressed size and file count to avoid zip bombs.
+
+## 3. Macro catalog
+
+- Primary source: the official macros repository `FreeCAD/FreeCAD-macros` on GitHub
+  (verify during spike S4; the FreeCAD wiki links macros there).
+- v0.1 capabilities: list/search macros in the repo, download a single `.FCMacro` into the
+  profile, delete, reveal, open externally.
+- Update checks are file-hash based, deferred to v0.2 (needs a cached index).
+- Macro placement: FreeCAD's macro dir collapses to the profile root when
+  `FREECAD_USER_HOME` is custom; scan `<profile>/*.FCMacro` and `<profile>/Macro/` if present.
+
+## 4. Bundled Python and pip
+
+### 4.1 Interpreter discovery per build kind
+
+| Kind | Interpreter |
+|---|---|
+| Linux AppImage | `<build>/FreeCAD_*.AppImage` mounts read-only; extract once to `builds/<id>/extracted/squashfs-root/usr/bin/python` on first pip need |
+| Windows archive | `<build>\bin\python.exe` (always invoke via `-m pip`, never `Scripts\pip.exe`) |
+| macOS dmg | `<build>/FreeCAD.app/Contents/Resources/bin/python` |
+| Custom | probe `<exeDir>/bin/python*`, `Contents/Resources/bin/python`; pip UI disabled with explanation if absent |
+
+Bash/zsh must never be involved: run the interpreter directly with an argument array and the
+profile env (plus `PYTHONHOME`/`PREFIX` only if the platform shim needs it; prefer the shim
+launcher when one exists, e.g. macOS `Contents/MacOS/FreeCAD` sets its own env).
+
+### 4.2 Pip invocation
+
+```
+<python> -m pip install --upgrade --target <targetDir> <spec...>
+    --disable-pip-version-check --no-warn-script-location
+```
+
+- `targetDir`: `<profile>/AdditionalPythonPackages/py<major><minor>` for FreeCAD 0.21+,
+  `<profile>/AdditionalPythonPackages` for 0.20 and older. The Python version is reported by
+  the interpreter (`sys.version_info`), never guessed.
+- FreeCAD appends `AdditionalPythonPackages[/pyXY]` to `sys.path` at startup (last), so
+  bundled modules win name clashes — warn users in that case.
+- `PYTHONPATH`/`PYTHONHOME` are ignored by FreeCAD 1.0+ (isolated `PyConfig`), which is why
+  the `--target` + `AdditionalPythonPackages` mechanism is used instead of env manipulation.
+- Pip output is streamed to a job log; a spinner plus "resolving…" state is shown because pip
+  can be silent for a while. Network failures report the raw pip tail.
+- Uninstall (v0.1): use `<python> -m pip uninstall --target` is unreliable; instead pip-install
+  a fresh resolution into a temp dir to compute removals, or delete the package directory and
+  refresh the DB. Spike S3 decides; until then removal is best-effort with a warning.
+- Concurrency: never allow two pip jobs in the same profile; packaging installs are serialized
+  globally as well (package DB locks).
+
+### 4.3 Addon requirements
+
+- Parse `requirements.txt` (comments, extras, markers) with a small parser; show a preview.
+- Install after explicit consent, then record each package with `source = addon:<id>`.
+- Do not vendor wheels; use the bundled pip's default index (PyPI) and respect system proxy.
+
+## 5. Network and privacy
+
+- Only three hosts by default: `api.github.com`/`github.com`, `addons.freecad.org`, `pypi.org`
+  (pip, user-triggered).
+- User-supplied URLs are fetched only on explicit action, with the host shown in the confirm dialog.
+- No telemetry. Logs may contain URLs; tokens are redacted.
