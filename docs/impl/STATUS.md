@@ -5,17 +5,23 @@
 
 - **Updated**: 2026-09-18
 - **Current milestone**: M1 — Foundation
-- **Active branch**: `main` → `v2` (M1-01 in flight)
+- **Active branch**: `v2`
 - **Last session**: 2026-09-18
-- **Next action**: Finish `M1-01` (commit docs, commit prototype freeze, tag `prototype-final`,
-  create `v2`), then `M1-02` (skeleton, deps, l10n, platform runners).
+- **Next action**: `M1-03` core primitives (`Result`/`AppError`, logging with rotation,
+  constants), then `M1-04` drift schema v1 + DAOs.
 - **Blockers**: none
-- **In progress**: `M1-01` — freeze prototype + branch
+- **In progress**: none
 - **Recently completed**:
-  - 2026-09-18 — v2 spec written (`docs/spec/`, 10 files)
-  - 2026-09-18 — implementation plan created (`docs/impl/`, decision log seeded D-001..D-017)
-  - 2026-09-18 — M0 complete: OQ-2 → `org.freecad.ext.launcher` (D-016), OQ-6 → ARB from
-    day one (D-017), spec approved, workflow confirmed
+  - M0 — OQ-2 → `org.freecad.ext.launcher` (D-016); OQ-6 → ARB from day one (D-017); spec
+    approved; repo workflow confirmed
+  - M1-01 — prototype tagged `prototype-final`, `v2` branch created
+  - M1-02 — v2 skeleton: prototype `lib/` replaced, ARB l10n scaffold, platform runners for
+    Linux/Windows/macOS with app id `org.freecad.ext.launcher`, `http` added, `snapd`/`recase`
+    removed. Verified locally: `flutter analyze` clean, `flutter test` green (1 widget test),
+    `flutter build linux --release` succeeds. Windows/macOS builds pending M1-09 CI.
+- **Notes**:
+  - Generated l10n files live in `lib/l10n/gen/` and are committed.
+  - Windows/macOS runner scaffolding was generated on Linux; only CI can compile them.
 
 ## Session log
 
@@ -23,10 +29,11 @@
 |---|---|---|---|---|
 | 2026-09-18 | planning | Requirements Q&A, cross-platform FreeCAD research, spec, implementation plan | — | `docs/spec/**`, `docs/impl/**`, `AGENTS.md` |
 | 2026-09-18 | M0 | Resolved OQ-2/OQ-6, spec approved, workflow confirmed | M0-01..M0-04 | `docs/impl/DECISIONS.md`, `docs/spec/**` |
+| 2026-09-18 | M1 | Prototype freeze, v2 branch, app skeleton with l10n and platform runners | M1-01, M1-02 | `lib/**`, `test/**`, `linux/**`, `windows/**`, `macos/**`, `pubspec.yaml`, `l10n.yaml` |
 
 ## Standing notes for the next agent
 
-- The prototype in `lib/` is **frozen**. Do not extend it; v2 replaces it on the `v2` branch.
+- The prototype is frozen at tag `prototype-final`; do not resurrect its code or schema.
 - Read `docs/impl/DECISIONS.md` before proposing alternatives to anything already decided.
 - The highest technical risk is `.7z` extraction (`S1`) — do not start `M2-05` before S1 exits.
-- Don't trust the old `AGENTS.md` architecture notes for v2; they describe the legacy prototype.
+- `AGENTS.md` is locally git-excluded (`.git/info/exclude`); it is not part of commits.

@@ -318,6 +318,11 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.0.0"
+  flutter_localizations:
+    dependency: "direct main"
+    description: flutter
+    source: sdk
+    version: "0.0.0"
   flutter_svg:
     dependency: "direct main"
     description:
@@ -336,14 +341,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  freezed_annotation:
-    dependency: transitive
-    description:
-      name: freezed_annotation
-      sha256: c2e2d632dd9b8a2b7751117abcfc2b4888ecfe181bd9fca7170d9ef02e595fe2
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.4.4"
   glob:
     dependency: transitive
     description:
@@ -369,7 +366,7 @@ packages:
     source: hosted
     version: "1.0.1"
   http:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: http
       sha256: "87721a4a50b19c7f1d49001e51409bddc46303966ce89a65af4f4e6004896412"
@@ -641,7 +638,7 @@ packages:
     source: hosted
     version: "1.5.0"
   recase:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: recase
       sha256: e4eb4ec2dcdee52dcf99cb4ceabaffc631d7424ee55e56f280bc039737f89213
@@ -685,14 +682,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  snapd:
-    dependency: "direct main"
-    description:
-      name: snapd
-      sha256: "0b0ce815c6932a53289b775d255f40d06976c6b0db9aa61451a10242b31e0026"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.7.4"
   source_gen:
     dependency: transitive
     description:

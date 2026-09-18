@@ -1,0 +1,10 @@
+{
+  "@@locale": "en",
+  "appTitle": "FreeCAD Launcher",
+  "navHome": "Home",
+  "navProfiles": "Profiles",
+  "navVersions": "Versions",
+  "navAddons": "Addons",
+  "navMacros": "Macros",
+  "navSettings": "Settings"
+}

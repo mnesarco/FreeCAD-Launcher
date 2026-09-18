@@ -19,8 +19,8 @@ Exit: no open question blocks M1; all spec open questions have an owner/status.
 
 | ID | Task | Done when | Deps | Effort | Status |
 |---|---|---|---|---|---|
-| M1-01 | Freeze prototype: tag `prototype-final`, create `v2` branch | Tag pushed, branch exists, `STATUS.md` updated | M0-04 | S | WIP |
-| M1-02 | Project skeleton on `v2`: `pubspec` deps (`http` added, `snapd` removed), lints, `main.dart`/`app.dart` shell, ARB scaffolding if OQ-6 says yes | App builds and runs on Linux/Windows/macOS | M0-02 | M | TODO |
+| M1-01 | Freeze prototype: tag `prototype-final`, create `v2` branch | Tag pushed, branch exists, `STATUS.md` updated | M0-04 | S | DONE |
+| M1-02 | Project skeleton on `v2`: `pubspec` deps (`http` added, `snapd` removed), lints, `main.dart`/`app.dart` shell, ARB scaffolding per D-017, platform runners generated with app id `org.freecad.ext.launcher` (D-016) | App builds and runs — Linux verified; Windows/macOS via M1-09 CI | M0-02 | M | DONE |
 | M1-03 | `core/`: `Result`, `AppError`, leveled logging with rotation + redaction, constants | Unit tests green; logs written under `logs/` | M1-02 | S | TODO |
 | M1-04 | drift schema v1 (`builds`, `profiles`, `installed_addons`, `python_packages`, `bundles`, `bundle_items`, `macros`, `catalog_cache`, `settings`) + DAOs + codegen | In-memory drift tests for each DAO; `build_runner` clean | M1-02, M0-01 | L | TODO |
 | M1-05 | `domain/profiles`: path mapping + env builder per OS + profile rules | Unit tests cover Linux/Windows/macOS env matrices (`spec 04 §4.1`) | M1-02 | M | TODO |
