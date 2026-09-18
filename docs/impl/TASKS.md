@@ -39,7 +39,7 @@ covered by tests.
 |---|---|---|---|---|---|
 | S1 | Spike: `.7z` extraction strategy | D-018: bundle `7zr.exe`; real 1.1.3 asset inspected (LZMA2+LZMA+BCJ2, koni_sevenz cannot read it); manual Windows extraction in M2-05 | M1-02 | M | DONE |
 | S2 | Spike: macOS `.dmg` install (mount/copy/detach/quarantine) | D-019 recorded; manual macOS verification folded into M2-05 | M1-02 | S | DONE |
-| M2-01 | GitHub releases client: conditional GET (ETag), cache, rate-limit header handling, token hook (disabled in v0.1 unless OQ-3 says otherwise) | Unit tests against fixtures; no network in tests; 304 path covered | M1-10 | M | TODO |
+| M2-01 | GitHub releases client: conditional GET (ETag), cache, rate-limit header handling, token hook (disabled in v0.1 unless OQ-3 says otherwise) | Unit tests against fixtures; no network in tests; 304 path covered | M1-10 | M | DONE |
 | M2-02 | Asset classifier + version compare: stable/legacy/weekly-aware, per-OS/arch selection, exact regexes from `spec 06 §1.3` | Fixture tests for 1.1.3, 1.0.2, 0.21.2, 0.20.0, weekly and gaps (0.19.4) | M1-10 | M | TODO |
 | M2-03 | Catalog cache store + TTL + stale/offline behavior | Cache round-trip test; UI can render stale data with a warning | M1-04 | S | TODO |
 | M2-04 | Download job pipeline: `.part`, progress, cancel, SHA-256 verify, cleanup | Unit tests; corrupted download rejected with no partial files | M1-06, M2-01 | M | TODO |

@@ -7,11 +7,11 @@
 - **Current milestone**: M1 — Foundation (code complete; first CI run pending a remote)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-18
-- **Next action**: `M2-01` GitHub releases client (conditional GET/ETag, cache, rate-limit
-  headers) using the M1-10 fixtures; then `M2-02` asset classifier.
+- **Next action**: `M2-02` asset classifier + version compare for all naming eras (stable,
+  legacy, weekly) using fixtures; then `M2-03` catalog cache store with TTL.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
-    OQ-7). Everything else in M1 is verified locally.
+    OQ-7). Everything else is verified locally.
 - **In progress**: none
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
@@ -23,6 +23,10 @@
   - S2 — **D-019**: `.dmg` install via `hdiutil attach -readonly` → copy `FreeCAD.app` →
     detach, quarantine removal with consent, direct binary spawn; manual macOS verification in
     M2-05.
+  - M2-01 — `GitHubReleasesClient` with conditional GET (ETag/If-Modified-Since), rate-limit
+    header parsing (`x-ratelimit-*`), token provider hook and typed responses; 7 tests using
+    `FakeHttp` + the releases fixture (200, 304, 403-exhausted, token on/off, transport error);
+    85 total tests green.
 - **Notes**:
   - Generated l10n files live in `lib/l10n/gen/` and are committed.
   - Windows/macOS runner scaffolding was generated on Linux; only CI can compile them.
@@ -42,6 +46,7 @@
 | 2026-09-18 | M1 | Diagnostics service + settings panel; shared fake process helper | M1-08 | `lib/platform/diagnostics.dart`, `lib/ui/settings/**`, `test/platform/**`, `test/helpers/**` |
 | 2026-09-18 | M1 | CI workflow + test harness (DB helper, FakeHttp, fixtures) | M1-09, M1-10 | `.github/workflows/ci.yml`, `test/helpers/**`, `test/fixtures/**` |
 | 2026-09-18 | M2 | Spikes S1/S2: real FreeCAD `.7z` inspected, bundled 7zr.exe + license, `.dmg` design | S1, S2 | `third_party/7zip/**`, `docs/impl/DECISIONS.md` |
+| 2026-09-18 | M2 | GitHub releases client with conditional GET, rate limits and token hook + tests | M2-01 | `lib/data/catalog/**`, `test/data/catalog/**` |
 
 ## Standing notes for the next agent
 
