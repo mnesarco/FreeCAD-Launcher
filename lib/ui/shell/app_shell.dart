@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:freecad_launcher/core/constants.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 
 class AppShell extends StatefulWidget {
@@ -87,6 +88,7 @@ class _StatusBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Container(
       height: 28,
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -96,9 +98,9 @@ class _StatusBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text('FreeCAD Launcher', style: theme.textTheme.labelSmall),
+          Text(l10n.appTitle, style: theme.textTheme.labelSmall),
           const Spacer(),
-          Text('0.1.0-dev', style: theme.textTheme.labelSmall),
+          Text(appVersion, style: theme.textTheme.labelSmall),
         ],
       ),
     );
