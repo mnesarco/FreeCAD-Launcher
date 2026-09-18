@@ -7,8 +7,8 @@
 - **Current milestone**: M1 — Foundation (code complete; first CI run pending a remote)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-18
-- **Next action**: `M2-03` catalog cache store (drift `catalog_cache` + payload files, TTL,
-  stale/offline behavior) wiring the client and classifier together.
+- **Next action**: `M2-04` download job pipeline (`.part`, progress, cancel, SHA-256 verify,
+  cleanup) with a swappable downloader for tests.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -19,13 +19,12 @@
   - S1 — **D-018**: bundle official 7-Zip standalone `third_party/7zip/7zr.exe` for Windows
     `.7z` (real asset is LZMA2+LZMA+BCJ2; pure-Dart readers cannot handle it).
   - S2 — **D-019**: `.dmg` install via `hdiutil` + consent-based quarantine removal.
-  - M2-01 — `GitHubReleasesClient` with conditional GET, rate-limit parsing and token hook;
-    7 tests with `FakeHttp`.
-  - M2-02 — Version model (`FreeCadVersion`, `WeeklyVersion`, `ReleaseTag` channel rules) and
-    `AssetClassifier`/`BuildCandidate` handling all naming eras (1.1.x, 1.0.x conda, 0.21.2
-    hyphen/intel, 0.20 zip portable, dated + rolling weeklies), installer/experimental/metadata
-    filtering, checksum sidecar resolution and macOS-target tie-break; 6 new fixtures,
-    16 new tests; 101 total green.
+  - M2-01 — `GitHubReleasesClient` with conditional GET, rate-limit parsing and token hook.
+  - M2-02 — Version model + `AssetClassifier`/`BuildCandidate` for all naming eras; 6 fixtures,
+    16 tests.
+  - M2-03 — `ReleasesCatalog`: 6 h TTL, atomic payload files, drift `catalog_cache` entry with
+    ETag/Last-Modified, `Link`-header pagination (max 5 pages), refresh via 304, and stale
+    fallback with `isStale`/`error` for offline/rate-limited use; 9 new tests, 110 total green.
 - **Notes**:
   - Generated l10n files live in `lib/l10n/gen/` and are committed.
   - Windows/macOS runner scaffolding was generated on Linux; only CI can compile them.
@@ -47,6 +46,7 @@
 | 2026-09-18 | M2 | Spikes S1/S2: real FreeCAD `.7z` inspected, bundled 7zr.exe + license, `.dmg` design | S1, S2 | `third_party/7zip/**`, `docs/impl/DECISIONS.md` |
 | 2026-09-18 | M2 | GitHub releases client with conditional GET, rate limits and token hook + tests | M2-01 | `lib/data/catalog/**`, `test/data/catalog/**` |
 | 2026-09-18 | M2 | Version model + asset classifier for all naming eras, fixtures and tests | M2-02 | `lib/domain/builds/**`, `lib/platform/host.dart`, `test/domain/**`, `test/fixtures/**` |
+| 2026-09-18 | M2 | Releases catalog cache: TTL, ETag/304 refresh, Link pagination, stale fallback | M2-03 | `lib/data/catalog/**`, `test/data/catalog/**` |
 
 ## Standing notes for the next agent
 

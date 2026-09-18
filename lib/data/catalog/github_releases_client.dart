@@ -18,6 +18,7 @@ class ReleasesResponse {
     this.body,
     this.etag,
     this.lastModified,
+    this.link,
     this.rateLimit = const GitHubRateLimit(),
   });
 
@@ -25,6 +26,7 @@ class ReleasesResponse {
   final String? body;
   final String? etag;
   final String? lastModified;
+  final String? link;
   final GitHubRateLimit rateLimit;
 
   bool get isOk => statusCode == 200;
@@ -32,6 +34,22 @@ class ReleasesResponse {
   bool get isNotModified => statusCode == 304;
 
   bool get isRateLimited => statusCode == 403 || statusCode == 429;
+
+  static int? nextPageFromLink(String? link) {
+    if (link == null) {
+      return null;
+    }
+    for (final part in link.split(',')) {
+      if (!part.contains('rel="next"')) {
+        continue;
+      }
+      final match = RegExp(r'[?&]page=(\d+)').firstMatch(part);
+      if (match != null) {
+        return int.tryParse(match[1]!);
+      }
+    }
+    return null;
+  }
 }
 
 class GitHubReleasesClient {
@@ -80,6 +98,7 @@ class GitHubReleasesClient {
       body: response.statusCode == 304 ? null : response.body,
       etag: response.headers['etag'],
       lastModified: response.headers['last-modified'],
+      link: response.headers['link'],
       rateLimit: _parseRateLimit(response.headers),
     );
   }

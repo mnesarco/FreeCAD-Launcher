@@ -116,4 +116,19 @@ void main() {
       throwsA(isA<http.ClientException>()),
     );
   });
+
+  test('parses the next page from the Link header', () {
+    expect(
+      ReleasesResponse.nextPageFromLink(
+        '<https://api.github.com/repos/FreeCAD/FreeCAD/releases?page=3>; rel="next", '
+        '<https://api.github.com/repos/FreeCAD/FreeCAD/releases?page=9>; rel="last"',
+      ),
+      3,
+    );
+    expect(
+      ReleasesResponse.nextPageFromLink('<https://api.github.com/x?page=9>; rel="last"'),
+      isNull,
+    );
+    expect(ReleasesResponse.nextPageFromLink(null), isNull);
+  });
 }
