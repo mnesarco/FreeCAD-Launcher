@@ -7,8 +7,8 @@
 - **Current milestone**: M1 — Foundation (code complete; first CI run pending a remote)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-18
-- **Next action**: `M2-04` download job pipeline (`.part`, progress, cancel, SHA-256 verify,
-  cleanup) with a swappable downloader for tests.
+- **Next action**: `M2-05` extraction/install strategies (`AppImage` copy+exec, safe zip/tar,
+  `.dmg` per D-019, `.7z` via bundled `7zr.exe` per D-018) into `builds/<id>/`.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -20,11 +20,11 @@
     `.7z` (real asset is LZMA2+LZMA+BCJ2; pure-Dart readers cannot handle it).
   - S2 — **D-019**: `.dmg` install via `hdiutil` + consent-based quarantine removal.
   - M2-01 — `GitHubReleasesClient` with conditional GET, rate-limit parsing and token hook.
-  - M2-02 — Version model + `AssetClassifier`/`BuildCandidate` for all naming eras; 6 fixtures,
-    16 tests.
-  - M2-03 — `ReleasesCatalog`: 6 h TTL, atomic payload files, drift `catalog_cache` entry with
-    ETag/Last-Modified, `Link`-header pagination (max 5 pages), refresh via 304, and stale
-    fallback with `isStale`/`error` for offline/rate-limited use; 9 new tests, 110 total green.
+  - M2-02 — Version model + `AssetClassifier`/`BuildCandidate` for all naming eras; 6 fixtures.
+  - M2-03 — `ReleasesCatalog` cache with TTL, ETag/304, `Link` pagination, stale fallback.
+  - M2-04 — `Downloader` pipeline: streamed `.part` writes, progress with fraction, cancellation
+    token, SHA-256 verification (sidecar parser in `checksum.dart`), cache hit by hash, and
+    guaranteed cleanup on error/cancel; 8 new tests, 120 total green.
 - **Notes**:
   - Generated l10n files live in `lib/l10n/gen/` and are committed.
   - Windows/macOS runner scaffolding was generated on Linux; only CI can compile them.
@@ -47,6 +47,7 @@
 | 2026-09-18 | M2 | GitHub releases client with conditional GET, rate limits and token hook + tests | M2-01 | `lib/data/catalog/**`, `test/data/catalog/**` |
 | 2026-09-18 | M2 | Version model + asset classifier for all naming eras, fixtures and tests | M2-02 | `lib/domain/builds/**`, `lib/platform/host.dart`, `test/domain/**`, `test/fixtures/**` |
 | 2026-09-18 | M2 | Releases catalog cache: TTL, ETag/304 refresh, Link pagination, stale fallback | M2-03 | `lib/data/catalog/**`, `test/data/catalog/**` |
+| 2026-09-18 | M2 | Download pipeline with progress, cancellation, SHA-256 verify and cleanup | M2-04 | `lib/platform/downloader.dart`, `lib/platform/checksum.dart`, `lib/core/cancellation.dart`, `test/platform/**` |
 
 ## Standing notes for the next agent
 
