@@ -7,7 +7,8 @@
 - **Current milestone**: M1 — Foundation (code complete; first CI run pending a remote)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-18
-- **Next action**: `M2-06` detect bundled Python version per installed build.
+- **Next action**: `M2-07` Versions UI (Installed / Available / Custom tabs, install dialog,
+  progress, all states).
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -16,22 +17,20 @@
     macOS needs a machine).
 - **In progress**: none
 - **Recently completed**:
-  - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
-    diagnostics, CI workflow, test harness). 78 tests green, analyze clean, codegen current.
-  - S1 — **D-018**: bundle official 7-Zip standalone `third_party/7zip/7zr.exe` for Windows
-    `.7z` (real asset is LZMA2+LZMA+BCJ2; pure-Dart readers cannot handle it).
+  - M1-01..M1-10 — foundation complete. 78 tests green.
+  - S1 — **D-018**: bundle official 7-Zip standalone `third_party/7zip/7zr.exe`.
   - S2 — **D-019**: `.dmg` install via `hdiutil` + consent-based quarantine removal.
-  - M2-01 — `GitHubReleasesClient` with conditional GET, rate-limit parsing and token hook.
-  - M2-02 — Version model + `AssetClassifier`/`BuildCandidate` for all naming eras; 6 fixtures.
-  - M2-03 — `ReleasesCatalog` cache with TTL, ETag/304, `Link` pagination, stale fallback.
-  - M2-04 — `Downloader` pipeline: `.part`, progress, cancel, SHA-256 verify, cache hit, cleanup.
-  - M2-05 — Extraction/install: `SafeArchiveExtractor` (zip/tar with zip-slip, symlink, entry
-    and size limits), `SevenZipExtractor` (bundled 7zr, arg arrays), `ProcessDmgExtractor`
-    (attach/ditto/detach with force retry), `BuildInstaller` (staging + atomic rename,
-    executable discovery, size computation). 22 new tests. Real end-to-end verified on Linux:
-    downloaded the actual 820 MB 1.1.3 AppImage with sidecar checksum, installed it, and ran it
-    (`--version` exit 0) via `test/manual/real_install_linux_test.dart`. 142 tests green,
-    1 manual test skipped by default.
+  - M2-01 — `GitHubReleasesClient` (conditional GET, rate limits, token hook).
+  - M2-02 — Version model + `AssetClassifier` for all naming eras; 6 fixtures.
+  - M2-03 — `ReleasesCatalog` cache (TTL, ETag/304, pagination, stale fallback).
+  - M2-04 — `Downloader` (`.part`, progress, cancel, SHA-256, cleanup, cache hit).
+  - M2-05 — Extractors + `BuildInstaller` (staging/atomic rename); real Linux AppImage
+    end-to-end verified (820 MB download → checksum → install → run, exit 0).
+  - M2-06 — `ProcessPythonProbe`: locates the bundled interpreter per build layout
+    (Windows `bin/python.exe`, macOS `Contents/Resources/bin/python`, extracted AppImage),
+    probes `-c "import sys; print(...)"`, prefers plain over versioned interpreters, and
+    reports graceful reasons for missing/failed probes; `BuildInstaller` now stores
+    `pythonVersion` (probe result or asset-name hint). 10 new tests, 152 total green.
 - **Notes**:
   - Generated l10n files live in `lib/l10n/gen/` and are committed.
   - Windows/macOS runner scaffolding was generated on Linux; only CI can compile them.
@@ -56,6 +55,7 @@
 | 2026-09-18 | M2 | Releases catalog cache: TTL, ETag/304 refresh, Link pagination, stale fallback | M2-03 | `lib/data/catalog/**`, `test/data/catalog/**` |
 | 2026-09-18 | M2 | Download pipeline with progress, cancellation, SHA-256 verify and cleanup | M2-04 | `lib/platform/downloader.dart`, `lib/platform/checksum.dart`, `lib/core/cancellation.dart`, `test/platform/**` |
 | 2026-09-18 | M2 | Extraction/install strategies + real Linux AppImage end-to-end install | M2-05 | `lib/platform/archive_extract.dart`, `seven_zip_extractor.dart`, `dmg_extractor.dart`, `build_installer.dart`, `test/platform/**`, `test/manual/**` |
+| 2026-09-18 | M2 | Bundled Python detection per build layout, probe + installer integration | M2-06 | `lib/platform/python_probe.dart`, `lib/platform/build_installer.dart`, `test/platform/**` |
 
 ## Standing notes for the next agent
 

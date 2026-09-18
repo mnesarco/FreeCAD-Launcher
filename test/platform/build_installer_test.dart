@@ -7,9 +7,26 @@ import 'package:freecad_launcher/platform/build_installer.dart';
 import 'package:freecad_launcher/platform/dmg_extractor.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/process.dart';
+import 'package:freecad_launcher/platform/python_probe.dart';
 import 'package:path/path.dart' as p;
 
 import '../helpers/fake_process.dart';
+
+class FakePythonProbe implements PythonProbe {
+  final List<({BuildKind kind, String directory, String? knownVersion})> calls = [];
+  PythonDetection result = const PythonDetection(reason: 'not found');
+
+  @override
+  Future<PythonDetection> detect({
+    required BuildKind kind,
+    required String installDirectory,
+    required String executablePath,
+    String? knownVersion,
+  }) async {
+    calls.add((kind: kind, directory: installDirectory, knownVersion: knownVersion));
+    return result;
+  }
+}
 
 class FakeArchiveExtractor implements ArchiveExtractor {
   final List<({String archive, String destination})> calls = [];
@@ -225,5 +242,63 @@ void main() {
       installed.executablePath,
       p.join(paths.buildDir('b1'), 'FreeCAD.app', 'Contents', 'MacOS', 'FreeCAD'),
     );
+  });
+
+  test('stores the python version hint when no probe is configured', () async {
+    final extractor = FakeArchiveExtractor()
+      ..onCreate = (destination) {
+        File(p.join(destination, 'FreeCAD.exe')).writeAsStringSync('exe');
+      };
+    final archive = await writeArchive('FreeCAD.zip', [0]);
+    final installer = BuildInstaller(
+      paths: paths,
+      processRunner: ProcessRunner(launcher: launcher),
+      archiveExtractor: extractor,
+    );
+
+    final installed = await installer.install(
+      InstallRequest(
+        buildId: 'b1',
+        kind: BuildKind.archive,
+        archivePath: archive.path,
+        assetName: 'FreeCAD.zip',
+        pythonVersionHint: '3.11',
+      ),
+    );
+
+    expect(installed.pythonVersion, '3.11');
+  });
+
+  test('uses the probe result and passes the hint through', () async {
+    final extractor = FakeArchiveExtractor()
+      ..onCreate = (destination) {
+        File(p.join(destination, 'FreeCAD.exe')).writeAsStringSync('exe');
+      };
+    final probe = FakePythonProbe()
+      ..result = const PythonDetection(
+        python: BundledPython(executablePath: '/data/python', version: '3.12'),
+      );
+    final archive = await writeArchive('FreeCAD.zip', [0]);
+    final installer = BuildInstaller(
+      paths: paths,
+      processRunner: ProcessRunner(launcher: launcher),
+      archiveExtractor: extractor,
+      pythonProbe: probe,
+    );
+
+    final installed = await installer.install(
+      InstallRequest(
+        buildId: 'b1',
+        kind: BuildKind.archive,
+        archivePath: archive.path,
+        assetName: 'FreeCAD.zip',
+        pythonVersionHint: '3.11',
+      ),
+    );
+
+    expect(installed.pythonVersion, '3.12');
+    expect(probe.calls.single.kind, BuildKind.archive);
+    expect(probe.calls.single.knownVersion, '3.11');
+    expect(probe.calls.single.directory, paths.buildDir('b1'));
   });
 }

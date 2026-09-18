@@ -7,6 +7,7 @@ import 'package:freecad_launcher/platform/archive_extract.dart';
 import 'package:freecad_launcher/platform/dmg_extractor.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/process.dart';
+import 'package:freecad_launcher/platform/python_probe.dart';
 
 class InstallRequest {
   const InstallRequest({
@@ -14,12 +15,14 @@ class InstallRequest {
     required this.kind,
     required this.archivePath,
     this.assetName,
+    this.pythonVersionHint,
   });
 
   final String buildId;
   final BuildKind kind;
   final String archivePath;
   final String? assetName;
+  final String? pythonVersionHint;
 }
 
 class InstalledBuild {
@@ -27,11 +30,13 @@ class InstalledBuild {
     required this.directory,
     required this.executablePath,
     required this.sizeBytes,
+    this.pythonVersion,
   });
 
   final String directory;
   final String executablePath;
   final int sizeBytes;
+  final String? pythonVersion;
 }
 
 class BuildInstaller {
@@ -41,11 +46,13 @@ class BuildInstaller {
     ArchiveExtractor? archiveExtractor,
     ArchiveExtractor? sevenZipExtractor,
     DmgExtractor? dmgExtractor,
+    PythonProbe? pythonProbe,
   }) : _paths = paths,
        _processRunner = processRunner,
        _archiveExtractor = archiveExtractor ?? const SafeArchiveExtractor(),
        _sevenZipExtractor = sevenZipExtractor,
-       _dmgExtractor = dmgExtractor;
+       _dmgExtractor = dmgExtractor,
+       _pythonProbe = pythonProbe;
 
   static const List<String> _executableNames = [
     'FreeCAD.exe',
@@ -60,6 +67,7 @@ class BuildInstaller {
   final ArchiveExtractor _archiveExtractor;
   final ArchiveExtractor? _sevenZipExtractor;
   final DmgExtractor? _dmgExtractor;
+  final PythonProbe? _pythonProbe;
 
   Future<InstalledBuild> install(InstallRequest request) async {
     final finalDirectory = Directory(_paths.buildDir(request.buildId));
@@ -84,11 +92,13 @@ class BuildInstaller {
         finalDirectory.deleteSync(recursive: true);
       }
       final moved = await staging.rename(finalDirectory.path);
+      final finalExecutable = p.join(moved.path, relativeExecutable);
 
       return InstalledBuild(
         directory: moved.path,
-        executablePath: p.join(moved.path, relativeExecutable),
+        executablePath: finalExecutable,
         sizeBytes: await _directorySize(moved.path),
+        pythonVersion: await _detectPythonVersion(request, moved.path, finalExecutable),
       );
     } on Object {
       if (staging.existsSync()) {
@@ -186,5 +196,23 @@ class BuildInstaller {
       }
     }
     return total;
+  }
+
+  Future<String?> _detectPythonVersion(
+    InstallRequest request,
+    String directory,
+    String executablePath,
+  ) async {
+    final probe = _pythonProbe;
+    if (probe == null) {
+      return request.pythonVersionHint;
+    }
+    final detection = await probe.detect(
+      kind: request.kind,
+      installDirectory: directory,
+      executablePath: executablePath,
+      knownVersion: request.pythonVersionHint,
+    );
+    return detection.python?.version ?? request.pythonVersionHint;
   }
 }
