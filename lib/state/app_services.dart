@@ -4,13 +4,24 @@ import 'package:drift/native.dart';
 import 'package:flutter/widgets.dart';
 
 import 'package:freecad_launcher/data/database.dart';
+import 'package:freecad_launcher/platform/diagnostics.dart';
+import 'package:freecad_launcher/platform/host.dart';
 import 'package:freecad_launcher/platform/paths.dart';
+import 'package:freecad_launcher/platform/process.dart';
 
 class AppServices {
-  AppServices({required this.paths, required this.database});
+  AppServices({required this.paths, required this.database, ProcessRunner? processRunner})
+    : processRunner = processRunner ?? ProcessRunner();
 
   final AppPaths paths;
   final AppDatabase database;
+  final ProcessRunner processRunner;
+
+  late final DiagnosticsService diagnostics = DiagnosticsService(
+    paths: paths,
+    platform: hostPlatform,
+    processRunner: processRunner,
+  );
 
   static Future<AppServices> bootstrap() async {
     final paths = await AppPaths.resolve();

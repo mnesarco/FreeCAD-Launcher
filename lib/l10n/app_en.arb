@@ -19,5 +19,16 @@
   "macrosEmptyMessage": "Install macros from the official catalog into a profile.",
   "settingsDataDirectory": "Data directory",
   "settingsVersion": "Version",
-  "settingsLicense": "License"
+  "settingsLicense": "License",
+  "settingsDiagnostics": "Diagnostics",
+  "diagnosticsRun": "Run diagnostics",
+  "diagnosticsRunning": "Running…",
+  "diagnosticDataDirectory": "Data directory writable",
+  "diagnosticFuse": "AppImage support (FUSE)",
+  "diagnosticGatekeeper": "macOS Gatekeeper",
+  "diagnosticDiskSpace": "Disk space",
+  "diagnosticsStatusOk": "OK",
+  "diagnosticsStatusWarning": "Warning",
+  "diagnosticsStatusError": "Error",
+  "diagnosticsStatusNotApplicable": "Not applicable"
 }

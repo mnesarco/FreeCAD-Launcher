@@ -7,8 +7,8 @@
 - **Current milestone**: M1 — Foundation
 - **Active branch**: `v2`
 - **Last session**: 2026-09-18
-- **Next action**: `M1-08` diagnostics service (FUSE presence, Gatekeeper/quarantine, disk
-  space, permissions) with structured, unit-testable results.
+- **Next action**: `M1-09` CI matrix (analyze, tests, codegen freshness, build per OS) +
+  `M1-10` test harness (shared fake HTTP client, fixtures dir).
 - **Blockers**: none
 - **In progress**: none
 - **Recently completed**:
@@ -32,6 +32,10 @@
   - M1-07 — `AppServices` (paths + drift DB, `bootstrap()` creates dirs) + `AppScope`;
     six-section shell with l10n empty states and settings showing the data directory; widget
     tests navigate every section; runtime verified dirs created. DB opens lazily on first use.
+  - M1-08 — `DiagnosticsService` (data-dir writability, Linux FUSE, macOS Gatekeeper, POSIX
+    disk space) with injectable process runner/env/device probes; Settings "Run diagnostics"
+    panel; 12 new tests, 75 total green. Known gap: disk probe is not implemented on Windows
+    yet (reports not-applicable).
 - **Notes**:
   - Generated l10n files live in `lib/l10n/gen/` and are committed.
   - Windows/macOS runner scaffolding was generated on Linux; only CI can compile them.
@@ -48,6 +52,7 @@
 | 2026-09-18 | M1 | Profile paths + launch environment builder per OS + AppPaths directory setup | M1-05 | `lib/domain/profiles/**`, `lib/platform/paths.dart`, `test/domain/**`, `test/platform/**` |
 | 2026-09-18 | M1 | ProcessRunner with streamed output, timeouts, kill and fake-adapter tests | M1-06 | `lib/platform/process.dart`, `test/platform/process_test.dart` |
 | 2026-09-18 | M1 | AppServices/AppScope, six-section shell with l10n empty states, settings data dir | M1-07 | `lib/state/**`, `lib/ui/**`, `lib/app.dart`, `lib/main.dart`, `lib/l10n/**`, `test/app_shell_test.dart` |
+| 2026-09-18 | M1 | Diagnostics service + settings panel; shared fake process helper | M1-08 | `lib/platform/diagnostics.dart`, `lib/ui/settings/**`, `test/platform/**`, `test/helpers/**` |
 
 ## Standing notes for the next agent
 

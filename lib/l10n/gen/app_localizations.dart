@@ -213,6 +213,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'License'**
   String get settingsLicense;
+
+  /// No description provided for @settingsDiagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostics'**
+  String get settingsDiagnostics;
+
+  /// No description provided for @diagnosticsRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Run diagnostics'**
+  String get diagnosticsRun;
+
+  /// No description provided for @diagnosticsRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running…'**
+  String get diagnosticsRunning;
+
+  /// No description provided for @diagnosticDataDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Data directory writable'**
+  String get diagnosticDataDirectory;
+
+  /// No description provided for @diagnosticFuse.
+  ///
+  /// In en, this message translates to:
+  /// **'AppImage support (FUSE)'**
+  String get diagnosticFuse;
+
+  /// No description provided for @diagnosticGatekeeper.
+  ///
+  /// In en, this message translates to:
+  /// **'macOS Gatekeeper'**
+  String get diagnosticGatekeeper;
+
+  /// No description provided for @diagnosticDiskSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'Disk space'**
+  String get diagnosticDiskSpace;
+
+  /// No description provided for @diagnosticsStatusOk.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get diagnosticsStatusOk;
+
+  /// No description provided for @diagnosticsStatusWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning'**
+  String get diagnosticsStatusWarning;
+
+  /// No description provided for @diagnosticsStatusError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get diagnosticsStatusError;
+
+  /// No description provided for @diagnosticsStatusNotApplicable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not applicable'**
+  String get diagnosticsStatusNotApplicable;
 }
 
 class _AppLocalizationsDelegate

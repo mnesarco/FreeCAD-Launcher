@@ -72,4 +72,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsLicense => 'License';
+
+  @override
+  String get settingsDiagnostics => 'Diagnostics';
+
+  @override
+  String get diagnosticsRun => 'Run diagnostics';
+
+  @override
+  String get diagnosticsRunning => 'Running…';
+
+  @override
+  String get diagnosticDataDirectory => 'Data directory writable';
+
+  @override
+  String get diagnosticFuse => 'AppImage support (FUSE)';
+
+  @override
+  String get diagnosticGatekeeper => 'macOS Gatekeeper';
+
+  @override
+  String get diagnosticDiskSpace => 'Disk space';
+
+  @override
+  String get diagnosticsStatusOk => 'OK';
+
+  @override
+  String get diagnosticsStatusWarning => 'Warning';
+
+  @override
+  String get diagnosticsStatusError => 'Error';
+
+  @override
+  String get diagnosticsStatusNotApplicable => 'Not applicable';
 }
