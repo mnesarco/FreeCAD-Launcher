@@ -1,0 +1,63 @@
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
+
+import 'package:freecad_launcher/data/daos/builds_dao.dart';
+import 'package:freecad_launcher/data/daos/bundles_dao.dart';
+import 'package:freecad_launcher/data/daos/catalog_cache_dao.dart';
+import 'package:freecad_launcher/data/daos/installed_addons_dao.dart';
+import 'package:freecad_launcher/data/daos/macros_dao.dart';
+import 'package:freecad_launcher/data/daos/profiles_dao.dart';
+import 'package:freecad_launcher/data/daos/python_packages_dao.dart';
+import 'package:freecad_launcher/data/daos/settings_dao.dart';
+import 'package:freecad_launcher/data/tables/builds.dart';
+import 'package:freecad_launcher/data/tables/bundles.dart';
+import 'package:freecad_launcher/data/tables/cache.dart';
+import 'package:freecad_launcher/data/tables/installed_addons.dart';
+import 'package:freecad_launcher/data/tables/macros.dart';
+import 'package:freecad_launcher/data/tables/profiles.dart';
+import 'package:freecad_launcher/data/tables/python_packages.dart';
+import 'package:freecad_launcher/data/tables/settings.dart';
+import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/cache/cache_types.dart';
+import 'package:freecad_launcher/domain/macros/macro_types.dart';
+
+part 'database.g.dart';
+
+@DriftDatabase(
+  tables: [
+    Builds,
+    Profiles,
+    InstalledAddons,
+    PythonPackages,
+    Bundles,
+    BundleItems,
+    Macros,
+    CatalogCache,
+    Settings,
+  ],
+  daos: [
+    BuildsDao,
+    ProfilesDao,
+    InstalledAddonsDao,
+    PythonPackagesDao,
+    BundlesDao,
+    MacrosDao,
+    CatalogCacheDao,
+    SettingsDao,
+  ],
+)
+class AppDatabase extends _$AppDatabase {
+  AppDatabase(super.e);
+
+  AppDatabase.inMemory() : super(NativeDatabase.memory());
+
+  @override
+  int get schemaVersion => 1;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON');
+    },
+  );
+}

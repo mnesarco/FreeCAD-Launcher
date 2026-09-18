@@ -1,0 +1,1 @@
+enum MacroSource { catalog, local }
