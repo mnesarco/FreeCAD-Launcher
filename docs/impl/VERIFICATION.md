@@ -46,6 +46,16 @@ Rules:
 - [ ] Deleting a build used by a profile is blocked; unused build delete removes files
 - [ ] Removing a build directory externally flips status to `missing` on restart
 
+Manual real-data test (Linux, network required, skipped by default):
+
+```sh
+FCL_REAL_INSTALL=1 flutter test test/manual/real_install_linux_test.dart
+```
+
+Windows equivalent (once a Windows machine/CI is available): run `7zr.exe` from
+`third_party/7zip/` against the real FreeCAD `.7z`; macOS: verify `hdiutil` attach/copy/detach
+and quarantine handling.
+
 ### M3 — Profiles and launch
 
 - [ ] Two profiles on one build: `user.cfg`, `Mod/`, macros, `AdditionalPythonPackages`,

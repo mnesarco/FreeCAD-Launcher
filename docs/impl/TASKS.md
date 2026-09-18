@@ -43,7 +43,7 @@ covered by tests.
 | M2-02 | Asset classifier + version compare: stable/legacy/weekly-aware, per-OS/arch selection, exact regexes from `spec 06 §1.3` | Fixture tests for 1.1.3, 1.0.2, 0.21.2, 0.20.0, weekly and gaps (0.19.4) | M1-10 | M | DONE |
 | M2-03 | Catalog cache store + TTL + stale/offline behavior | Cache round-trip test; UI can render stale data with a warning | M1-04 | S | DONE |
 | M2-04 | Download job pipeline: `.part`, progress, cancel, SHA-256 verify, cleanup | Unit tests; corrupted download rejected with no partial files | M1-06, M2-01 | M | DONE |
-| M2-05 | Extraction/install strategies per kind: AppImage copy+exec bit, zip/tar safe-extract, dmg (S2), 7z (S1) | Real stable build installs on each OS; zip-slip/fixture guard tests | S1, S2, M2-04 | L | TODO |
+| M2-05 | Extraction/install strategies per kind: AppImage copy+exec bit, zip/tar safe-extract, dmg (S2), 7z (S1) | Real Linux AppImage install verified end-to-end; zip-slip/symlink/bomb guard tests; Windows/macOS real extraction pending those OSes (CI/manual) | S1, S2, M2-04 | L | DONE |
 | M2-06 | Detect bundled Python version on install (run interpreter, parse, store) | Version shown in build detail; handles missing interpreter gracefully | M2-05 | S | TODO |
 | M2-07 | Versions UI: Installed / Available / Custom tabs, install dialog with preflight, progress, errors | Manual: install from UI on each OS; all states implemented | M1-07, M2-04, M2-05 | L | TODO |
 | M2-08 | Custom build import: local file / URL, trust confirmation, optional label + checksum | Manual: import user file, launch pending M3; DB + files correct | M2-05 | M | TODO |

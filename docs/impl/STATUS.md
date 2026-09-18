@@ -7,11 +7,13 @@
 - **Current milestone**: M1 — Foundation (code complete; first CI run pending a remote)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-18
-- **Next action**: `M2-05` extraction/install strategies (`AppImage` copy+exec, safe zip/tar,
-  `.dmg` per D-019, `.7z` via bundled `7zr.exe` per D-018) into `builds/<id>/`.
+- **Next action**: `M2-06` detect bundled Python version per installed build.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
+  - Windows `.7z` and macOS `.dmg` real extraction/install are implemented and unit-tested with
+    fakes but need those OSes to verify for real (Windows CI will run once a remote exists;
+    macOS needs a machine).
 - **In progress**: none
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
@@ -22,9 +24,14 @@
   - M2-01 — `GitHubReleasesClient` with conditional GET, rate-limit parsing and token hook.
   - M2-02 — Version model + `AssetClassifier`/`BuildCandidate` for all naming eras; 6 fixtures.
   - M2-03 — `ReleasesCatalog` cache with TTL, ETag/304, `Link` pagination, stale fallback.
-  - M2-04 — `Downloader` pipeline: streamed `.part` writes, progress with fraction, cancellation
-    token, SHA-256 verification (sidecar parser in `checksum.dart`), cache hit by hash, and
-    guaranteed cleanup on error/cancel; 8 new tests, 120 total green.
+  - M2-04 — `Downloader` pipeline: `.part`, progress, cancel, SHA-256 verify, cache hit, cleanup.
+  - M2-05 — Extraction/install: `SafeArchiveExtractor` (zip/tar with zip-slip, symlink, entry
+    and size limits), `SevenZipExtractor` (bundled 7zr, arg arrays), `ProcessDmgExtractor`
+    (attach/ditto/detach with force retry), `BuildInstaller` (staging + atomic rename,
+    executable discovery, size computation). 22 new tests. Real end-to-end verified on Linux:
+    downloaded the actual 820 MB 1.1.3 AppImage with sidecar checksum, installed it, and ran it
+    (`--version` exit 0) via `test/manual/real_install_linux_test.dart`. 142 tests green,
+    1 manual test skipped by default.
 - **Notes**:
   - Generated l10n files live in `lib/l10n/gen/` and are committed.
   - Windows/macOS runner scaffolding was generated on Linux; only CI can compile them.
@@ -48,6 +55,7 @@
 | 2026-09-18 | M2 | Version model + asset classifier for all naming eras, fixtures and tests | M2-02 | `lib/domain/builds/**`, `lib/platform/host.dart`, `test/domain/**`, `test/fixtures/**` |
 | 2026-09-18 | M2 | Releases catalog cache: TTL, ETag/304 refresh, Link pagination, stale fallback | M2-03 | `lib/data/catalog/**`, `test/data/catalog/**` |
 | 2026-09-18 | M2 | Download pipeline with progress, cancellation, SHA-256 verify and cleanup | M2-04 | `lib/platform/downloader.dart`, `lib/platform/checksum.dart`, `lib/core/cancellation.dart`, `test/platform/**` |
+| 2026-09-18 | M2 | Extraction/install strategies + real Linux AppImage end-to-end install | M2-05 | `lib/platform/archive_extract.dart`, `seven_zip_extractor.dart`, `dmg_extractor.dart`, `build_installer.dart`, `test/platform/**`, `test/manual/**` |
 
 ## Standing notes for the next agent
 
