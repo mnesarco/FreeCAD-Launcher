@@ -1,0 +1,28 @@
+[
+  {
+    "id": 4,
+    "tag_name": "0.20.0",
+    "name": "FreeCAD 0.20.0",
+    "prerelease": false,
+    "published_at": "2022-06-14T12:00:00Z",
+    "html_url": "https://github.com/FreeCAD/FreeCAD/releases/tag/0.20.0",
+    "body": "Release.",
+    "assets": [
+      {
+        "name": "FreeCAD-0.20.0-Linux-x86_64.AppImage",
+        "browser_download_url": "https://example.invalid/FreeCAD-0.20.0-Linux-x86_64.AppImage",
+        "size": 90000000
+      },
+      {
+        "name": "FreeCAD-0.20.0-WIN-x64-portable-1.zip",
+        "browser_download_url": "https://example.invalid/FreeCAD-0.20.0-WIN-x64-portable-1.zip",
+        "size": 190000000
+      },
+      {
+        "name": "FreeCAD-0.20.0-macOS-x86_64.dmg",
+        "browser_download_url": "https://example.invalid/FreeCAD-0.20.0-macOS-x86_64.dmg",
+        "size": 290000000
+      }
+    ]
+  }
+]

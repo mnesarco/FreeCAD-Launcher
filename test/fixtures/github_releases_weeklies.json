@@ -1,0 +1,28 @@
+[
+  {
+    "id": 6,
+    "tag_name": "weeklies",
+    "name": "FreeCAD weeklies (rolling)",
+    "prerelease": true,
+    "published_at": "2026-09-16T12:00:00Z",
+    "html_url": "https://github.com/FreeCAD/FreeCAD/releases/tag/weeklies",
+    "body": "Rolling development builds.",
+    "assets": [
+      {
+        "name": "FreeCAD_weekly-Linux-x86_64.AppImage",
+        "browser_download_url": "https://example.invalid/FreeCAD_weekly-Linux-x86_64.AppImage",
+        "size": 130000000
+      },
+      {
+        "name": "FreeCAD_weekly-Linux-aarch64.AppImage",
+        "browser_download_url": "https://example.invalid/FreeCAD_weekly-Linux-aarch64.AppImage",
+        "size": 130000000
+      },
+      {
+        "name": "FreeCAD_weekly-Linux-x86_64.AppImage.zsync",
+        "browser_download_url": "https://example.invalid/FreeCAD_weekly-Linux-x86_64.AppImage.zsync",
+        "size": 500000
+      }
+    ]
+  }
+]

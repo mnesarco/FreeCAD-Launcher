@@ -7,8 +7,8 @@
 - **Current milestone**: M1 — Foundation (code complete; first CI run pending a remote)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-18
-- **Next action**: `M2-02` asset classifier + version compare for all naming eras (stable,
-  legacy, weekly) using fixtures; then `M2-03` catalog cache store with TTL.
+- **Next action**: `M2-03` catalog cache store (drift `catalog_cache` + payload files, TTL,
+  stale/offline behavior) wiring the client and classifier together.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -16,17 +16,16 @@
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
     diagnostics, CI workflow, test harness). 78 tests green, analyze clean, codegen current.
-  - S1 — Real FreeCAD 1.1.3 Windows asset inspected: `LZMA2:28 LZMA:20 BCJ2`, solid, 2 blocks;
-    pure-Dart `koni_sevenz` cannot read BCJ2 → **D-018**: bundle official 7-Zip standalone
-    `third_party/7zip/7zr.exe` (sha256 pinned, LGPL) and invoke via `ProcessRunner` arg arrays.
-    Manual Windows extraction remains in M2-05.
-  - S2 — **D-019**: `.dmg` install via `hdiutil attach -readonly` → copy `FreeCAD.app` →
-    detach, quarantine removal with consent, direct binary spawn; manual macOS verification in
-    M2-05.
-  - M2-01 — `GitHubReleasesClient` with conditional GET (ETag/If-Modified-Since), rate-limit
-    header parsing (`x-ratelimit-*`), token provider hook and typed responses; 7 tests using
-    `FakeHttp` + the releases fixture (200, 304, 403-exhausted, token on/off, transport error);
-    85 total tests green.
+  - S1 — **D-018**: bundle official 7-Zip standalone `third_party/7zip/7zr.exe` for Windows
+    `.7z` (real asset is LZMA2+LZMA+BCJ2; pure-Dart readers cannot handle it).
+  - S2 — **D-019**: `.dmg` install via `hdiutil` + consent-based quarantine removal.
+  - M2-01 — `GitHubReleasesClient` with conditional GET, rate-limit parsing and token hook;
+    7 tests with `FakeHttp`.
+  - M2-02 — Version model (`FreeCadVersion`, `WeeklyVersion`, `ReleaseTag` channel rules) and
+    `AssetClassifier`/`BuildCandidate` handling all naming eras (1.1.x, 1.0.x conda, 0.21.2
+    hyphen/intel, 0.20 zip portable, dated + rolling weeklies), installer/experimental/metadata
+    filtering, checksum sidecar resolution and macOS-target tie-break; 6 new fixtures,
+    16 new tests; 101 total green.
 - **Notes**:
   - Generated l10n files live in `lib/l10n/gen/` and are committed.
   - Windows/macOS runner scaffolding was generated on Linux; only CI can compile them.
@@ -47,6 +46,7 @@
 | 2026-09-18 | M1 | CI workflow + test harness (DB helper, FakeHttp, fixtures) | M1-09, M1-10 | `.github/workflows/ci.yml`, `test/helpers/**`, `test/fixtures/**` |
 | 2026-09-18 | M2 | Spikes S1/S2: real FreeCAD `.7z` inspected, bundled 7zr.exe + license, `.dmg` design | S1, S2 | `third_party/7zip/**`, `docs/impl/DECISIONS.md` |
 | 2026-09-18 | M2 | GitHub releases client with conditional GET, rate limits and token hook + tests | M2-01 | `lib/data/catalog/**`, `test/data/catalog/**` |
+| 2026-09-18 | M2 | Version model + asset classifier for all naming eras, fixtures and tests | M2-02 | `lib/domain/builds/**`, `lib/platform/host.dart`, `test/domain/**`, `test/fixtures/**` |
 
 ## Standing notes for the next agent
 

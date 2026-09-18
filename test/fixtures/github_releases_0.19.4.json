@@ -1,0 +1,23 @@
+[
+  {
+    "id": 7,
+    "tag_name": "0.19.4",
+    "name": "FreeCAD 0.19.4",
+    "prerelease": false,
+    "published_at": "2022-02-01T12:00:00Z",
+    "html_url": "https://github.com/FreeCAD/FreeCAD/releases/tag/0.19.4",
+    "body": "Windows-only maintenance release.",
+    "assets": [
+      {
+        "name": "FreeCAD-0.19.4-WIN-x64-installer-1.exe",
+        "browser_download_url": "https://example.invalid/FreeCAD-0.19.4-WIN-x64-installer-1.exe",
+        "size": 180000000
+      },
+      {
+        "name": "FreeCAD-0.19.4-WIN-x64-installer-2.exe",
+        "browser_download_url": "https://example.invalid/FreeCAD-0.19.4-WIN-x64-installer-2.exe",
+        "size": 180000000
+      }
+    ]
+  }
+]
