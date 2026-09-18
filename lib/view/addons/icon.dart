@@ -79,7 +79,7 @@ class AddonIcon extends StatelessWidget {
               width: size,
               height: size,
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => _defaultIcon(theme: theme, size: size),
+              errorBuilder: (_, _, _) => _defaultIcon(theme: theme, size: size),
             ),
     );
   }

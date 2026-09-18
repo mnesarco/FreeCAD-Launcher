@@ -20,7 +20,9 @@ class Profiles extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().unique()();
   TextColumn get args => text()();
-  TextColumn get cwd => text()();
+  TextColumn get freecadVersion => text()();
+  TextColumn get pythonVersion => text()();
+  IntColumn get appId => integer().nullable()();
 }
 
 class Launchers extends Table {
@@ -49,7 +51,7 @@ class Database extends _$Database {
   Database() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -58,7 +60,12 @@ class Database extends _$Database {
     },
     onUpgrade: (Migrator m, int from, int to) async {
       if (from < 2) {
-        // Migration Code
+        await m.addColumn(profiles, profiles.freecadVersion);
+        await m.addColumn(profiles, profiles.pythonVersion);
+        await m.dropColumn(profiles, 'cwd');
+      }
+      if (from < 3) {
+        await m.addColumn(profiles, profiles.appId);
       }
     },
   );
@@ -126,6 +133,7 @@ class Database extends _$Database {
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dataRoot = await getApplicationSupportDirectory();
+    print(dataRoot);
     final folder = Directory(dataRoot.path);
 
     if (!await folder.exists()) await folder.create(recursive: true);

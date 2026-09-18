@@ -41,8 +41,8 @@ class _HomeViewState extends State<HomeView> {
       ],
       bottom: const TabBar(
         tabs: [
-          Tab(icon: Icon(Icons.rocket_launch), text: "Launchers"),
-          Tab(icon: Icon(Icons.folder), text: "Profiles"),
+          // Tab(icon: Icon(Icons.rocket_launch), text: "Launchers"),
+          Tab(icon: Icon(Icons.rocket_launch), text: "Profiles"),
           Tab(icon: Icon(FreeCADIcons.freecad), text: "Applications"),
           Tab(icon: Icon(Icons.extension), text: "Addons"),
           Tab(icon: Icon(Icons.auto_fix_high), text: "Macros"),
@@ -54,6 +54,15 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     final mode = _themeMode.watch(context);
+
+    final content = [
+      // Container(),
+      ProfileManagerView(controller: widget.controller.profiles),
+      AppManagerView(controller: widget.controller.apps),
+      AddonCatalogView(controller: widget.controller),
+      Container(),
+    ];
+
     return MainControllerScope(
       controller: widget.controller,
       child: MaterialApp(
@@ -71,18 +80,10 @@ class _HomeViewState extends State<HomeView> {
         themeMode: mode,
         home: DefaultTabController(
           animationDuration: Duration.zero,
-          length: 5,
+          length: content.length,
           child: Scaffold(
             appBar: _appBar(mode),
-            body: TabBarView(
-              children: [
-                Container(),
-                ProfileManagerView(controller: widget.controller.profiles),
-                AppManagerView(controller: widget.controller.apps),
-                AddonCatalogView(controller: widget.controller),
-                Container(),
-              ],
-            ),
+            body: TabBarView(children: content),
             bottomNavigationBar: _StatusBar(),
           ),
         ),

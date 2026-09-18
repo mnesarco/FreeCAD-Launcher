@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:freecad_launcher/view/widgets.dart';
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:xml/xml_events.dart';
 
 import '../../controller/main.dart';
 import '../../service/database.dart';
@@ -11,22 +12,40 @@ class ProfileManagerView extends StatelessWidget {
   const ProfileManagerView({super.key, required this.controller});
 
   Future<void> _openAddDialog(BuildContext context) async {
-    final result = await ProfileFormDialog.show(context);
+    final result = await ProfileFormDialog.show(context, profileController: controller);
     if (result == null) return;
-    controller.add(result.name, result.args, result.cwd);
+    controller.add(
+      result.name,
+      result.args,
+      result.appId,
+      result.freecadVersion,
+      result.pythonVersion,
+    );
   }
 
   Future<void> _openEditDialog(BuildContext context, Profile profile) async {
-    final result = await ProfileFormDialog.show(context, profile: profile);
+    final result = await ProfileFormDialog.show(
+      context,
+      profileController: controller,
+      profile: profile,
+    );
     if (result == null) return;
     controller.db.updateProfile(
-      Profile(id: profile.id, name: result.name, args: result.args, cwd: result.cwd),
+      Profile(
+        id: profile.id,
+        name: result.name,
+        args: result.args,
+        freecadVersion: result.freecadVersion,
+        pythonVersion: result.pythonVersion,
+        appId: result.appId,
+      ),
     );
   }
 
   Widget _grid(BuildContext context) {
     final state = controller.items.watch(context);
     final theme = Theme.of(context);
+    final main = MainController.of(context);
     return Expanded(
       child: state.map(
         data: (list) => ResponsiveGrid(
@@ -35,12 +54,15 @@ class ProfileManagerView extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           data: list,
           builder: (context, profile) {
+            final async = main.apps.items.value;
+            final appsList = async.hasValue ? (async.value ?? []) : [];
+            final app = appsList.where((a) => a.id == profile.appId).firstOrNull;
             return InkWell(
               onTap: () => _openEditDialog(context, profile),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.folder, size: 48),
+                  const Icon(Icons.rocket_launch, size: 48),
                   const SizedBox(height: 8),
                   Text(
                     profile.name,
@@ -50,11 +72,20 @@ class ProfileManagerView extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    profile.cwd.isNotEmpty ? profile.cwd : 'No working dir',
+                    'FC ${profile.freecadVersion}  Py ${profile.pythonVersion}',
                     style: theme.textTheme.bodySmall,
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  if (app != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      app.name,
+                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary),
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ],
               ),
             );

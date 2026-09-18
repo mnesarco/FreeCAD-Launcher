@@ -424,17 +424,46 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _cwdMeta = const VerificationMeta('cwd');
+  static const VerificationMeta _freecadVersionMeta = const VerificationMeta(
+    'freecadVersion',
+  );
   @override
-  late final GeneratedColumn<String> cwd = GeneratedColumn<String>(
-    'cwd',
+  late final GeneratedColumn<String> freecadVersion = GeneratedColumn<String>(
+    'freecad_version',
     aliasedName,
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _pythonVersionMeta = const VerificationMeta(
+    'pythonVersion',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, name, args, cwd];
+  late final GeneratedColumn<String> pythonVersion = GeneratedColumn<String>(
+    'python_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _appIdMeta = const VerificationMeta('appId');
+  @override
+  late final GeneratedColumn<int> appId = GeneratedColumn<int>(
+    'app_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    args,
+    freecadVersion,
+    pythonVersion,
+    appId,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -466,13 +495,33 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
     } else if (isInserting) {
       context.missing(_argsMeta);
     }
-    if (data.containsKey('cwd')) {
+    if (data.containsKey('freecad_version')) {
       context.handle(
-        _cwdMeta,
-        cwd.isAcceptableOrUnknown(data['cwd']!, _cwdMeta),
+        _freecadVersionMeta,
+        freecadVersion.isAcceptableOrUnknown(
+          data['freecad_version']!,
+          _freecadVersionMeta,
+        ),
       );
     } else if (isInserting) {
-      context.missing(_cwdMeta);
+      context.missing(_freecadVersionMeta);
+    }
+    if (data.containsKey('python_version')) {
+      context.handle(
+        _pythonVersionMeta,
+        pythonVersion.isAcceptableOrUnknown(
+          data['python_version']!,
+          _pythonVersionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_pythonVersionMeta);
+    }
+    if (data.containsKey('app_id')) {
+      context.handle(
+        _appIdMeta,
+        appId.isAcceptableOrUnknown(data['app_id']!, _appIdMeta),
+      );
     }
     return context;
   }
@@ -495,10 +544,18 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
         DriftSqlType.string,
         data['${effectivePrefix}args'],
       )!,
-      cwd: attachedDatabase.typeMapping.read(
+      freecadVersion: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}cwd'],
+        data['${effectivePrefix}freecad_version'],
       )!,
+      pythonVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}python_version'],
+      )!,
+      appId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}app_id'],
+      ),
     );
   }
 
@@ -512,12 +569,16 @@ class Profile extends DataClass implements Insertable<Profile> {
   final int id;
   final String name;
   final String args;
-  final String cwd;
+  final String freecadVersion;
+  final String pythonVersion;
+  final int? appId;
   const Profile({
     required this.id,
     required this.name,
     required this.args,
-    required this.cwd,
+    required this.freecadVersion,
+    required this.pythonVersion,
+    this.appId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -525,7 +586,11 @@ class Profile extends DataClass implements Insertable<Profile> {
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
     map['args'] = Variable<String>(args);
-    map['cwd'] = Variable<String>(cwd);
+    map['freecad_version'] = Variable<String>(freecadVersion);
+    map['python_version'] = Variable<String>(pythonVersion);
+    if (!nullToAbsent || appId != null) {
+      map['app_id'] = Variable<int>(appId);
+    }
     return map;
   }
 
@@ -534,7 +599,11 @@ class Profile extends DataClass implements Insertable<Profile> {
       id: Value(id),
       name: Value(name),
       args: Value(args),
-      cwd: Value(cwd),
+      freecadVersion: Value(freecadVersion),
+      pythonVersion: Value(pythonVersion),
+      appId: appId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(appId),
     );
   }
 
@@ -547,7 +616,9 @@ class Profile extends DataClass implements Insertable<Profile> {
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       args: serializer.fromJson<String>(json['args']),
-      cwd: serializer.fromJson<String>(json['cwd']),
+      freecadVersion: serializer.fromJson<String>(json['freecadVersion']),
+      pythonVersion: serializer.fromJson<String>(json['pythonVersion']),
+      appId: serializer.fromJson<int?>(json['appId']),
     );
   }
   @override
@@ -557,23 +628,39 @@ class Profile extends DataClass implements Insertable<Profile> {
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'args': serializer.toJson<String>(args),
-      'cwd': serializer.toJson<String>(cwd),
+      'freecadVersion': serializer.toJson<String>(freecadVersion),
+      'pythonVersion': serializer.toJson<String>(pythonVersion),
+      'appId': serializer.toJson<int?>(appId),
     };
   }
 
-  Profile copyWith({int? id, String? name, String? args, String? cwd}) =>
-      Profile(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        args: args ?? this.args,
-        cwd: cwd ?? this.cwd,
-      );
+  Profile copyWith({
+    int? id,
+    String? name,
+    String? args,
+    String? freecadVersion,
+    String? pythonVersion,
+    Value<int?> appId = const Value.absent(),
+  }) => Profile(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    args: args ?? this.args,
+    freecadVersion: freecadVersion ?? this.freecadVersion,
+    pythonVersion: pythonVersion ?? this.pythonVersion,
+    appId: appId.present ? appId.value : this.appId,
+  );
   Profile copyWithCompanion(ProfilesCompanion data) {
     return Profile(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       args: data.args.present ? data.args.value : this.args,
-      cwd: data.cwd.present ? data.cwd.value : this.cwd,
+      freecadVersion: data.freecadVersion.present
+          ? data.freecadVersion.value
+          : this.freecadVersion,
+      pythonVersion: data.pythonVersion.present
+          ? data.pythonVersion.value
+          : this.pythonVersion,
+      appId: data.appId.present ? data.appId.value : this.appId,
     );
   }
 
@@ -583,13 +670,16 @@ class Profile extends DataClass implements Insertable<Profile> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('args: $args, ')
-          ..write('cwd: $cwd')
+          ..write('freecadVersion: $freecadVersion, ')
+          ..write('pythonVersion: $pythonVersion, ')
+          ..write('appId: $appId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, args, cwd);
+  int get hashCode =>
+      Object.hash(id, name, args, freecadVersion, pythonVersion, appId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -597,39 +687,52 @@ class Profile extends DataClass implements Insertable<Profile> {
           other.id == this.id &&
           other.name == this.name &&
           other.args == this.args &&
-          other.cwd == this.cwd);
+          other.freecadVersion == this.freecadVersion &&
+          other.pythonVersion == this.pythonVersion &&
+          other.appId == this.appId);
 }
 
 class ProfilesCompanion extends UpdateCompanion<Profile> {
   final Value<int> id;
   final Value<String> name;
   final Value<String> args;
-  final Value<String> cwd;
+  final Value<String> freecadVersion;
+  final Value<String> pythonVersion;
+  final Value<int?> appId;
   const ProfilesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.args = const Value.absent(),
-    this.cwd = const Value.absent(),
+    this.freecadVersion = const Value.absent(),
+    this.pythonVersion = const Value.absent(),
+    this.appId = const Value.absent(),
   });
   ProfilesCompanion.insert({
     this.id = const Value.absent(),
     required String name,
     required String args,
-    required String cwd,
+    required String freecadVersion,
+    required String pythonVersion,
+    this.appId = const Value.absent(),
   }) : name = Value(name),
        args = Value(args),
-       cwd = Value(cwd);
+       freecadVersion = Value(freecadVersion),
+       pythonVersion = Value(pythonVersion);
   static Insertable<Profile> custom({
     Expression<int>? id,
     Expression<String>? name,
     Expression<String>? args,
-    Expression<String>? cwd,
+    Expression<String>? freecadVersion,
+    Expression<String>? pythonVersion,
+    Expression<int>? appId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (args != null) 'args': args,
-      if (cwd != null) 'cwd': cwd,
+      if (freecadVersion != null) 'freecad_version': freecadVersion,
+      if (pythonVersion != null) 'python_version': pythonVersion,
+      if (appId != null) 'app_id': appId,
     });
   }
 
@@ -637,13 +740,17 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     Value<int>? id,
     Value<String>? name,
     Value<String>? args,
-    Value<String>? cwd,
+    Value<String>? freecadVersion,
+    Value<String>? pythonVersion,
+    Value<int?>? appId,
   }) {
     return ProfilesCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       args: args ?? this.args,
-      cwd: cwd ?? this.cwd,
+      freecadVersion: freecadVersion ?? this.freecadVersion,
+      pythonVersion: pythonVersion ?? this.pythonVersion,
+      appId: appId ?? this.appId,
     );
   }
 
@@ -659,8 +766,14 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     if (args.present) {
       map['args'] = Variable<String>(args.value);
     }
-    if (cwd.present) {
-      map['cwd'] = Variable<String>(cwd.value);
+    if (freecadVersion.present) {
+      map['freecad_version'] = Variable<String>(freecadVersion.value);
+    }
+    if (pythonVersion.present) {
+      map['python_version'] = Variable<String>(pythonVersion.value);
+    }
+    if (appId.present) {
+      map['app_id'] = Variable<int>(appId.value);
     }
     return map;
   }
@@ -671,7 +784,9 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('args: $args, ')
-          ..write('cwd: $cwd')
+          ..write('freecadVersion: $freecadVersion, ')
+          ..write('pythonVersion: $pythonVersion, ')
+          ..write('appId: $appId')
           ..write(')'))
         .toString();
   }
@@ -1837,14 +1952,18 @@ typedef $$ProfilesTableCreateCompanionBuilder =
       Value<int> id,
       required String name,
       required String args,
-      required String cwd,
+      required String freecadVersion,
+      required String pythonVersion,
+      Value<int?> appId,
     });
 typedef $$ProfilesTableUpdateCompanionBuilder =
     ProfilesCompanion Function({
       Value<int> id,
       Value<String> name,
       Value<String> args,
-      Value<String> cwd,
+      Value<String> freecadVersion,
+      Value<String> pythonVersion,
+      Value<int?> appId,
     });
 
 final class $$ProfilesTableReferences
@@ -1894,8 +2013,18 @@ class $$ProfilesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get cwd => $composableBuilder(
-    column: $table.cwd,
+  ColumnFilters<String> get freecadVersion => $composableBuilder(
+    column: $table.freecadVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pythonVersion => $composableBuilder(
+    column: $table.pythonVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get appId => $composableBuilder(
+    column: $table.appId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1949,8 +2078,18 @@ class $$ProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get cwd => $composableBuilder(
-    column: $table.cwd,
+  ColumnOrderings<String> get freecadVersion => $composableBuilder(
+    column: $table.freecadVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pythonVersion => $composableBuilder(
+    column: $table.pythonVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get appId => $composableBuilder(
+    column: $table.appId,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -1973,8 +2112,18 @@ class $$ProfilesTableAnnotationComposer
   GeneratedColumn<String> get args =>
       $composableBuilder(column: $table.args, builder: (column) => column);
 
-  GeneratedColumn<String> get cwd =>
-      $composableBuilder(column: $table.cwd, builder: (column) => column);
+  GeneratedColumn<String> get freecadVersion => $composableBuilder(
+    column: $table.freecadVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get pythonVersion => $composableBuilder(
+    column: $table.pythonVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get appId =>
+      $composableBuilder(column: $table.appId, builder: (column) => column);
 
   Expression<T> launchersRefs<T extends Object>(
     Expression<T> Function($$LaunchersTableAnnotationComposer a) f,
@@ -2033,19 +2182,32 @@ class $$ProfilesTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> args = const Value.absent(),
-                Value<String> cwd = const Value.absent(),
-              }) => ProfilesCompanion(id: id, name: name, args: args, cwd: cwd),
+                Value<String> freecadVersion = const Value.absent(),
+                Value<String> pythonVersion = const Value.absent(),
+                Value<int?> appId = const Value.absent(),
+              }) => ProfilesCompanion(
+                id: id,
+                name: name,
+                args: args,
+                freecadVersion: freecadVersion,
+                pythonVersion: pythonVersion,
+                appId: appId,
+              ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 required String name,
                 required String args,
-                required String cwd,
+                required String freecadVersion,
+                required String pythonVersion,
+                Value<int?> appId = const Value.absent(),
               }) => ProfilesCompanion.insert(
                 id: id,
                 name: name,
                 args: args,
-                cwd: cwd,
+                freecadVersion: freecadVersion,
+                pythonVersion: pythonVersion,
+                appId: appId,
               ),
           withReferenceMapper: (p0) => p0
               .map(

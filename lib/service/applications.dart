@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:convert';
 
+import 'package:freecad_launcher/util/hashlib.dart';
 import 'package:freecad_launcher/util/path.dart';
 import 'package:snapd/snapd.dart';
 import 'package:path/path.dart' as p;
@@ -14,12 +16,23 @@ sealed class Result<T> {
 
 class Success<T> extends Result<T> {
   final T data;
-  Success(this.data);
+  Success({required this.data});
 }
 
 class Failure<T> extends Result<T> {
   final String error;
-  Failure(this.error);
+  Failure({required this.error});
+}
+
+class Version {
+  final String freecad;
+  final String python;
+  Version({required this.freecad, required this.python});
+
+  @override
+  String toString() {
+    return "Version(freecad=${freecad}, python=${python})";
+  }
 }
 
 abstract class AppService {
@@ -27,17 +40,133 @@ abstract class AppService {
   const AppService(this.kind);
 
   Future<Result<void>> launch(
-    String target, [
+    String target, {
     String? freecadHome,
     Map<String, String>? env,
     List<String>? args,
     String? workingDirectory,
-  ]);
+  });
+
+  Future<Result<String>> call(
+    String target, {
+    String? freecadHome,
+    Map<String, String>? env,
+    List<String>? args,
+    String? workingDirectory,
+  });
+
+  Future<Result<List<dynamic>>> callMacro(
+    String target, {
+    File? macro,
+    Future<File> Function(Directory)? macroBuilder,
+    String? freecadHome,
+    Map<String, String>? env,
+    List<String>? args,
+    String? workingDirectory,
+  }) async {
+    var (Directory fcHome, Directory macroParent, int delete) = await switch ((
+      freecadHome,
+      macro,
+    )) {
+      // Prepare Env directories
+      (null, null) => () async {
+        Directory path = await mkTempFreecadDir();
+        return (path, path, 1);
+      }(),
+      (null, File f) => () async {
+        Directory path = await mkTempFreecadDir();
+        return (path, f.parent, 1);
+      }(),
+      (String h, null) => () async {
+        Directory path = await mkTempFreecadDir();
+        return (Directory(h), path, 2);
+      }(),
+      (String h, File f) => () async {
+        return (Directory(h), f.parent, 0);
+      }(),
+    };
+
+    // Build macro
+    final macroFile = await () async {
+      if (macroBuilder != null) {
+        return await macroBuilder(macroParent);
+      }
+      if (macro == null) {
+        throw ArgumentError("Either macro or macroBuilder must be provided.");
+      }
+      return macro;
+    }();
+
+    print("${fcHome}, ${macroParent}, ${macroFile}");
+
+    final freecadArgs = [...?args, "-c", "-M", macroParent.path, macroFile.path];
+
+    print(freecadArgs);
+
+    // Execute/Call freecad
+    var result = await call(
+      target,
+      freecadHome: fcHome.path,
+      env: env,
+      args: freecadArgs,
+      workingDirectory: macroParent.path,
+    );
+
+    // Env dirs cleanup
+    switch (delete) {
+      case 1:
+        if (await fcHome.exists()) {
+          await fcHome.delete(recursive: true);
+        }
+      case 2:
+        if (await macroParent.exists()) {
+          await macroParent.delete(recursive: true);
+        }
+      default:
+      // Do Nothing
+    }
+
+    // Extract data
+    switch (result) {
+      case Success(data: var data):
+        print(data);
+        List<String> records = extractMacroOutput(data);
+        print(records);
+        return Success(data: records.map((str) => jsonDecode(str)).toList());
+      case Failure(error: var err):
+        return Failure(error: err);
+    }
+  }
 
   Future<Result<List<String>>> find({String? path});
   Future<Result<bool>> test(String target);
-  Future<Result<String>> getVersion(String target);
   Future<Result<String>> upgrade(String target);
+
+  Future<Result<Version>> getVersion(String target) async {
+    Future<File> macro(Directory d) async => await macroVersionCheck(d);
+    var output = await callMacro(target, macroBuilder: macro);
+
+    switch (output) {
+      case Success(data: var data):
+        {
+          if (data.isNotEmpty) {
+            var freecad = data[0]['freecad'] as List<dynamic>;
+            var python = (data[0]['python'] as String).split(".");
+            return Success(
+              data: Version(
+                freecad: "${freecad[0]}.${freecad[1]}",
+                python: "${python[0]}.${python[1]}",
+              ),
+            );
+          }
+          return Failure(error: "Invalid FreeCAD Version");
+        }
+      case Failure(error: var err):
+        {
+          return Failure(error: err);
+        }
+    }
+  }
 }
 
 class FlatpakTarget {
@@ -75,7 +204,7 @@ class FlatpakService extends AppService {
       ], runInShell: true);
 
       if (result.exitCode != 0) {
-        return Success([]);
+        return Success(data: []);
       }
 
       final installedRefs = result.stdout
@@ -85,52 +214,52 @@ class FlatpakService extends AppService {
           .map((line) => line.trim().split(RegExp(r'\t+')).join('::'))
           .toList();
 
-      return Success(installedRefs);
+      return Success(data: installedRefs);
     } catch (e) {
-      return Failure(e.toString());
+      return Failure(error: e.toString());
     }
   }
 
-  @override
-  Future<Result<String>> getVersion(String target) async {
-    final FlatpakTarget f = FlatpakTarget.fromString(target);
-    try {
-      final result = await Process.run("flatpak", [
-        "list",
-        "--app",
-        "--${f.install}",
-        "--columns=ref:f,version:f",
-      ], runInShell: true);
+  // @override
+  // Future<Result<String>> getVersion(String target) async {
+  //   final FlatpakTarget f = FlatpakTarget.fromString(target);
+  //   try {
+  //     final result = await Process.run("flatpak", [
+  //       "list",
+  //       "--app",
+  //       "--${f.install}",
+  //       "--columns=ref:f,version:f",
+  //     ], runInShell: true);
 
-      if (result.exitCode != 0) {
-        return Failure(result.stderr.toString());
-      }
+  //     if (result.exitCode != 0) {
+  //       return Failure(result.stderr.toString());
+  //     }
 
-      final version = result.stdout
-          .toString()
-          .split('\n')
-          .where((line) => line.contains(f.ref))
-          .map((line) => line.trim().split(RegExp(r'\t+'))[1])
-          .firstOrNull;
+  //     final version = result.stdout
+  //         .toString()
+  //         .split('\n')
+  //         .where((line) => line.contains(f.ref))
+  //         .map((line) => line.trim().split(RegExp(r'\t+'))[1])
+  //         .firstOrNull;
 
-      if (version == null) {
-        return Failure("No Version found for ${f.ref}");
-      }
+  //     if (version == null) {
+  //       return Failure("No Version found for ${f.ref}");
+  //     }
 
-      return Success(version);
-    } catch (e) {
-      return Failure(e.toString());
-    }
-  }
+  //     return Success(version);
+  //   } catch (e) {
+  //     return Failure(e.toString());
+  //   }
+  // }
 
   @override
   Future<Result<void>> launch(
-    String target, [
+    String target, {
     String? freecadHome,
     Map<String, String>? env,
     List<String>? args,
     String? workingDirectory,
-  ]) async {
+  }) async {
     try {
       final fTarget = FlatpakTarget.fromString(target);
       final workingDir = workingDirectory ?? (await Path.home()).str;
@@ -147,21 +276,52 @@ class FlatpakService extends AppService {
         mode: ProcessStartMode.detached,
       );
 
-      return Success(null);
+      return Success(data: null);
     } catch (e) {
-      return Failure('$e');
+      return Failure(error: '$e');
+    }
+  }
+
+  @override
+  Future<Result<String>> call(
+    String target, {
+    String? freecadHome,
+    Map<String, String>? env,
+    List<String>? args,
+    String? workingDirectory,
+  }) async {
+    try {
+      final fTarget = FlatpakTarget.fromString(target);
+      final workingDir = workingDirectory ?? (await Path.home()).str;
+      final envExt = {...?env, "FREECAD_HOME": ?freecadHome};
+      final passEnv = envExt.entries
+          .map((e) => "--env=${e.key}=${e.value}")
+          .toList(growable: false);
+
+      final result = await Process.run(
+        "flatpak",
+        ['run', '--${fTarget.install}', ...passEnv, appId, ...?args],
+        workingDirectory: workingDir,
+        environment: {...Platform.environment, ...envExt},
+      );
+
+      if (result.exitCode == 0) {
+        return Success(data: result.stdout.toString().trim());
+      }
+
+      return Failure(error: result.stderr.toString().trim());
+    } catch (e) {
+      return Failure(error: '$e');
     }
   }
 
   @override
   Future<Result<bool>> test(String target) {
-    // TODO: implement test
     throw UnimplementedError();
   }
 
   @override
   Future<Result<String>> upgrade(String target) {
-    // TODO: implement upgrade
     throw UnimplementedError();
   }
 }
@@ -176,36 +336,39 @@ class SnapService extends AppService {
     try {
       final snaps = await client.getApps(names: [appId]);
       return Success(
-        snaps.map((s) => "$appId.${s.name}").where((name) => name == "$appId.$appId").toList(),
+        data: snaps
+            .map((s) => "$appId.${s.name}")
+            .where((name) => name == "$appId.$appId")
+            .toList(),
       );
     } catch (e) {
-      return Success([]);
+      return Success(data: []);
     } finally {
       client.close();
     }
   }
 
-  @override
-  Future<Result<String>> getVersion(String target) async {
-    final client = SnapdClient();
-    try {
-      final snap = await client.getSnap(appId);
-      return Success(snap.version);
-    } catch (e) {
-      return Failure("No Snap found. $e");
-    } finally {
-      client.close();
-    }
-  }
+  // @override
+  // Future<Result<String>> getVersion(String target) async {
+  //   final client = SnapdClient();
+  //   try {
+  //     final snap = await client.getSnap(appId);
+  //     return Success(snap.version);
+  //   } catch (e) {
+  //     return Failure("No Snap found. $e");
+  //   } finally {
+  //     client.close();
+  //   }
+  // }
 
   @override
   Future<Result<void>> launch(
-    String target, [
+    String target, {
     String? freecadHome,
     Map<String, String>? env,
     List<String>? args,
     String? workingDirectory,
-  ]) async {
+  }) async {
     try {
       final workingDir = workingDirectory ?? (await Path.home()).str;
       final envExt = {...?env, "FREECAD_USER_HOME": ?freecadHome};
@@ -218,21 +381,48 @@ class SnapService extends AppService {
         mode: ProcessStartMode.detached,
       );
 
-      return Success(null);
+      return Success(data: null);
     } catch (e) {
-      return Failure('$e');
+      return Failure(error: '$e');
+    }
+  }
+
+  @override
+  Future<Result<String>> call(
+    String target, {
+    String? freecadHome,
+    Map<String, String>? env,
+    List<String>? args,
+    String? workingDirectory,
+  }) async {
+    try {
+      final workingDir = workingDirectory ?? (await Path.home()).str;
+      final envExt = {...?env, "FREECAD_USER_HOME": ?freecadHome};
+
+      final result = await Process.run(
+        "snap",
+        ['run', appId, ...?args],
+        workingDirectory: workingDir,
+        environment: {...Platform.environment, ...envExt},
+      );
+
+      if (result.exitCode == 0) {
+        return Success(data: result.stdout.toString().trim());
+      }
+
+      return Failure(error: result.stderr.toString().trim());
+    } catch (e) {
+      return Failure(error: '$e');
     }
   }
 
   @override
   Future<Result<bool>> test(String target) {
-    // TODO: implement test
     throw UnimplementedError();
   }
 
   @override
   Future<Result<String>> upgrade(String target) {
-    // TODO: implement upgrade
     throw UnimplementedError();
   }
 }
@@ -254,24 +444,34 @@ class ExecutableService extends AppService {
         // pass, IO errors ignored here intentionally.
       }
     }
-    return Success(files);
+    return Success(data: files);
   }
 
-  @override
-  Future<Result<String>> getVersion(String target) {
-    // TODO: implement getVersion
-    throw UnimplementedError();
-  }
+  // @override
+  // Future<Result<String>> getVersion(String target) {
+  //   // TODO: implement getVersion
+  //   throw UnimplementedError();
+  // }
 
   @override
   Future<Result<void>> launch(
-    String target, [
+    String target, {
     String? freecadHome,
     Map<String, String>? env,
     List<String>? args,
     String? workingDirectory,
-  ]) {
-    // TODO: implement launch
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Result<String>> call(
+    String target, {
+    String? freecadHome,
+    Map<String, String>? env,
+    List<String>? args,
+    String? workingDirectory,
+  }) {
     throw UnimplementedError();
   }
 
@@ -288,13 +488,13 @@ class ExecutableService extends AppService {
   }
 }
 
-/*
-class SystemAppService extends AppService {}
-
-
-class AppImageService extends AppService {}
-
-*/
+AppService appServiceForKind(String kind) {
+  return switch (kind) {
+    'Flatpak' => FlatpakService(),
+    'Snap' => SnapService(),
+    _ => ExecutableService(kind),
+  };
+}
 
 Future<bool> _isExecutable(File file) async {
   final stat = await file.stat();
@@ -324,15 +524,29 @@ Future<String?> which(String command) async {
   return null;
 }
 
-Future<String> macroVersionCheck() async {
-  final tmpDir = Directory.systemTemp.path;
-  final file = File(p.join(tmpDir, 'FCL_Version.FCMacro'));
-  if (!await file.exists()) {
-    file.writeAsString(
-      'import json, sys, FreeCAD\n'
-      'print("[freecad-launcher]", json.dumps(FreeCAD.Version()), "[/freecad-launcher]")\n'
-      'sys.exit(0)");\n',
-    );
-  }
-  return file.path;
+class Macro {
+  static final String OUTPUT_TAG = "freecad-launcher:out";
+}
+
+Future<File> macroVersionCheck(Directory parent) async {
+  final file = File(p.join(parent.path, 'FCL_Version.FCMacro'));
+  await file.writeAsString(
+    'import json, sys, platform, FreeCAD\n'
+    'data = {"freecad": FreeCAD.Version(), "python": platform.python_version()}\n'
+    'FreeCAD.Console.PrintMessage("[${Macro.OUTPUT_TAG}]" + json.dumps(data) + "[/${Macro.OUTPUT_TAG}]")\n'
+    'sys.exit(0)\n',
+  );
+  return file;
+}
+
+Future<Directory> mkTempFreecadDir() async {
+  final home = await Path.home();
+  final dir = Directory(p.join(home.str, ".FCL", generateRandomHex()));
+  await dir.create(recursive: true);
+  return dir;
+}
+
+List<String> extractMacroOutput(String source) {
+  RegExp regex = RegExp('\\[${Macro.OUTPUT_TAG}\\](.*?)\\[/${Macro.OUTPUT_TAG}\\]', dotAll: true);
+  return regex.allMatches(source).map((match) => match.group(1)!).toList();
 }

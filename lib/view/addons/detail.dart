@@ -226,7 +226,7 @@ class AddonDetailSheet extends StatelessWidget {
       file.uri.pathSegments.last,
       downloadAt,
     );
-    final Profile p = Profile(id: 1, name: 'XXX', args: '', cwd: '');
+    final Profile p = Profile(id: 1, name: 'XXX', args: '', freecadVersion: '', pythonVersion: '');
     await controller.profileDirectoryController.deploy(p, download);
   }
 

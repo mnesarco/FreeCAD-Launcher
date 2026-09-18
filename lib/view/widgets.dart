@@ -159,9 +159,9 @@ class TextFormFieldExt extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextFormField(
       initialValue: value.value,
-      decoration: const InputDecoration(
-        hintText: 'e.g. FreeCAD 1.0',
-        border: OutlineInputBorder(),
+      decoration: InputDecoration(
+        hintText: hintText,
+        border: const OutlineInputBorder(),
         isDense: true,
       ),
       onChanged: (v) {

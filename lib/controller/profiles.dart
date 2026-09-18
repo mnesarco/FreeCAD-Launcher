@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
+import 'package:drift/drift.dart';
+import 'package:freecad_launcher/service/applications.dart';
 import 'package:freecad_launcher/service/database.dart';
 import 'package:freecad_launcher/util/path.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -16,10 +18,28 @@ class ProfileController {
     return db.watchProfiles(searchFilter.value);
   });
 
+  late final apps = streamSignal(() {
+    return db.watchApps("");
+  });
+
   ProfileController(this.db);
 
-  void add(String name, String args, String cwd) {
-    db.addProfile(ProfilesCompanion.insert(name: name, args: args, cwd: cwd));
+  void add(String name, String args, int? appId, String freecadVersion, String pythonVersion) {
+    db.addProfile(
+      ProfilesCompanion.insert(
+        name: name,
+        args: args,
+        freecadVersion: freecadVersion,
+        pythonVersion: pythonVersion,
+        appId: Value(appId),
+      ),
+    );
+  }
+
+  Future<Version?> resolveFreeCADVersion(App app) async {
+    final service = appServiceForKind(app.kind);
+    final result = await service.getVersion(app.command);
+    return result.fold(onSuccess: (version) => version, onFailure: (err) => null);
   }
 }
 
@@ -27,6 +47,7 @@ enum AddonDeployResult { installed, upgraded, downgraded, removed, ignored, erro
 
 extension ProfileExt on Profile {
   Future<Path> get path async => await Path.support() / "profiles" / "profile$id";
+  Future<Path> get cwd async => await path;
 }
 
 extension DownloadedAddonExt on DownloadedAddon {
