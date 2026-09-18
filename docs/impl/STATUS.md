@@ -4,12 +4,14 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-18
-- **Current milestone**: M1 — Foundation
+- **Current milestone**: M1 — Foundation (code complete; first CI run pending a remote)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-18
-- **Next action**: `M1-09` CI matrix (analyze, tests, codegen freshness, build per OS) +
-  `M1-10` test harness (shared fake HTTP client, fixtures dir).
-- **Blockers**: none
+- **Next action**: start M2 with the risk spikes: `S1` (.7z extraction strategy) and `S2`
+  (macOS `.dmg` install), then `M2-01` (GitHub releases client).
+- **Blockers**:
+  - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
+    OQ-7). Everything else in M1 is verified locally.
 - **In progress**: none
 - **Recently completed**:
   - M0 — OQ-2 → `org.freecad.ext.launcher` (D-016); OQ-6 → ARB from day one (D-017); spec
@@ -36,6 +38,9 @@
     disk space) with injectable process runner/env/device probes; Settings "Run diagnostics"
     panel; 12 new tests, 75 total green. Known gap: disk probe is not implemented on Windows
     yet (reports not-applicable).
+  - M1-09/M1-10 — CI workflow (Linux/Windows/macOS: deps, l10n, codegen freshness, analyze,
+    tests, release builds) validated locally; test harness (`createTestDatabase`, `FakeHttp`,
+    fixture loader, `test/fixtures/` + GitHub releases fixture); 78 total tests green.
 - **Notes**:
   - Generated l10n files live in `lib/l10n/gen/` and are committed.
   - Windows/macOS runner scaffolding was generated on Linux; only CI can compile them.
@@ -53,6 +58,7 @@
 | 2026-09-18 | M1 | ProcessRunner with streamed output, timeouts, kill and fake-adapter tests | M1-06 | `lib/platform/process.dart`, `test/platform/process_test.dart` |
 | 2026-09-18 | M1 | AppServices/AppScope, six-section shell with l10n empty states, settings data dir | M1-07 | `lib/state/**`, `lib/ui/**`, `lib/app.dart`, `lib/main.dart`, `lib/l10n/**`, `test/app_shell_test.dart` |
 | 2026-09-18 | M1 | Diagnostics service + settings panel; shared fake process helper | M1-08 | `lib/platform/diagnostics.dart`, `lib/ui/settings/**`, `test/platform/**`, `test/helpers/**` |
+| 2026-09-18 | M1 | CI workflow + test harness (DB helper, FakeHttp, fixtures) | M1-09, M1-10 | `.github/workflows/ci.yml`, `test/helpers/**`, `test/fixtures/**` |
 
 ## Standing notes for the next agent
 

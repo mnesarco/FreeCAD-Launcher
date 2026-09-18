@@ -27,8 +27,8 @@ Exit: no open question blocks M1; all spec open questions have an owner/status.
 | M1-06 | `platform/process.dart`: `ProcessRunner` (arg arrays, sanitized env, streamed output, kill tree) | Unit tests with a fake process adapter; no shell usage | M1-03 | M | DONE |
 | M1-07 | `AppServices` + `AppScope` + sidebar shell + status bar + navigation (Home/Profiles/Versions/Addons/Macros/Settings) | App navigates all sections with empty states | M1-02 | M | DONE |
 | M1-08 | Diagnostics service: FUSE presence (Linux), Gatekeeper/quarantine (macOS), disk, permissions | Diagnostics screen/API returns structured results; unit-testable | M1-03, M1-05 | S | DONE |
-| M1-09 | CI matrix: analyze, tests, codegen-freshness check, `flutter build` per OS | Workflow green on a test PR | M1-02 | M | TODO |
-| M1-10 | Test harness: in-memory drift helper, injected fake HTTP client, fixtures dir | Helpers used by at least one existing test | M1-04 | M | TODO |
+| M1-09 | CI matrix: analyze, tests, codegen-freshness check, `flutter build` per OS | Workflow valid locally; first GitHub run pending a remote (OQ-7) | M1-02 | M | DONE |
+| M1-10 | Test harness: in-memory drift helper, injected fake HTTP client, fixtures dir | Helpers used by at least one existing test | M1-04 | M | DONE |
 
 Exit: shell runs on all three OSes; analyze/tests/build green in CI; schema and env logic
 covered by tests.

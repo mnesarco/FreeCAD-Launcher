@@ -1,0 +1,48 @@
+[
+  {
+    "id": 1,
+    "tag_name": "1.1.3",
+    "name": "FreeCAD 1.1.3",
+    "prerelease": false,
+    "published_at": "2026-07-25T12:00:00Z",
+    "html_url": "https://github.com/FreeCAD/FreeCAD/releases/tag/1.1.3",
+    "body": "Bug fix release.",
+    "assets": [
+      {
+        "name": "FreeCAD_1.1.3-Linux-x86_64-py311.AppImage",
+        "browser_download_url": "https://example.invalid/FreeCAD_1.1.3-Linux-x86_64-py311.AppImage",
+        "size": 123456789
+      },
+      {
+        "name": "FreeCAD_1.1.3-Linux-aarch64-py311.AppImage",
+        "browser_download_url": "https://example.invalid/FreeCAD_1.1.3-Linux-aarch64-py311.AppImage",
+        "size": 123456789
+      },
+      {
+        "name": "FreeCAD_1.1.3-Linux-x86_64-py311.AppImage-SHA256.txt",
+        "browser_download_url": "https://example.invalid/FreeCAD_1.1.3-Linux-x86_64-py311.AppImage-SHA256.txt",
+        "size": 128
+      },
+      {
+        "name": "FreeCAD_1.1.3-Windows-x86_64-py311.7z",
+        "browser_download_url": "https://example.invalid/FreeCAD_1.1.3-Windows-x86_64-py311.7z",
+        "size": 234567890
+      },
+      {
+        "name": "FreeCAD_1.1.3-Windows-x86_64-py311-installer.exe",
+        "browser_download_url": "https://example.invalid/FreeCAD_1.1.3-Windows-x86_64-py311-installer.exe",
+        "size": 234567890
+      },
+      {
+        "name": "FreeCAD_1.1.3-macOS-arm64-py311.dmg",
+        "browser_download_url": "https://example.invalid/FreeCAD_1.1.3-macOS-arm64-py311.dmg",
+        "size": 345678901
+      },
+      {
+        "name": "FreeCAD_1.1.3-macOS-x86_64-py311.dmg",
+        "browser_download_url": "https://example.invalid/FreeCAD_1.1.3-macOS-x86_64-py311.dmg",
+        "size": 345678901
+      }
+    ]
+  }
+]
