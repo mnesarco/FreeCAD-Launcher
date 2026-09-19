@@ -547,6 +547,77 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bundlesUnknownAddon => 'Not in catalog';
 
   @override
+  String get bundlesApply => 'Apply';
+
+  @override
+  String get bundlesApplyTitle => 'Apply collection';
+
+  @override
+  String get bundlesApplyProfile => 'Target profile';
+
+  @override
+  String get bundlesApplyNoProfiles => 'Create a profile first.';
+
+  @override
+  String get bundlesApplyPreview => 'Preview';
+
+  @override
+  String get bundlesApplyActionInstall => 'Install';
+
+  @override
+  String get bundlesApplyActionUpdate => 'Update';
+
+  @override
+  String get bundlesApplyActionSkip => 'Skip';
+
+  @override
+  String get bundlesApplyActionUnavailable => 'Unavailable';
+
+  @override
+  String get bundlesApplyAddonMissing => 'Not in catalog';
+
+  @override
+  String bundlesApplyBranchMissing(String branch) {
+    return 'Branch $branch is missing';
+  }
+
+  @override
+  String get bundlesApplyInstallRequirements =>
+      'Also install declared Python requirements';
+
+  @override
+  String get bundlesApplyNothing => 'Nothing to apply.';
+
+  @override
+  String get bundlesApplyRunning => 'Applying…';
+
+  @override
+  String get bundlesApplySummary => 'Result';
+
+  @override
+  String bundlesApplyInstalledCount(int count) {
+    return '$count installed';
+  }
+
+  @override
+  String bundlesApplyUpdatedCount(int count) {
+    return '$count updated';
+  }
+
+  @override
+  String bundlesApplySkippedCount(int count) {
+    return '$count skipped';
+  }
+
+  @override
+  String bundlesApplyFailedCount(int count) {
+    return '$count failed';
+  }
+
+  @override
+  String get bundlesApplyClose => 'Close';
+
+  @override
   String get addonsSearchHint => 'Search addons, use #tag';
 
   @override

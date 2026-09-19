@@ -26,6 +26,7 @@ import 'package:freecad_launcher/platform/python_probe.dart';
 import 'package:freecad_launcher/platform/seven_zip_extractor.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:freecad_launcher/state/builds_controller.dart';
+import 'package:freecad_launcher/state/bundle_apply_controller.dart';
 import 'package:freecad_launcher/state/bundles_controller.dart';
 import 'package:freecad_launcher/state/jobs_controller.dart';
 import 'package:freecad_launcher/state/profiles_controller.dart';
@@ -162,6 +163,25 @@ class AppServices {
   late final SettingsController settings = SettingsController(cliWrapper: cliWrapper);
 
   late final BundlesController bundles = BundlesController(database: database);
+
+  late final BundleApplyController bundleApply = BundleApplyController(
+    install: ({
+      required String addonId,
+      required String branchRef,
+      required String profileId,
+      required bool installRequirements,
+    }) => addons.install(
+      addonId: addonId,
+      branchRef: branchRef,
+      profileId: profileId,
+      installRequirements: installRequirements,
+    ),
+    update: ({
+      required String addonId,
+      required String branchRef,
+      required String profileId,
+    }) => addons.update(addonId: addonId, branchRef: branchRef, profileId: profileId),
+  );
 
   late final PythonController python = PythonController(
     database: database,

@@ -177,6 +177,51 @@
   "bundlesNameTooLong": "Name is too long (max 64 characters).",
   "bundlesNameTaken": "A collection with this name already exists.",
   "bundlesUnknownAddon": "Not in catalog",
+  "bundlesApply": "Apply",
+  "bundlesApplyTitle": "Apply collection",
+  "bundlesApplyProfile": "Target profile",
+  "bundlesApplyNoProfiles": "Create a profile first.",
+  "bundlesApplyPreview": "Preview",
+  "bundlesApplyActionInstall": "Install",
+  "bundlesApplyActionUpdate": "Update",
+  "bundlesApplyActionSkip": "Skip",
+  "bundlesApplyActionUnavailable": "Unavailable",
+  "bundlesApplyAddonMissing": "Not in catalog",
+  "bundlesApplyBranchMissing": "Branch {branch} is missing",
+  "@bundlesApplyBranchMissing": {
+    "placeholders": {
+      "branch": {"type": "String"}
+    }
+  },
+  "bundlesApplyInstallRequirements": "Also install declared Python requirements",
+  "bundlesApplyNothing": "Nothing to apply.",
+  "bundlesApplyRunning": "Applying…",
+  "bundlesApplySummary": "Result",
+  "bundlesApplyInstalledCount": "{count} installed",
+  "@bundlesApplyInstalledCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bundlesApplyUpdatedCount": "{count} updated",
+  "@bundlesApplyUpdatedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bundlesApplySkippedCount": "{count} skipped",
+  "@bundlesApplySkippedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bundlesApplyFailedCount": "{count} failed",
+  "@bundlesApplyFailedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bundlesApplyClose": "Close",
   "addonsSearchHint": "Search addons, use #tag",
   "addonsFilterAll": "All",
   "addonsFilterContent": "Content",

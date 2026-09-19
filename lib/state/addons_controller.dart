@@ -11,6 +11,7 @@ import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/addons/addon_update_rules.dart';
 import 'package:freecad_launcher/domain/builds/freecad_version.dart';
 import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/domain/python/requirements_parser.dart';
@@ -254,22 +255,12 @@ class AddonsController {
       return false;
     }
     final branch = branchOf(addon, installed.gitRef ?? addon.primaryBranch.gitRef);
-    final catalogTime = branch.lastUpdateTime;
-    final installedTime = installed.catalogLastUpdate;
-    if (catalogTime != null &&
-        (installedTime == null || catalogTime.isAfter(installedTime))) {
-      return true;
-    }
-    final catalogVersion = branch.metadata?.version;
-    final installedVersion = installed.version;
-    if (catalogVersion != null &&
-        catalogVersion.isNotEmpty &&
-        installedVersion != null &&
-        installedVersion.isNotEmpty &&
-        catalogVersion != installedVersion) {
-      return true;
-    }
-    return false;
+    return addonContentChanged(
+      catalogLastUpdate: branch.lastUpdateTime,
+      catalogVersion: branch.metadata?.version,
+      installedCatalogLastUpdate: installed.catalogLastUpdate,
+      installedVersion: installed.version,
+    );
   }
 
   Future<Result<void>> update({

@@ -105,7 +105,7 @@ that profile; jobs UI is usable.
 |---|---|---|---|---|---|
 | S4 | Spike: macro catalog source and license | Written decision D-### (repo/API, URL stability, license) | M1-02 | S | DONE |
 | M5-01 | Bundles: model, DAO, CRUD UI, add/remove items | Unit tests; manual create/edit from a profile | M1-04 | M | DONE |
-| M5-02 | Bundle apply: planner (install/update/skip/conflict), preview, sequential execution | Unit tests for planner; manual apply with summary of results | M5-01, M4-03 | M | TODO |
+| M5-02 | Bundle apply: planner (install/update/skip/conflict), preview, sequential execution | Unit tests for planner; manual apply with summary of results | M5-01, M4-03 | M | DONE |
 | M5-03 | Bundle export/import JSON (`spec 05 §4.1`) with validation and unresolved-item handling | Round-trip test incl. unknown addon ids | M5-01 | S | TODO |
 | M5-04 | Macro catalog client + install single macro (per S4) | Manual install from catalog; file appears in profile scan | S4, M3-02 | M | TODO |
 | M5-05 | Macro scanner (flat profile root + `Macro/`) + list/delete/reveal/open-external | Manual on each OS; DB reconciliation on startup | M5-04 | M | TODO |

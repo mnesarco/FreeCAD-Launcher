@@ -1126,6 +1126,126 @@ abstract class AppLocalizations {
   /// **'Not in catalog'**
   String get bundlesUnknownAddon;
 
+  /// No description provided for @bundlesApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get bundlesApply;
+
+  /// No description provided for @bundlesApplyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply collection'**
+  String get bundlesApplyTitle;
+
+  /// No description provided for @bundlesApplyProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Target profile'**
+  String get bundlesApplyProfile;
+
+  /// No description provided for @bundlesApplyNoProfiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a profile first.'**
+  String get bundlesApplyNoProfiles;
+
+  /// No description provided for @bundlesApplyPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get bundlesApplyPreview;
+
+  /// No description provided for @bundlesApplyActionInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get bundlesApplyActionInstall;
+
+  /// No description provided for @bundlesApplyActionUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get bundlesApplyActionUpdate;
+
+  /// No description provided for @bundlesApplyActionSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get bundlesApplyActionSkip;
+
+  /// No description provided for @bundlesApplyActionUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get bundlesApplyActionUnavailable;
+
+  /// No description provided for @bundlesApplyAddonMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Not in catalog'**
+  String get bundlesApplyAddonMissing;
+
+  /// No description provided for @bundlesApplyBranchMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch {branch} is missing'**
+  String bundlesApplyBranchMissing(String branch);
+
+  /// No description provided for @bundlesApplyInstallRequirements.
+  ///
+  /// In en, this message translates to:
+  /// **'Also install declared Python requirements'**
+  String get bundlesApplyInstallRequirements;
+
+  /// No description provided for @bundlesApplyNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to apply.'**
+  String get bundlesApplyNothing;
+
+  /// No description provided for @bundlesApplyRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Applying…'**
+  String get bundlesApplyRunning;
+
+  /// No description provided for @bundlesApplySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
+  String get bundlesApplySummary;
+
+  /// No description provided for @bundlesApplyInstalledCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} installed'**
+  String bundlesApplyInstalledCount(int count);
+
+  /// No description provided for @bundlesApplyUpdatedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} updated'**
+  String bundlesApplyUpdatedCount(int count);
+
+  /// No description provided for @bundlesApplySkippedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} skipped'**
+  String bundlesApplySkippedCount(int count);
+
+  /// No description provided for @bundlesApplyFailedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} failed'**
+  String bundlesApplyFailedCount(int count);
+
+  /// No description provided for @bundlesApplyClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get bundlesApplyClose;
+
   /// No description provided for @addonsSearchHint.
   ///
   /// In en, this message translates to:

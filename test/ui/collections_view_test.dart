@@ -15,6 +15,7 @@ import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/addons/addons_view.dart';
 import 'package:path/path.dart' as p;
 
+import '../data/test_fixtures.dart';
 import '../helpers/fake_addon_catalog.dart';
 import '../helpers/fake_download.dart';
 
@@ -143,6 +144,70 @@ void main() {
 
     expect(find.text('A collection with this name already exists.'), findsOneWidget);
     expect(find.byType(AlertDialog), findsOneWidget);
+  });
+
+  testWidgets('previews an install action for a missing addon', (tester) async {
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    await services.bundles.create(
+      name: 'Base',
+      initialItems: (bundleId) => [
+        sampleBundleItem(bundleId: bundleId, addonId: 'A2plus'),
+      ],
+    );
+    await pumpCollections(tester);
+
+    await tester.tap(find.text('Base'));
+    await settle(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Apply'));
+    await settle(tester);
+
+    expect(find.text('Apply collection'), findsOneWidget);
+    expect(find.text('Default'), findsWidgets);
+    expect(find.text('A2plus'), findsWidgets);
+    expect(find.text('Install'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await settle(tester);
+    expect(find.text('Apply collection'), findsNothing);
+  });
+
+  testWidgets('previews a skip action for an up-to-date addon', (tester) async {
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    await db.installedAddonsDao.save(
+      sampleAddon(
+        profileId: 'profile-1',
+        addonId: 'A2plus',
+        displayName: 'A2plus',
+        version: '1.0.0',
+        gitRef: 'master',
+      ),
+    );
+    await services.bundles.create(
+      name: 'Base',
+      initialItems: (bundleId) => [
+        sampleBundleItem(bundleId: bundleId, addonId: 'A2plus'),
+      ],
+    );
+    await pumpCollections(tester);
+
+    await tester.tap(find.text('Base'));
+    await settle(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Apply'));
+    await settle(tester);
+
+    expect(find.text('Skip'), findsOneWidget);
+    final applyButton = tester.widget<FilledButton>(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(FilledButton, 'Apply'),
+      ),
+    );
+    expect(applyButton.onPressed, isNull);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await settle(tester);
   });
 
   testWidgets('opens a collection, adds and removes an addon, then deletes it', (tester) async {

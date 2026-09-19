@@ -3,9 +3,11 @@ import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/bundles/bundle_planner.dart';
 import 'package:freecad_launcher/domain/bundles/bundle_rules.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/state/bundle_apply_controller.dart';
 import 'package:freecad_launcher/state/bundles_controller.dart';
 import 'package:freecad_launcher/ui/addons/addon_icon.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
@@ -206,6 +208,12 @@ class _BundleDetailViewState extends State<BundleDetailView> {
                             ),
                           ),
                           FilledButton.tonalIcon(
+                            onPressed: items.isEmpty ? null : () => _apply(context, bundle),
+                            icon: const Icon(Icons.playlist_add_check),
+                            label: Text(l10n.bundlesApply),
+                          ),
+                          const SizedBox(width: 8),
+                          FilledButton.tonalIcon(
                             onPressed: () => _addAddon(context, bundle),
                             icon: const Icon(Icons.add),
                             label: Text(l10n.bundlesAddAddon),
@@ -283,6 +291,13 @@ class _BundleDetailViewState extends State<BundleDetailView> {
       (error) => messenger.showSnackBar(
         SnackBar(content: Text('${l10n.bundlesDeleteFailed}: $error')),
       ),
+    );
+  }
+
+  Future<void> _apply(BuildContext context, Bundle bundle) async {
+    await showDialog<BundleApplySummary>(
+      context: context,
+      builder: (context) => BundleApplyDialog(bundleId: bundle.id),
     );
   }
 
@@ -599,6 +614,240 @@ class _AddAddonDialogState extends State<AddAddonDialog> {
             addon.description.toLowerCase().contains(query))
           addon,
     ];
+  }
+}
+
+class BundleApplyDialog extends StatefulWidget {
+  const BundleApplyDialog({super.key, required this.bundleId});
+
+  final String bundleId;
+
+  @override
+  State<BundleApplyDialog> createState() => _BundleApplyDialogState();
+}
+
+class _BundleApplyDialogState extends State<BundleApplyDialog> {
+  String? _profileId;
+  bool _installRequirements = false;
+  BundleApplySummary? _summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final services = AppScope.of(context);
+    final applying = services.bundleApply.applying.watch(context);
+    final completed = services.bundleApply.completed.watch(context);
+    final total = services.bundleApply.total.watch(context);
+    final profiles = services.profiles.profiles.watch(context);
+    final catalog = services.addons.addons.watch(context);
+    final installedRows = services.addons.installedAddons.watch(context);
+    final bundleItems = services.bundles.items.watch(context).where(
+      (item) => item.bundleId == widget.bundleId,
+    );
+
+    final profileId = _profileId ?? (profiles.isEmpty ? null : profiles.first.id);
+    final plan = planBundleApply(
+      entries: [
+        for (final item in bundleItems)
+          BundlePlanEntry(addonId: item.addonId, gitRef: item.gitRef),
+      ],
+      catalog: catalog,
+      installed: [
+        for (final row in installedRows)
+          if (row.profileId == profileId)
+            BundlePlanInstalledAddon(
+              addonId: row.addonId,
+              gitRef: row.gitRef,
+              version: row.version,
+              catalogLastUpdate: row.catalogLastUpdate,
+            ),
+      ],
+    );
+
+    final summary = _summary;
+    Widget content;
+    if (summary != null) {
+      content = _summaryView(l10n, summary);
+    } else if (applying) {
+      content = Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(l10n.bundlesApplyRunning),
+          const SizedBox(height: 12),
+          LinearProgressIndicator(value: total == 0 ? null : completed / total),
+        ],
+      );
+    } else {
+      content = _previewView(l10n, services, profiles, profileId, plan);
+    }
+
+    return AlertDialog(
+      title: Text(l10n.bundlesApplyTitle),
+      content: SizedBox(width: 520, height: 400, child: content),
+      actions: [
+        if (summary != null)
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(summary),
+            child: Text(l10n.bundlesApplyClose),
+          )
+        else ...[
+          TextButton(
+            onPressed: applying ? null : () => Navigator.of(context).pop(),
+            child: Text(l10n.bundlesCancel),
+          ),
+          FilledButton(
+            onPressed: !applying && profileId != null && plan.actionable.isNotEmpty
+                ? () => _run(services, profileId, plan)
+                : null,
+            child: Text(l10n.bundlesApply),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _previewView(
+    AppLocalizations l10n,
+    AppServices services,
+    List<Profile> profiles,
+    String? profileId,
+    BundleApplyPlan plan,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (profiles.isEmpty)
+          Text(l10n.bundlesApplyNoProfiles)
+        else
+          InputDecorator(
+            decoration: InputDecoration(
+              isDense: true,
+              labelText: l10n.bundlesApplyProfile,
+            ),
+            child: DropdownButton<String>(
+              value: profileId,
+              isDense: true,
+              isExpanded: true,
+              items: [
+                for (final profile in profiles)
+                  DropdownMenuItem(value: profile.id, child: Text(profile.name)),
+              ],
+              onChanged: (value) => setState(() => _profileId = value),
+            ),
+          ),
+        const SizedBox(height: 8),
+        if (plan.items.isEmpty)
+          Text(l10n.bundlesApplyNothing)
+        else
+          Expanded(
+            child: ListView(
+              children: [for (final item in plan.items) _planRow(l10n, item)],
+            ),
+          ),
+        if (plan.hasRequirements)
+          CheckboxListTile(
+            value: _installRequirements,
+            onChanged: (value) => setState(() => _installRequirements = value ?? false),
+            title: Text(l10n.bundlesApplyInstallRequirements),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+          ),
+      ],
+    );
+  }
+
+  Widget _planRow(AppLocalizations l10n, BundleApplyPlanItem item) {
+    final theme = Theme.of(context);
+    return ListTile(
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      title: Text(item.addonName ?? item.addonId),
+      subtitle: Text(_subtitle(l10n, item), style: theme.textTheme.bodySmall),
+      trailing: Chip(
+        label: Text(_actionLabel(l10n, item.action)),
+        visualDensity: VisualDensity.compact,
+      ),
+    );
+  }
+
+  Widget _summaryView(AppLocalizations l10n, BundleApplySummary summary) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            Chip(label: Text(l10n.bundlesApplyInstalledCount(
+              summary.count(BundleApplyItemStatus.installed),
+            ))),
+            Chip(label: Text(l10n.bundlesApplyUpdatedCount(
+              summary.count(BundleApplyItemStatus.updated),
+            ))),
+            Chip(label: Text(l10n.bundlesApplySkippedCount(
+              summary.count(BundleApplyItemStatus.skipped),
+            ))),
+            Chip(label: Text(l10n.bundlesApplyFailedCount(
+              summary.count(BundleApplyItemStatus.failed),
+            ))),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (summary.failures.isNotEmpty)
+          Expanded(
+            child: ListView(
+              children: [
+                for (final failure in summary.failures)
+                  ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.error_outline, color: theme.colorScheme.error),
+                    title: Text(failure.item.addonName ?? failure.item.addonId),
+                    subtitle: Text(failure.error ?? ''),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  String _subtitle(AppLocalizations l10n, BundleApplyPlanItem item) {
+    if (item.action == BundleItemAction.unavailable) {
+      if (item.isAddonMissing) {
+        return l10n.bundlesApplyAddonMissing;
+      }
+      return l10n.bundlesApplyBranchMissing(item.branchRef ?? '');
+    }
+    final parts = [
+      if (item.branchRef != null) item.branchRef!,
+      if (item.action == BundleItemAction.update && item.catalogVersion != null)
+        '${item.installedVersion ?? '?'} → ${item.catalogVersion}',
+    ];
+    return parts.join('  ·  ');
+  }
+
+  String _actionLabel(AppLocalizations l10n, BundleItemAction action) {
+    return switch (action) {
+      BundleItemAction.install => l10n.bundlesApplyActionInstall,
+      BundleItemAction.update => l10n.bundlesApplyActionUpdate,
+      BundleItemAction.skip => l10n.bundlesApplyActionSkip,
+      BundleItemAction.unavailable => l10n.bundlesApplyActionUnavailable,
+    };
+  }
+
+  Future<void> _run(AppServices services, String profileId, BundleApplyPlan plan) async {
+    final summary = await services.bundleApply.apply(
+      profileId: profileId,
+      items: plan.actionable,
+      installRequirements: _installRequirements,
+    );
+    if (!mounted) {
+      return;
+    }
+    setState(() => _summary = summary);
   }
 }
 

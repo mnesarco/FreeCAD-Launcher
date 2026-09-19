@@ -8,9 +8,9 @@
   Collections, macros, config, export (S4 spike, then M5-01)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-19
-- **Next action**: start `M5-02` (bundle apply planner + preview). `M5-04` (macro catalog client)
-  is unblocked by S4/D-044. Manual M4 UI click-throughs and the Windows/macOS manual checks
-  remain open.
+- **Next action**: start `M5-03` (bundle export/import JSON). `M5-04` (macro catalog client) is
+  unblocked by S4/D-044. Manual M4 UI click-throughs and the Windows/macOS manual checks remain
+  open.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -151,7 +151,11 @@
     from a profile's installed addons, addon picker with catalog search, per-item branch, remove,
     delete); async name validation mirrors profile rules; `BundlesDao.save` now clears nullable
     fields. Apply/export/import deferred to M5-02/M5-03. 12 new tests.
-  - 344 tests green (8 manual probes skipped), analyze clean, app builds and launches.
+  - M5-02 — **D-046**: pure `planBundleApply` (install/update/skip/unavailable, shared update
+    rule with `isUpdateAvailable`), `BundleApplyController` (sequential execution, progress
+    signals, summary, failure-tolerant) and the Apply dialog (profile picker, action chips,
+    one-shot requirements consent, progress, summary). 12 new tests.
+  - 356 tests green (8 manual probes skipped), analyze clean, app builds and launches.
 
 ## Session log
 
@@ -201,6 +205,7 @@
 | 2026-09-19 | M4 | D-040 addon update detection, backups and removal | M4-04 | `docs/impl/DECISIONS.md`, `lib/state/addons_controller.dart`, `lib/ui/addons/addons_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M4 | D-041 requirements parser, consent and pip installation | M4-05, M4-06 | `docs/impl/DECISIONS.md`, `lib/domain/python/**`, `lib/platform/python_*.dart`, `lib/platform/pip_runner.dart`, `lib/state/addons_controller.dart`, `lib/ui/addons/**`, `test/**` |
 | 2026-09-19 | M4 | D-042 Python packages tab and RECORD-based uninstall | M4-07 | `docs/impl/DECISIONS.md`, `lib/platform/python_uninstaller.dart`, `lib/state/python_controller.dart`, `lib/state/app_services.dart`, `lib/ui/profiles/profile_detail_view.dart`, `lib/l10n/**`, `test/**` |
+| 2026-09-19 | M5 | D-046 bundle apply planner, sequential runner and preview dialog | M5-02 | `docs/impl/DECISIONS.md`, `lib/domain/addons/addon_update_rules.dart`, `lib/domain/bundles/bundle_planner.dart`, `lib/state/bundle_apply_controller.dart`, `lib/state/addons_controller.dart`, `lib/state/app_services.dart`, `lib/ui/addons/collections_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M5 | D-045 bundles controller + Collections tab (create/edit/items, profile seed) | M5-01 | `docs/impl/DECISIONS.md`, `lib/domain/bundles/bundle_rules.dart`, `lib/state/bundles_controller.dart`, `lib/state/app_services.dart`, `lib/data/daos/bundles_dao.dart`, `lib/ui/addons/collections_view.dart`, `lib/ui/addons/addons_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | S4 | D-044 macro catalog source: addons.freecad.org cache, format, placement and license handling | S4 | `docs/impl/DECISIONS.md`, `docs/spec/06-integrations.md` |
 | 2026-09-19 | M4 | D-043 job queue (controller, cancel/retry, status bar + jobs dialog) and wiring for builds/addons/pip | M4-08 | `docs/impl/DECISIONS.md`, `docs/impl/TASKS.md`, `lib/domain/jobs/job_types.dart`, `lib/state/jobs_controller.dart`, `lib/state/*_controller.dart`, `lib/state/app_services.dart`, `lib/core/cancellation.dart`, `lib/platform/addon_installer.dart`, `lib/ui/jobs/jobs_dialog.dart`, `lib/ui/shell/app_shell.dart`, `lib/l10n/**`, `test/**` |

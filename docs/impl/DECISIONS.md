@@ -800,3 +800,35 @@ Template:
 - **Refs**: spec 02 FR-5.1, spec 03 §2.4, spec 05 `bundles`/`bundle_items`,
   `lib/state/bundles_controller.dart`, `lib/domain/bundles/bundle_rules.dart`,
   `lib/ui/addons/collections_view.dart`, `TASKS.md` M5-01
+
+### D-046 — Bundle apply: pure planner, sequential execution and preview dialog (M5-02)
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: FR-5.2 requires a preview (install/update/skip/conflict per item) followed by
+  execution with explicit confirmation; M5-01 stored bundles and items.
+- **Decision**:
+  - `planBundleApply` (pure, `domain/bundles/bundle_planner.dart`) takes domain inputs
+    (`BundlePlanEntry`, `BundlePlanInstalledAddon`) plus the catalog and classifies every item as
+    `install | update | skip | unavailable`. `unavailable` covers both a missing addon and a
+    missing branch of a known addon; `gitRef == null` resolves to the primary branch.
+  - Update detection reuses the single rule `addonContentChanged`
+    (`domain/addons/addon_update_rules.dart`, extracted from `AddonsController.isUpdateAvailable`)
+    on catalog timestamp/version vs installed timestamp/version, plus branch switches.
+  - `BundleApplyController` (state) executes the actionable items sequentially through injected
+    install/update closures wired to `AddonsController` (parallel installs stay excluded per
+    D-043); it exposes `applying/completed/total/currentAddonId` signals and returns a
+    `BundleApplySummary` with per-item installed/updated/skipped/failed results; failures are
+    collected and the run continues. Each install/update still appears in the jobs dialog.
+  - Requirements are handled once per run: the planner flags `hasRequirements` per item and the
+    preview offers a single "Also install declared Python requirements" checkbox (default off)
+    instead of the per-addon M4-05 consent dialog; unchecked means "addon only".
+  - UI: the collection detail gains **Apply**, opening a dialog with three stages — preview
+    (target profile picker, per-item action chips, requirement checkbox), running (progress bar)
+    and summary (counts plus failed items with errors). Only actionable items execute;
+    skip/unavailable are informational.
+- **Consequences**: M6-03 batch updates can reuse the controller/summary; apply progress is
+  dialog-scoped (not persisted); per-item toggles and conflict resolution are deferred (M6-03);
+  a canceled/failed item does not roll back earlier items.
+- **Refs**: spec 02 FR-5.2, spec 03 §2.4, `lib/domain/bundles/bundle_planner.dart`,
+  `lib/state/bundle_apply_controller.dart`, `lib/ui/addons/collections_view.dart`,
+  `TASKS.md` M5-02, D-040, D-043, D-045
