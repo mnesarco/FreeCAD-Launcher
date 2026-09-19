@@ -4,6 +4,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/catalog/github_releases_client.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
@@ -61,6 +62,12 @@ class AppServices {
   late final Downloader downloader = Downloader(
     source: HttpDownloadSource(_client),
     cacheDirectory: paths.downloadsCacheDir,
+  );
+
+  late final AddonCatalog addonCatalog = AddonCatalog(
+    downloader: downloader,
+    dao: database.catalogCacheDao,
+    cacheDirectory: paths.addonsCacheDir,
   );
 
   late final PythonProbe pythonProbe = ProcessPythonProbe(processRunner: processRunner);

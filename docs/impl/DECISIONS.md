@@ -535,3 +535,29 @@ Template:
   Dart I/O plus DB row deletion; safety guards mirror archive extraction; a partially failed
   uninstall surfaces as a job error and the reconciler keeps the DB row until files are gone.
 - **Refs**: spec 06 §4.2, `TASKS.md` S3, M4-04, M4-06, M4-07, D-006
+
+### D-037 — Addon catalog model, parsing and cache behavior
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: M4-01; the catalog is a ~1.5 MB zip containing a single ~4 MB JSON with 168
+  addon IDs (176 branch entries). Real data shows quirks the parser must tolerate: 43 entries
+  have no metadata, `freecad_min/max` are `null`, a string, or `{"version_as_list": [...]}`,
+  and three entries lack `zip_url` (two carry `relative_cache_path`, one has neither).
+- **Decision**:
+  - Domain models keep one `Addon` per ID with one or more `AddonBranch` entries; `package.xml`
+    is parsed with `package:xml` into name/description/version/license/pythonmin/tags/people/
+    content; requirements and icon come from the JSON metadata.
+  - Branch URLs: `zip_url` wins; otherwise `relative_cache_path` is resolved against
+    `https://addons.freecad.org/` (parameterized for future settings). Branches with neither
+    are skipped; the one uninstallable addon (`Supplemental-Materials`) is omitted.
+  - Malformed branches (no `git_ref`) are skipped; `_`/`$` keys and non-array values ignored;
+    addons sort case-insensitively by display name.
+  - `AddonCatalog` mirrors `ReleasesCatalog`: 6 h TTL, payload stored as
+    `<addonsCache>/addon_catalog_cache.zip`, DB row in `catalog_cache` under `addons:catalog`,
+    stale fallback with `error` when offline, `AddonCatalogUnavailableException` when no cache
+    exists. No ETag (the CDN zip has no stable validator); stats are deferred.
+- **Consequences**: Real catalog parses to 167 addons / 175 branches (verified from the local
+  zip); UI search helpers (`matchesQuery`, `#tag`) live on `Addon` for M4-02. Stats
+  (`addon_stats.json`) remain optional and unimplemented.
+- **Refs**: `addon_index_spec.md`, spec 06 §2, `lib/domain/addons/addon.dart`,
+  `lib/data/catalog/addon_catalog*.dart`, `TASKS.md` M4-01, M4-02, D-007

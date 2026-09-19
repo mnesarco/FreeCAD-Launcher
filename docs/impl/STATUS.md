@@ -4,12 +4,12 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-19
-- **Current milestone**: M4 — Addons and Python (started; S3 done, M4-01 next)
+- **Current milestone**: M4 — Addons and Python (S3, M4-01 done; M4-02 next)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-19
-- **Next action**: start `M4-01` (addon catalog client + cache + parser per
-  `addon_index_spec.md`), then M4-02 catalog UI, M4-03 install engine. M3 exit review and
-  Windows/macOS manual checks remain open; `m3-complete` tag exists.
+- **Next action**: start `M4-02` (catalog UI: search text + `#tag`, filters, grid, addon detail
+  with branches and install action), then M4-03 install engine. M3 exit review and Windows/macOS
+  manual checks remain open; `m3-complete` tag exists.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -97,8 +97,10 @@
   - S3 — **D-036**: pip has no `--target` uninstall; `--upgrade` is mandatory and leaves old
     dist-info. Removal is RECORD-based (delete files inside the target, prune empty dirs);
     updates uninstall first then reinstall. Tested with Python 3.12 / pip 24.0.
-  - 259 tests green (5 manual network/launch/wrapper/isolation probes skipped), analyze clean,
-    app builds and launches.
+  - M4-01 — **D-037**: addon domain models + `package.xml` parser, branch URL fallback to the
+    CDN base, `AddonCatalog` with 6 h TTL / stale fallback / `addons:catalog` cache row.
+    Real catalog parses to 167 addons / 175 branches (one entry has no install URL).
+  - 269 tests green (6 manual probes skipped), analyze clean, app builds and launches.
 
 ## Session log
 
@@ -137,6 +139,7 @@
 | 2026-09-19 | M3 | D-035 CLI wrapper installer + settings card + PATH reporting | M3-09 | `docs/impl/DECISIONS.md`, `docs/spec/03-ux.md`, `lib/platform/cli_wrapper.dart`, `lib/state/settings_controller.dart`, `lib/state/app_services.dart`, `lib/ui/settings/settings_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M3 | AGENTS.md refresh (tracked again) + M3-10 isolation E2E on Linux | M3-10 | `AGENTS.md`, `docs/impl/STATUS.md`, `docs/impl/VERIFICATION.md`, `test/manual/isolation_e2e_linux_test.dart` |
 | 2026-09-19 | M4 | S3 pip-uninstall spike; RECORD-based removal decision | S3 | `docs/impl/DECISIONS.md`, `docs/spec/06-integrations.md` |
+| 2026-09-19 | M4 | D-037 addon catalog models, parser and cached client | M4-01 | `docs/impl/DECISIONS.md`, `lib/domain/addons/addon.dart`, `lib/data/catalog/addon_catalog*.dart`, `lib/state/app_services.dart`, `test/**` |
 
 ## Standing notes for the next agent
 
