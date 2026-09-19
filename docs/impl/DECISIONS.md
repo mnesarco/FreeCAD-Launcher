@@ -630,3 +630,32 @@ Template:
   add backup retention caps; profile Addons tab stays read-only until M5-08.
 - **Refs**: spec 06 §2, spec 02 FR-4/FR-10, `lib/state/addons_controller.dart`,
   `lib/ui/addons/addons_view.dart`, `TASKS.md` M4-04, D-008, D-039
+
+### D-041 — Requirements parsing, consent and pip installation (M4-05/M4-06)
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: Addons may declare `requirements.txt`; installing them needs an interpreter per
+  build kind, a pip invocation into the profile target, and explicit consent because it runs
+  third-party install code.
+- **Decision**:
+  - `parseRequirements` handles names, extras, specifiers and environment markers, strips
+    comments, and flags unsupported pip options (`-e`, `--index-url`, …) as invalid entries.
+  - Before installing an addon with requirements, the UI shows a consent dialog
+    (install packages / addon only / cancel); cancel aborts the whole addon install, addon-only
+    skips pip.
+  - Interpreter resolution (`PythonEnvResolver`): stored `builds.pythonPath` first; then a
+    nearby scan for custom builds; the bundled scan for archive/dmg; for AppImages run
+    `--appimage-extract` once into `builds/<id>/extracted/` and use
+    `squashfs-root/usr/bin/python`. A missing interpreter surfaces a requirements error without
+    failing the addon install.
+  - `PipRunner` runs `<python> -m pip install --upgrade --target
+    <profile>/AdditionalPythonPackages/pyXY <specs> --disable-pip-version-check
+    --no-warn-script-location` with a sanitized environment (`PIP_NO_INPUT`,
+    `PYTHONNOUSERSITE`, no `PYTHON*`), writes `logs/pip-<addon>-<ts>.log`, returns the output
+    tail on failure, and serializes all pip jobs globally through a queue.
+  - Each requirement is recorded in `python_packages` with `source = addon:<id>` and the actual
+    target dir.
+- **Consequences**: M4-07 renders these rows and implements RECORD-based uninstall (D-036);
+  real `six` install verified via the extracted interpreter (`import six` ok).
+- **Refs**: spec 06 §4.1/§4.2/§4.3, spec 02 FR-4.7/FR-6, `lib/domain/python/requirements_parser.dart`,
+  `lib/platform/python_env.dart`, `lib/platform/pip_runner.dart`, `TASKS.md` M4-05, M4-06, D-006, D-036

@@ -7,9 +7,13 @@ import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/platform/addon_installer.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
+import 'package:freecad_launcher/platform/pip_runner.dart';
+import 'package:freecad_launcher/platform/process.dart';
+import 'package:freecad_launcher/platform/python_env.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:path/path.dart' as p;
 
@@ -17,6 +21,48 @@ import '../data/test_fixtures.dart';
 import '../helpers/fake_addon_catalog.dart';
 import '../helpers/fake_download.dart';
 import '../helpers/test_database.dart';
+
+class FakePipRunner extends PipRunner {
+  FakePipRunner()
+    : super(processRunner: ProcessRunner(), paths: AppPaths(dataRoot: '/tmp'));
+
+  bool success = true;
+  final List<({String pythonPath, String targetDirectory, List<String> packages})> calls = [];
+
+  @override
+  Future<PipResult> install({
+    required String pythonPath,
+    required String targetDirectory,
+    required List<String> packages,
+    required String label,
+    void Function(String line)? onOutput,
+    Duration timeout = const Duration(minutes: 30),
+  }) async {
+    calls.add((pythonPath: pythonPath, targetDirectory: targetDirectory, packages: packages));
+    return PipResult(
+      exitCode: success ? 0 : 1,
+      logPath: '/tmp/pip.log',
+      outputTail: success ? '' : 'pip failed',
+    );
+  }
+}
+
+class FakePythonEnvResolver extends PythonEnvResolver {
+  FakePythonEnvResolver(this.pythonPath) : super(processRunner: ProcessRunner());
+
+  final String? pythonPath;
+
+  @override
+  Future<String?> resolve({
+    required BuildKind kind,
+    required String buildDirectory,
+    required String executablePath,
+    String? storedPythonPath,
+    void Function(String line)? onOutput,
+  }) async {
+    return pythonPath;
+  }
+}
 
 Addon addon(
   String id, {
@@ -27,6 +73,7 @@ Addon addon(
   String? freecadMin,
   String? freecadMax,
   String version = '',
+  String requirements = '',
 }) {
   return Addon(
     id: id,
@@ -49,7 +96,7 @@ Addon addon(
           tags: tags,
           people: const [],
           content: content,
-          requirements: '',
+          requirements: requirements,
         ),
       ),
     ],
@@ -83,10 +130,15 @@ void main() {
     }
   });
 
-  AddonsController controller() {
+  AddonsController controller({
+    PipRunner? pipRunner,
+    PythonEnvResolver? pythonResolver,
+  }) {
     return AddonsController(
       database: db,
       catalog: catalog,
+      pipRunner: pipRunner,
+      pythonResolver: pythonResolver,
       installer: AddonInstaller(
         downloader: Downloader(
           source: downloadSource,
@@ -401,6 +453,121 @@ void main() {
     );
 
     expect(result.isErr, isTrue);
+    subject.dispose();
+  });
+
+  test('installs declared requirements with pip and records the packages', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [
+        addon(
+          'WithReqs',
+          name: 'WithReqs',
+          version: '1.0.0',
+          requirements: 'numpy>=1.26\n# comment\nsix',
+        ),
+      ],
+      freshness: CatalogFreshness.fresh,
+    );
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    downloadSource.streamFactory = () => Stream.fromIterable([
+      catalogZip({'WithReqs-master/InitGui.py': 'gui'}),
+    ]);
+    final pip = FakePipRunner();
+    final subject = controller(
+      pipRunner: pip,
+      pythonResolver: FakePythonEnvResolver('/opt/freecad/bin/python'),
+    );
+    await subject.load();
+
+    final result = await subject.install(
+      addonId: 'WithReqs',
+      branchRef: 'master',
+      profileId: 'profile-1',
+      installRequirements: true,
+    );
+
+    expect(result.isOk, isTrue);
+    expect(pip.calls.single.pythonPath, '/opt/freecad/bin/python');
+    expect(pip.calls.single.packages, ['numpy>=1.26', 'six']);
+    expect(
+      pip.calls.single.targetDirectory,
+      p.join(
+        tempDirectory.path,
+        'profiles',
+        'profile-1',
+        'AdditionalPythonPackages',
+        'py311',
+      ),
+    );
+    final packages = await db.pythonPackagesDao.getByProfile('profile-1');
+    expect(packages.map((package) => package.name).toSet(), {'numpy', 'six'});
+    expect(packages.every((package) => package.source == 'addon:WithReqs'), isTrue);
+    expect(subject.requirementsErrors.value, isEmpty);
+    subject.dispose();
+  });
+
+  test('requirements failures are reported without failing the addon install', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [
+        addon(
+          'WithReqs',
+          requirements: 'numpy>=1.26',
+        ),
+      ],
+      freshness: CatalogFreshness.fresh,
+    );
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    downloadSource.streamFactory = () => Stream.fromIterable([
+      catalogZip({'WithReqs-master/InitGui.py': 'gui'}),
+    ]);
+    final pip = FakePipRunner()..success = false;
+    final subject = controller(
+      pipRunner: pip,
+      pythonResolver: FakePythonEnvResolver('/opt/freecad/bin/python'),
+    );
+    await subject.load();
+
+    final result = await subject.install(
+      addonId: 'WithReqs',
+      branchRef: 'master',
+      profileId: 'profile-1',
+      installRequirements: true,
+    );
+
+    expect(result.isOk, isTrue);
+    expect(subject.requirementsErrors.value['WithReqs'], isNotNull);
+    expect(await db.pythonPackagesDao.getByProfile('profile-1'), isEmpty);
+    subject.dispose();
+  });
+
+  test('skips pip when the addon declares no requirements', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [addon('A2plus')],
+      freshness: CatalogFreshness.fresh,
+    );
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    downloadSource.streamFactory = () => Stream.fromIterable([
+      catalogZip({'A2plus-master/InitGui.py': 'gui'}),
+    ]);
+    final pip = FakePipRunner();
+    final subject = controller(
+      pipRunner: pip,
+      pythonResolver: FakePythonEnvResolver('/opt/freecad/bin/python'),
+    );
+    await subject.load();
+
+    final result = await subject.install(
+      addonId: 'A2plus',
+      branchRef: 'master',
+      profileId: 'profile-1',
+      installRequirements: true,
+    );
+
+    expect(result.isOk, isTrue);
+    expect(pip.calls, isEmpty);
     subject.dispose();
   });
 

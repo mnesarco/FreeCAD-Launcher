@@ -4,10 +4,12 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/python/requirements_parser.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/addons/addon_icon.dart';
+import 'package:freecad_launcher/ui/addons/requirements_dialog.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 
 class AddonsView extends StatefulWidget {
@@ -371,6 +373,8 @@ class _AddonDetailViewState extends State<AddonDetailView> {
     final updateAvailable =
         profileId != null && controller.isUpdateAvailable(profileId, currentAddon.id);
     final installError = controller.installErrors.watch(context)[currentAddon.id];
+    final requirementsError =
+        controller.requirementsErrors.watch(context)[currentAddon.id];
     final canInstall = profileId != null && !installing && !installedInSelected;
 
     return Column(
@@ -540,6 +544,15 @@ class _AddonDetailViewState extends State<AddonDetailView> {
                             ),
                           ),
                         ],
+                        if (requirementsError != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            '${l10n.addonsRequirementsFailed}: $requirementsError',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ],
                       ],
                     ],
                   ),
@@ -556,10 +569,27 @@ class _AddonDetailViewState extends State<AddonDetailView> {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).addons;
     final messenger = ScaffoldMessenger.of(context);
+
+    final branch = controller.branchOf(addon, branchRef);
+    var installRequirements = false;
+    if (branch.hasRequirements) {
+      final requirements = parseRequirements(branch.metadata?.requirements ?? '');
+      final choice = await showRequirementsConsentDialog(
+        context,
+        addonName: addon.displayName,
+        requirements: requirements,
+      );
+      if (!mounted || choice == RequirementsChoice.cancel) {
+        return;
+      }
+      installRequirements = choice == RequirementsChoice.installPackages;
+    }
+
     final result = await controller.install(
       addonId: addon.id,
       branchRef: branchRef,
       profileId: profileId,
+      installRequirements: installRequirements,
     );
     if (!mounted) {
       return;

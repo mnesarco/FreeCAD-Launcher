@@ -19,7 +19,9 @@ import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/host.dart';
 import 'package:freecad_launcher/platform/launch.dart';
 import 'package:freecad_launcher/platform/paths.dart';
+import 'package:freecad_launcher/platform/pip_runner.dart';
 import 'package:freecad_launcher/platform/process.dart';
+import 'package:freecad_launcher/platform/python_env.dart';
 import 'package:freecad_launcher/platform/python_probe.dart';
 import 'package:freecad_launcher/platform/seven_zip_extractor.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
@@ -112,6 +114,15 @@ class AppServices {
 
   late final AddonInstaller addonInstaller = AddonInstaller(downloader: downloader);
 
+  late final PipRunner pipRunner = PipRunner(
+    processRunner: processRunner,
+    paths: paths,
+  );
+
+  late final PythonEnvResolver pythonEnvResolver = PythonEnvResolver(
+    processRunner: processRunner,
+  );
+
   late final AddonsController addons =
       _addonsControllerOverride ??
       AddonsController(
@@ -119,6 +130,8 @@ class AppServices {
         catalog: addonCatalog,
         installer: addonInstaller,
         paths: paths,
+        pipRunner: pipRunner,
+        pythonResolver: pythonEnvResolver,
       );
 
   late final BuildsController builds =

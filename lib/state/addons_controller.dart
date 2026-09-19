@@ -12,8 +12,11 @@ import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show Catalo
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
 import 'package:freecad_launcher/domain/builds/freecad_version.dart';
+import 'package:freecad_launcher/domain/python/requirements_parser.dart';
 import 'package:freecad_launcher/platform/addon_installer.dart';
 import 'package:freecad_launcher/platform/paths.dart';
+import 'package:freecad_launcher/platform/pip_runner.dart';
+import 'package:freecad_launcher/platform/python_env.dart';
 
 enum AddonInstalledFilter { installed, notInstalled }
 
@@ -23,17 +26,23 @@ class AddonsController {
     required AddonCatalog catalog,
     required AddonInstaller installer,
     required AppPaths paths,
+    PipRunner? pipRunner,
+    PythonEnvResolver? pythonResolver,
     DateTime Function()? clock,
   }) : _database = database,
        _catalog = catalog,
        _installer = installer,
        _paths = paths,
+       _pipRunner = pipRunner,
+       _pythonResolver = pythonResolver,
        _clock = clock ?? DateTime.now;
 
   final AppDatabase _database;
   final AddonCatalog _catalog;
   final AddonInstaller _installer;
   final AppPaths _paths;
+  final PipRunner? _pipRunner;
+  final PythonEnvResolver? _pythonResolver;
   final DateTime Function() _clock;
 
   final addons = signal<List<Addon>>([]);
@@ -49,6 +58,8 @@ class AddonsController {
   final installedAddons = signal<List<InstalledAddon>>([]);
   final installing = signal<Set<String>>({});
   final installErrors = signal<Map<String, AppError>>({});
+  final requirementsInstalling = signal<Set<String>>({});
+  final requirementsErrors = signal<Map<String, AppError>>({});
   final freecadVersions = signal<List<String>>([]);
   final selectedBranches = signal<Map<String, String>>({});
 
@@ -329,6 +340,7 @@ class AddonsController {
     required String addonId,
     required String branchRef,
     required String profileId,
+    bool installRequirements = false,
   }) async {
     final addon = byId(addonId);
     if (addon == null) {
@@ -365,6 +377,14 @@ class AddonsController {
           hasRequirements: branch.hasRequirements,
         ),
       );
+      if (installRequirements && branch.hasRequirements) {
+        await _installRequirements(
+          profile: profile,
+          addon: addon,
+          branch: branch,
+          installedAt: now,
+        );
+      }
       return const Ok(null);
     } on Object catch (error) {
       final appError = error is AppError ? error : AppError.from(error, retryable: true);
@@ -373,6 +393,83 @@ class AddonsController {
     } finally {
       installing.value = {...installing.value}..remove(addonId);
     }
+  }
+
+  Future<void> _installRequirements({
+    required Profile profile,
+    required Addon addon,
+    required AddonBranch branch,
+    required DateTime installedAt,
+  }) async {
+    final requirements = parseRequirements(
+      branch.metadata?.requirements ?? '',
+    ).where((requirement) => requirement.valid).toList();
+    if (requirements.isEmpty) {
+      return;
+    }
+    final runner = _pipRunner;
+    final resolver = _pythonResolver;
+    if (runner == null || resolver == null) {
+      return;
+    }
+
+    requirementsInstalling.value = {...requirementsInstalling.value, addon.id};
+    requirementsErrors.value = {...requirementsErrors.value}..remove(addon.id);
+    try {
+      final build = await _database.buildsDao.getById(profile.buildId);
+      if (build == null) {
+        throw const AddonInstallException('Build not found');
+      }
+      final interpreter = await resolver.resolve(
+        kind: build.kind,
+        buildDirectory: _paths.buildDir(build.id),
+        executablePath: build.localPath,
+        storedPythonPath: build.pythonPath,
+      );
+      if (interpreter == null) {
+        throw const AddonInstallException(
+          'No bundled Python interpreter found for this build',
+        );
+      }
+      final targetDirectory = p.join(
+        _paths.profilePaths(profile.id).additionalPythonPackages,
+        'py${profile.pythonVersion.replaceAll('.', '')}',
+      );
+      final result = await runner.install(
+        pythonPath: interpreter,
+        targetDirectory: targetDirectory,
+        packages: requirements.map(_requirementSpec).toList(),
+        label: addon.id,
+      );
+      if (!result.isSuccess) {
+        throw AddonInstallException('pip failed: ${result.outputTail}');
+      }
+      for (final requirement in requirements) {
+        await _database.pythonPackagesDao.save(
+          PythonPackage(
+            id: const Uuid().v4(),
+            profileId: profile.id,
+            name: requirement.name,
+            targetDir: targetDirectory,
+            source: 'addon:${addon.id}',
+            installedAt: installedAt,
+          ),
+        );
+      }
+    } on Object catch (error) {
+      requirementsErrors.value = {
+        ...requirementsErrors.value,
+        addon.id: error is AppError ? error : AppError.from(error, retryable: true),
+      };
+    } finally {
+      requirementsInstalling.value = {...requirementsInstalling.value}..remove(addon.id);
+    }
+  }
+
+  String _requirementSpec(PythonRequirement requirement) {
+    final extras = requirement.extras.isEmpty ? '' : '[${requirement.extras.join(',')}]';
+    final marker = requirement.marker.isEmpty ? '' : '; ${requirement.marker}';
+    return '${requirement.name}$extras${requirement.specifier}$marker';
   }
 
   void clearInstallError(String addonId) {

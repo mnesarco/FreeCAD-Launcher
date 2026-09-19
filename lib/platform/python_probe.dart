@@ -342,14 +342,11 @@ class ProcessPythonProbe implements PythonProbe {
     required String installDirectory,
     required String executablePath,
   }) {
-    final candidates = _findAllIn(
-      _interpreterDirectories(
-        kind: kind,
-        installDirectory: installDirectory,
-        executablePath: executablePath,
-      ),
+    return locateBundledInterpreter(
+      kind: kind,
+      installDirectory: installDirectory,
+      executablePath: executablePath,
     );
-    return candidates.isEmpty ? null : candidates.first;
   }
 
   List<String> _interpreterDirectories({
@@ -357,60 +354,15 @@ class ProcessPythonProbe implements PythonProbe {
     required String installDirectory,
     required String executablePath,
   }) {
-    if (kind == BuildKind.appimage) {
-      return [p.join(installDirectory, 'squashfs-root', 'usr', 'bin')];
-    }
-
-    final executableDirectory = p.dirname(executablePath);
-    return [
-      executableDirectory,
-      p.join(executableDirectory, 'bin'),
-      p.join(executableDirectory, '..', 'Resources', 'bin'),
-      p.join(installDirectory, 'bin'),
-      p.join(installDirectory, 'usr', 'bin'),
-      p.join(installDirectory, 'FreeCAD.app', 'Contents', 'Resources', 'bin'),
-    ];
+    return interpreterDirectories(
+      kind: kind,
+      installDirectory: installDirectory,
+      executablePath: executablePath,
+    );
   }
 
   List<String> _findAllIn(List<String> directories) {
-    final results = <String>[];
-    final seen = <String>{};
-    for (final directory in directories) {
-      final resolved = p.normalize(directory);
-      if (!Directory(resolved).existsSync()) {
-        continue;
-      }
-
-      final candidates = <String, File>{};
-      for (final entity in Directory(resolved).listSync(followLinks: false)) {
-        if (entity is! File) {
-          continue;
-        }
-        final name = p.basename(entity.path).toLowerCase();
-        if (_scriptNames.contains(name) || _versionedName.hasMatch(name)) {
-          candidates[name] = entity;
-        }
-      }
-      if (candidates.isEmpty) {
-        continue;
-      }
-
-      for (final preferred in _scriptNames) {
-        final match = candidates[preferred];
-        if (match != null && seen.add(match.path)) {
-          results.add(match.path);
-        }
-      }
-      final versioned = candidates.keys.where((name) => name.startsWith('python3')).toList()
-        ..sort((a, b) => b.compareTo(a));
-      for (final name in versioned) {
-        final match = candidates[name]!;
-        if (seen.add(match.path)) {
-          results.add(match.path);
-        }
-      }
-    }
-    return results;
+    return findInterpretersIn(directories);
   }
 }
 
@@ -431,4 +383,85 @@ class _HeadlessProbeOutcome {
 
   final _HeadlessProbeResult? result;
   final String? error;
+}
+
+String? locateBundledInterpreter({
+  required BuildKind kind,
+  required String installDirectory,
+  required String executablePath,
+}) {
+  final directories = interpreterDirectories(
+    kind: kind,
+    installDirectory: installDirectory,
+    executablePath: executablePath,
+  );
+  final candidates = findInterpretersIn(directories);
+  return candidates.isEmpty ? null : candidates.first;
+}
+
+String? locateInterpreterIn(String directory) {
+  final candidates = findInterpretersIn([directory]);
+  return candidates.isEmpty ? null : candidates.first;
+}
+
+List<String> interpreterDirectories({
+  required BuildKind kind,
+  required String installDirectory,
+  required String executablePath,
+}) {
+  if (kind == BuildKind.appimage) {
+    return [p.join(installDirectory, 'squashfs-root', 'usr', 'bin')];
+  }
+
+  final executableDirectory = p.dirname(executablePath);
+  return [
+    executableDirectory,
+    p.join(executableDirectory, 'bin'),
+    p.join(executableDirectory, '..', 'Resources', 'bin'),
+    p.join(installDirectory, 'bin'),
+    p.join(installDirectory, 'usr', 'bin'),
+    p.join(installDirectory, 'FreeCAD.app', 'Contents', 'Resources', 'bin'),
+  ];
+}
+
+List<String> findInterpretersIn(List<String> directories) {
+  final results = <String>[];
+  final seen = <String>{};
+  for (final directory in directories) {
+    final resolved = p.normalize(directory);
+    if (!Directory(resolved).existsSync()) {
+      continue;
+    }
+
+    final candidates = <String, File>{};
+    for (final entity in Directory(resolved).listSync(followLinks: false)) {
+      if (entity is! File) {
+        continue;
+      }
+      final name = p.basename(entity.path).toLowerCase();
+      if (ProcessPythonProbe._scriptNames.contains(name) ||
+          ProcessPythonProbe._versionedName.hasMatch(name)) {
+        candidates[name] = entity;
+      }
+    }
+    if (candidates.isEmpty) {
+      continue;
+    }
+
+    for (final preferred in ProcessPythonProbe._scriptNames) {
+      final match = candidates[preferred];
+      if (match != null && seen.add(match.path)) {
+        results.add(match.path);
+      }
+    }
+    final versioned = candidates.keys.where((name) => name.startsWith('python3')).toList()
+      ..sort((a, b) => b.compareTo(a));
+    for (final name in versioned) {
+      final match = candidates[name]!;
+      if (seen.add(match.path)) {
+        results.add(match.path);
+      }
+    }
+  }
+  return results;
 }

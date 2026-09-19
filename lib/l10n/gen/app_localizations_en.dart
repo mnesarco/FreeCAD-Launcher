@@ -566,6 +566,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addonsNoProfiles => 'Create a profile first to install addons.';
 
   @override
+  String get addonsRequirementsTitle => 'Python packages required';
+
+  @override
+  String get addonsRequirementsMessage =>
+      'This addon declares Python dependencies. Install them into the profile with pip? Packages go under the profile\'s AdditionalPythonPackages; system Python is untouched.';
+
+  @override
+  String get addonsRequirementsInstall => 'Install packages';
+
+  @override
+  String get addonsRequirementsAddonOnly => 'Addon only';
+
+  @override
+  String get addonsRequirementsInvalid => 'Cannot parse';
+
+  @override
+  String get addonsRequirementsFailed => 'Python packages failed';
+
+  @override
   String get addonsInstallSoon =>
       'The install engine arrives in the next milestone.';
 

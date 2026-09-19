@@ -1162,6 +1162,42 @@ abstract class AppLocalizations {
   /// **'Create a profile first to install addons.'**
   String get addonsNoProfiles;
 
+  /// No description provided for @addonsRequirementsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Python packages required'**
+  String get addonsRequirementsTitle;
+
+  /// No description provided for @addonsRequirementsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This addon declares Python dependencies. Install them into the profile with pip? Packages go under the profile\'s AdditionalPythonPackages; system Python is untouched.'**
+  String get addonsRequirementsMessage;
+
+  /// No description provided for @addonsRequirementsInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Install packages'**
+  String get addonsRequirementsInstall;
+
+  /// No description provided for @addonsRequirementsAddonOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Addon only'**
+  String get addonsRequirementsAddonOnly;
+
+  /// No description provided for @addonsRequirementsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot parse'**
+  String get addonsRequirementsInvalid;
+
+  /// No description provided for @addonsRequirementsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Python packages failed'**
+  String get addonsRequirementsFailed;
+
   /// No description provided for @addonsInstallSoon.
   ///
   /// In en, this message translates to:
