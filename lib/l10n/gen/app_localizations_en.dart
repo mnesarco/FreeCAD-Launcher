@@ -534,6 +534,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addonsInstalledMessage => 'Addon installed';
 
   @override
+  String get addonsUpdate => 'Update';
+
+  @override
+  String get addonsUpdateAvailable =>
+      'A newer version is available in the catalog.';
+
+  @override
+  String get addonsUpdatedMessage => 'Addon updated';
+
+  @override
+  String get addonsUpdateFailed => 'Update failed';
+
+  @override
+  String get addonsRemove => 'Remove';
+
+  @override
+  String get addonsRemoveTitle => 'Remove this addon?';
+
+  @override
+  String get addonsRemoveMessage =>
+      'The addon files are deleted from this profile. Existing backups are kept.';
+
+  @override
+  String get addonsRemovedMessage => 'Addon removed';
+
+  @override
+  String get addonsRemoveFailed => 'Could not remove the addon';
+
+  @override
   String get addonsNoProfiles => 'Create a profile first to install addons.';
 
   @override

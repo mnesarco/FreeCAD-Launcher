@@ -58,6 +58,7 @@ InstalledAddon sampleAddon({
   String displayName = 'A2plus',
   String? gitRef = 'master',
   String? version = '0.4.60',
+  DateTime? catalogLastUpdate,
 }) {
   return InstalledAddon(
     id: id,
@@ -69,6 +70,7 @@ InstalledAddon sampleAddon({
     installedAt: _baseTime,
     updatedAt: _baseTime,
     hasRequirements: false,
+    catalogLastUpdate: catalogLastUpdate,
   );
 }
 

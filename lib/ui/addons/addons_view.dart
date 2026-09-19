@@ -330,7 +330,14 @@ class _AddonDetailViewState extends State<AddonDetailView> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).addons;
-    final addon = controller.byId(widget.addonId);
+    final catalog = controller.addons.watch(context);
+    Addon? addon;
+    for (final candidate in catalog) {
+      if (candidate.id == widget.addonId) {
+        addon = candidate;
+        break;
+      }
+    }
     if (addon == null) {
       return Column(
         children: [
@@ -351,18 +358,24 @@ class _AddonDetailViewState extends State<AddonDetailView> {
     if (profileId == null || !profiles.any((profile) => profile.id == profileId)) {
       profileId = profiles.isEmpty ? null : profiles.first.id;
     }
-    final selectedRef = controller.branchRefFor(addon);
-    final metadata = addon.primaryBranch.metadata;
-    final installedCount = controller.installedCounts.watch(context)[addon.id] ?? 0;
-    final installing = controller.installing.watch(context).contains(addon.id);
-    final installedInSelected =
-        profileId != null && controller.isInstalledIn(profileId, addon.id);
-    final installError = controller.installErrors.watch(context)[addon.id];
+    final currentAddon = addon;
+    final selectedRef = controller.branchRefFor(currentAddon);
+    final metadata = currentAddon.primaryBranch.metadata;
+    final installedRows = controller.installedAddons.watch(context);
+    final installedCount = controller.installedCounts.watch(context)[currentAddon.id] ?? 0;
+    final installing = controller.installing.watch(context).contains(currentAddon.id);
+    final installedInSelected = profileId != null &&
+        installedRows.any(
+          (row) => row.profileId == profileId && row.addonId == currentAddon.id,
+        );
+    final updateAvailable =
+        profileId != null && controller.isUpdateAvailable(profileId, currentAddon.id);
+    final installError = controller.installErrors.watch(context)[currentAddon.id];
     final canInstall = profileId != null && !installing && !installedInSelected;
 
     return Column(
       children: [
-        _DetailHeader(title: addon.displayName, onBack: widget.onBack),
+        _DetailHeader(title: currentAddon.displayName, onBack: widget.onBack),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(16),
@@ -372,7 +385,7 @@ class _AddonDetailViewState extends State<AddonDetailView> {
                 children: [
                   AddonIcon(base64Data: metadata?.iconBase64, size: 56),
                   const SizedBox(width: 16),
-                  Expanded(child: Text(addon.description)),
+                  Expanded(child: Text(currentAddon.description)),
                 ],
               ),
               if (installedCount > 0) ...[
@@ -383,22 +396,22 @@ class _AddonDetailViewState extends State<AddonDetailView> {
               _InfoCard(
                 title: l10n.addonsVersion,
                 rows: [
-                  _InfoRow(l10n.addonsVersion, addon.version),
-                  _InfoRow(l10n.addonsLicense, addon.license ?? l10n.addonsNone),
+                  _InfoRow(l10n.addonsVersion, currentAddon.version),
+                  _InfoRow(l10n.addonsLicense, currentAddon.license ?? l10n.addonsNone),
                   _InfoRow(l10n.addonsAuthors, _authors(metadata)),
                   _InfoRow(l10n.addonsFreecadRange, _range(addon)),
                   _InfoRow(l10n.addonsLastUpdate, _lastUpdate(addon)),
                   _InfoRow(
                     l10n.addonsContent,
-                    addon.content.map((content) => _contentLabel(l10n, content)).join(', '),
+                    currentAddon.content.map((content) => _contentLabel(l10n, content)).join(', '),
                   ),
                   _InfoRow(
                     l10n.addonsTags,
-                    addon.tags.isEmpty ? l10n.addonsNone : addon.tags.join(', '),
+                    currentAddon.tags.isEmpty ? l10n.addonsNone : currentAddon.tags.join(', '),
                   ),
                   _InfoRow(
                     l10n.addonsRequirements,
-                    addon.hasRequirements
+                    currentAddon.hasRequirements
                         ? l10n.addonsRequirementsYes
                         : l10n.addonsRequirementsNo,
                   ),
@@ -407,10 +420,10 @@ class _AddonDetailViewState extends State<AddonDetailView> {
               const SizedBox(height: 12),
               _InfoCard(
                 title: l10n.addonsRepository,
-                rows: [_InfoRow(l10n.addonsRepository, addon.primaryBranch.repositoryUrl)],
+                rows: [_InfoRow(l10n.addonsRepository, currentAddon.primaryBranch.repositoryUrl)],
                 trailing: TextButton.icon(
                   onPressed: () => launchUrl(
-                    Uri.parse(addon.primaryBranch.repositoryUrl),
+                    Uri.parse(currentAddon.primaryBranch.repositoryUrl),
                     mode: LaunchMode.externalApplication,
                   ),
                   icon: const Icon(Icons.open_in_new, size: 16),
@@ -434,12 +447,12 @@ class _AddonDetailViewState extends State<AddonDetailView> {
                         groupValue: selectedRef,
                         onChanged: (value) {
                           if (value != null) {
-                            controller.selectBranch(addon.id, value);
+                            controller.selectBranch(currentAddon.id, value);
                           }
                         },
                         child: Column(
                           children: [
-                            for (final branch in addon.branches)
+                            for (final branch in currentAddon.branches)
                               RadioListTile<String>(
                                 value: branch.gitRef,
                                 dense: true,
@@ -472,23 +485,52 @@ class _AddonDetailViewState extends State<AddonDetailView> {
                               : (value) => setState(() => _profileId = value),
                         ),
                         const SizedBox(height: 8),
-                        FilledButton.icon(
-                          onPressed: canInstall
-                              ? () => _install(addon, selectedRef, profileId!)
-                              : null,
-                          icon: installing
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                        Row(
+                          children: [
+                            if (installedInSelected)
+                              if (updateAvailable)
+                                FilledButton.icon(
+                                  onPressed: installing
+                                      ? null
+                                      : () => _update(currentAddon, selectedRef, profileId!),
+                                  icon: const Icon(Icons.upgrade_outlined),
+                                  label: Text(l10n.addonsUpdate),
                                 )
-                              : const Icon(Icons.download_outlined),
-                          label: Text(
-                            installedInSelected
-                                ? l10n.addonsInstalledBadge
-                                : l10n.addonsInstall,
-                          ),
+                              else
+                                Chip(label: Text(l10n.addonsInstalledBadge))
+                            else
+                              FilledButton.icon(
+                                onPressed: canInstall
+                                    ? () => _install(currentAddon, selectedRef, profileId!)
+                                    : null,
+                                icon: installing
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : const Icon(Icons.download_outlined),
+                                label: Text(l10n.addonsInstall),
+                              ),
+                            if (installedInSelected) ...[
+                              const SizedBox(width: 8),
+                              OutlinedButton.icon(
+                                onPressed: installing
+                                    ? null
+                                    : () => _remove(currentAddon, profileId!),
+                                icon: const Icon(Icons.delete_outline),
+                                label: Text(l10n.addonsRemove),
+                              ),
+                            ],
+                          ],
                         ),
+                        if (installedInSelected && updateAvailable) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.addonsUpdateAvailable,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
                         if (installError != null) ...[
                           const SizedBox(height: 4),
                           Text(
@@ -528,6 +570,69 @@ class _AddonDetailViewState extends State<AddonDetailView> {
       ),
       (error) => messenger.showSnackBar(
         SnackBar(content: Text('${l10n.addonsInstallFailed}: $error')),
+      ),
+    );
+  }
+
+  Future<void> _update(Addon addon, String branchRef, String profileId) async {
+    final l10n = AppLocalizations.of(context);
+    final controller = AppScope.of(context).addons;
+    final messenger = ScaffoldMessenger.of(context);
+    final result = await controller.update(
+      addonId: addon.id,
+      branchRef: branchRef,
+      profileId: profileId,
+    );
+    if (!mounted) {
+      return;
+    }
+    result.fold(
+      (_) => messenger.showSnackBar(
+        SnackBar(content: Text(l10n.addonsUpdatedMessage)),
+      ),
+      (error) => messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.addonsUpdateFailed}: $error')),
+      ),
+    );
+  }
+
+  Future<void> _remove(Addon addon, String profileId) async {
+    final l10n = AppLocalizations.of(context);
+    final controller = AppScope.of(context).addons;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.addonsRemoveTitle),
+        content: Text('${addon.displayName}\n\n${l10n.addonsRemoveMessage}'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.versionsCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.addonsRemove),
+          ),
+        ],
+      ),
+    );
+    if (!(confirmed ?? false) || !mounted) {
+      return;
+    }
+    final messenger = ScaffoldMessenger.of(context);
+    final result = await controller.remove(
+      addonId: addon.id,
+      profileId: profileId,
+    );
+    if (!mounted) {
+      return;
+    }
+    result.fold(
+      (_) => messenger.showSnackBar(
+        SnackBar(content: Text(l10n.addonsRemovedMessage)),
+      ),
+      (error) => messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.addonsRemoveFailed}: $error')),
       ),
     );
   }

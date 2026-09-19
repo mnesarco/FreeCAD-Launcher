@@ -4,12 +4,12 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-19
-- **Current milestone**: M4 — Addons and Python (S3, M4-01..M4-03 done; M4-04 next)
+- **Current milestone**: M4 — Addons and Python (S3, M4-01..M4-04 done; M4-05 next)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-19
-- **Next action**: start `M4-04` (branch selection, update detection, update with backup and
-  remove), then M4-05 requirements, M4-06 pip runner. M3 exit review and Windows/macOS manual
-  checks remain open.
+- **Next action**: start `M4-05` (requirements.txt parser + consent dialog), then M4-06 pip
+  runner, M4-07 Python UI, M4-08 job queue. M3 exit review and Windows/macOS manual checks
+  remain open.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -123,7 +123,11 @@
   - M4-11 — profile detail **Addons** tab now lists installed addons (name, version, branch,
     installed date) from `ProfilesController.installedAddons`, with the standard empty state
     (previously a placeholder, which made successful installs look lost).
-  - 287 tests green (7 manual probes skipped), analyze clean, app builds and launches.
+  - M4-04 — **D-040**: update detection (catalog timestamp/version), pre-update backups in
+    `<profile>/backups/addon-<id>-<ts>/`, reinstall via the atomic installer, and remove
+    (files + DB row, backups kept); detail page shows Update/Remove for installed addons.
+    Real A2plus E2E verified: install → update (backup contains `package.xml`) → remove.
+  - 292 tests green (7 manual probes skipped), analyze clean, app builds and launches.
 
 ## Session log
 
@@ -170,6 +174,7 @@
 | 2026-09-19 | M4 | Multi-select checkable filter menu for addon content/installed filters | M4-10 | `docs/spec/03-ux.md`, `lib/state/addons_controller.dart`, `lib/ui/addons/addons_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M4 | D-039 addon install engine (safe extract, atomic Mod placement, DB row) | M4-03 | `docs/impl/DECISIONS.md`, `docs/spec/06-integrations.md`, `lib/platform/addon_installer.dart`, `lib/state/addons_controller.dart`, `lib/ui/addons/addons_view.dart`, `test/**` |
 | 2026-09-19 | M4 | Profile detail Addons tab lists installed addons | M4-11 | `lib/state/profiles_controller.dart`, `lib/ui/profiles/profile_detail_view.dart`, `test/ui/profiles_view_test.dart` |
+| 2026-09-19 | M4 | D-040 addon update detection, backups and removal | M4-04 | `docs/impl/DECISIONS.md`, `lib/state/addons_controller.dart`, `lib/ui/addons/addons_view.dart`, `lib/l10n/**`, `test/**` |
 
 ## Standing notes for the next agent
 

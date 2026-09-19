@@ -1102,6 +1102,60 @@ abstract class AppLocalizations {
   /// **'Addon installed'**
   String get addonsInstalledMessage;
 
+  /// No description provided for @addonsUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get addonsUpdate;
+
+  /// No description provided for @addonsUpdateAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'A newer version is available in the catalog.'**
+  String get addonsUpdateAvailable;
+
+  /// No description provided for @addonsUpdatedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Addon updated'**
+  String get addonsUpdatedMessage;
+
+  /// No description provided for @addonsUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Update failed'**
+  String get addonsUpdateFailed;
+
+  /// No description provided for @addonsRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get addonsRemove;
+
+  /// No description provided for @addonsRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this addon?'**
+  String get addonsRemoveTitle;
+
+  /// No description provided for @addonsRemoveMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The addon files are deleted from this profile. Existing backups are kept.'**
+  String get addonsRemoveMessage;
+
+  /// No description provided for @addonsRemovedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Addon removed'**
+  String get addonsRemovedMessage;
+
+  /// No description provided for @addonsRemoveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove the addon'**
+  String get addonsRemoveFailed;
+
   /// No description provided for @addonsNoProfiles.
   ///
   /// In en, this message translates to:

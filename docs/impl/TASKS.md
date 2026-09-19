@@ -88,7 +88,7 @@ shell; launch command viewer matches reality.
 | M4-01 | Addon catalog client + cache + parser per `addon_index_spec.md`; stats optional/non-fatal | Fixture tests for catalog zip parsing, branches, metadata; offline stale cache works | M1-10, M2-03 | M | DONE |
 | M4-02 | Catalog UI: search (text + `#tag`), filters, grid, addon detail with branches and install action | Manual: search/filter/detail work offline against cache | M4-01 | L | DONE |
 | M4-03 | Addon install engine: `zip_url` download, safe extract, place in `<profile>/Mod/<id>`, DB record | Real addon installs and loads in FreeCAD; zip-slip/bomb guard tests | M4-01, M2-04 | L | DONE |
-| M4-04 | Branch selection, update detection, update (with backup) and remove | Manual: update an outdated addon; backup exists; remove cleans up | M4-03 | M | TODO |
+| M4-04 | Branch selection, update detection, update (with backup) and remove | Manual: update an outdated addon; backup exists; remove cleans up | M4-03 | M | DONE |
 | M4-05 | `requirements.txt` parser + consent dialog (install packages / addon only / cancel) | Unit tests for parser; manual consent flow | M4-03 | M | TODO |
 | M4-06 | Interpreter discovery per build kind + pip runner (`--target`, streaming log, serialized jobs) | Real `pip install` works in a profile on each OS; module import verified in FreeCAD | M1-06, M2-06, S3 | M | TODO |
 | M4-07 | Python packages UI + DB records + uninstall (per S3 decision) | Manual install/list/uninstall; per-profile isolation verified | M4-06 | M | TODO |

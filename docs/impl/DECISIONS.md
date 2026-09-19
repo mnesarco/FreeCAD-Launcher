@@ -609,3 +609,24 @@ Template:
   remains manual.
 - **Refs**: spec 06 §2, spec 02 FR-4, `lib/platform/addon_installer.dart`,
   `lib/state/addons_controller.dart`, `lib/ui/addons/addons_view.dart`, `TASKS.md` M4-03
+
+### D-040 — Addon update detection, pre-update backups and removal
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: M4-04; catalog entries carry `last_update_time` and package versions, while the
+  installed row stores the catalog timestamp at install time. Updates must never silently
+  destroy a working addon.
+- **Decision**:
+  - Update available when the branch `lastUpdateTime` is newer than the installed
+    `catalogLastUpdate`, or when the installed version differs from the branch package version.
+    Detection only flags; nothing auto-installs (D-008).
+  - Update = copy the current `<Mod>/<id>` into `<profile>/backups/addon-<id>-<timestamp>/`
+    first (abort on failure), then reinstall the selected branch with the existing atomic
+    installer (D-039). No backup pruning yet.
+  - Remove = delete `<Mod>/<id>` and the `installed_addons` row (0-row delete → error);
+    backups are kept. The UI shows Update (when flagged) + Remove for an installed addon, with
+    a confirmation dialog for removal.
+- **Consequences**: M6-01 adds badges/batch updates on top of `isUpdateAvailable`; M5-06 can
+  add backup retention caps; profile Addons tab stays read-only until M5-08.
+- **Refs**: spec 06 §2, spec 02 FR-4/FR-10, `lib/state/addons_controller.dart`,
+  `lib/ui/addons/addons_view.dart`, `TASKS.md` M4-04, D-008, D-039

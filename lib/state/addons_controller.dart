@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:signals_flutter/signals_flutter.dart';
@@ -216,6 +217,112 @@ class AddonsController {
     return installedAddons.value.any(
       (row) => row.profileId == profileId && row.addonId == addonId,
     );
+  }
+
+  InstalledAddon? installedFor(String profileId, String addonId) {
+    for (final row in installedAddons.value) {
+      if (row.profileId == profileId && row.addonId == addonId) {
+        return row;
+      }
+    }
+    return null;
+  }
+
+  bool isUpdateAvailable(String profileId, String addonId) {
+    final installed = installedFor(profileId, addonId);
+    if (installed == null) {
+      return false;
+    }
+    final addon = byId(addonId);
+    if (addon == null) {
+      return false;
+    }
+    final branch = branchOf(addon, installed.gitRef ?? addon.primaryBranch.gitRef);
+    final catalogTime = branch.lastUpdateTime;
+    final installedTime = installed.catalogLastUpdate;
+    if (catalogTime != null &&
+        (installedTime == null || catalogTime.isAfter(installedTime))) {
+      return true;
+    }
+    final catalogVersion = branch.metadata?.version;
+    final installedVersion = installed.version;
+    if (catalogVersion != null &&
+        catalogVersion.isNotEmpty &&
+        installedVersion != null &&
+        installedVersion.isNotEmpty &&
+        catalogVersion != installedVersion) {
+      return true;
+    }
+    return false;
+  }
+
+  Future<Result<void>> update({
+    required String addonId,
+    required String branchRef,
+    required String profileId,
+  }) async {
+    if (installedFor(profileId, addonId) == null) {
+      return const Err(AppError(message: 'Addon is not installed in this profile'));
+    }
+    try {
+      await _backupAddon(profileId, addonId);
+    } on Object catch (error) {
+      return Err(AppError.from(error, retryable: true));
+    }
+    final result = await install(
+      addonId: addonId,
+      branchRef: branchRef,
+      profileId: profileId,
+    );
+    if (result.isErr) {
+      return Err(AppError(message: 'Update failed: ${result.errorOrNull}'));
+    }
+    return const Ok(null);
+  }
+
+  Future<Result<void>> remove({
+    required String addonId,
+    required String profileId,
+  }) async {
+    if (installedFor(profileId, addonId) == null) {
+      return const Err(AppError(message: 'Addon is not installed in this profile'));
+    }
+    try {
+      final directory = Directory(p.join(_paths.profilePaths(profileId).mod, addonId));
+      if (directory.existsSync()) {
+        await directory.delete(recursive: true);
+      }
+      final deleted = await _database.installedAddonsDao.deleteAddon(profileId, addonId);
+      if (deleted == 0) {
+        return const Err(AppError(message: 'Addon is not installed in this profile'));
+      }
+      return const Ok(null);
+    } on Object catch (error) {
+      return Err(AppError.from(error, retryable: true));
+    }
+  }
+
+  Future<String?> _backupAddon(String profileId, String addonId) async {
+    final source = Directory(p.join(_paths.profilePaths(profileId).mod, addonId));
+    if (!source.existsSync()) {
+      return null;
+    }
+    final stamp = _clock().toIso8601String().replaceAll(RegExp(r'[:.]'), '-');
+    final target = Directory(
+      p.join(_paths.profilePaths(profileId).backups, 'addon-$addonId-$stamp'),
+    );
+    await target.create(recursive: true);
+    await for (final entity in source.list(recursive: true, followLinks: false)) {
+      final relative = p.relative(entity.path, from: source.path);
+      final destination = p.join(target.path, relative);
+      if (entity is File) {
+        await Directory(p.dirname(destination)).create(recursive: true);
+        await entity.copy(destination);
+      } else if (entity is Directory) {
+        await Directory(destination).create(recursive: true);
+      }
+    }
+    return target.path;
   }
 
   Future<Result<void>> install({

@@ -300,6 +300,141 @@ void main() {
     expect(result.errorOrNull!.message, contains('Profile not found'));
     subject.dispose();
   });
+
+  test('detects updates by catalog timestamp and version', () async {
+    final catalogAddon = addon('A2plus', name: 'A2plus', version: '0.4.68');
+    catalog.result = AddonCatalogResult(
+      addons: [catalogAddon],
+      freshness: CatalogFreshness.fresh,
+    );
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    final subject = controller();
+    await subject.load();
+    subject.start();
+    await pumpEventQueue();
+
+    await db.installedAddonsDao.save(
+      sampleAddon(
+        profileId: 'profile-1',
+        addonId: 'A2plus',
+        version: '0.4.60',
+        catalogLastUpdate: DateTime.utc(2026, 1, 1),
+      ),
+    );
+    await pumpEventQueue();
+    expect(subject.isUpdateAvailable('profile-1', 'A2plus'), isTrue);
+
+    await db.installedAddonsDao.save(
+      sampleAddon(
+        profileId: 'profile-1',
+        addonId: 'A2plus',
+        version: '0.4.68',
+        catalogLastUpdate: DateTime.utc(2026, 12, 1),
+      ),
+    );
+    await pumpEventQueue();
+    expect(subject.isUpdateAvailable('profile-1', 'A2plus'), isFalse);
+    subject.dispose();
+  });
+
+  test('update backs up the current addon and reinstalls it', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [addon('A2plus', name: 'A2plus', version: '0.4.68')],
+      freshness: CatalogFreshness.fresh,
+    );
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    final modDirectory = p.join(
+      tempDirectory.path,
+      'profiles',
+      'profile-1',
+      'Mod',
+      'A2plus',
+    );
+    File(p.join(modDirectory, 'old.txt')).createSync(recursive: true);
+    await db.installedAddonsDao.save(
+      sampleAddon(profileId: 'profile-1', addonId: 'A2plus', version: '0.4.60'),
+    );
+    downloadSource.streamFactory = () => Stream.fromIterable([
+      catalogZip({'A2plus-master/new.txt': 'new'}),
+    ]);
+    final subject = controller();
+    await subject.load();
+    subject.start();
+    await pumpEventQueue();
+
+    final result = await subject.update(
+      addonId: 'A2plus',
+      branchRef: 'master',
+      profileId: 'profile-1',
+    );
+
+    expect(result.isOk, isTrue);
+    final backupDirectory = p.join(
+      tempDirectory.path,
+      'profiles',
+      'profile-1',
+      'backups',
+      'addon-A2plus-2026-09-19T16-00-00-000Z',
+    );
+    expect(File(p.join(backupDirectory, 'old.txt')).existsSync(), isTrue);
+    expect(File(p.join(modDirectory, 'new.txt')).existsSync(), isTrue);
+    expect(File(p.join(modDirectory, 'old.txt')).existsSync(), isFalse);
+    final row = await db.installedAddonsDao.getByAddon('profile-1', 'A2plus');
+    expect(row!.version, '0.4.68');
+    subject.dispose();
+  });
+
+  test('update requires an installed addon', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [addon('A2plus')],
+      freshness: CatalogFreshness.fresh,
+    );
+    final subject = controller();
+    await subject.load();
+
+    final result = await subject.update(
+      addonId: 'A2plus',
+      branchRef: 'master',
+      profileId: 'profile-1',
+    );
+
+    expect(result.isErr, isTrue);
+    subject.dispose();
+  });
+
+  test('remove deletes the addon files and the DB row', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [addon('A2plus')],
+      freshness: CatalogFreshness.fresh,
+    );
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    final modDirectory = p.join(
+      tempDirectory.path,
+      'profiles',
+      'profile-1',
+      'Mod',
+      'A2plus',
+    );
+    File(p.join(modDirectory, 'InitGui.py')).createSync(recursive: true);
+    await db.installedAddonsDao.save(
+      sampleAddon(profileId: 'profile-1', addonId: 'A2plus'),
+    );
+    final subject = controller();
+    await subject.load();
+    subject.start();
+    await pumpEventQueue();
+
+    final result = await subject.remove(addonId: 'A2plus', profileId: 'profile-1');
+
+    expect(result.isOk, isTrue);
+    expect(Directory(modDirectory).existsSync(), isFalse);
+    expect(await db.installedAddonsDao.getByAddon('profile-1', 'A2plus'), isNull);
+    expect((await subject.remove(addonId: 'A2plus', profileId: 'profile-1')).isErr, isTrue);
+    subject.dispose();
+  });
 }
 
 List<int> catalogZip(Map<String, String> files) {

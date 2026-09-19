@@ -15,6 +15,7 @@ import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/addons/addons_view.dart';
 import 'package:path/path.dart' as p;
 
+import '../data/test_fixtures.dart';
 import '../helpers/fake_addon_catalog.dart';
 import '../helpers/fake_download.dart';
 
@@ -52,13 +53,14 @@ Addon _addon(
 
 void main() {
   late Directory tempDirectory;
+  late AppDatabase db;
   late AppServices services;
   late FakeAddonCatalog catalog;
 
   setUp(() {
     tempDirectory = Directory.systemTemp.createTempSync('fcl_addons_ui');
     final paths = AppPaths(dataRoot: tempDirectory.path);
-    final db = AppDatabase.inMemory();
+    db = AppDatabase.inMemory();
     catalog = FakeAddonCatalog(
       downloader: Downloader(
         source: FakeDownloadSource(),
@@ -173,6 +175,41 @@ void main() {
     await tester.tap(find.byTooltip('Clear search'));
     await settle(tester);
     expect(find.text('MacroTool'), findsOneWidget);
+  });
+
+  group('with an installed addon', () {
+    setUp(() async {
+      await db.buildsDao.save(sampleBuild());
+      final profile = (await services.profilesRepository.create(
+        name: 'Dev',
+        buildId: 'build-1',
+      )).valueOrNull!;
+      await db.installedAddonsDao.save(
+        sampleAddon(
+          profileId: profile.id,
+          addonId: 'A2plus',
+          displayName: 'A2plus',
+          version: '0.9.0',
+        ),
+      );
+    });
+
+    testWidgets('shows Update and Remove actions for an outdated addon', (tester) async {
+      await pumpAddons(tester);
+      await tester.tap(find.text('A2plus'));
+      await settle(tester);
+
+      await tester.scrollUntilVisible(
+        find.text('Branches'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await settle(tester);
+
+      expect(find.text('Update'), findsOneWidget);
+      expect(find.text('Remove'), findsOneWidget);
+      expect(find.text('A newer version is available in the catalog.'), findsOneWidget);
+    });
   });
 
   testWidgets('multi-select filter menu toggles several filters', (tester) async {
