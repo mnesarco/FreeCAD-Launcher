@@ -470,3 +470,23 @@ Template:
   hit real I/O. Linux manual test executes the generated command via `/bin/sh -c` (exit 0).
 - **Refs**: spec 02 FR-2.6, spec 03 §2.3, `lib/domain/profiles/launch_command.dart`,
   `lib/ui/profiles/launch_command_dialog.dart`, `TASKS.md` M3-07, D-029, D-030
+
+### D-034 — CLI mode and exit codes
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: FR-3.1..FR-3.4 require a scriptable CLI; `main.dart` previously always started
+  the GUI. M3-09's wrapper scripts will call the same binary.
+- **Decision**:
+  - `runCli` (`lib/cli/cli.dart`) supports `list`, `run <profile> [-- <args>...]`,
+    `--version`/`-v` and `--help`/`-h`; no arguments starts the GUI. Everything after `--` is
+    passed through verbatim; extra arguments without `--` are a usage error.
+  - Exit codes: `0` success; `run` returns FreeCAD's own exit code; `2` usage errors and
+    unknown profiles; `1` launch failures, including quarantine-required (the CLI cannot give
+    consent — it prints instructions to launch once from the UI).
+  - `list` prints tab-separated `name<TAB>buildVersion<TAB>channel<TAB>pyX.Y` for scripts.
+  - CLI output is plain English and not localized (machine-readability over translation).
+- **Consequences**: Linux shell checks pass for `--version`, `--help`, `list` and all exit
+  codes; `run` was exercised with the real Pixi profile (the build ignores `--version` and
+  opened the GUI, so it was stopped) — passthrough/exit-code propagation is unit-tested.
+  Windows/macOS shell checks remain.
+- **Refs**: spec 02 FR-3.1..3.4, `lib/cli/cli.dart`, `lib/main.dart`, `TASKS.md` M3-08, M3-09
