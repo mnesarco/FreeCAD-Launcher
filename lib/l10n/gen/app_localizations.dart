@@ -1084,6 +1084,30 @@ abstract class AppLocalizations {
   /// **'Install'**
   String get addonsInstall;
 
+  /// No description provided for @addonsInstallTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Install into'**
+  String get addonsInstallTarget;
+
+  /// No description provided for @addonsInstallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Install failed'**
+  String get addonsInstallFailed;
+
+  /// No description provided for @addonsInstalledMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Addon installed'**
+  String get addonsInstalledMessage;
+
+  /// No description provided for @addonsNoProfiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a profile first to install addons.'**
+  String get addonsNoProfiles;
+
   /// No description provided for @addonsInstallSoon.
   ///
   /// In en, this message translates to:

@@ -3,6 +3,7 @@ import 'package:freecad_launcher/app.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
 import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
+import 'package:freecad_launcher/platform/addon_installer.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
@@ -22,6 +23,13 @@ void main() {
       database: database,
       addonsController: AddonsController(
         database: database,
+        installer: AddonInstaller(
+          downloader: Downloader(
+            source: FakeDownloadSource(),
+            cacheDirectory: '/tmp/freecad_launcher_test/downloads',
+          ),
+        ),
+        paths: AppPaths(dataRoot: '/tmp/freecad_launcher_test'),
         catalog: (FakeAddonCatalog(
           downloader: Downloader(
             source: FakeDownloadSource(),

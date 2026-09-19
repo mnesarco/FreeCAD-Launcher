@@ -102,7 +102,8 @@ cache format. Integration rules for v2:
   catalog entry; show update, never auto-apply.
 - **Requirements**: if the archive has `requirements.txt`, offer the pip flow (FR-4.7/FR-6).
 - **Safety**: safe-extract with zip-slip and symlink guards; reject entries with absolute paths;
-  cap uncompressed size and file count to avoid zip bombs.
+  cap uncompressed size and file count to avoid zip bombs. Installs are atomic: extract into
+  `<Mod>/<id>.part`, then rename into place with a `.old` backup when replacing (D-039).
 
 ## 3. Macro catalog
 

@@ -55,6 +55,15 @@ void main() {
     setUp(() async {
       await services.database.buildsDao.save(sampleBuild());
       await services.profilesRepository.create(name: 'Dev', buildId: 'build-1');
+      final profile = await services.profilesRepository.getByName('Dev');
+      await services.database.installedAddonsDao.save(
+        sampleAddon(
+          profileId: profile!.id,
+          addonId: 'A2plus',
+          displayName: 'A2plus',
+          version: '0.4.68',
+        ),
+      );
     });
 
     testWidgets('renders the card with real data', (tester) async {
@@ -63,7 +72,7 @@ void main() {
       expect(find.text('Dev'), findsOneWidget);
       expect(find.text('Launch'), findsOneWidget);
       expect(find.textContaining('Python 3.11'), findsOneWidget);
-      expect(find.textContaining('Addons: 0'), findsOneWidget);
+      expect(find.textContaining('Addons: 1'), findsOneWidget);
     });
 
     testWidgets('opens the detail tabs skeleton', (tester) async {
@@ -95,6 +104,21 @@ void main() {
       expect(find.textContaining('user.cfg'), findsWidgets);
       expect(find.textContaining('FREECAD_USER_HOME'), findsWidgets);
       expect(find.text('Environment overrides'), findsOneWidget);
+    });
+    testWidgets('shows installed addons in the profile detail', (tester) async {
+      await pumpProfiles(tester);
+      await tester.tap(find.text('Dev'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      await tester.tap(find.text('Addons'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      expect(find.text('A2plus'), findsOneWidget);
+      expect(find.textContaining('v0.4.68'), findsOneWidget);
     });
   });
 }

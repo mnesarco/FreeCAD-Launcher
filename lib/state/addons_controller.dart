@@ -1,23 +1,39 @@
 import 'dart:async';
 
+import 'package:path/path.dart' as p;
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import 'package:freecad_launcher/core/errors.dart';
+import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
 import 'package:freecad_launcher/domain/builds/freecad_version.dart';
+import 'package:freecad_launcher/platform/addon_installer.dart';
+import 'package:freecad_launcher/platform/paths.dart';
 
 enum AddonInstalledFilter { installed, notInstalled }
 
 class AddonsController {
-  AddonsController({required AppDatabase database, required AddonCatalog catalog})
-    : _database = database,
-      _catalog = catalog;
+  AddonsController({
+    required AppDatabase database,
+    required AddonCatalog catalog,
+    required AddonInstaller installer,
+    required AppPaths paths,
+    DateTime Function()? clock,
+  }) : _database = database,
+       _catalog = catalog,
+       _installer = installer,
+       _paths = paths,
+       _clock = clock ?? DateTime.now;
 
   final AppDatabase _database;
   final AddonCatalog _catalog;
+  final AddonInstaller _installer;
+  final AppPaths _paths;
+  final DateTime Function() _clock;
 
   final addons = signal<List<Addon>>([]);
   final loading = signal(false);
@@ -29,6 +45,9 @@ class AddonsController {
   final installedFilter = signal<Set<AddonInstalledFilter>>({});
   final freecadFilter = signal<String?>(null);
   final installedCounts = signal<Map<String, int>>({});
+  final installedAddons = signal<List<InstalledAddon>>([]);
+  final installing = signal<Set<String>>({});
+  final installErrors = signal<Map<String, AppError>>({});
   final freecadVersions = signal<List<String>>([]);
   final selectedBranches = signal<Map<String, String>>({});
 
@@ -70,6 +89,7 @@ class AddonsController {
 
   void start() {
     _installedSubscription ??= _database.installedAddonsDao.watchAll().listen((rows) {
+      installedAddons.value = rows;
       final counts = <String, int>{};
       for (final row in rows) {
         counts[row.addonId] = (counts[row.addonId] ?? 0) + 1;
@@ -174,6 +194,82 @@ class AddonsController {
       }
     }
     return null;
+  }
+
+  AddonBranch branchOf(Addon addon, String gitRef) {
+    for (final branch in addon.branches) {
+      if (branch.gitRef == gitRef) {
+        return branch;
+      }
+    }
+    return addon.primaryBranch;
+  }
+
+  Set<String> profilesWithAddon(String addonId) {
+    return {
+      for (final row in installedAddons.value)
+        if (row.addonId == addonId) row.profileId,
+    };
+  }
+
+  bool isInstalledIn(String profileId, String addonId) {
+    return installedAddons.value.any(
+      (row) => row.profileId == profileId && row.addonId == addonId,
+    );
+  }
+
+  Future<Result<void>> install({
+    required String addonId,
+    required String branchRef,
+    required String profileId,
+  }) async {
+    final addon = byId(addonId);
+    if (addon == null) {
+      return const Err(AppError(message: 'Addon not found'));
+    }
+    final branch = branchOf(addon, branchRef);
+    final profile = await _database.profilesDao.getById(profileId);
+    if (profile == null) {
+      return const Err(AppError(message: 'Profile not found'));
+    }
+
+    installing.value = {...installing.value, addonId};
+    installErrors.value = {...installErrors.value}..remove(addonId);
+    try {
+      await _installer.install(
+        zipUri: Uri.parse(branch.zipUrl),
+        destinationDirectory: p.join(_paths.profilePaths(profileId).mod, addon.id),
+        downloadDirectory: _paths.downloadsCacheDir,
+        assetName: '${addon.id}-${branch.gitRef}.zip',
+      );
+      final now = _clock();
+      await _database.installedAddonsDao.save(
+        InstalledAddon(
+          id: const Uuid().v4(),
+          profileId: profileId,
+          addonId: addon.id,
+          displayName: addon.displayName,
+          gitRef: branch.gitRef,
+          version: branch.metadata?.version,
+          installedAt: now,
+          updatedAt: now,
+          catalogLastUpdate: branch.lastUpdateTime,
+          sourceUrl: branch.zipUrl,
+          hasRequirements: branch.hasRequirements,
+        ),
+      );
+      return const Ok(null);
+    } on Object catch (error) {
+      final appError = error is AppError ? error : AppError.from(error, retryable: true);
+      installErrors.value = {...installErrors.value, addonId: appError};
+      return Err(appError);
+    } finally {
+      installing.value = {...installing.value}..remove(addonId);
+    }
+  }
+
+  void clearInstallError(String addonId) {
+    installErrors.value = {...installErrors.value}..remove(addonId);
   }
 
   void dispose() {

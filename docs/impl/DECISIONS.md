@@ -583,3 +583,29 @@ Template:
   and install action to the detail page; M4-04 reuses the controller for updates.
 - **Refs**: spec 03 §2.4, spec 02 FR-4, `lib/state/addons_controller.dart`,
   `lib/ui/addons/**`, `TASKS.md` M4-02, M4-03, M5-01, D-037
+
+### D-039 — Addon install pipeline (download → safe extract → atomic Mod placement)
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: M4-03; addon branch zips are GitHub-style archives with a single top-level
+  directory, and FreeCAD loads addons from `<profile>/Mod/<AddonId>`. Installs must be safe
+  against hostile archives and must not destroy a working addon when a reinstall fails.
+- **Decision**:
+  - `AddonInstaller` downloads the branch `zip_url` through `Downloader` (download cache),
+    extracts into `<dest>.part` with `SafeArchiveExtractor` (zip-slip/bomb/symlink guards,
+    D-014), strips a single top-level folder (tolerating `__MACOSX`), and rejects archives that
+    expand to zero files — the archive decoder tolerates garbage input, so an empty result must
+    be an error.
+  - Replacement is atomic: an existing `<dest>` is renamed to `<dest>.old`, staging is renamed
+    into place, and the backup is restored if the rename fails; staging/backup are cleaned up.
+  - `AddonsController.install` records an `installed_addons` row (gitRef, catalog version,
+    `catalogLastUpdate`, `sourceUrl`, `hasRequirements`) and exposes `installing`/`installErrors`
+    signals; the detail page installs into a picked profile.
+  - Catalog zips have no checksums; trust comes from the curated catalog plus structural
+    checks, and the user must confirm nothing extra (installs are explicit user actions).
+- **Consequences**: M4-04 reuse: update = install (backup semantics already handle replace),
+  remove = delete directory + DB row; requirements install (M4-05) keys off `hasRequirements`.
+  Real A2plus install verified (6.1 MB, `package.xml` + `InitGui.py`); GUI load click-through
+  remains manual.
+- **Refs**: spec 06 §2, spec 02 FR-4, `lib/platform/addon_installer.dart`,
+  `lib/state/addons_controller.dart`, `lib/ui/addons/addons_view.dart`, `TASKS.md` M4-03

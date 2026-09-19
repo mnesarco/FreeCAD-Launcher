@@ -7,6 +7,7 @@ import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show Catalo
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
+import 'package:freecad_launcher/platform/addon_installer.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
@@ -81,7 +82,17 @@ void main() {
     services = AppServices(
       paths: paths,
       database: db,
-      addonsController: AddonsController(database: db, catalog: catalog),
+      addonsController: AddonsController(
+        database: db,
+        installer: AddonInstaller(
+          downloader: Downloader(
+            source: FakeDownloadSource(),
+            cacheDirectory: p.join(tempDirectory.path, 'downloads'),
+          ),
+        ),
+        paths: paths,
+        catalog: catalog,
+      ),
     );
   });
 
@@ -136,7 +147,7 @@ void main() {
     expect(find.text('Branches'), findsOneWidget);
     expect(find.text('master'), findsWidgets);
     expect(find.text('MIT'), findsOneWidget);
-    expect(find.text('The install engine arrives in the next milestone.'), findsOneWidget);
+    expect(find.text('Create a profile first to install addons.'), findsOneWidget);
   });
 
   testWidgets('keeps the search query after opening a detail and going back', (tester) async {

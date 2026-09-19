@@ -34,6 +34,7 @@ class _AddonsViewState extends State<AddonsView> {
     if (!_started) {
       _started = true;
       AppScope.of(context).addons.start();
+      AppScope.of(context).profiles.start();
     }
   }
 
@@ -312,21 +313,28 @@ class _AddonCard extends StatelessWidget {
   }
 }
 
-class AddonDetailView extends StatelessWidget {
+class AddonDetailView extends StatefulWidget {
   const AddonDetailView({super.key, required this.addonId, required this.onBack});
 
   final String addonId;
   final VoidCallback onBack;
 
   @override
+  State<AddonDetailView> createState() => _AddonDetailViewState();
+}
+
+class _AddonDetailViewState extends State<AddonDetailView> {
+  String? _profileId;
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).addons;
-    final addon = controller.byId(addonId);
+    final addon = controller.byId(widget.addonId);
     if (addon == null) {
       return Column(
         children: [
-          _DetailHeader(title: l10n.addonsTabCatalog, onBack: onBack),
+          _DetailHeader(title: l10n.addonsTabCatalog, onBack: widget.onBack),
           Expanded(
             child: EmptyState(
               icon: Icons.error_outline,
@@ -338,13 +346,23 @@ class AddonDetailView extends StatelessWidget {
       );
     }
 
-    final installedCount = controller.installedCounts.watch(context)[addon.id] ?? 0;
+    final profiles = AppScope.of(context).profiles.profiles.watch(context);
+    var profileId = _profileId;
+    if (profileId == null || !profiles.any((profile) => profile.id == profileId)) {
+      profileId = profiles.isEmpty ? null : profiles.first.id;
+    }
     final selectedRef = controller.branchRefFor(addon);
     final metadata = addon.primaryBranch.metadata;
+    final installedCount = controller.installedCounts.watch(context)[addon.id] ?? 0;
+    final installing = controller.installing.watch(context).contains(addon.id);
+    final installedInSelected =
+        profileId != null && controller.isInstalledIn(profileId, addon.id);
+    final installError = controller.installErrors.watch(context)[addon.id];
+    final canInstall = profileId != null && !installing && !installedInSelected;
 
     return Column(
       children: [
-        _DetailHeader(title: addon.displayName, onBack: onBack),
+        _DetailHeader(title: addon.displayName, onBack: widget.onBack),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(16),
@@ -433,16 +451,54 @@ class AddonDetailView extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      FilledButton.icon(
-                        onPressed: null,
-                        icon: const Icon(Icons.download_outlined),
-                        label: Text(l10n.addonsInstall),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        l10n.addonsInstallSoon,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
+                      if (profiles.isEmpty)
+                        Text(
+                          l10n.addonsNoProfiles,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        )
+                      else ...[
+                        _CompactDropdown<String?>(
+                          value: profileId,
+                          hint: Text(l10n.addonsInstallTarget),
+                          items: [
+                            for (final profile in profiles)
+                              DropdownMenuItem(
+                                value: profile.id,
+                                child: Text(profile.name),
+                              ),
+                          ],
+                          onChanged: installing
+                              ? null
+                              : (value) => setState(() => _profileId = value),
+                        ),
+                        const SizedBox(height: 8),
+                        FilledButton.icon(
+                          onPressed: canInstall
+                              ? () => _install(addon, selectedRef, profileId!)
+                              : null,
+                          icon: installing
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.download_outlined),
+                          label: Text(
+                            installedInSelected
+                                ? l10n.addonsInstalledBadge
+                                : l10n.addonsInstall,
+                          ),
+                        ),
+                        if (installError != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            '${l10n.addonsInstallFailed}: $installError',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ],
+                      ],
                     ],
                   ),
                 ),
@@ -451,6 +507,28 @@ class AddonDetailView extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Future<void> _install(Addon addon, String branchRef, String profileId) async {
+    final l10n = AppLocalizations.of(context);
+    final controller = AppScope.of(context).addons;
+    final messenger = ScaffoldMessenger.of(context);
+    final result = await controller.install(
+      addonId: addon.id,
+      branchRef: branchRef,
+      profileId: profileId,
+    );
+    if (!mounted) {
+      return;
+    }
+    result.fold(
+      (_) => messenger.showSnackBar(
+        SnackBar(content: Text(l10n.addonsInstalledMessage)),
+      ),
+      (error) => messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.addonsInstallFailed}: $error')),
+      ),
     );
   }
 

@@ -1,11 +1,15 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/platform/addon_installer.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
+import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:path/path.dart' as p;
 
@@ -56,13 +60,15 @@ void main() {
   late Directory tempDirectory;
   late AppDatabase db;
   late FakeAddonCatalog catalog;
+  late FakeDownloadSource downloadSource;
 
   setUp(() {
     tempDirectory = Directory.systemTemp.createTempSync('fcl_addons_controller');
     db = createTestDatabase();
+    downloadSource = FakeDownloadSource();
     catalog = FakeAddonCatalog(
       downloader: Downloader(
-        source: FakeDownloadSource(),
+        source: downloadSource,
         cacheDirectory: p.join(tempDirectory.path, 'addons'),
       ),
       dao: db.catalogCacheDao,
@@ -77,7 +83,20 @@ void main() {
     }
   });
 
-  AddonsController controller() => AddonsController(database: db, catalog: catalog);
+  AddonsController controller() {
+    return AddonsController(
+      database: db,
+      catalog: catalog,
+      installer: AddonInstaller(
+        downloader: Downloader(
+          source: downloadSource,
+          cacheDirectory: p.join(tempDirectory.path, 'downloads'),
+        ),
+      ),
+      paths: AppPaths(dataRoot: tempDirectory.path),
+      clock: () => DateTime.utc(2026, 9, 19, 16),
+    );
+  }
 
   test('loads the catalog and reports errors', () async {
     catalog.result = AddonCatalogResult(
@@ -188,4 +207,106 @@ void main() {
     expect(subject.branchRefFor(subject.addons.value.single), 'dev');
     subject.dispose();
   });
+
+  test('installs an addon into Mod and records it', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [addon('A2plus', name: 'A2plus', version: '0.4.68')],
+      freshness: CatalogFreshness.fresh,
+    );
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    downloadSource.streamFactory = () => Stream.fromIterable([
+      catalogZip({
+        'A2plus-master/InitGui.py': 'gui',
+        'A2plus-master/package.xml': '<package><name>A2plus</name></package>',
+      }),
+    ]);
+    final subject = controller();
+    await subject.load();
+    subject.start();
+    await pumpEventQueue();
+
+    final result = await subject.install(
+      addonId: 'A2plus',
+      branchRef: 'master',
+      profileId: 'profile-1',
+    );
+
+    expect(result.isOk, isTrue);
+    final modDirectory = p.join(
+      tempDirectory.path,
+      'profiles',
+      'profile-1',
+      'Mod',
+      'A2plus',
+    );
+    expect(File(p.join(modDirectory, 'InitGui.py')).existsSync(), isTrue);
+    expect(File(p.join(modDirectory, 'package.xml')).existsSync(), isTrue);
+    final row = await db.installedAddonsDao.getByAddon('profile-1', 'A2plus');
+    expect(row, isNotNull);
+    expect(row!.gitRef, 'master');
+    expect(row.version, '0.4.68');
+    expect(row.hasRequirements, isFalse);
+    expect(subject.installing.value, isEmpty);
+    await pumpEventQueue();
+    expect(subject.isInstalledIn('profile-1', 'A2plus'), isTrue);
+    subject.dispose();
+  });
+
+  test('install failure reports the error and records nothing', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [addon('Broken')],
+      freshness: CatalogFreshness.fresh,
+    );
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    downloadSource.streamFactory = () => Stream.fromIterable([utf8.encode('not a zip')]);
+    final subject = controller();
+    await subject.load();
+
+    final result = await subject.install(
+      addonId: 'Broken',
+      branchRef: 'master',
+      profileId: 'profile-1',
+    );
+
+    expect(result.isErr, isTrue);
+    expect(subject.installErrors.value['Broken'], isNotNull);
+    expect(await db.installedAddonsDao.getByAddon('profile-1', 'Broken'), isNull);
+    expect(
+      Directory(
+        p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'Broken'),
+      ).existsSync(),
+      isFalse,
+    );
+    subject.dispose();
+  });
+
+  test('install requires an existing profile', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [addon('A2plus')],
+      freshness: CatalogFreshness.fresh,
+    );
+    final subject = controller();
+    await subject.load();
+
+    final result = await subject.install(
+      addonId: 'A2plus',
+      branchRef: 'master',
+      profileId: 'nope',
+    );
+
+    expect(result.isErr, isTrue);
+    expect(result.errorOrNull!.message, contains('Profile not found'));
+    subject.dispose();
+  });
+}
+
+List<int> catalogZip(Map<String, String> files) {
+  final archive = Archive();
+  files.forEach((name, content) {
+    final bytes = utf8.encode(content);
+    archive.addFile(ArchiveFile(name, bytes.length, bytes));
+  });
+  return ZipEncoder().encode(archive);
 }

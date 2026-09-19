@@ -93,7 +93,7 @@ class ProfileDetailView extends StatelessWidget {
             child: TabBarView(
               children: [
                 _OverviewTab(profile: current, buildInfo: build),
-                _ComingSoonTab(icon: Icons.extension_outlined, label: l10n.profilesTabAddons),
+                _ProfileAddonsTab(profileId: current.id),
                 _ComingSoonTab(icon: Icons.terminal_outlined, label: l10n.profilesTabPython),
                 _ComingSoonTab(icon: Icons.auto_fix_high_outlined, label: l10n.profilesTabMacros),
                 _ComingSoonTab(icon: Icons.tune_outlined, label: l10n.profilesTabConfig),
@@ -257,6 +257,51 @@ class _OverviewTab extends StatelessWidget {
       return '';
     }
     return '  ·  ${formatBytes(file.lengthSync())}';
+  }
+}
+
+class _ProfileAddonsTab extends StatelessWidget {
+  const _ProfileAddonsTab({required this.profileId});
+
+  final String profileId;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final controller = AppScope.of(context).profiles;
+    final installed = controller.installedAddons.watch(context).where(
+      (addon) => addon.profileId == profileId,
+    ).toList()
+      ..sort(
+        (a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()),
+      );
+
+    if (installed.isEmpty) {
+      return EmptyState(
+        icon: Icons.extension_outlined,
+        title: l10n.addonsEmptyTitle,
+        message: l10n.addonsEmptyMessage,
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(8),
+      itemCount: installed.length,
+      separatorBuilder: (context, index) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final addon = installed[index];
+        final subtitle = [
+          if ((addon.version ?? '').isNotEmpty) 'v${addon.version}',
+          if ((addon.gitRef ?? '').isNotEmpty) addon.gitRef!,
+          formatProfileDateTime(l10n, addon.installedAt),
+        ].join('  ·  ');
+        return ListTile(
+          leading: const Icon(Icons.extension_outlined),
+          title: Text(addon.displayName),
+          subtitle: Text(subtitle),
+        );
+      },
+    );
   }
 }
 

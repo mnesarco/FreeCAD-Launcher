@@ -82,6 +82,7 @@ class ProfilesController {
   final profilesError = signal<AppError?>(null);
   final buildsById = signal<Map<String, Build>>({});
   final addonCounts = signal<Map<String, int>>({});
+  final installedAddons = signal<List<InstalledAddon>>([]);
   final packageCounts = signal<Map<String, int>>({});
   final profileSizes = signal<Map<String, int>>({});
   final runningProfiles = signal<Set<String>>({});
@@ -111,12 +112,21 @@ class ProfilesController {
       (builds) => buildsById.value = {for (final build in builds) build.id: build},
     );
     _addonsSubscription ??= _database.installedAddonsDao.watchAll().listen(
-      (addons) => addonCounts.value = _countByProfile(addons.map((addon) => addon.profileId)),
+      (addons) {
+        installedAddons.value = addons;
+        addonCounts.value = _countByProfile(addons.map((addon) => addon.profileId));
+      },
     );
     _packagesSubscription ??= _database.pythonPackagesDao.watchAll().listen(
       (packages) =>
           packageCounts.value = _countByProfile(packages.map((package) => package.profileId)),
     );
+  }
+
+  List<InstalledAddon> installedForProfile(String profileId) {
+    return installedAddons.value
+        .where((addon) => addon.profileId == profileId)
+        .toList(growable: false);
   }
 
   Future<void> refreshSizes() async {

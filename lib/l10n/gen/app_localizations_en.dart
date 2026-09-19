@@ -525,6 +525,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addonsInstall => 'Install';
 
   @override
+  String get addonsInstallTarget => 'Install into';
+
+  @override
+  String get addonsInstallFailed => 'Install failed';
+
+  @override
+  String get addonsInstalledMessage => 'Addon installed';
+
+  @override
+  String get addonsNoProfiles => 'Create a profile first to install addons.';
+
+  @override
   String get addonsInstallSoon =>
       'The install engine arrives in the next milestone.';
 

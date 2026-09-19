@@ -4,12 +4,12 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-19
-- **Current milestone**: M4 — Addons and Python (S3, M4-01, M4-02 done; M4-03 next)
+- **Current milestone**: M4 — Addons and Python (S3, M4-01..M4-03 done; M4-04 next)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-19
-- **Next action**: start `M4-03` (addon install engine: `zip_url` download, safe extract,
-  `<profile>/Mod/<id>` placement, DB record), then M4-04 updates/remove, M4-05 requirements,
-  M4-06 pip runner. M3 exit review and Windows/macOS manual checks remain open.
+- **Next action**: start `M4-04` (branch selection, update detection, update with backup and
+  remove), then M4-05 requirements, M4-06 pip runner. M3 exit review and Windows/macOS manual
+  checks remain open.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -116,7 +116,14 @@
     (hamburger with active-count badge, clear action); empty or both-checked selections mean "no
     filter". The hamburger sits in the search/refresh row; the FreeCAD-version filter row only
     appears when installed versions exist. Controller and widget tests cover multiple checks.
-  - 278 tests green (6 manual probes skipped), analyze clean, app builds and launches.
+  - M4-03 — **D-039**: `AddonInstaller` (download → safe extract → `Mod/<id>` atomic replace
+    with `.old` backup, single-root stripping, zero-file guard) + `AddonsController.install`
+    (DB row, installing/error signals) and a profile picker/Install button in the detail page.
+    Real A2plus install verified (6.1 MB, `package.xml`/`InitGui.py`).
+  - M4-11 — profile detail **Addons** tab now lists installed addons (name, version, branch,
+    installed date) from `ProfilesController.installedAddons`, with the standard empty state
+    (previously a placeholder, which made successful installs look lost).
+  - 287 tests green (7 manual probes skipped), analyze clean, app builds and launches.
 
 ## Session log
 
@@ -161,6 +168,8 @@
 | 2026-09-19 | M4 | Fix catalog search state after detail navigation | M4-02 | `lib/ui/addons/addons_view.dart`, `test/ui/addons_view_test.dart` |
 | 2026-09-19 | M4 | Compact rounded outlined input theme; bordered dropdown filters | M4-09 | `docs/spec/03-ux.md`, `lib/app.dart`, `lib/ui/addons/addons_view.dart`, `test/ui/app_theme_test.dart` |
 | 2026-09-19 | M4 | Multi-select checkable filter menu for addon content/installed filters | M4-10 | `docs/spec/03-ux.md`, `lib/state/addons_controller.dart`, `lib/ui/addons/addons_view.dart`, `lib/l10n/**`, `test/**` |
+| 2026-09-19 | M4 | D-039 addon install engine (safe extract, atomic Mod placement, DB row) | M4-03 | `docs/impl/DECISIONS.md`, `docs/spec/06-integrations.md`, `lib/platform/addon_installer.dart`, `lib/state/addons_controller.dart`, `lib/ui/addons/addons_view.dart`, `test/**` |
+| 2026-09-19 | M4 | Profile detail Addons tab lists installed addons | M4-11 | `lib/state/profiles_controller.dart`, `lib/ui/profiles/profile_detail_view.dart`, `test/ui/profiles_view_test.dart` |
 
 ## Standing notes for the next agent
 
