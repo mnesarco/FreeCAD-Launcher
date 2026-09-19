@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:uuid/uuid.dart';
 
@@ -12,7 +14,9 @@ import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/domain/macros/macro_catalog_entry.dart';
 import 'package:freecad_launcher/domain/macros/macro_types.dart';
 import 'package:freecad_launcher/platform/macro_installer.dart';
+import 'package:freecad_launcher/platform/macro_scanner.dart';
 import 'package:freecad_launcher/platform/paths.dart';
+import 'package:path/path.dart' as p;
 import 'package:freecad_launcher/state/jobs_controller.dart';
 
 class MacrosController {
@@ -21,12 +25,14 @@ class MacrosController {
     required MacroCatalog catalog,
     required AppPaths paths,
     MacroInstaller installer = const MacroInstaller(),
+    MacroScanner scanner = const MacroScanner(),
     JobsController? jobs,
     DateTime Function()? clock,
   }) : _database = database,
        _catalog = catalog,
        _paths = paths,
        _installer = installer,
+       _scanner = scanner,
        _jobs = jobs,
        _clock = clock ?? DateTime.now;
 
@@ -34,6 +40,7 @@ class MacrosController {
   final MacroCatalog _catalog;
   final AppPaths _paths;
   final MacroInstaller _installer;
+  final MacroScanner _scanner;
   final JobsController? _jobs;
   final DateTime Function() _clock;
 
@@ -72,6 +79,75 @@ class MacrosController {
     );
     if (!loaded.value && !loading.value) {
       unawaited(load());
+    }
+    unawaited(reconcileAll());
+  }
+
+  Future<void> reconcileAll() async {
+    final profiles = await _database.profilesDao.getAll();
+    for (final profile in profiles) {
+      await reconcile(profile.id);
+    }
+  }
+
+  Future<void> reconcile(String profileId) async {
+    final scanned = await _scanner.scan(_paths.profilePaths(profileId).root);
+    final rows = await _database.macrosDao.getByProfile(profileId);
+    for (final row in rows) {
+      if (!scanned.any((macro) => macro.fileName == row.fileName)) {
+        await _database.macrosDao.deleteByFileName(profileId, row.fileName);
+      }
+    }
+    for (final macro in scanned) {
+      Macro? existing;
+      for (final row in rows) {
+        if (row.fileName == macro.fileName) {
+          existing = row;
+          break;
+        }
+      }
+      if (existing == null) {
+        await _database.macrosDao.save(
+          Macro(
+            id: const Uuid().v4(),
+            profileId: profileId,
+            name: macro.name,
+            fileName: macro.fileName,
+            source: MacroSource.local,
+            installedAt: macro.modifiedAt,
+            updatedAt: macro.modifiedAt,
+            sizeBytes: macro.sizeBytes,
+          ),
+        );
+      } else if (existing.sizeBytes != macro.sizeBytes ||
+          existing.updatedAt != macro.modifiedAt) {
+        await _database.macrosDao.save(
+          existing.copyWith(
+            sizeBytes: Value(macro.sizeBytes),
+            updatedAt: macro.modifiedAt,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<Result<void>> delete({
+    required String profileId,
+    required String fileName,
+  }) async {
+    final row = await _database.macrosDao.getByFileName(profileId, fileName);
+    if (row == null) {
+      return const Err(AppError(message: 'Macro is not installed in this profile'));
+    }
+    try {
+      final file = File(p.join(_paths.profilePaths(profileId).root, fileName));
+      if (file.existsSync()) {
+        file.deleteSync();
+      }
+      await _database.macrosDao.deleteByFileName(profileId, fileName);
+      return const Ok(null);
+    } on Object catch (failure) {
+      return Err(AppError.from(failure, retryable: true));
     }
   }
 
@@ -148,6 +224,13 @@ class MacrosController {
       );
       final existing = await _database.macrosDao.getByFileName(profileId, installed.fileName);
       final now = _clock();
+      var sizeBytes = 0;
+      for (final filePath in installed.files) {
+        final file = File(filePath);
+        if (file.existsSync()) {
+          sizeBytes += file.lengthSync();
+        }
+      }
       await _database.macrosDao.save(
         Macro(
           id: existing?.id ?? const Uuid().v4(),
@@ -158,6 +241,8 @@ class MacrosController {
           installedAt: existing?.installedAt ?? now,
           updatedAt: now,
           catalogCommit: existing?.catalogCommit,
+          license: entry.hasLicense ? entry.license : null,
+          sizeBytes: sizeBytes,
         ),
       );
       return const Ok(null);

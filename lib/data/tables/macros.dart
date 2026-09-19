@@ -21,6 +21,10 @@ class Macros extends Table {
 
   TextColumn get catalogCommit => text().nullable()();
 
+  TextColumn get license => text().nullable()();
+
+  IntColumn get sizeBytes => integer().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 

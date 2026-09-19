@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:signals_flutter/signals_flutter.dart';
 
+import 'package:freecad_launcher/core/format.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
+import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/macros/macro_catalog_entry.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
@@ -27,6 +30,180 @@ class _MacrosViewState extends State<MacrosView> {
       services.profiles.start();
     }
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          TabBar(
+            tabs: [
+              Tab(text: l10n.macrosTabInstalled),
+              Tab(text: l10n.macrosTabCatalog),
+            ],
+          ),
+          const Expanded(
+            child: TabBarView(children: [_InstalledTab(), _CatalogTab()]),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InstalledTab extends StatelessWidget {
+  const _InstalledTab();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final services = AppScope.of(context);
+    final controller = services.macros;
+    final profiles = services.profiles.profiles.watch(context);
+    final installed = controller.installedMacros.watch(context);
+
+    var profileId = controller.selectedProfileId.watch(context);
+    if (profileId == null || !profiles.any((profile) => profile.id == profileId)) {
+      profileId = profiles.isEmpty ? null : profiles.first.id;
+    }
+    final rows = profileId == null
+        ? const <Macro>[]
+        : installed.where((row) => row.profileId == profileId).toList();
+
+    return Column(
+      children: [
+        _ProfilePicker(profileId: profileId, profiles: profiles),
+        const SizedBox(height: 8),
+        Expanded(
+          child: rows.isEmpty
+              ? EmptyState(
+                  icon: Icons.auto_fix_high_outlined,
+                  title: l10n.macrosEmptyTitle,
+                  message: l10n.macrosEmptyMessage,
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  itemCount: rows.length,
+                  itemBuilder: (context, index) => _InstalledMacroTile(
+                    macro: rows[index],
+                    profileId: profileId!,
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+class _InstalledMacroTile extends StatelessWidget {
+  const _InstalledMacroTile({required this.macro, required this.profileId});
+
+  final Macro macro;
+  final String profileId;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final services = AppScope.of(context);
+    final path = p.join(services.paths.profilePaths(profileId).root, macro.fileName);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: const Icon(Icons.auto_fix_high_outlined),
+        title: Text(macro.name),
+        subtitle: Text(
+          [
+            if (macro.sizeBytes != null) formatBytes(macro.sizeBytes!),
+            _date(macro.updatedAt),
+            if ((macro.license ?? '').isNotEmpty) macro.license!,
+          ].join('  ·  '),
+          style: theme.textTheme.bodySmall,
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.open_in_new),
+              tooltip: l10n.macrosOpen,
+              onPressed: () => _run(context, () => services.macroFiles.open(path)),
+            ),
+            IconButton(
+              icon: const Icon(Icons.folder_open_outlined),
+              tooltip: l10n.macrosReveal,
+              onPressed: () => _run(context, () => services.macroFiles.reveal(path)),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              tooltip: l10n.macrosDelete,
+              onPressed: () => _delete(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _run(BuildContext context, Future<void> Function() action) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await action();
+    } on Object catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.macrosActionFailed}: $error')),
+      );
+    }
+  }
+
+  Future<void> _delete(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final services = AppScope.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.macrosDeleteTitle),
+        content: Text('${macro.name}\n\n${l10n.macrosDeleteMessage}'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.bundlesCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.macrosDelete),
+          ),
+        ],
+      ),
+    );
+    if (!(confirmed ?? false)) {
+      return;
+    }
+    final result = await services.macros.delete(
+      profileId: profileId,
+      fileName: macro.fileName,
+    );
+    result.fold(
+      (_) => messenger.showSnackBar(SnackBar(content: Text(l10n.macrosDeleted))),
+      (error) => messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.macrosDeleteFailed}: $error')),
+      ),
+    );
+  }
+
+  String _date(DateTime value) {
+    final local = value.toLocal();
+    String two(int part) => part.toString().padLeft(2, '0');
+    return '${local.year}-${two(local.month)}-${two(local.day)}';
+  }
+}
+
+class _CatalogTab extends StatelessWidget {
+  const _CatalogTab();
 
   @override
   Widget build(BuildContext context) {
@@ -85,13 +262,13 @@ class _MacrosViewState extends State<MacrosView> {
               installedRows.any(
                 (row) => row.profileId == profileId && row.fileName == macro.fileName,
               );
-          return _MacroTile(
+          return _CatalogMacroTile(
             macro: macro,
             isInstalled: isInstalled,
             isInstalling: installing.contains(macro.name),
             canInstall: profileId != null && !isInstalled,
             error: installErrors[macro.name],
-            onInstall: profileId == null ? null : () => _install(macro, profileId!),
+            onInstall: profileId == null ? null : () => _install(context, macro, profileId!),
           );
         },
       );
@@ -140,49 +317,25 @@ class _MacrosViewState extends State<MacrosView> {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Row(
-            children: [
-              if (profiles.isEmpty)
-                Expanded(child: Text(l10n.addonsNoProfiles))
-              else
-                Expanded(
-                  child: InputDecorator(
-                    decoration: InputDecoration(
-                      isDense: true,
-                      labelText: l10n.addonsInstallTarget,
-                    ),
-                    child: DropdownButton<String>(
-                      value: profileId,
-                      isDense: true,
-                      isExpanded: true,
-                      items: [
-                        for (final profile in profiles)
-                          DropdownMenuItem(value: profile.id, child: Text(profile.name)),
-                      ],
-                      onChanged: (value) =>
-                          controller.selectedProfileId.value = value,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
+        _ProfilePicker(profileId: profileId, profiles: profiles),
         const SizedBox(height: 8),
         Expanded(child: body),
       ],
     );
   }
 
-  Future<void> _install(MacroCatalogEntry macro, String profileId) async {
+  Future<void> _install(
+    BuildContext context,
+    MacroCatalogEntry macro,
+    String profileId,
+  ) async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final result = await AppScope.of(context).macros.install(
       name: macro.name,
       profileId: profileId,
     );
-    if (!mounted) {
+    if (!context.mounted) {
       return;
     }
     result.fold(
@@ -196,8 +349,49 @@ class _MacrosViewState extends State<MacrosView> {
   }
 }
 
-class _MacroTile extends StatelessWidget {
-  const _MacroTile({
+class _ProfilePicker extends StatelessWidget {
+  const _ProfilePicker({required this.profileId, required this.profiles});
+
+  final String? profileId;
+  final List<Profile> profiles;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final controller = AppScope.of(context).macros;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Row(
+        children: [
+          if (profiles.isEmpty)
+            Expanded(child: Text(l10n.addonsNoProfiles))
+          else
+            Expanded(
+              child: InputDecorator(
+                decoration: InputDecoration(
+                  isDense: true,
+                  labelText: l10n.addonsInstallTarget,
+                ),
+                child: DropdownButton<String>(
+                  value: profileId,
+                  isDense: true,
+                  isExpanded: true,
+                  items: [
+                    for (final profile in profiles)
+                      DropdownMenuItem(value: profile.id, child: Text(profile.name)),
+                  ],
+                  onChanged: (value) => controller.selectedProfileId.value = value,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CatalogMacroTile extends StatelessWidget {
+  const _CatalogMacroTile({
     required this.macro,
     required this.isInstalled,
     required this.isInstalling,

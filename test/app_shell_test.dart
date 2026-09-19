@@ -122,7 +122,7 @@ void main() {
 
     await tester.tap(find.text('Macros'));
     await tester.pumpAndSettle();
-    expect(find.text('Catalog is empty'), findsOneWidget);
+    expect(find.text('No macros'), findsOneWidget);
 
     await tester.tap(find.text('Settings'));
     await tester.pumpAndSettle();

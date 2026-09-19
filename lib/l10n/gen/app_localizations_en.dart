@@ -908,6 +908,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get macrosClearSearch => 'Clear search';
 
   @override
+  String get macrosTabInstalled => 'Installed';
+
+  @override
+  String get macrosTabCatalog => 'Catalog';
+
+  @override
+  String get macrosOpen => 'Open';
+
+  @override
+  String get macrosReveal => 'Reveal in folder';
+
+  @override
+  String get macrosDelete => 'Delete';
+
+  @override
+  String get macrosDeleteTitle => 'Delete macro';
+
+  @override
+  String get macrosDeleteMessage =>
+      'The macro file is deleted from this profile.';
+
+  @override
+  String get macrosDeleted => 'Macro deleted';
+
+  @override
+  String get macrosDeleteFailed => 'Could not delete the macro';
+
+  @override
+  String get macrosActionFailed => 'Could not run the system action';
+
+  @override
   String get jobsTitle => 'Jobs';
 
   @override

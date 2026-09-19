@@ -19,6 +19,7 @@ import 'package:freecad_launcher/platform/dmg_extractor.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/host.dart';
 import 'package:freecad_launcher/platform/launch.dart';
+import 'package:freecad_launcher/platform/macro_file_actions.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/pip_runner.dart';
 import 'package:freecad_launcher/platform/process.dart';
@@ -172,6 +173,11 @@ class AppServices {
   );
 
   late final SettingsController settings = SettingsController(cliWrapper: cliWrapper);
+
+  late final MacroFileActions macroFiles = MacroFileActions(
+    processRunner: processRunner,
+    platform: hostPlatform,
+  );
 
   late final BundlesController bundles = BundlesController(database: database);
 

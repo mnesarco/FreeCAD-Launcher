@@ -1792,6 +1792,66 @@ abstract class AppLocalizations {
   /// **'Clear search'**
   String get macrosClearSearch;
 
+  /// No description provided for @macrosTabInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed'**
+  String get macrosTabInstalled;
+
+  /// No description provided for @macrosTabCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog'**
+  String get macrosTabCatalog;
+
+  /// No description provided for @macrosOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get macrosOpen;
+
+  /// No description provided for @macrosReveal.
+  ///
+  /// In en, this message translates to:
+  /// **'Reveal in folder'**
+  String get macrosReveal;
+
+  /// No description provided for @macrosDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get macrosDelete;
+
+  /// No description provided for @macrosDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete macro'**
+  String get macrosDeleteTitle;
+
+  /// No description provided for @macrosDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The macro file is deleted from this profile.'**
+  String get macrosDeleteMessage;
+
+  /// No description provided for @macrosDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro deleted'**
+  String get macrosDeleted;
+
+  /// No description provided for @macrosDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the macro'**
+  String get macrosDeleteFailed;
+
+  /// No description provided for @macrosActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not run the system action'**
+  String get macrosActionFailed;
+
   /// No description provided for @jobsTitle.
   ///
   /// In en, this message translates to:

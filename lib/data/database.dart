@@ -52,13 +52,17 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.inMemory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onUpgrade: (m, from, to) async {
       if (from < 2) {
         await m.addColumn(builds, builds.pythonPath);
+      }
+      if (from < 3) {
+        await m.addColumn(macros, macros.license);
+        await m.addColumn(macros, macros.sizeBytes);
       }
     },
     beforeOpen: (details) async {

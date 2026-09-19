@@ -3501,6 +3501,28 @@ class $MacrosTable extends Macros with TableInfo<$MacrosTable, Macro> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _licenseMeta = const VerificationMeta(
+    'license',
+  );
+  @override
+  late final GeneratedColumn<String> license = GeneratedColumn<String>(
+    'license',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sizeBytesMeta = const VerificationMeta(
+    'sizeBytes',
+  );
+  @override
+  late final GeneratedColumn<int> sizeBytes = GeneratedColumn<int>(
+    'size_bytes',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3511,6 +3533,8 @@ class $MacrosTable extends Macros with TableInfo<$MacrosTable, Macro> {
     installedAt,
     updatedAt,
     catalogCommit,
+    license,
+    sizeBytes,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3581,6 +3605,18 @@ class $MacrosTable extends Macros with TableInfo<$MacrosTable, Macro> {
         ),
       );
     }
+    if (data.containsKey('license')) {
+      context.handle(
+        _licenseMeta,
+        license.isAcceptableOrUnknown(data['license']!, _licenseMeta),
+      );
+    }
+    if (data.containsKey('size_bytes')) {
+      context.handle(
+        _sizeBytesMeta,
+        sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta),
+      );
+    }
     return context;
   }
 
@@ -3628,6 +3664,14 @@ class $MacrosTable extends Macros with TableInfo<$MacrosTable, Macro> {
         DriftSqlType.string,
         data['${effectivePrefix}catalog_commit'],
       ),
+      license: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}license'],
+      ),
+      sizeBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}size_bytes'],
+      ),
     );
   }
 
@@ -3649,6 +3693,8 @@ class Macro extends DataClass implements Insertable<Macro> {
   final DateTime installedAt;
   final DateTime updatedAt;
   final String? catalogCommit;
+  final String? license;
+  final int? sizeBytes;
   const Macro({
     required this.id,
     required this.profileId,
@@ -3658,6 +3704,8 @@ class Macro extends DataClass implements Insertable<Macro> {
     required this.installedAt,
     required this.updatedAt,
     this.catalogCommit,
+    this.license,
+    this.sizeBytes,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3676,6 +3724,12 @@ class Macro extends DataClass implements Insertable<Macro> {
     if (!nullToAbsent || catalogCommit != null) {
       map['catalog_commit'] = Variable<String>(catalogCommit);
     }
+    if (!nullToAbsent || license != null) {
+      map['license'] = Variable<String>(license);
+    }
+    if (!nullToAbsent || sizeBytes != null) {
+      map['size_bytes'] = Variable<int>(sizeBytes);
+    }
     return map;
   }
 
@@ -3691,6 +3745,12 @@ class Macro extends DataClass implements Insertable<Macro> {
       catalogCommit: catalogCommit == null && nullToAbsent
           ? const Value.absent()
           : Value(catalogCommit),
+      license: license == null && nullToAbsent
+          ? const Value.absent()
+          : Value(license),
+      sizeBytes: sizeBytes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sizeBytes),
     );
   }
 
@@ -3710,6 +3770,8 @@ class Macro extends DataClass implements Insertable<Macro> {
       installedAt: serializer.fromJson<DateTime>(json['installedAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       catalogCommit: serializer.fromJson<String?>(json['catalogCommit']),
+      license: serializer.fromJson<String?>(json['license']),
+      sizeBytes: serializer.fromJson<int?>(json['sizeBytes']),
     );
   }
   @override
@@ -3726,6 +3788,8 @@ class Macro extends DataClass implements Insertable<Macro> {
       'installedAt': serializer.toJson<DateTime>(installedAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'catalogCommit': serializer.toJson<String?>(catalogCommit),
+      'license': serializer.toJson<String?>(license),
+      'sizeBytes': serializer.toJson<int?>(sizeBytes),
     };
   }
 
@@ -3738,6 +3802,8 @@ class Macro extends DataClass implements Insertable<Macro> {
     DateTime? installedAt,
     DateTime? updatedAt,
     Value<String?> catalogCommit = const Value.absent(),
+    Value<String?> license = const Value.absent(),
+    Value<int?> sizeBytes = const Value.absent(),
   }) => Macro(
     id: id ?? this.id,
     profileId: profileId ?? this.profileId,
@@ -3749,6 +3815,8 @@ class Macro extends DataClass implements Insertable<Macro> {
     catalogCommit: catalogCommit.present
         ? catalogCommit.value
         : this.catalogCommit,
+    license: license.present ? license.value : this.license,
+    sizeBytes: sizeBytes.present ? sizeBytes.value : this.sizeBytes,
   );
   Macro copyWithCompanion(MacrosCompanion data) {
     return Macro(
@@ -3764,6 +3832,8 @@ class Macro extends DataClass implements Insertable<Macro> {
       catalogCommit: data.catalogCommit.present
           ? data.catalogCommit.value
           : this.catalogCommit,
+      license: data.license.present ? data.license.value : this.license,
+      sizeBytes: data.sizeBytes.present ? data.sizeBytes.value : this.sizeBytes,
     );
   }
 
@@ -3777,7 +3847,9 @@ class Macro extends DataClass implements Insertable<Macro> {
           ..write('source: $source, ')
           ..write('installedAt: $installedAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('catalogCommit: $catalogCommit')
+          ..write('catalogCommit: $catalogCommit, ')
+          ..write('license: $license, ')
+          ..write('sizeBytes: $sizeBytes')
           ..write(')'))
         .toString();
   }
@@ -3792,6 +3864,8 @@ class Macro extends DataClass implements Insertable<Macro> {
     installedAt,
     updatedAt,
     catalogCommit,
+    license,
+    sizeBytes,
   );
   @override
   bool operator ==(Object other) =>
@@ -3804,7 +3878,9 @@ class Macro extends DataClass implements Insertable<Macro> {
           other.source == this.source &&
           other.installedAt == this.installedAt &&
           other.updatedAt == this.updatedAt &&
-          other.catalogCommit == this.catalogCommit);
+          other.catalogCommit == this.catalogCommit &&
+          other.license == this.license &&
+          other.sizeBytes == this.sizeBytes);
 }
 
 class MacrosCompanion extends UpdateCompanion<Macro> {
@@ -3816,6 +3892,8 @@ class MacrosCompanion extends UpdateCompanion<Macro> {
   final Value<DateTime> installedAt;
   final Value<DateTime> updatedAt;
   final Value<String?> catalogCommit;
+  final Value<String?> license;
+  final Value<int?> sizeBytes;
   final Value<int> rowid;
   const MacrosCompanion({
     this.id = const Value.absent(),
@@ -3826,6 +3904,8 @@ class MacrosCompanion extends UpdateCompanion<Macro> {
     this.installedAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.catalogCommit = const Value.absent(),
+    this.license = const Value.absent(),
+    this.sizeBytes = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MacrosCompanion.insert({
@@ -3837,6 +3917,8 @@ class MacrosCompanion extends UpdateCompanion<Macro> {
     required DateTime installedAt,
     required DateTime updatedAt,
     this.catalogCommit = const Value.absent(),
+    this.license = const Value.absent(),
+    this.sizeBytes = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        profileId = Value(profileId),
@@ -3854,6 +3936,8 @@ class MacrosCompanion extends UpdateCompanion<Macro> {
     Expression<DateTime>? installedAt,
     Expression<DateTime>? updatedAt,
     Expression<String>? catalogCommit,
+    Expression<String>? license,
+    Expression<int>? sizeBytes,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3865,6 +3949,8 @@ class MacrosCompanion extends UpdateCompanion<Macro> {
       if (installedAt != null) 'installed_at': installedAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (catalogCommit != null) 'catalog_commit': catalogCommit,
+      if (license != null) 'license': license,
+      if (sizeBytes != null) 'size_bytes': sizeBytes,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3878,6 +3964,8 @@ class MacrosCompanion extends UpdateCompanion<Macro> {
     Value<DateTime>? installedAt,
     Value<DateTime>? updatedAt,
     Value<String?>? catalogCommit,
+    Value<String?>? license,
+    Value<int?>? sizeBytes,
     Value<int>? rowid,
   }) {
     return MacrosCompanion(
@@ -3889,6 +3977,8 @@ class MacrosCompanion extends UpdateCompanion<Macro> {
       installedAt: installedAt ?? this.installedAt,
       updatedAt: updatedAt ?? this.updatedAt,
       catalogCommit: catalogCommit ?? this.catalogCommit,
+      license: license ?? this.license,
+      sizeBytes: sizeBytes ?? this.sizeBytes,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3922,6 +4012,12 @@ class MacrosCompanion extends UpdateCompanion<Macro> {
     if (catalogCommit.present) {
       map['catalog_commit'] = Variable<String>(catalogCommit.value);
     }
+    if (license.present) {
+      map['license'] = Variable<String>(license.value);
+    }
+    if (sizeBytes.present) {
+      map['size_bytes'] = Variable<int>(sizeBytes.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3939,6 +4035,8 @@ class MacrosCompanion extends UpdateCompanion<Macro> {
           ..write('installedAt: $installedAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('catalogCommit: $catalogCommit, ')
+          ..write('license: $license, ')
+          ..write('sizeBytes: $sizeBytes, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -7300,6 +7398,8 @@ typedef $$MacrosTableCreateCompanionBuilder =
       required DateTime installedAt,
       required DateTime updatedAt,
       Value<String?> catalogCommit,
+      Value<String?> license,
+      Value<int?> sizeBytes,
       Value<int> rowid,
     });
 typedef $$MacrosTableUpdateCompanionBuilder =
@@ -7312,6 +7412,8 @@ typedef $$MacrosTableUpdateCompanionBuilder =
       Value<DateTime> installedAt,
       Value<DateTime> updatedAt,
       Value<String?> catalogCommit,
+      Value<String?> license,
+      Value<int?> sizeBytes,
       Value<int> rowid,
     });
 
@@ -7379,6 +7481,16 @@ class $$MacrosTableFilterComposer
 
   ColumnFilters<String> get catalogCommit => $composableBuilder(
     column: $table.catalogCommit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get license => $composableBuilder(
+    column: $table.license,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7450,6 +7562,16 @@ class $$MacrosTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get license => $composableBuilder(
+    column: $table.license,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$ProfilesTableOrderingComposer get profileId {
     final $$ProfilesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -7507,6 +7629,12 @@ class $$MacrosTableAnnotationComposer
     column: $table.catalogCommit,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get license =>
+      $composableBuilder(column: $table.license, builder: (column) => column);
+
+  GeneratedColumn<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
 
   $$ProfilesTableAnnotationComposer get profileId {
     final $$ProfilesTableAnnotationComposer composer = $composerBuilder(
@@ -7568,6 +7696,8 @@ class $$MacrosTableTableManager
                 Value<DateTime> installedAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<String?> catalogCommit = const Value.absent(),
+                Value<String?> license = const Value.absent(),
+                Value<int?> sizeBytes = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MacrosCompanion(
                 id: id,
@@ -7578,6 +7708,8 @@ class $$MacrosTableTableManager
                 installedAt: installedAt,
                 updatedAt: updatedAt,
                 catalogCommit: catalogCommit,
+                license: license,
+                sizeBytes: sizeBytes,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7590,6 +7722,8 @@ class $$MacrosTableTableManager
                 required DateTime installedAt,
                 required DateTime updatedAt,
                 Value<String?> catalogCommit = const Value.absent(),
+                Value<String?> license = const Value.absent(),
+                Value<int?> sizeBytes = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MacrosCompanion.insert(
                 id: id,
@@ -7600,6 +7734,8 @@ class $$MacrosTableTableManager
                 installedAt: installedAt,
                 updatedAt: updatedAt,
                 catalogCommit: catalogCommit,
+                license: license,
+                sizeBytes: sizeBytes,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

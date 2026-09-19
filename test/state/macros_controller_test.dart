@@ -124,6 +124,57 @@ void main() {
     expect((await controller.install(name: 'Foto', profileId: 'missing')).isErr, isTrue);
   });
 
+  test('reconciles scanned files into the index and drops stale rows', () async {
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    final root = paths.profilePaths('profile-1').root;
+    File(p.join(root, 'Foto.FCMacro')).createSync(recursive: true);
+    File(p.join(root, 'Macro', 'Legacy.FCMacro')).createSync(recursive: true);
+    await db.macrosDao.save(
+      sampleMacro(
+        profileId: 'profile-1',
+        id: 'stale',
+        name: 'Ghost',
+        fileName: 'Ghost.FCMacro',
+      ),
+    );
+
+    await controller.reconcile('profile-1');
+    await pumpEventQueue();
+
+    final rows = await db.macrosDao.getByProfile('profile-1');
+    expect(rows.map((row) => row.fileName).toSet(), {'Foto.FCMacro', 'Legacy.FCMacro'});
+    expect(rows.every((row) => row.source == MacroSource.local), isTrue);
+    expect(rows.firstWhere((row) => row.fileName == 'Foto.FCMacro').sizeBytes, isNotNull);
+  });
+
+  test('deletes a macro file and its row', () async {
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    final file = File(
+      p.join(paths.profilePaths('profile-1').root, 'Foto.FCMacro'),
+    )..createSync(recursive: true);
+    await db.macrosDao.save(
+      sampleMacro(profileId: 'profile-1', name: 'Foto', fileName: 'Foto.FCMacro'),
+    );
+
+    final result = await controller.delete(
+      profileId: 'profile-1',
+      fileName: 'Foto.FCMacro',
+    );
+
+    expect(result.isOk, isTrue);
+    expect(file.existsSync(), isFalse);
+    expect(await db.macrosDao.getByFileName('profile-1', 'Foto.FCMacro'), isNull);
+    expect(
+      (await controller.delete(
+        profileId: 'profile-1',
+        fileName: 'Foto.FCMacro',
+      )).isErr,
+      isTrue,
+    );
+  });
+
   test('filters by name, comment and description', () async {
     controller.loaded.value = true;
     controller.macros.value = [

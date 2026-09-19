@@ -12,6 +12,7 @@ import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/macros_controller.dart';
 import 'package:freecad_launcher/ui/macros/macros_view.dart';
+import 'package:path/path.dart' as p;
 import '../data/test_fixtures.dart';
 import '../helpers/fake_download.dart';
 
@@ -68,7 +69,7 @@ void main() {
     }
   }
 
-  Future<void> pumpMacros(WidgetTester tester) async {
+  Future<void> pumpMacros(WidgetTester tester, {bool catalog = false}) async {
     await tester.pumpWidget(
       AppScope(
         services: services,
@@ -80,12 +81,16 @@ void main() {
       ),
     );
     await settle(tester);
+    if (catalog) {
+      await tester.tap(find.text('Catalog'));
+      await settle(tester);
+    }
   }
 
   testWidgets('renders the catalog and filters by search', (tester) async {
     await db.buildsDao.save(sampleBuild());
     await db.profilesDao.save(sampleProfile());
-    await pumpMacros(tester);
+    await pumpMacros(tester, catalog: true);
 
     expect(find.text('Foto'), findsOneWidget);
     expect(find.text('TreeHelper'), findsOneWidget);
@@ -111,13 +116,20 @@ void main() {
         source: MacroSource.catalog,
       ),
     );
+    File(
+      p.join(tempDirectory.path, 'profiles', 'profile-1', 'Foto.FCMacro'),
+    ).createSync(recursive: true);
     await pumpMacros(tester);
 
-    expect(find.text('Installed'), findsOneWidget);
+    expect(find.text('Foto'), findsOneWidget);
+
+    await tester.tap(find.text('Catalog'));
+    await settle(tester);
+    expect(find.widgetWithText(Chip, 'Installed'), findsOneWidget);
     expect(find.text('Install'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), 'camera');
     await settle(tester);
-    expect(find.text('Installed'), findsOneWidget);
+    expect(find.widgetWithText(Chip, 'Installed'), findsOneWidget);
   });
 }

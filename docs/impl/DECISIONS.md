@@ -896,3 +896,34 @@ Template:
   `lib/domain/macros/macro_catalog_entry.dart`, `lib/platform/macro_installer.dart`,
   `lib/state/macros_controller.dart`, `lib/ui/macros/macros_view.dart`,
   `TASKS.md` M5-04, D-044
+
+### D-049 — Macro scanner, schema v3 and installed-macro actions (M5-05)
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: FR-7.1/7.3/7.4 need the installed list (name, size, date) with delete/reveal/open;
+  spec 04 notes the macro dir is the profile root (`FREECAD_USER_HOME`) with a legacy `Macro/`
+  subdir; D-044 deferred license persistence to this task.
+- **Decision**:
+  - Schema **v3**: `macros.license` (text?) and `macros.sizeBytes` (int?), added via
+    `onUpgrade(from < 3)` with regenerated drift code; catalog installs now store the SPDX
+    license (null when the cache has none) and the summed size of installed files.
+  - `MacroScanner` (platform) lists `<profile>/*.FCMacro` first, then `<profile>/Macro/*.FCMacro`
+    (`.fcmacro` matched case-insensitively); duplicate file names prefer the profile root; each
+    entry carries name, fileName, path, size and modified time.
+  - `MacrosController` reconciliation: `start()` triggers `reconcileAll()` (every profile);
+    `reconcile(profileId)` deletes rows whose file disappeared and inserts local rows (source
+    `local`, size/modified from disk) or refreshes size/modified when they changed; catalog rows
+    are kept while their file exists.
+  - `delete(profileId, fileName)` removes the file (if present) and the row; missing rows error.
+  - `MacroFileActions` (platform) reveals/opens a path through `ProcessRunner` argument arrays:
+    Linux `xdg-open [dirname]` / `xdg-open <file>`; macOS `open -R` / `open`; Windows
+    `explorer.exe /select,<path>` / `cmd /c start "" <path>`. No shell interpolation.
+  - UI: the Macros screen is tabbed — **Installed** (profile picker, size/date/license rows,
+    Open/Reveal/Delete with confirmation) and **Catalog** (unchanged). External file changes are
+    picked up on the next startup reconcile.
+- **Consequences**: M5-08 can render the profile Macros tab from the same index; reconciliation is
+  startup-only (no filesystem watcher) and macros placed externally are imported as `local`; the
+  legacy `Macro/` directory keeps working.
+- **Refs**: spec 02 FR-7.1/7.3/7.4, spec 04 §"user home", `lib/platform/macro_scanner.dart`,
+  `lib/platform/macro_file_actions.dart`, `lib/state/macros_controller.dart`,
+  `lib/ui/macros/macros_view.dart`, `TASKS.md` M5-05, D-044, D-048
