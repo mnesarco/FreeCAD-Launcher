@@ -58,6 +58,8 @@ class AppServices {
     cacheDirectory: paths.downloadsCacheDir,
   );
 
+  late final PythonProbe pythonProbe = ProcessPythonProbe(processRunner: processRunner);
+
   late final BuildInstaller buildInstaller = BuildInstaller(
     paths: paths,
     processRunner: processRunner,
@@ -67,7 +69,7 @@ class AppServices {
     dmgExtractor: hostPlatform == BuildPlatform.macos
         ? ProcessDmgExtractor(processRunner: processRunner)
         : null,
-    pythonProbe: ProcessPythonProbe(processRunner: processRunner),
+    pythonProbe: pythonProbe,
   );
 
   late final BuildsController builds =
@@ -80,6 +82,7 @@ class AppServices {
         paths: paths,
         platform: hostPlatform,
         arch: hostArch,
+        pythonProbe: pythonProbe,
       );
 
   static Future<AppServices> bootstrap() async {

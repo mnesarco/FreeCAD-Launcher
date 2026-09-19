@@ -5,7 +5,9 @@
 - **DB is an index, not the source of truth.** Installed builds, profiles, and addons exist on
   disk; the drift DB indexes them. On startup a reconciler marks entries whose files vanished
   as `missing`/`broken` instead of assuming the DB is right.
-- **Fresh start.** No migration from the prototype schema. `schemaVersion = 1`.
+- **Fresh start.** No migration from the prototype schema. `schemaVersion = 2` (v1 plus the
+  nullable `builds.pythonPath` column; the only `onUpgrade` is the pre-release v1 → v2
+  `addColumn`, see D-020).
 - All timestamps stored as ISO-8601 strings (`store_date_time_values_as_text: true` in
   `build.yaml`, matching `driftRuntimeOptions.defaultSerializer` in `main.dart`).
 
@@ -23,10 +25,11 @@
 | `arch` | text | `x86_64` \| `aarch64`/`arm64` |
 | `sourceUrl` | text? | download URL for catalog builds |
 | `assetName` | text? | original asset filename |
-| `localPath` | text | absolute path to executable/bundle root |
+| `localPath` | text | absolute path to executable/bundle root (user-referenced path or symlink for in-place customs) |
 | `sha256` | text? | expected checksum; nullable for custom |
 | `verified` | bool | checksum verified at install |
 | `pythonVersion` | text? | detected, e.g. `3.11` |
+| `pythonPath` | text? | interpreter used for pip (`--target`), detected or user-selected |
 | `sizeBytes` | int? | installed size |
 | `status` | text | `installed` \| `missing` \| `broken` |
 | `releaseNotesUrl` | text? | |
@@ -147,7 +150,7 @@ App data root (from `path_provider` `getApplicationSupportDirectory()`):
       system.cfg
       Mod/                   # addons
       AdditionalPythonPackages/
-        py311/               # 0.21+ target
+        py311/               # 1.0+ target
       home/                  # HOME override
       xdg/{config,data,cache}/
       temp/

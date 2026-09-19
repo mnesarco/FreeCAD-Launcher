@@ -65,13 +65,17 @@ class DownloadResult {
   const DownloadResult({
     required this.path,
     required this.bytes,
-    required this.sha256,
+    this.sha256,
     required this.fromCache,
   });
 
   final String path;
   final int bytes;
-  final String sha256;
+
+  /// Present only when the file was verified against an expected checksum or
+  /// read from a verified cache entry.
+  final String? sha256;
+
   final bool fromCache;
 }
 
@@ -171,10 +175,13 @@ class Downloader {
       rethrow;
     }
 
-    final actual = await sha256File(part.path);
-    if (expected != null && actual != expected) {
-      part.deleteSync();
-      throw ChecksumMismatchException(expected: expected, actual: actual);
+    String? actual;
+    if (expected != null) {
+      actual = await sha256File(part.path);
+      if (actual != expected) {
+        part.deleteSync();
+        throw ChecksumMismatchException(expected: expected, actual: actual);
+      }
     }
 
     if (target.existsSync()) {

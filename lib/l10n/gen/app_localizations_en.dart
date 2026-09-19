@@ -66,6 +66,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get versionsInstall => 'Install';
 
   @override
+  String get versionsHashing => 'Hashing file…';
+
+  @override
+  String get versionsDetectingPython => 'Detecting Python…';
+
+  @override
   String get versionsDownloading => 'Downloading…';
 
   @override
@@ -133,7 +139,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get versionsCustomEmptyMessage =>
-      'Add a local archive or URL to install a custom FreeCAD version.';
+      'Add a local archive or URL, or select a FreeCAD executable (self-compiled or installed by other means) to reference in place.';
 
   @override
   String get versionsCustomSource => 'File path or URL';
@@ -155,7 +161,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get versionsCustomTrustMessage =>
-      'Custom builds are not verified against the official catalog. Only import files you trust.';
+      'Custom builds are not verified against the official catalog. Executables are run once, headless, to detect their Python version. Only import files you trust.';
 
   @override
   String get versionsCustomTrustConfirm => 'Import';
@@ -165,6 +171,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get versionsCustomFailed => 'Import failed';
+
+  @override
+  String get versionsCustomAllFiles => 'All files';
+
+  @override
+  String get versionsCustomBuilds => 'FreeCAD builds';
+
+  @override
+  String get versionsCustomPythonMissingTitle =>
+      'Python interpreter not detected';
+
+  @override
+  String get versionsCustomPythonMissingMessage =>
+      'The build was imported, but its Python interpreter could not be detected. Addons and Python packages need it; select the interpreter this build uses, or skip for now.';
+
+  @override
+  String get versionsCustomPythonChoose => 'Choose Python…';
+
+  @override
+  String get versionsCustomPythonSkip => 'Skip';
+
+  @override
+  String get versionsCustomPythonSaved => 'Python interpreter saved';
+
+  @override
+  String get versionsCustomPythonFailed => 'Could not use that Python';
 
   @override
   String get versionsPython => 'Python';

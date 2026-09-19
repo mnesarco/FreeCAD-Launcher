@@ -20,10 +20,17 @@ void main() {
       expect(const FreeCadVersion(1, 1, 3) >= const FreeCadVersion(1, 1, 3), isTrue);
     });
 
-    test('marks pre-1.1 versions as legacy', () {
-      expect(const FreeCadVersion(0, 21, 2).isLegacy, isTrue);
+    test('marks supported pre-1.1 versions as legacy', () {
       expect(const FreeCadVersion(1, 0, 2).isLegacy, isTrue);
       expect(const FreeCadVersion(1, 1, 0).isLegacy, isFalse);
+      expect(const FreeCadVersion(0, 21, 2).isLegacy, isFalse);
+    });
+
+    test('flags the 1.0 support floor', () {
+      expect(const FreeCadVersion(0, 19, 4).isSupported, isFalse);
+      expect(const FreeCadVersion(0, 21, 2).isSupported, isFalse);
+      expect(const FreeCadVersion(1, 0, 0).isSupported, isTrue);
+      expect(const FreeCadVersion(1, 1, 3).isSupported, isTrue);
     });
   });
 
@@ -50,12 +57,17 @@ void main() {
     test('classifies stable, legacy and weekly tags', () {
       expect(ReleaseTag.parse('1.1.3')!.channel, BuildChannel.stable);
       expect(ReleaseTag.parse('1.0.2')!.channel, BuildChannel.legacy);
-      expect(ReleaseTag.parse('0.21.2')!.channel, BuildChannel.legacy);
-      expect(ReleaseTag.parse('0.20.0')!.channel, BuildChannel.legacy);
       expect(ReleaseTag.parse('weekly-2026.09.16')!.channel, BuildChannel.weekly);
       expect(ReleaseTag.parse('weekly-2026.09.16')!.weekly, isNotNull);
       expect(ReleaseTag.parse('weeklies')!.channel, BuildChannel.weekly);
       expect(ReleaseTag.parse('weeklies')!.weekly, isNull);
+    });
+
+    test('ignores pre-1.0 releases', () {
+      expect(ReleaseTag.parse('0.21.2'), isNull);
+      expect(ReleaseTag.parse('0.20.0'), isNull);
+      expect(ReleaseTag.parse('0.19.4'), isNull);
+      expect(ReleaseTag.parse('0.19'), isNull);
     });
 
     test('rejects unknown tags', () {

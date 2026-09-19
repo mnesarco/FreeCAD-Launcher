@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -11,6 +13,15 @@ import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/builds_controller.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
+
+String _stageLabel(AppLocalizations l10n, InstallStage stage) {
+  return switch (stage) {
+    InstallStage.hashing => l10n.versionsHashing,
+    InstallStage.downloading => l10n.versionsDownloading,
+    InstallStage.installing => l10n.versionsInstalling,
+    InstallStage.detectingPython => l10n.versionsDetectingPython,
+  };
+}
 
 class BuildsView extends StatefulWidget {
   const BuildsView({super.key});
@@ -327,9 +338,7 @@ class _AvailableBuildTile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
-                  progress.stage == InstallStage.downloading
-                      ? l10n.versionsDownloading
-                      : l10n.versionsInstalling,
+                  _stageLabel(l10n, progress.stage),
                   style: theme.textTheme.labelSmall,
                 ),
                 TextButton(
@@ -345,7 +354,7 @@ class _AvailableBuildTile extends StatelessWidget {
       trailing = Chip(label: Text(l10n.versionsTabInstalled));
     } else {
       trailing = FilledButton(
-        onPressed: () => controller.install(candidate),
+        onPressed: () => _install(context, controller, candidate),
         child: Text(l10n.versionsInstall),
       );
     }
@@ -366,6 +375,18 @@ class _AvailableBuildTile extends StatelessWidget {
       ),
       trailing: trailing,
     );
+  }
+
+  Future<void> _install(
+    BuildContext context,
+    BuildsController controller,
+    BuildCandidate candidate,
+  ) async {
+    final tabController = DefaultTabController.of(context);
+    final result = await controller.install(candidate);
+    if (result.isOk) {
+      tabController.animateTo(0);
+    }
   }
 }
 
@@ -391,19 +412,74 @@ class _CustomTabState extends State<_CustomTab> {
   }
 
   Future<void> _pickFile() async {
-    const typeGroup = XTypeGroup(
-      label: 'FreeCAD builds',
-      extensions: ['AppImage', '7z', 'zip', 'dmg', 'tgz', 'tar', 'gz'],
-    );
-    final file = await openFile(acceptedTypeGroups: const [typeGroup]);
+    final l10n = AppLocalizations.of(context);
+    final typeGroups = <XTypeGroup>[
+      XTypeGroup(
+        label: l10n.versionsCustomBuilds,
+        extensions: const ['AppImage', '7z', 'zip', 'dmg', 'tgz', 'tar', 'gz'],
+      ),
+      XTypeGroup(label: l10n.versionsCustomAllFiles),
+    ];
+    final file = await openFile(acceptedTypeGroups: typeGroups);
     if (file != null && mounted) {
       setState(() => _sourceController.text = file.path);
     }
   }
 
+  Future<void> _offerPythonPicker(String buildId) async {
+    final l10n = AppLocalizations.of(context);
+    final controller = AppScope.of(context).builds;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.versionsCustomPythonMissingTitle),
+        content: Text(l10n.versionsCustomPythonMissingMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.versionsCustomPythonSkip),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.versionsCustomPythonChoose),
+          ),
+        ],
+      ),
+    );
+    if (!(confirmed ?? false) || !mounted) {
+      return;
+    }
+
+    final pythonFile = await openFile(
+      acceptedTypeGroups: [XTypeGroup(label: l10n.versionsCustomAllFiles)],
+    );
+    if (pythonFile == null || !mounted) {
+      return;
+    }
+
+    final result = await controller.setCustomPython(
+      buildId: buildId,
+      pythonExecutable: pythonFile.path,
+    );
+    if (!mounted) {
+      return;
+    }
+    final messenger = ScaffoldMessenger.of(context);
+    result.fold(
+      (_) => messenger.showSnackBar(
+        SnackBar(content: Text(l10n.versionsCustomPythonSaved)),
+      ),
+      (error) => messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.versionsCustomPythonFailed}: $error')),
+      ),
+    );
+  }
+
   Future<void> _import() async {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).builds;
+    final tabController = DefaultTabController.of(context);
     final source = _sourceController.text.trim();
     if (source.isEmpty) {
       return;
@@ -450,6 +526,10 @@ class _CustomTabState extends State<_CustomTab> {
         messenger.showSnackBar(
           SnackBar(content: Text('${l10n.versionsCustomImported}: ${build.version}')),
         );
+        tabController.animateTo(0);
+        if (build.pythonVersion == null) {
+          unawaited(_offerPythonPicker(build.id));
+        }
       },
       (error) => messenger.showSnackBar(
         SnackBar(content: Text('${l10n.versionsCustomFailed}: $error')),
@@ -460,6 +540,15 @@ class _CustomTabState extends State<_CustomTab> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final controller = AppScope.of(context).builds;
+    final progressByBuild = controller.installProgress.watch(context);
+    InstallProgress? progress;
+    for (final entry in progressByBuild.entries) {
+      if (entry.key.startsWith('custom:')) {
+        progress = entry.value;
+        break;
+      }
+    }
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -501,6 +590,15 @@ class _CustomTabState extends State<_CustomTab> {
             ),
           ],
         ),
+        if (progress != null) ...[
+          const SizedBox(height: 16),
+          LinearProgressIndicator(value: progress.fraction),
+          const SizedBox(height: 4),
+          Text(
+            _stageLabel(l10n, progress.stage),
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+        ],
       ],
     );
   }

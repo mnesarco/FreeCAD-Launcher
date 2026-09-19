@@ -115,10 +115,10 @@ Notes:
 
 | Kind | Executable | Notes |
 |---|---|---|
-| AppImage (Linux) | `<build>/FreeCAD_*.AppImage` | Use FUSE when available, else set `APPIMAGE_EXTRACT_AND_RUN=1` (detected via `/dev/fuse`/`fusermount`) |
+| AppImage (Linux) | `<build>/FreeCAD_*.AppImage` | Use FUSE when available, else set `APPIMAGE_EXTRACT_AND_RUN=1` (detected via `/dev/fuse`/`fusermount`); Python detected via headless macro probe (D-022) |
 | Archive (Windows) | `<build>\FreeCAD.exe` (`bin\` layout respected) | extracted from `.7z` portable |
 | Archive (macOS) | `<build>/FreeCAD.app/Contents/MacOS/FreeCAD` | spawn directly to keep env; strip quarantine on install with user consent |
-| Custom | user-configured executable | env still applied |
+| Custom | user-selected executable (referenced in place) | env still applied; Python detected via headless probe (`FreeCADCmd` or `--console`) with manual fallback (D-020) |
 
 Optional explicit args: `-u <profile>/user.cfg -s <profile>/system.cfg` are passed for clarity
 even though `FREECAD_USER_HOME` already places them there.

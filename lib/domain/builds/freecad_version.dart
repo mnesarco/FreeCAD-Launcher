@@ -10,6 +10,8 @@ class FreeCadVersion implements Comparable<FreeCadVersion> {
   final int minor;
   final int patch;
 
+  static const FreeCadVersion minSupported = FreeCadVersion(1, 0);
+
   static const FreeCadVersion stableLine = FreeCadVersion(1, 1);
 
   static FreeCadVersion? tryParse(String text) {
@@ -24,7 +26,9 @@ class FreeCadVersion implements Comparable<FreeCadVersion> {
     );
   }
 
-  bool get isLegacy => compareTo(stableLine) < 0;
+  bool get isSupported => compareTo(minSupported) >= 0;
+
+  bool get isLegacy => isSupported && compareTo(stableLine) < 0;
 
   bool operator <(FreeCadVersion other) => compareTo(other) < 0;
 
@@ -108,7 +112,7 @@ class ReleaseTag {
       return ReleaseTag(raw: tag, channel: BuildChannel.weekly, weekly: weekly);
     }
     final version = FreeCadVersion.tryParse(tag);
-    if (version != null) {
+    if (version != null && version.isSupported) {
       return ReleaseTag(
         raw: tag,
         channel: version.isLegacy ? BuildChannel.legacy : BuildChannel.stable,

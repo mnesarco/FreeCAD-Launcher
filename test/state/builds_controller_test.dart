@@ -14,6 +14,7 @@ import 'package:freecad_launcher/platform/build_installer.dart';
 import 'package:freecad_launcher/platform/checksum.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
+import 'package:freecad_launcher/platform/python_probe.dart';
 import 'package:freecad_launcher/state/builds_controller.dart';
 import 'package:path/path.dart' as p;
 
@@ -51,6 +52,7 @@ class FakeInstaller implements BuildInstaller {
     executablePath: '/data/builds/x/FreeCAD',
     sizeBytes: 100,
     pythonVersion: '3.11',
+    pythonPath: '/data/builds/x/bin/python3.11',
   );
   Object? error;
 
@@ -60,7 +62,37 @@ class FakeInstaller implements BuildInstaller {
       throw error!;
     }
     requests.add(request);
+    request.onDetectingPython?.call();
     return result;
+  }
+}
+
+class FakePythonProbe implements PythonProbe {
+  final List<String> freeCadCalls = [];
+  final List<String> interpreterCalls = [];
+  PythonDetection fromFreeCadResult = const PythonDetection(reason: 'not detected');
+  PythonDetection interpreterResult = const PythonDetection(reason: 'not detected');
+
+  @override
+  Future<PythonDetection> detect({
+    required BuildKind kind,
+    required String installDirectory,
+    required String executablePath,
+    String? knownVersion,
+  }) async {
+    return const PythonDetection(reason: 'unused');
+  }
+
+  @override
+  Future<PythonDetection> detectFromFreeCad({required String executablePath}) async {
+    freeCadCalls.add(executablePath);
+    return fromFreeCadResult;
+  }
+
+  @override
+  Future<PythonDetection> detectInterpreter({required String executablePath}) async {
+    interpreterCalls.add(executablePath);
+    return interpreterResult;
   }
 }
 
@@ -102,6 +134,8 @@ void main() {
     FakeDownloadSourceWithResponses? source,
     FakeInstaller? installer,
     FakeReleasesCatalog? catalog,
+    PythonProbe? pythonProbe,
+    BuildPlatform platform = BuildPlatform.linux,
   }) {
     final downloader = Downloader(
       source: source ??
@@ -119,8 +153,9 @@ void main() {
       downloader: downloader,
       installer: installer ?? FakeInstaller(),
       paths: paths,
-      platform: BuildPlatform.linux,
+      platform: platform,
       arch: BuildArch.x86_64,
+      pythonProbe: pythonProbe,
       clock: () => DateTime.utc(2026, 9, 18),
     );
   }
@@ -351,11 +386,17 @@ void main() {
     expect((await database.buildsDao.getById('build-1'))!.status, BuildStatus.broken);
   });
 
-  test('imports a local AppImage as a custom build', () async {
+  test('imports a local AppImage without hashing when no checksum is given', () async {
     final sourceFile = File(p.join(tempDirectory.path, 'MyBuild.AppImage'))
       ..writeAsStringSync('data');
+    if (!Platform.isWindows) {
+      Process.runSync('chmod', ['755', sourceFile.path]);
+    }
     final installer = FakeInstaller();
-    final controller = buildController(installer: installer);
+    final controller = buildController(
+      installer: installer,
+      platform: Platform.isWindows ? BuildPlatform.windows : BuildPlatform.linux,
+    );
 
     final result = await controller.importCustom(
       source: sourceFile.path,
@@ -369,10 +410,122 @@ void main() {
     expect(build.version, 'My Build');
     expect(build.kind, BuildKind.appimage);
     expect(build.localPath, '/data/builds/x/FreeCAD');
-    expect(build.sha256, sha256OfBytes(utf8.encode('data')));
-    expect(build.verified, isTrue);
+    expect(build.sha256, isNull);
+    expect(build.verified, isFalse);
     expect(installer.requests, hasLength(1));
+    expect(installer.requests.single.referenceInPlace, isTrue);
     expect(await database.buildsDao.getById(build.id), isNotNull);
+  });
+
+  test('hashes and verifies a local AppImage only when a checksum is given', () async {
+    final data = utf8.encode('data');
+    final sourceFile = File(p.join(tempDirectory.path, 'MyBuild.AppImage'))
+      ..writeAsStringSync('data');
+    if (!Platform.isWindows) {
+      Process.runSync('chmod', ['755', sourceFile.path]);
+    }
+    final controller = buildController(
+      platform: Platform.isWindows ? BuildPlatform.windows : BuildPlatform.linux,
+    );
+
+    final result = await controller.importCustom(
+      source: sourceFile.path,
+      sha256: sha256OfBytes(data),
+      kind: BuildKind.appimage,
+    );
+
+    expect(result.isOk, isTrue);
+    expect(result.valueOrNull!.sha256, sha256OfBytes(data));
+    expect(result.valueOrNull!.verified, isTrue);
+  });
+
+  test('rejects a local AppImage with a wrong checksum', () async {
+    final sourceFile = File(p.join(tempDirectory.path, 'MyBuild.AppImage'))
+      ..writeAsStringSync('data');
+    if (!Platform.isWindows) {
+      Process.runSync('chmod', ['755', sourceFile.path]);
+    }
+    final controller = buildController(
+      platform: Platform.isWindows ? BuildPlatform.windows : BuildPlatform.linux,
+    );
+
+    final result = await controller.importCustom(
+      source: sourceFile.path,
+      sha256: sha256OfBytes(utf8.encode('other')),
+    );
+
+    expect(result.isErr, isTrue);
+    expect(await database.buildsDao.getAll(), isEmpty);
+  });
+
+  test('reports hashing, installing and detecting stages for a local import', () async {
+    final data = utf8.encode('data');
+    final sourceFile = File(p.join(tempDirectory.path, 'MyBuild.AppImage'))
+      ..writeAsStringSync('data');
+    if (!Platform.isWindows) {
+      Process.runSync('chmod', ['755', sourceFile.path]);
+    }
+    final probe = FakePythonProbe()
+      ..fromFreeCadResult = const PythonDetection(
+        python: BundledPython(executablePath: '/opt/python3.11', version: '3.11'),
+      );
+    final controller = buildController(
+      installer: FakeInstaller(),
+      pythonProbe: probe,
+      platform: Platform.isWindows ? BuildPlatform.windows : BuildPlatform.linux,
+    );
+    final stages = <InstallStage>[];
+    final dispose = controller.installProgress.subscribe((progressByBuild) {
+      for (final entry in progressByBuild.entries) {
+        if (entry.key.startsWith('custom:')) {
+          if (stages.isEmpty || stages.last != entry.value.stage) {
+            stages.add(entry.value.stage);
+          }
+        }
+      }
+    });
+
+    await controller.importCustom(source: sourceFile.path, sha256: sha256OfBytes(data));
+    dispose();
+
+    expect(
+      stages,
+      containsAllInOrder([
+        InstallStage.hashing,
+        InstallStage.installing,
+        InstallStage.detectingPython,
+      ]),
+    );
+  });
+
+  test('downloads a URL AppImage as a managed copy', () async {
+    final installer = FakeInstaller();
+    final controller = buildController(installer: installer);
+
+    final result = await controller.importCustom(
+      source: 'https://example.invalid/MyBuild.AppImage',
+      fileName: 'MyBuild.AppImage',
+      kind: BuildKind.appimage,
+    );
+
+    expect(result.isOk, isTrue);
+    expect(installer.requests.single.referenceInPlace, isFalse);
+  });
+
+  test('rejects a non-executable local AppImage', () async {
+    if (Platform.isWindows) {
+      return;
+    }
+    final sourceFile = File(p.join(tempDirectory.path, 'MyBuild.AppImage'))
+      ..writeAsStringSync('data');
+    Process.runSync('chmod', ['644', sourceFile.path]);
+    final controller = buildController();
+
+    final result = await controller.importCustom(source: sourceFile.path);
+
+    expect(result.isErr, isTrue);
+    expect('${result.errorOrNull}', contains('not executable'));
+    expect(await database.buildsDao.getAll(), isEmpty);
   });
 
   test('imports a URL archive with a checksum', () async {
@@ -400,8 +553,14 @@ void main() {
 
   test('registers a custom executable without installing', () async {
     final executable = File(p.join(tempDirectory.path, 'my-freecad'))..writeAsStringSync('bin');
+    if (!Platform.isWindows) {
+      Process.runSync('chmod', ['755', executable.path]);
+    }
     final installer = FakeInstaller();
-    final controller = buildController(installer: installer);
+    final controller = buildController(
+      installer: installer,
+      platform: Platform.isWindows ? BuildPlatform.windows : BuildPlatform.linux,
+    );
 
     final result = await controller.importCustom(source: executable.path);
 
@@ -410,6 +569,112 @@ void main() {
     expect(result.valueOrNull!.localPath, executable.path);
     expect(result.valueOrNull!.verified, isFalse);
     expect(installer.requests, isEmpty);
+  });
+
+  test('detects Python for a custom executable and references it in place', () async {
+    final executable = File(p.join(tempDirectory.path, 'FreeCAD'))
+      ..writeAsStringSync('bin');
+    if (!Platform.isWindows) {
+      Process.runSync('chmod', ['755', executable.path]);
+    }
+    final probe = FakePythonProbe()
+      ..fromFreeCadResult = const PythonDetection(
+        python: BundledPython(
+          executablePath: '/opt/freecad/bin/python3.11',
+          version: '3.11',
+        ),
+      );
+    final controller = buildController(
+      pythonProbe: probe,
+      platform: Platform.isWindows ? BuildPlatform.windows : BuildPlatform.linux,
+    );
+
+    final result = await controller.importCustom(source: executable.path);
+
+    expect(result.isOk, isTrue);
+    final build = result.valueOrNull!;
+    expect(build.localPath, executable.path);
+    expect(build.pythonVersion, '3.11');
+    expect(build.pythonPath, '/opt/freecad/bin/python3.11');
+    expect(probe.freeCadCalls, [executable.path]);
+    expect(Directory(p.join(paths.buildsDir, build.id)).existsSync(), isFalse);
+  });
+
+  test('rejects a custom executable without the executable bit', () async {
+    if (Platform.isWindows) {
+      return;
+    }
+    final executable = File(p.join(tempDirectory.path, 'not-executable'))
+      ..writeAsStringSync('bin');
+    Process.runSync('chmod', ['644', executable.path]);
+    final controller = buildController();
+
+    final result = await controller.importCustom(source: executable.path);
+
+    expect(result.isErr, isTrue);
+    expect('${result.errorOrNull}', contains('not executable'));
+    expect(await database.buildsDao.getAll(), isEmpty);
+  });
+
+  test('rejects a directory as a custom executable', () async {
+    final directory = Directory(p.join(tempDirectory.path, 'some-dir'))..createSync();
+    final controller = buildController();
+
+    final result = await controller.importCustom(source: directory.path);
+
+    expect(result.isErr, isTrue);
+    expect('${result.errorOrNull}', contains('Not an executable file'));
+  });
+
+  test('setCustomPython probes the interpreter and stores it', () async {
+    final executable = File(p.join(tempDirectory.path, 'FreeCAD'))
+      ..writeAsStringSync('bin');
+    if (!Platform.isWindows) {
+      Process.runSync('chmod', ['755', executable.path]);
+    }
+    final probe = FakePythonProbe();
+    final controller = buildController(
+      pythonProbe: probe,
+      platform: Platform.isWindows ? BuildPlatform.windows : BuildPlatform.linux,
+    );
+    final imported = await controller.importCustom(source: executable.path);
+    expect(imported.isOk, isTrue);
+    final build = imported.valueOrNull!;
+    expect(build.pythonVersion, isNull);
+
+    final pythonFile = File(p.join(tempDirectory.path, 'python3'))..createSync();
+    probe.interpreterResult = PythonDetection(
+      python: BundledPython(executablePath: pythonFile.path, version: '3.11'),
+    );
+    final result = await controller.setCustomPython(
+      buildId: build.id,
+      pythonExecutable: pythonFile.path,
+    );
+
+    expect(result.isOk, isTrue);
+    expect(result.valueOrNull!.pythonVersion, '3.11');
+    expect(result.valueOrNull!.pythonPath, pythonFile.path);
+    expect(probe.interpreterCalls, [pythonFile.path]);
+    expect(
+      (await database.buildsDao.getById(build.id))!.pythonPath,
+      pythonFile.path,
+    );
+  });
+
+  test('setCustomPython reports interpreter probe failures', () async {
+    await database.buildsDao.save(sampleBuild(id: 'custom:1', kind: BuildKind.custom));
+    final probe = FakePythonProbe()
+      ..interpreterResult = const PythonDetection(reason: 'not a Python interpreter');
+    final controller = buildController(pythonProbe: probe);
+
+    final result = await controller.setCustomPython(
+      buildId: 'custom:1',
+      pythonExecutable: '/bin/false',
+    );
+
+    expect(result.isErr, isTrue);
+    expect('${result.errorOrNull}', contains('not a Python interpreter'));
+    controller.dispose();
   });
 
   test('import fails for a missing local file', () async {

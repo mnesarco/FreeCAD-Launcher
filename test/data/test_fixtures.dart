@@ -8,6 +8,7 @@ final DateTime _baseTime = DateTime.utc(2026, 9, 18, 10);
 Build sampleBuild({
   String id = 'build-1',
   String version = '1.1.3',
+  BuildKind kind = BuildKind.appimage,
   BuildChannel channel = BuildChannel.stable,
   BuildPlatform platform = BuildPlatform.linux,
   String arch = 'x86_64',
@@ -16,7 +17,7 @@ Build sampleBuild({
 }) {
   return Build(
     id: id,
-    kind: BuildKind.appimage,
+    kind: kind,
     version: version,
     channel: channel,
     platform: platform,

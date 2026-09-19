@@ -202,6 +202,18 @@ abstract class AppLocalizations {
   /// **'Install'**
   String get versionsInstall;
 
+  /// No description provided for @versionsHashing.
+  ///
+  /// In en, this message translates to:
+  /// **'Hashing file…'**
+  String get versionsHashing;
+
+  /// No description provided for @versionsDetectingPython.
+  ///
+  /// In en, this message translates to:
+  /// **'Detecting Python…'**
+  String get versionsDetectingPython;
+
   /// No description provided for @versionsDownloading.
   ///
   /// In en, this message translates to:
@@ -331,7 +343,7 @@ abstract class AppLocalizations {
   /// No description provided for @versionsCustomEmptyMessage.
   ///
   /// In en, this message translates to:
-  /// **'Add a local archive or URL to install a custom FreeCAD version.'**
+  /// **'Add a local archive or URL, or select a FreeCAD executable (self-compiled or installed by other means) to reference in place.'**
   String get versionsCustomEmptyMessage;
 
   /// No description provided for @versionsCustomSource.
@@ -373,7 +385,7 @@ abstract class AppLocalizations {
   /// No description provided for @versionsCustomTrustMessage.
   ///
   /// In en, this message translates to:
-  /// **'Custom builds are not verified against the official catalog. Only import files you trust.'**
+  /// **'Custom builds are not verified against the official catalog. Executables are run once, headless, to detect their Python version. Only import files you trust.'**
   String get versionsCustomTrustMessage;
 
   /// No description provided for @versionsCustomTrustConfirm.
@@ -393,6 +405,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import failed'**
   String get versionsCustomFailed;
+
+  /// No description provided for @versionsCustomAllFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'All files'**
+  String get versionsCustomAllFiles;
+
+  /// No description provided for @versionsCustomBuilds.
+  ///
+  /// In en, this message translates to:
+  /// **'FreeCAD builds'**
+  String get versionsCustomBuilds;
+
+  /// No description provided for @versionsCustomPythonMissingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Python interpreter not detected'**
+  String get versionsCustomPythonMissingTitle;
+
+  /// No description provided for @versionsCustomPythonMissingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The build was imported, but its Python interpreter could not be detected. Addons and Python packages need it; select the interpreter this build uses, or skip for now.'**
+  String get versionsCustomPythonMissingMessage;
+
+  /// No description provided for @versionsCustomPythonChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Python…'**
+  String get versionsCustomPythonChoose;
+
+  /// No description provided for @versionsCustomPythonSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get versionsCustomPythonSkip;
+
+  /// No description provided for @versionsCustomPythonSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Python interpreter saved'**
+  String get versionsCustomPythonSaved;
+
+  /// No description provided for @versionsCustomPythonFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not use that Python'**
+  String get versionsCustomPythonFailed;
 
   /// No description provided for @versionsPython.
   ///

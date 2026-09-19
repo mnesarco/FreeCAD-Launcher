@@ -132,6 +132,17 @@ class $BuildsTable extends Builds with TableInfo<$BuildsTable, Build> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _pythonPathMeta = const VerificationMeta(
+    'pythonPath',
+  );
+  @override
+  late final GeneratedColumn<String> pythonPath = GeneratedColumn<String>(
+    'python_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _sizeBytesMeta = const VerificationMeta(
     'sizeBytes',
   );
@@ -199,6 +210,7 @@ class $BuildsTable extends Builds with TableInfo<$BuildsTable, Build> {
     sha256,
     verified,
     pythonVersion,
+    pythonPath,
     sizeBytes,
     status,
     releaseNotesUrl,
@@ -277,6 +289,12 @@ class $BuildsTable extends Builds with TableInfo<$BuildsTable, Build> {
           data['python_version']!,
           _pythonVersionMeta,
         ),
+      );
+    }
+    if (data.containsKey('python_path')) {
+      context.handle(
+        _pythonPathMeta,
+        pythonPath.isAcceptableOrUnknown(data['python_path']!, _pythonPathMeta),
       );
     }
     if (data.containsKey('size_bytes')) {
@@ -380,6 +398,10 @@ class $BuildsTable extends Builds with TableInfo<$BuildsTable, Build> {
         DriftSqlType.string,
         data['${effectivePrefix}python_version'],
       ),
+      pythonPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}python_path'],
+      ),
       sizeBytes: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}size_bytes'],
@@ -433,6 +455,7 @@ class Build extends DataClass implements Insertable<Build> {
   final String? sha256;
   final bool verified;
   final String? pythonVersion;
+  final String? pythonPath;
   final int? sizeBytes;
   final BuildStatus status;
   final String? releaseNotesUrl;
@@ -451,6 +474,7 @@ class Build extends DataClass implements Insertable<Build> {
     this.sha256,
     required this.verified,
     this.pythonVersion,
+    this.pythonPath,
     this.sizeBytes,
     required this.status,
     this.releaseNotesUrl,
@@ -490,6 +514,9 @@ class Build extends DataClass implements Insertable<Build> {
     if (!nullToAbsent || pythonVersion != null) {
       map['python_version'] = Variable<String>(pythonVersion);
     }
+    if (!nullToAbsent || pythonPath != null) {
+      map['python_path'] = Variable<String>(pythonPath);
+    }
     if (!nullToAbsent || sizeBytes != null) {
       map['size_bytes'] = Variable<int>(sizeBytes);
     }
@@ -528,6 +555,9 @@ class Build extends DataClass implements Insertable<Build> {
       pythonVersion: pythonVersion == null && nullToAbsent
           ? const Value.absent()
           : Value(pythonVersion),
+      pythonPath: pythonPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pythonPath),
       sizeBytes: sizeBytes == null && nullToAbsent
           ? const Value.absent()
           : Value(sizeBytes),
@@ -564,6 +594,7 @@ class Build extends DataClass implements Insertable<Build> {
       sha256: serializer.fromJson<String?>(json['sha256']),
       verified: serializer.fromJson<bool>(json['verified']),
       pythonVersion: serializer.fromJson<String?>(json['pythonVersion']),
+      pythonPath: serializer.fromJson<String?>(json['pythonPath']),
       sizeBytes: serializer.fromJson<int?>(json['sizeBytes']),
       status: $BuildsTable.$converterstatus.fromJson(
         serializer.fromJson<String>(json['status']),
@@ -595,6 +626,7 @@ class Build extends DataClass implements Insertable<Build> {
       'sha256': serializer.toJson<String?>(sha256),
       'verified': serializer.toJson<bool>(verified),
       'pythonVersion': serializer.toJson<String?>(pythonVersion),
+      'pythonPath': serializer.toJson<String?>(pythonPath),
       'sizeBytes': serializer.toJson<int?>(sizeBytes),
       'status': serializer.toJson<String>(
         $BuildsTable.$converterstatus.toJson(status),
@@ -618,6 +650,7 @@ class Build extends DataClass implements Insertable<Build> {
     Value<String?> sha256 = const Value.absent(),
     bool? verified,
     Value<String?> pythonVersion = const Value.absent(),
+    Value<String?> pythonPath = const Value.absent(),
     Value<int?> sizeBytes = const Value.absent(),
     BuildStatus? status,
     Value<String?> releaseNotesUrl = const Value.absent(),
@@ -638,6 +671,7 @@ class Build extends DataClass implements Insertable<Build> {
     pythonVersion: pythonVersion.present
         ? pythonVersion.value
         : this.pythonVersion,
+    pythonPath: pythonPath.present ? pythonPath.value : this.pythonPath,
     sizeBytes: sizeBytes.present ? sizeBytes.value : this.sizeBytes,
     status: status ?? this.status,
     releaseNotesUrl: releaseNotesUrl.present
@@ -662,6 +696,9 @@ class Build extends DataClass implements Insertable<Build> {
       pythonVersion: data.pythonVersion.present
           ? data.pythonVersion.value
           : this.pythonVersion,
+      pythonPath: data.pythonPath.present
+          ? data.pythonPath.value
+          : this.pythonPath,
       sizeBytes: data.sizeBytes.present ? data.sizeBytes.value : this.sizeBytes,
       status: data.status.present ? data.status.value : this.status,
       releaseNotesUrl: data.releaseNotesUrl.present
@@ -689,6 +726,7 @@ class Build extends DataClass implements Insertable<Build> {
           ..write('sha256: $sha256, ')
           ..write('verified: $verified, ')
           ..write('pythonVersion: $pythonVersion, ')
+          ..write('pythonPath: $pythonPath, ')
           ..write('sizeBytes: $sizeBytes, ')
           ..write('status: $status, ')
           ..write('releaseNotesUrl: $releaseNotesUrl, ')
@@ -712,6 +750,7 @@ class Build extends DataClass implements Insertable<Build> {
     sha256,
     verified,
     pythonVersion,
+    pythonPath,
     sizeBytes,
     status,
     releaseNotesUrl,
@@ -734,6 +773,7 @@ class Build extends DataClass implements Insertable<Build> {
           other.sha256 == this.sha256 &&
           other.verified == this.verified &&
           other.pythonVersion == this.pythonVersion &&
+          other.pythonPath == this.pythonPath &&
           other.sizeBytes == this.sizeBytes &&
           other.status == this.status &&
           other.releaseNotesUrl == this.releaseNotesUrl &&
@@ -754,6 +794,7 @@ class BuildsCompanion extends UpdateCompanion<Build> {
   final Value<String?> sha256;
   final Value<bool> verified;
   final Value<String?> pythonVersion;
+  final Value<String?> pythonPath;
   final Value<int?> sizeBytes;
   final Value<BuildStatus> status;
   final Value<String?> releaseNotesUrl;
@@ -773,6 +814,7 @@ class BuildsCompanion extends UpdateCompanion<Build> {
     this.sha256 = const Value.absent(),
     this.verified = const Value.absent(),
     this.pythonVersion = const Value.absent(),
+    this.pythonPath = const Value.absent(),
     this.sizeBytes = const Value.absent(),
     this.status = const Value.absent(),
     this.releaseNotesUrl = const Value.absent(),
@@ -793,6 +835,7 @@ class BuildsCompanion extends UpdateCompanion<Build> {
     this.sha256 = const Value.absent(),
     this.verified = const Value.absent(),
     this.pythonVersion = const Value.absent(),
+    this.pythonPath = const Value.absent(),
     this.sizeBytes = const Value.absent(),
     required BuildStatus status,
     this.releaseNotesUrl = const Value.absent(),
@@ -822,6 +865,7 @@ class BuildsCompanion extends UpdateCompanion<Build> {
     Expression<String>? sha256,
     Expression<bool>? verified,
     Expression<String>? pythonVersion,
+    Expression<String>? pythonPath,
     Expression<int>? sizeBytes,
     Expression<String>? status,
     Expression<String>? releaseNotesUrl,
@@ -842,6 +886,7 @@ class BuildsCompanion extends UpdateCompanion<Build> {
       if (sha256 != null) 'sha256': sha256,
       if (verified != null) 'verified': verified,
       if (pythonVersion != null) 'python_version': pythonVersion,
+      if (pythonPath != null) 'python_path': pythonPath,
       if (sizeBytes != null) 'size_bytes': sizeBytes,
       if (status != null) 'status': status,
       if (releaseNotesUrl != null) 'release_notes_url': releaseNotesUrl,
@@ -864,6 +909,7 @@ class BuildsCompanion extends UpdateCompanion<Build> {
     Value<String?>? sha256,
     Value<bool>? verified,
     Value<String?>? pythonVersion,
+    Value<String?>? pythonPath,
     Value<int?>? sizeBytes,
     Value<BuildStatus>? status,
     Value<String?>? releaseNotesUrl,
@@ -884,6 +930,7 @@ class BuildsCompanion extends UpdateCompanion<Build> {
       sha256: sha256 ?? this.sha256,
       verified: verified ?? this.verified,
       pythonVersion: pythonVersion ?? this.pythonVersion,
+      pythonPath: pythonPath ?? this.pythonPath,
       sizeBytes: sizeBytes ?? this.sizeBytes,
       status: status ?? this.status,
       releaseNotesUrl: releaseNotesUrl ?? this.releaseNotesUrl,
@@ -938,6 +985,9 @@ class BuildsCompanion extends UpdateCompanion<Build> {
     if (pythonVersion.present) {
       map['python_version'] = Variable<String>(pythonVersion.value);
     }
+    if (pythonPath.present) {
+      map['python_path'] = Variable<String>(pythonPath.value);
+    }
     if (sizeBytes.present) {
       map['size_bytes'] = Variable<int>(sizeBytes.value);
     }
@@ -976,6 +1026,7 @@ class BuildsCompanion extends UpdateCompanion<Build> {
           ..write('sha256: $sha256, ')
           ..write('verified: $verified, ')
           ..write('pythonVersion: $pythonVersion, ')
+          ..write('pythonPath: $pythonPath, ')
           ..write('sizeBytes: $sizeBytes, ')
           ..write('status: $status, ')
           ..write('releaseNotesUrl: $releaseNotesUrl, ')
@@ -4619,6 +4670,7 @@ typedef $$BuildsTableCreateCompanionBuilder =
       Value<String?> sha256,
       Value<bool> verified,
       Value<String?> pythonVersion,
+      Value<String?> pythonPath,
       Value<int?> sizeBytes,
       required BuildStatus status,
       Value<String?> releaseNotesUrl,
@@ -4640,6 +4692,7 @@ typedef $$BuildsTableUpdateCompanionBuilder =
       Value<String?> sha256,
       Value<bool> verified,
       Value<String?> pythonVersion,
+      Value<String?> pythonPath,
       Value<int?> sizeBytes,
       Value<BuildStatus> status,
       Value<String?> releaseNotesUrl,
@@ -4741,6 +4794,11 @@ class $$BuildsTableFilterComposer
 
   ColumnFilters<String> get pythonVersion => $composableBuilder(
     column: $table.pythonVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pythonPath => $composableBuilder(
+    column: $table.pythonPath,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4865,6 +4923,11 @@ class $$BuildsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get pythonPath => $composableBuilder(
+    column: $table.pythonPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get sizeBytes => $composableBuilder(
     column: $table.sizeBytes,
     builder: (column) => ColumnOrderings(column),
@@ -4935,6 +4998,11 @@ class $$BuildsTableAnnotationComposer
 
   GeneratedColumn<String> get pythonVersion => $composableBuilder(
     column: $table.pythonVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get pythonPath => $composableBuilder(
+    column: $table.pythonPath,
     builder: (column) => column,
   );
 
@@ -5023,6 +5091,7 @@ class $$BuildsTableTableManager
                 Value<String?> sha256 = const Value.absent(),
                 Value<bool> verified = const Value.absent(),
                 Value<String?> pythonVersion = const Value.absent(),
+                Value<String?> pythonPath = const Value.absent(),
                 Value<int?> sizeBytes = const Value.absent(),
                 Value<BuildStatus> status = const Value.absent(),
                 Value<String?> releaseNotesUrl = const Value.absent(),
@@ -5042,6 +5111,7 @@ class $$BuildsTableTableManager
                 sha256: sha256,
                 verified: verified,
                 pythonVersion: pythonVersion,
+                pythonPath: pythonPath,
                 sizeBytes: sizeBytes,
                 status: status,
                 releaseNotesUrl: releaseNotesUrl,
@@ -5063,6 +5133,7 @@ class $$BuildsTableTableManager
                 Value<String?> sha256 = const Value.absent(),
                 Value<bool> verified = const Value.absent(),
                 Value<String?> pythonVersion = const Value.absent(),
+                Value<String?> pythonPath = const Value.absent(),
                 Value<int?> sizeBytes = const Value.absent(),
                 required BuildStatus status,
                 Value<String?> releaseNotesUrl = const Value.absent(),
@@ -5082,6 +5153,7 @@ class $$BuildsTableTableManager
                 sha256: sha256,
                 verified: verified,
                 pythonVersion: pythonVersion,
+                pythonPath: pythonPath,
                 sizeBytes: sizeBytes,
                 status: status,
                 releaseNotesUrl: releaseNotesUrl,

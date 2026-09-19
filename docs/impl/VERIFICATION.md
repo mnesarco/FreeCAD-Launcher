@@ -43,6 +43,15 @@ Rules:
 - [ ] Corrupted/mismatched SHA-256 is rejected and leaves no partial files
 - [ ] Offline mode shows stale cached catalog with a warning; no crash
 - [ ] Custom build import works for a local file (each OS) and a URL
+- [ ] Custom executable import references the binary in place, rejects
+      missing/non-executable files, and blocks non-executable picks (D-020)
+- [ ] Custom executable Python is detected via the headless probe or the manual
+      interpreter picker fallback (D-020)
+- [ ] AppImage Python is detected without extraction via the headless macro probe (D-022)
+- [ ] A local custom AppImage is symlinked into `builds/<id>/` (no duplicate bytes) and removing
+      it leaves the original file intact (D-023)
+- [ ] Importing a local file without a checksum performs no hashing; when a checksum is given,
+      the UI shows the hashing stage/progress, then installing and detecting Python (D-024)
 - [ ] Deleting a build used by a profile is blocked; unused build delete removes files
 - [ ] Removing a build directory externally flips status to `missing` on restart
 
@@ -50,6 +59,8 @@ Manual real-data test (Linux, network required, skipped by default):
 
 ```sh
 FCL_REAL_INSTALL=1 flutter test test/manual/real_install_linux_test.dart
+FCL_REAL_PROBE=1 flutter test test/manual/real_python_probe_test.dart
+# override the probed binary: FCL_PROBE_BINARY=/path/to/FreeCAD
 ```
 
 Windows equivalent (once a Windows machine/CI is available): run `7zr.exe` from

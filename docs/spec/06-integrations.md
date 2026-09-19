@@ -12,8 +12,10 @@ All facts below were verified against live GitHub APIs and the FreeCAD source as
 | Latest stable | `GET https://api.github.com/repos/FreeCAD/FreeCAD/releases/latest` |
 | All releases (paged) | `GET https://api.github.com/repos/FreeCAD/FreeCAD/releases?per_page=100&page=N` |
 | Single tag | `GET https://api.github.com/repos/FreeCAD/FreeCAD/releases/tags/<tag>` |
-| Legacy full bundles | `GET https://api.github.com/repos/FreeCAD/FreeCAD-Bundle/releases` (archived repo) |
 | Asset download | `https://github.com/FreeCAD/FreeCAD/releases/download/<tag>/<asset>` |
+
+Pre-1.0 releases (0.19–0.21) and the archived `FreeCAD/FreeCAD-Bundle` repo are ignored
+(D-021).
 
 Implementation uses conditional requests (`If-None-Match`) and caches the payload. Note:
 unauthenticated 304 responses still consume a small amount of rate limit; avoid polling.
@@ -33,10 +35,10 @@ Asset names have evolved. Classification must use regex over exact names, not as
 
 | Channel | Tag pattern | Pre-release flag | Assets |
 |---|---|---|---|
-| `stable` | semver `X.Y.Z` | false | see below |
+| `stable` | semver `X.Y.Z` >= 1.0 | false | see below |
 | `weekly` | `weekly-YYYY.MM.DD` | true | `FreeCAD_weekly-...` |
 | `weekly` rolling | `weeklies` | true | Linux only |
-| `legacy` | `0.XX.Y` and `1.0.x` | false | varies, see gaps |
+| `legacy` | `1.0.x` | false | 1.0 conda-era names |
 
 Asset patterns (current era, 1.1.x):
 
@@ -44,18 +46,15 @@ Asset patterns (current era, 1.1.x):
 - Windows: `FreeCAD_<ver>-Windows-x86_64-py<py>.7z` (portable) and `...-installer.exe` (ignored)
 - macOS: `FreeCAD_<ver>-macOS-(arm64|x86_64)-py<py>.dmg`
 
-Older naming (must still parse for `legacy`):
+Older naming (still parsed for `legacy` = 1.0.x):
 
 - 1.0.x: `FreeCAD_1.0.2-conda-Linux-x86_64-py311.AppImage`, `...-conda-Windows-x86_64-py311.7z`,
   `...-conda-Windows-x86_64-installer-1.exe`, `...-conda-macOS-arm64-py311.dmg`
-- 0.21.2: `FreeCAD-0.21.2-Linux-x86_64.AppImage`, `FreeCAD-0.21.2-Windows_x86_64.7z`,
-  `FreeCAD-0.21.2-macOS-{arm64,intel-x86_64}.dmg`
-- 0.20.x: `FreeCAD-0.20.0-Linux-x86_64.AppImage`, `FreeCAD-0.20.0-WIN-x64-portable-1.zip`,
-  `FreeCAD-0.20.0-macOS-x86_64.dmg`
-- 0.19.x: full bundles also on `FreeCAD/FreeCAD-Bundle` releases (e.g. tag `0.19`)
 
-Known gaps: 0.19.4 has no Linux/macOS binaries on either repo; the catalog must hide
-unsupported combinations rather than link to 404s.
+Pre-1.0 releases (0.19–0.21, e.g. `FreeCAD-0.21.2-Linux-x86_64.AppImage`) are ignored by the
+classifier (D-021); their fixtures remain as regression cases. Known gaps no longer apply to
+supported lines: assets are hidden rather than linked when a platform/arch combination is
+missing.
 
 Weekly notes:
 
@@ -80,7 +79,7 @@ Weekly notes:
 
 ### 1.5 Version ordering
 
-- Stable/legacy: semver compare (`1.1.3 > 1.1.2 > 1.0.2 > 0.21.2`).
+- Stable/legacy: semver compare (`1.1.3 > 1.1.2 > 1.0.2`); pre-1.0 tags are ignored (D-021).
 - Weekly: compare tag dates (`weekly-2026.09.16`), all weeklies sort above any stable only
   within the weekly channel; channels are never mixed in one update suggestion.
 - Build identity = `(channel, version, platform, arch)`; two builds of the same version from
@@ -137,11 +136,11 @@ launcher when one exists, e.g. macOS `Contents/MacOS/FreeCAD` sets its own env).
     --disable-pip-version-check --no-warn-script-location
 ```
 
-- `targetDir`: `<profile>/AdditionalPythonPackages/py<major><minor>` for FreeCAD 0.21+,
-  `<profile>/AdditionalPythonPackages` for 0.20 and older. The Python version is reported by
-  the interpreter (`sys.version_info`), never guessed.
-- FreeCAD appends `AdditionalPythonPackages[/pyXY]` to `sys.path` at startup (last), so
-  bundled modules win name clashes — warn users in that case.
+- `targetDir`: `<profile>/AdditionalPythonPackages/py<major><minor>` (FreeCAD 1.0+ always uses
+  the versioned dir; pre-1.0 is unsupported, D-021). The Python version is reported by the
+  interpreter (`sys.version_info`), never guessed.
+- FreeCAD appends `AdditionalPythonPackages/pyXY` to `sys.path` at startup (last), so bundled
+  modules win name clashes — warn users in that case.
 - `PYTHONPATH`/`PYTHONHOME` are ignored by FreeCAD 1.0+ (isolated `PyConfig`), which is why
   the `--target` + `AdditionalPythonPackages` mechanism is used instead of env manipulation.
 - Pip output is streamed to a job log; a spinner plus "resolving…" state is shown because pip

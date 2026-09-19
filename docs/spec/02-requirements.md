@@ -11,15 +11,21 @@ Priority tags: **[v0.1]** MVP, **[v0.2]** next, **[v1.0]** before public stable 
 - FR-1.2 **[v0.1]** Installing a build downloads it, verifies SHA-256 against the
   `-SHA256.txt` sidecar (when present), extracts if needed, and records it atomically.
 - FR-1.3 **[v0.1]** Supported formats: Linux AppImage, Windows portable `.7z`, macOS `.dmg`
-  (`.app` extracted), and user-supplied local files/URLs.
+  (`.app` extracted), and user-supplied local files/URLs. A local FreeCAD executable may also be
+  referenced in place (self-compiled or installed by other methods), Linux-first.
 - FR-1.4 **[v0.1]** Installed builds are listed with disk usage, status (`installed`, `missing`,
   `broken`), and which profiles use them.
 - FR-1.5 **[v0.1]** Deleting a build is blocked while visible profiles reference it; unused
   builds can be deleted with their files.
 - FR-1.6 **[v0.1]** User-supplied builds: pick a file or paste a URL, optionally provide a
-  version label and checksum; trust confirmation is required.
+  version label and checksum; trust confirmation is required. Selecting an executable references
+  it in place (never copied or deleted by the launcher), and a local AppImage is symlinked into
+  the builds directory rather than duplicated. Hashing runs only when a checksum is provided and
+  progress is shown; its Python version is detected best-effort with a manual interpreter picker
+  as fallback.
 - FR-1.7 **[v0.2]** Weekly/pre-release channel (`weekly-YYYY.MM.DD` and rolling `weeklies`) and
-  older stable versions (0.20/0.21/1.0/1.1 series, with legacy `FreeCAD-Bundle` fallback).
+  older supported stable lines (currently 1.0.x as `legacy`). Releases older than 1.0 are
+  ignored (D-021).
 - FR-1.8 **[v0.2]** "Check for updates" marks installed stable/weekly builds with a newer
   release; user confirms an in-place update that keeps profiles intact.
 - FR-1.9 **[v0.2]** Each build reports its bundled Python version, detected once on install.

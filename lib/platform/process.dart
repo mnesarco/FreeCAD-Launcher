@@ -49,6 +49,8 @@ abstract interface class ProcessHandle {
 
   Future<int> get exitCode;
 
+  Future<void> closeStdin();
+
   bool kill([ProcessSignal signal = ProcessSignal.sigterm]);
 }
 
@@ -88,6 +90,15 @@ class IoProcessHandle implements ProcessHandle {
   Future<int> get exitCode => _process.exitCode;
 
   @override
+  Future<void> closeStdin() async {
+    try {
+      await _process.stdin.close();
+    } on Object {
+      // The process may have exited already; EOF is best-effort.
+    }
+  }
+
+  @override
   bool kill([ProcessSignal signal = ProcessSignal.sigterm]) {
     if (Platform.isWindows) {
       unawaited(_killTreeWindows());
@@ -125,6 +136,9 @@ class ProcessRunner {
     void Function(String line)? onStderr,
   }) async {
     final handle = await _launcher.start(spec);
+    // Some tools (e.g. FreeCAD) fall back to an interactive prompt when stdin
+    // stays open; `run` is non-interactive, so give the child EOF.
+    await handle.closeStdin();
     final stdoutBuffer = StringBuffer();
     final stderrBuffer = StringBuffer();
 

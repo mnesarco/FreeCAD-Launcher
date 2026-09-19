@@ -57,7 +57,7 @@ Execution tracking (tasks, status, decisions) lives in [`../impl/`](../impl/READ
 | Term | Meaning |
 |---|---|
 | **Build** | One installed FreeCAD binary bundle: an AppImage, an extracted portable archive, or a user-supplied executable. Identified by version + channel + platform + arch. |
-| **Channel** | Where a build comes from: `stable`, `weekly`, `legacy` (old stable tags), or `custom`. |
+| **Channel** | Where a build comes from: `stable`, `weekly`, `legacy` (older supported 1.x stable lines, e.g. 1.0.x), or `custom`. |
 | **Profile** | An isolated FreeCAD environment: its own user data, config, macros, addons, and Python packages, bound to one build. |
 | **Shared build** | The FreeCAD binary is installed once and reused by any number of profiles; isolation happens through environment variables at launch. |
 | **Addon** | A workbench/macro/preference pack/bundle from the official FreeCAD addon catalog. |

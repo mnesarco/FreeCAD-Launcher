@@ -65,6 +65,18 @@ void main() {
     expect(result.isSuccess, isFalse);
   });
 
+  test('closes stdin so child tools do not wait for input', () async {
+    final future = runner.run(
+      const ProcessSpec(executable: 'freecad', arguments: ['--console']),
+    );
+    await pumpEventQueue();
+
+    final handle = fake.handles.single;
+    expect(handle.stdinClosed, isTrue);
+    handle.exit(0);
+    await future;
+  });
+
   test('kills the process and throws on timeout', () async {
     final future = runner.run(
       const ProcessSpec(executable: 'pip'),

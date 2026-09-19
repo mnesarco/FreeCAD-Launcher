@@ -27,6 +27,8 @@ class Builds extends Table {
 
   TextColumn get pythonVersion => text().nullable()();
 
+  TextColumn get pythonPath => text().nullable()();
+
   IntColumn get sizeBytes => integer().nullable()();
 
   TextColumn get status => textEnum<BuildStatus>()();

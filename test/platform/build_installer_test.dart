@@ -26,6 +26,16 @@ class FakePythonProbe implements PythonProbe {
     calls.add((kind: kind, directory: installDirectory, knownVersion: knownVersion));
     return result;
   }
+
+  @override
+  Future<PythonDetection> detectFromFreeCad({required String executablePath}) async {
+    return result;
+  }
+
+  @override
+  Future<PythonDetection> detectInterpreter({required String executablePath}) async {
+    return result;
+  }
 }
 
 class FakeArchiveExtractor implements ArchiveExtractor {
@@ -108,6 +118,55 @@ void main() {
     expect(launcher.specs.single.arguments.first, '755');
     expect(launcher.specs.single.arguments.last, endsWith(p.join('b1.part', 'FreeCAD.AppImage')));
     expect(Directory('${paths.buildDir('b1')}.part').existsSync(), isFalse);
+  });
+
+  test('notifies before probing Python', () async {
+    final source = await writeArchive('MyBuild.AppImage', [1]);
+    final probe = FakePythonProbe();
+    var notified = false;
+    final installer = BuildInstaller(
+      paths: paths,
+      processRunner: ProcessRunner(launcher: launcher),
+      pythonProbe: probe,
+    );
+
+    await installer.install(
+      InstallRequest(
+        buildId: 'b1',
+        kind: BuildKind.appimage,
+        archivePath: source.path,
+        assetName: 'MyBuild.AppImage',
+        referenceInPlace: true,
+        onDetectingPython: () => notified = true,
+      ),
+    );
+
+    expect(notified, isTrue);
+  });
+
+  test('symlinks a referenced AppImage instead of copying it', () async {
+    final source = await writeArchive('MyBuild.AppImage', [1, 2, 3, 4]);
+    final installer = BuildInstaller(
+      paths: paths,
+      processRunner: ProcessRunner(launcher: launcher),
+    );
+
+    final installed = await installer.install(
+      InstallRequest(
+        buildId: 'b1',
+        kind: BuildKind.appimage,
+        archivePath: source.path,
+        assetName: 'MyBuild.AppImage',
+        referenceInPlace: true,
+      ),
+    );
+
+    final link = Link(installed.executablePath);
+    expect(link.existsSync(), isTrue);
+    expect(link.targetSync(), source.path);
+    expect(File(installed.executablePath).readAsBytesSync(), [1, 2, 3, 4]);
+    expect(installed.sizeBytes, 4);
+    expect(launcher.specs, isEmpty);
   });
 
   test('cleans up when marking the AppImage executable fails', () async {

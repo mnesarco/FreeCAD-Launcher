@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:path/path.dart' as p;
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:uuid/uuid.dart';
@@ -16,6 +17,7 @@ import 'package:freecad_launcher/platform/build_installer.dart';
 import 'package:freecad_launcher/platform/checksum.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
+import 'package:freecad_launcher/platform/python_probe.dart';
 
 class CustomImportException implements Exception {
   const CustomImportException(this.message);
@@ -26,7 +28,7 @@ class CustomImportException implements Exception {
   String toString() => message;
 }
 
-enum InstallStage { downloading, verifying, installing }
+enum InstallStage { hashing, downloading, installing, detectingPython }
 
 class InstallProgress {
   const InstallProgress({required this.stage, this.fraction});
@@ -44,6 +46,7 @@ class BuildsController {
     required AppPaths paths,
     required BuildPlatform platform,
     required String arch,
+    PythonProbe? pythonProbe,
     DateTime Function()? clock,
   }) : _database = database,
        _catalog = catalog,
@@ -52,6 +55,7 @@ class BuildsController {
        _paths = paths,
        _platform = platform,
        _arch = arch,
+       _pythonProbe = pythonProbe,
        _clock = clock ?? DateTime.now;
 
   final AppDatabase _database;
@@ -61,6 +65,7 @@ class BuildsController {
   final AppPaths _paths;
   final BuildPlatform _platform;
   final String _arch;
+  final PythonProbe? _pythonProbe;
   final DateTime Function() _clock;
 
   final installedBuilds = signal<List<Build>>([]);
@@ -206,6 +211,10 @@ class BuildsController {
           archivePath: download.path,
           assetName: candidate.assetName,
           pythonVersionHint: candidate.pythonVersion,
+          onDetectingPython: () => _setProgress(
+            buildId,
+            const InstallProgress(stage: InstallStage.detectingPython),
+          ),
         ),
       );
 
@@ -223,6 +232,7 @@ class BuildsController {
         sha256: download.sha256,
         verified: expected != null,
         pythonVersion: installed.pythonVersion,
+        pythonPath: installed.pythonPath,
         sizeBytes: installed.sizeBytes,
         status: BuildStatus.installed,
         releaseNotesUrl: candidate.releaseNotesUrl,
@@ -288,7 +298,9 @@ class BuildsController {
     final buildId = 'custom:${const Uuid().v4()}';
     final token = CancellationToken();
     _tokens[buildId] = token;
-    _setProgress(buildId, const InstallProgress(stage: InstallStage.downloading, fraction: 0));
+    if (isUrl) {
+      _setProgress(buildId, const InstallProgress(stage: InstallStage.downloading, fraction: 0));
+    }
 
     try {
       var effectiveSha = sha256?.trim().toLowerCase();
@@ -299,6 +311,7 @@ class BuildsController {
       final String executablePath;
       final int sizeBytes;
       String? pythonVersion;
+      String? pythonPath;
       final String assetName = fileName ??
           (isUrl ? Uri.parse(trimmed).path.split('/').last : p.basename(trimmed));
 
@@ -308,19 +321,25 @@ class BuildsController {
             'A custom executable must be a local file, not a URL',
           );
         }
-        final file = File(trimmed);
-        if (!file.existsSync()) {
-          throw CustomImportException('File not found: $trimmed');
-        }
-        if (effectiveSha != null && await sha256File(file.path) != effectiveSha) {
-          throw const ChecksumMismatchException(
-            expected: 'the provided checksum',
-            actual: 'the file content',
-          );
+        final file = _validatedExecutable(trimmed);
+        if (effectiveSha != null) {
+          final actual = await _hashWithProgress(buildId, file.path);
+          if (actual != effectiveSha) {
+            throw ChecksumMismatchException(expected: effectiveSha, actual: actual);
+          }
         }
         executablePath = file.path;
         sizeBytes = await file.length();
+        if (_pythonProbe != null) {
+          _setProgress(buildId, const InstallProgress(stage: InstallStage.detectingPython));
+        }
+        final detection = await _pythonProbe?.detectFromFreeCad(
+          executablePath: file.path,
+        );
+        pythonVersion = detection?.detectedVersion;
+        pythonPath = detection?.python?.executablePath;
       } else {
+        var referenceInPlace = false;
         String archivePath;
         if (isUrl) {
           final download = await _downloader.download(
@@ -332,16 +351,22 @@ class BuildsController {
           archivePath = download.path;
           effectiveSha = download.sha256;
         } else {
-          final file = File(trimmed);
-          if (!file.existsSync()) {
+          final type = FileSystemEntity.typeSync(trimmed);
+          if (type == FileSystemEntityType.notFound) {
             throw CustomImportException('File not found: $trimmed');
           }
-          archivePath = file.path;
-          final actual = await sha256File(file.path);
-          if (effectiveSha != null && actual != effectiveSha) {
-            throw ChecksumMismatchException(expected: effectiveSha, actual: actual);
+          if (resolvedKind == BuildKind.appimage) {
+            referenceInPlace = true;
+            archivePath = _validatedExecutable(trimmed).path;
+          } else {
+            archivePath = File(trimmed).path;
           }
-          effectiveSha ??= actual;
+          if (effectiveSha != null) {
+            final actual = await _hashWithProgress(buildId, archivePath);
+            if (actual != effectiveSha) {
+              throw ChecksumMismatchException(expected: effectiveSha, actual: actual);
+            }
+          }
         }
 
         _setProgress(buildId, const InstallProgress(stage: InstallStage.installing));
@@ -352,11 +377,17 @@ class BuildsController {
             archivePath: archivePath,
             assetName: assetName,
             pythonVersionHint: null,
+            referenceInPlace: referenceInPlace,
+            onDetectingPython: () => _setProgress(
+              buildId,
+              const InstallProgress(stage: InstallStage.detectingPython),
+            ),
           ),
         );
         executablePath = installed.executablePath;
         sizeBytes = installed.sizeBytes;
         pythonVersion = installed.pythonVersion;
+        pythonPath = installed.pythonPath;
       }
 
       final label = (versionLabel != null && versionLabel.trim().isNotEmpty)
@@ -376,6 +407,7 @@ class BuildsController {
         sha256: effectiveSha,
         verified: effectiveSha != null,
         pythonVersion: pythonVersion,
+        pythonPath: pythonPath,
         sizeBytes: sizeBytes,
         status: BuildStatus.installed,
         releaseNotesUrl: null,
@@ -412,6 +444,73 @@ class BuildsController {
     return BuildKind.custom;
   }
 
+  Future<Result<Build>> setCustomPython({
+    required String buildId,
+    required String pythonExecutable,
+  }) async {
+    final build = await _database.buildsDao.getById(buildId);
+    if (build == null) {
+      return const Err(AppError(message: 'Build not found'));
+    }
+
+    final probe = _pythonProbe;
+    if (probe == null) {
+      return const Err(AppError(message: 'Python detection is unavailable'));
+    }
+
+    final trimmed = pythonExecutable.trim();
+    if (trimmed.isEmpty) {
+      return const Err(AppError(message: 'Select a Python executable'));
+    }
+    final type = FileSystemEntity.typeSync(trimmed);
+    if (type == FileSystemEntityType.notFound) {
+      return Err(AppError(message: 'File not found: $trimmed'));
+    }
+    if (type != FileSystemEntityType.file) {
+      return Err(AppError(message: 'Not a file: $trimmed'));
+    }
+
+    final detection = await probe.detectInterpreter(executablePath: trimmed);
+    final python = detection.python;
+    if (python == null) {
+      return Err(AppError(message: detection.reason ?? 'Not a Python interpreter: $trimmed'));
+    }
+
+    final updated = build.copyWith(
+      pythonVersion: Value(python.version),
+      pythonPath: Value(python.executablePath),
+      updatedAt: _clock(),
+    );
+    await _database.buildsDao.save(updated);
+    return Ok(updated);
+  }
+
+  File _validatedExecutable(String path) {
+    final type = FileSystemEntity.typeSync(path);
+    if (type == FileSystemEntityType.notFound) {
+      throw CustomImportException('File not found: $path');
+    }
+    if (type != FileSystemEntityType.file) {
+      throw CustomImportException('Not an executable file: $path');
+    }
+
+    final file = File(path);
+    if (_platform != BuildPlatform.windows && !_hasExecutableBit(file)) {
+      throw CustomImportException('File is not executable: $path');
+    }
+    return file;
+  }
+
+  static const int _executableBits = 0x49;
+
+  bool _hasExecutableBit(File file) {
+    try {
+      return file.statSync().mode & _executableBits != 0;
+    } on FileSystemException {
+      return false;
+    }
+  }
+
   void clearInstallError(String buildId) {
     installErrors.value = {...installErrors.value}..remove(buildId);
   }
@@ -431,6 +530,25 @@ class BuildsController {
     } on Object {
       return null;
     }
+  }
+
+  Future<String> _hashWithProgress(String buildId, String path) {
+    _setProgress(buildId, const InstallProgress(stage: InstallStage.hashing));
+    var lastPercent = -1;
+    return sha256File(
+      path,
+      onProgress: (fraction) {
+        final percent = (fraction * 100).floor();
+        if (percent == lastPercent) {
+          return;
+        }
+        lastPercent = percent;
+        _setProgress(
+          buildId,
+          InstallProgress(stage: InstallStage.hashing, fraction: fraction),
+        );
+      },
+    );
   }
 
   void _setProgress(String buildId, InstallProgress progress) {

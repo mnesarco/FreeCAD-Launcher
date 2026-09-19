@@ -16,6 +16,8 @@ class InstallRequest {
     required this.archivePath,
     this.assetName,
     this.pythonVersionHint,
+    this.referenceInPlace = false,
+    this.onDetectingPython,
   });
 
   final String buildId;
@@ -23,6 +25,8 @@ class InstallRequest {
   final String archivePath;
   final String? assetName;
   final String? pythonVersionHint;
+  final bool referenceInPlace;
+  final void Function()? onDetectingPython;
 }
 
 class InstalledBuild {
@@ -31,12 +35,14 @@ class InstalledBuild {
     required this.executablePath,
     required this.sizeBytes,
     this.pythonVersion,
+    this.pythonPath,
   });
 
   final String directory;
   final String executablePath;
   final int sizeBytes;
   final String? pythonVersion;
+  final String? pythonPath;
 }
 
 class BuildInstaller {
@@ -93,12 +99,17 @@ class BuildInstaller {
       }
       final moved = await staging.rename(finalDirectory.path);
       final finalExecutable = p.join(moved.path, relativeExecutable);
+      request.onDetectingPython?.call();
+      final python = await _detectPython(request, moved.path, finalExecutable);
 
       return InstalledBuild(
         directory: moved.path,
         executablePath: finalExecutable,
-        sizeBytes: await _directorySize(moved.path),
-        pythonVersion: await _detectPythonVersion(request, moved.path, finalExecutable),
+        sizeBytes: request.referenceInPlace
+            ? await File(request.archivePath).length()
+            : await _directorySize(moved.path),
+        pythonVersion: python?.detectedVersion,
+        pythonPath: python?.python?.executablePath,
       );
     } on Object {
       if (staging.existsSync()) {
@@ -111,6 +122,16 @@ class BuildInstaller {
   Future<String> _installAppImage(InstallRequest request, String directory) async {
     final fileName = request.assetName ?? p.basename(request.archivePath);
     final target = p.join(directory, fileName);
+
+    if (request.referenceInPlace) {
+      try {
+        await Link(target).create(request.archivePath);
+        return target;
+      } on FileSystemException {
+        // Fall back to a copy when the filesystem cannot create symlinks.
+      }
+    }
+
     await File(request.archivePath).copy(target);
 
     final chmod = await _processRunner.run(
@@ -198,21 +219,21 @@ class BuildInstaller {
     return total;
   }
 
-  Future<String?> _detectPythonVersion(
+  Future<PythonDetection?> _detectPython(
     InstallRequest request,
     String directory,
     String executablePath,
   ) async {
     final probe = _pythonProbe;
     if (probe == null) {
-      return request.pythonVersionHint;
+      final hint = request.pythonVersionHint;
+      return hint == null ? null : PythonDetection(version: hint);
     }
-    final detection = await probe.detect(
+    return probe.detect(
       kind: request.kind,
       installDirectory: directory,
       executablePath: executablePath,
       knownVersion: request.pythonVersionHint,
     );
-    return detection.python?.version ?? request.pythonVersionHint;
   }
 }

@@ -52,6 +52,15 @@ void main() {
     expect(progress.last.fraction, 1.0);
   });
 
+  test('skips hashing when no checksum is provided', () async {
+    source.streamFactory = () => Stream.fromIterable([data]);
+
+    final result = await downloader.download(uri: uri, fileName: 'FreeCAD.7z');
+
+    expect(result.sha256, isNull);
+    expect(File(result.path).readAsBytesSync(), data);
+  });
+
   test('returns a cached file without opening the source', () async {
     final target = File(p.join(cacheDirectory.path, 'FreeCAD.7z'))..writeAsBytesSync(data);
 

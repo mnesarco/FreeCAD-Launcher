@@ -10,6 +10,7 @@ class FakeProcessHandle implements ProcessHandle {
   final Completer<int> _exitCompleter = Completer<int>();
 
   bool killed = false;
+  bool stdinClosed = false;
   ProcessSignal? killSignal;
 
   void emitStdout(String text) => _stdoutController.add(utf8.encode(text));
@@ -40,6 +41,11 @@ class FakeProcessHandle implements ProcessHandle {
 
   @override
   Future<int> get exitCode => _exitCompleter.future;
+
+  @override
+  Future<void> closeStdin() async {
+    stdinClosed = true;
+  }
 
   @override
   bool kill([ProcessSignal signal = ProcessSignal.sigterm]) {

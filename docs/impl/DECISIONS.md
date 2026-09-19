@@ -168,3 +168,138 @@ Template:
 - **Decision**: Install with `hdiutil attach -nobrowse -readonly -mountpoint <staging> <dmg>` → copy `FreeCAD.app` into `builds/<id>/` → `hdiutil detach <staging>` (retry with `-force` after a timeout). After copying, offer quarantine removal (`xattr -dr com.apple.quarantine <app>`) with an explanation. Launch by spawning `FreeCAD.app/Contents/MacOS/FreeCAD` directly so the profile environment is inherited. Gatekeeper state comes from the diagnostics service; if launch fails, surface right-click→Open guidance.
 - **Consequences**: No notarization assumptions. Manual macOS verification cannot be done on Linux and is folded into M2-05 acceptance.
 - **Refs**: S2, `../spec/06-integrations.md` §1.4, `TASKS.md` M2-05
+
+### D-020 — Custom builds accept user-selected executables (Linux-first) + Python detection
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: On Linux a user may want the launcher to manage an arbitrary FreeCAD binary —
+  self-compiled (e.g. `~/build/bin/FreeCAD`) or installed by another method (distro package,
+  wrapper script, symlink). The custom import path (M2-08) only let users pick archive
+  extensions, so extensionless binaries could not be selected. Python info for such binaries is
+  also unknown. This refines D-002, which rules out package-manager *integration*, not
+  referencing a local binary the user already has.
+- **Decision**:
+  - `BuildKind.custom` references any local executable file by absolute path (`localPath`);
+    the launcher never copies it and `remove` deletes only the DB row. Known extensions keep
+    the managed pipeline (`.AppImage` copied, archives extracted, `.dmg` mounted).
+  - Validation: path exists, is a regular file (symlinks followed), and has the executable bit
+    on Linux/macOS. URLs are rejected for `custom`.
+  - Python detection for custom executables, best-effort and non-fatal:
+    1. Scan near the (symlink-resolved) binary for a bundled interpreter and probe it with
+       `-c`.
+    2. Otherwise run the binary headless with a temp probe script (sibling `FreeCADCmd`
+       preferred, else `<binary> --console <script>`) that prints `FCL_PY_VERSION`,
+       `FCL_PY_PREFIX`, `FCL_PY_EXEC`; resolve the interpreter from a prefix that still
+       exists after exit (AppImage mounts do not).
+    3. If still unknown, the UI offers a Python executable picker; the chosen interpreter is
+       probed with `-c` and stored.
+  - Schema revision: nullable `builds.pythonPath`; `schemaVersion` 1 → 2 with an
+    `onUpgrade` `addColumn` for pre-release dev DBs. No prototype migration (D-009 stands).
+- **Consequences**: `localPath` may point outside the launcher data dir; reconciler/verify only
+  check existence; pip jobs (M4) use the stored `pythonPath`. Import runs the selected binary
+  headlessly (behind the existing trust confirmation) with a 60 s timeout; failures degrade to
+  "Python unknown", never block the import.
+- **Refs**: spec 02 FR-1.3/FR-1.6, spec 03 §2.2, spec 04 §4.2, spec 05 `builds`, `TASKS.md`
+  M2-12/M2-13, D-002, D-009
+
+### D-021 — Support floor: FreeCAD 1.0+ only
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: The catalog previously spanned 0.19–1.1 assets, with a `legacy` channel covering
+  everything before 1.1 and a `FreeCAD/FreeCAD-Bundle` fallback. The product targets modern
+  FreeCAD; pre-1.0 releases only add classifier surface, catalog noise, and dead Python layouts.
+- **Decision**:
+  - The official catalog supports FreeCAD 1.0 and newer only. Tags below 1.0 (0.19–0.21) are
+    ignored at tag parse time via `FreeCadVersion.isSupported`.
+  - `legacy` now means the older supported stable line (1.0.x while the current line is 1.1.x);
+    the channel stays for FR-1.7's "older stable versions".
+  - The archived `FreeCAD/FreeCAD-Bundle` fallback is dropped; the catalog is `FreeCAD/FreeCAD`.
+  - The `<= 0.20` flat `AdditionalPythonPackages` target dir is dropped: always `py<XY>`.
+  - Custom builds are unaffected: users may reference any executable (D-020); the floor applies
+    to the managed catalog only.
+- **Consequences**: Pre-1.0 fixtures stay as regression tests asserting empty classification;
+  spec 06's legacy asset patterns shrink to 1.0.x; D-006's flat-dir clause and D-007's
+  0.19–1.0/FreeCAD-Bundle clauses no longer apply.
+- **Refs**: spec 02 FR-1.7, spec 06 §1.1/§1.3/§1.5/§4.2, spec 05, `TASKS.md` M2-14, D-006, D-007
+
+### D-022 — AppImage Python detection via headless macro probe
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: `M2-06` probed AppImages by scanning a `squashfs-root/` tree that never exists in
+  the current install layout (AppImages are stored as single files), so detection failed for
+  custom AppImages and had to rely on asset-name hints for catalog builds. The frozen prototype
+  (`prototype-final`) proved a working method: write an `.FCMacro`, run FreeCAD headless
+  (`-c -M <macroDir> <macro>`) and parse tagged console output; the macro exits via
+  `sys.exit(0)`.
+- **Decision**:
+  - `ProcessPythonProbe.detect(kind: appimage)` first probes an extracted interpreter when one
+    exists; otherwise it runs the binary headless with the prototype's tagged-JSON macro and
+    uses the reported `python` version. The asset-name `pythonVersionHint` becomes the fallback
+    when the headless run fails.
+  - The headless macro reports `python`, `sys.prefix` and `sys.executable` as JSON inside
+    `[freecad-launcher:out]…[/freecad-launcher:out]`; interpreter paths are only stored when the
+    prefix still exists after exit (AppImage mounts are transient).
+  - Detection is best-effort and never blocks an install; pip still extracts the AppImage once
+    on first pip need (spec 06 §4.1).
+- **Consequences**: Importing/installing an AppImage runs it once, headless (covered by the
+  existing trust confirmation for custom builds); the "AppImage must be extracted before its
+  Python can be probed" failure mode disappears; custom AppImages no longer trigger the manual
+  interpreter dialog when the version is known.
+- **Refs**: `lib/platform/python_probe.dart`, `prototype-final:lib/service/applications.dart`
+  (`callMacro`/`macroVersionCheck`), spec 04 §4.2, spec 06 §4.1, `TASKS.md` M2-15, M2-06, D-020
+
+### D-023 — Custom local AppImages are symlinked, not copied
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: Importing a locally selected `.AppImage` ran it through the managed install
+  pipeline, copying the whole file (hundreds of MB to >1 GB) into `builds/<id>/`. Users who
+  already keep AppImages on disk (e.g. in a toolkit directory) pay that disk cost twice, unlike
+  custom executables, which are referenced in place (D-020).
+- **Decision**:
+  - A local (non-URL) AppImage import is created as a symlink
+    `builds/<id>/<assetName> -> <user file>`; the AppImage is not copied. `remove` deletes the
+    symlink only, never the target. If the filesystem cannot create symlinks, fall back to a
+    copy so the import still succeeds.
+  - The selected file must exist and be executable (Linux/macOS) before importing; the symlink
+    target is what the launcher later runs.
+  - URL-downloaded AppImages and catalog installs still get a managed copy (their source is the
+    download cache, not a user-owned file).
+  - `sizeBytes` reports the target AppImage length (launcher-owned disk stays ~0).
+- **Consequences**: `kind` remains `appimage` (FUSE/extract-and-run launch handling applies);
+  a moved/deleted target flips status to `broken` via the existing reconciler; the symlink
+  keeps the `builds/<id>/` layout, staged rename, verify and launch code unchanged.
+- **Refs**: spec 02 FR-1.6, spec 03 §2.2, spec 05 `builds`, `TASKS.md` M2-16, D-020, D-022
+
+### D-024 — Hashing is opt-in via checksum; imports report explicit stages
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: Importing a local AppImage hashed the whole file (~10.3 s for 778 MB) with pure
+  Dart `package:crypto` even when the user provided no checksum, and the UI only showed an
+  indeterminate "installing" spinner. The AppImage symlink/probe work is ~0.5 s, so hashing
+  dominated the wait with no user-visible progress (measured in session).
+- **Decision**:
+  - Local imports hash only when the user provided a checksum; otherwise `sha256` stays null and
+    `verified` is false (the column is already nullable for custom builds, D-009/spec 05).
+  - The downloader verifies only when an expected checksum exists; `DownloadResult.sha256` is
+    nullable, so catalog assets without a sidecar store no hash either.
+  - `sha256File` reports progress; `BuildsController` throttles it to 1% steps.
+  - Progress stages are explicit: `hashing`, `downloading`, `installing`, `detectingPython`.
+    Both the Available list and the Custom tab show the current stage and a progress bar.
+- **Consequences**: Custom imports without a checksum import in ~1 s plus detection; "verify
+  files" for those builds is existence-only (no hash to compare) until a checksum is supplied at
+  import; catalog assets lacking `-SHA256.txt` are likewise unverified (already possible).
+- **Refs**: `lib/platform/checksum.dart`, `lib/platform/downloader.dart`,
+  `lib/state/builds_controller.dart`, `lib/ui/builds/builds_view.dart`, spec 02 FR-1.6,
+  spec 03 §2.2, `TASKS.md` M2-17
+
+### D-025 — Successful installs switch to the Installed tab
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: Catalog installs from Available and custom imports from Custom ended with only a
+  snackbar; the new build was not visible until the user switched tabs manually.
+- **Decision**: After a successful catalog install or custom import, the Versions view animates
+  to the Installed tab. Failed installs stay on the current tab so the error stays visible. The
+  Python fallback dialog (D-020) opens after the switch.
+- **Consequences**: `_AvailableBuildTile` and `_CustomTab` capture the `TabController` before
+  awaiting, avoiding context use across async gaps.
+- **Refs**: spec 03 §2.2, `lib/ui/builds/builds_view.dart`, `TASKS.md` M2-18, M2-07, M2-08

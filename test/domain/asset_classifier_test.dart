@@ -52,7 +52,7 @@ void main() {
     });
   });
 
-  group('legacy naming eras', () {
+  group('legacy naming era', () {
     test('1.0.2 conda names are legacy and installers are skipped', () {
       final candidates = classifyFixture('github_releases_1.0.2.json');
 
@@ -62,29 +62,17 @@ void main() {
       expect(linux.assetName, 'FreeCAD_1.0.2-conda-Linux-x86_64-py311.AppImage');
       expect(linux.pythonVersion, '3.11');
     });
+  });
 
-    test('0.21.2 hyphen names and intel-x86_64 normalize', () {
-      final candidates = classifyFixture('github_releases_0.21.2.json');
-
-      expect(candidates, hasLength(5));
-      final windows = select(candidates, platform: BuildPlatform.windows, arch: BuildArch.x86_64)!;
-      expect(windows.assetName, 'FreeCAD-0.21.2-Windows_x86_64.7z');
-
-      final macIntel = select(candidates, platform: BuildPlatform.macos, arch: BuildArch.x86_64)!;
-      expect(macIntel.assetName, 'FreeCAD-0.21.2-macOS-intel-x86_64.dmg');
-
-      final linuxArm = select(candidates, platform: BuildPlatform.linux, arch: BuildArch.arm64)!;
-      expect(linuxArm.assetName, 'FreeCAD-0.21.2-Linux-aarch64.AppImage');
-    });
-
-    test('0.20.0 zip portable is an archive candidate', () {
-      final candidates = classifyFixture('github_releases_0.20.0.json');
-
-      expect(candidates, hasLength(3));
-      final windows = select(candidates, platform: BuildPlatform.windows, arch: BuildArch.x86_64)!;
-      expect(windows.assetName, 'FreeCAD-0.20.0-WIN-x64-portable-1.zip');
-      expect(windows.kind, BuildKind.archive);
-      expect(windows.pythonVersion, isNull);
+  group('pre-1.0 releases', () {
+    test('are ignored by the classifier', () {
+      for (final fixture in const [
+        'github_releases_0.19.4.json',
+        'github_releases_0.20.0.json',
+        'github_releases_0.21.2.json',
+      ]) {
+        expect(classifyFixture(fixture), isEmpty, reason: fixture);
+      }
     });
   });
 
@@ -113,15 +101,6 @@ void main() {
       expect(candidates.first.weekly, isNull);
       final linux = select(candidates, platform: BuildPlatform.linux, arch: BuildArch.x86_64)!;
       expect(linux.assetName, 'FreeCAD_weekly-Linux-x86_64.AppImage');
-    });
-  });
-
-  group('gaps', () {
-    test('0.19.4 with only installers yields no candidates', () {
-      final candidates = classifyFixture('github_releases_0.19.4.json');
-
-      expect(candidates, isEmpty);
-      expect(select(candidates, platform: BuildPlatform.windows, arch: BuildArch.x86_64), isNull);
     });
   });
 }

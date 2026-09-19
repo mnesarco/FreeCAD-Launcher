@@ -22,6 +22,23 @@ void main() {
     }
   });
 
+  test('reports hashing progress and still matches the digest', () async {
+    final directory = Directory.systemTemp.createTempSync('fcl_checksum_progress');
+    try {
+      final bytes = List<int>.generate(4096, (index) => index % 251);
+      final file = File(p.join(directory.path, 'data.bin'))..writeAsBytesSync(bytes);
+      final progress = <double>[];
+
+      final digest = await sha256File(file.path, onProgress: progress.add);
+
+      expect(digest, sha256OfBytes(bytes));
+      expect(progress, isNotEmpty);
+      expect(progress.last, 1.0);
+    } finally {
+      directory.deleteSync(recursive: true);
+    }
+  });
+
   group('parseSha256Text', () {
     test('extracts the digest from common sidecar formats', () {
       final hash = List.filled(64, 'a').join();
