@@ -75,6 +75,15 @@ and quarantine handling.
 - [ ] "Show launch command" output, when pasted into a shell, reproduces the launch
 - [ ] AppImage on a FUSE-less system launches via the extract-and-run fallback
 - [ ] macOS `.app` launches from `builds/` with quarantine handled
+
+Manual real-data checks (Linux, skipped by default):
+
+```sh
+FCL_REAL_LAUNCH=1 flutter test test/manual/real_launch_linux_test.dart
+FCL_REAL_WRAPPER=1 flutter test test/manual/cli_wrapper_linux_test.dart
+FCL_REAL_ISOLATION=1 flutter test test/manual/isolation_e2e_linux_test.dart
+# override the binary with FCL_LAUNCH_BINARY / FCL_WRAPPER_TARGET
+```
 - [ ] Create/duplicate failures leave no partial `profiles/<id>.part` directories or DB rows
       (D-028)
 - [ ] Duplicate asks config-only vs full payload and copies the chosen contents

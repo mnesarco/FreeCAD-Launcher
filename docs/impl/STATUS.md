@@ -4,19 +4,22 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-19
-- **Current milestone**: M3 — Profiles and launch (M3-01..M3-09 done; M3-10 next)
+- **Current milestone**: M3 — Profiles and launch (all tasks done; Linux verified — M3 exit
+  review and Windows/macOS manual checks pending)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-19
-- **Next action**: start `M3-10` (isolation E2E: two profiles, same build, independent
-  config/Mod/macros/temp).
+- **Next action**: run the M3 exit checklist in `VERIFICATION.md` on Linux, complete the
+  Windows/macOS launch/isolation checks when those OSes are available, then decide the
+  `v2` → `main` merge (D-015) before starting **M4** (`S3` pip-uninstall spike, addon catalog).
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
   - Real Windows `.7z` extraction and macOS `.dmg` install still need those OSes (Windows CI
     once a remote exists; macOS needs a machine). Linux is verified end-to-end.
   - Manual UI click-throughs (install from Versions, custom import incl. executable + Python
-    fallback dialog, profiles create/launch) are pending; headless profile launch is verified on
-    Linux, GUI launch and Windows/macOS launches are pending a manual pass on those OSes.
+    fallback dialog, profiles create/launch) are pending; headless profile launch, CLI wrapper
+    and profile isolation are verified on Linux; GUI launch and Windows/macOS launches are
+    pending a manual pass on those OSes.
 - **In progress**: none
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
@@ -89,8 +92,11 @@
   - M3-09 — **D-035**: CLI wrapper installer (`~/.local/bin/freecad-launcher` /
     `%LOCALAPPDATA%\…\freecad-launcher.cmd`), `$APPIMAGE`-aware target, PATH status report-only,
     Settings card with install/remove; manual Linux wrapper ran the built CLI (`--version`).
-  - 259 tests green (4 manual network/launch/wrapper probes skipped), analyze clean, app builds
-    and launches.
+  - M3-10 — isolation E2E verified on Linux: two profiles on the same 1.0.2 AppImage wrote
+    distinct markers into `FREECAD_USER_HOME`, `HOME`, `TMPDIR` and `Mod/`; deleting one profile
+    left the other intact (paths in the session log).
+  - 259 tests green (5 manual network/launch/wrapper/isolation probes skipped), analyze clean,
+    app builds and launches.
 
 ## Session log
 
@@ -127,6 +133,7 @@
 | 2026-09-19 | M3 | D-033 launch command viewer with isolation overrides and copy | M3-07 | `docs/impl/DECISIONS.md`, `lib/domain/profiles/launch_command.dart`, `lib/state/profiles_controller.dart`, `lib/platform/launch.dart`, `lib/platform/paths.dart`, `lib/ui/profiles/**`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M3 | D-034 CLI mode (list/run/help/version, passthrough, exit codes) | M3-08 | `docs/impl/DECISIONS.md`, `lib/cli/cli.dart`, `lib/main.dart`, `test/cli/cli_test.dart` |
 | 2026-09-19 | M3 | D-035 CLI wrapper installer + settings card + PATH reporting | M3-09 | `docs/impl/DECISIONS.md`, `docs/spec/03-ux.md`, `lib/platform/cli_wrapper.dart`, `lib/state/settings_controller.dart`, `lib/state/app_services.dart`, `lib/ui/settings/settings_view.dart`, `lib/l10n/**`, `test/**` |
+| 2026-09-19 | M3 | AGENTS.md refresh (tracked again) + M3-10 isolation E2E on Linux | M3-10 | `AGENTS.md`, `docs/impl/STATUS.md`, `docs/impl/VERIFICATION.md`, `test/manual/isolation_e2e_linux_test.dart` |
 
 ## Standing notes for the next agent
 
