@@ -78,6 +78,12 @@ class ProfilesController {
   final DateTime Function() _clock;
 
   final profiles = signal<List<Profile>>([]);
+  final profilesLoaded = signal(false);
+  final profilesError = signal<AppError?>(null);
+  final buildsById = signal<Map<String, Build>>({});
+  final addonCounts = signal<Map<String, int>>({});
+  final packageCounts = signal<Map<String, int>>({});
+  final profileSizes = signal<Map<String, int>>({});
   final runningProfiles = signal<Set<String>>({});
   final launchLogs = signal<Map<String, String>>({});
   final lastExitCodes = signal<Map<String, int>>({});
@@ -85,11 +91,67 @@ class ProfilesController {
   final Map<String, int> _runningCounts = {};
 
   StreamSubscription<List<Profile>>? _profilesSubscription;
+  StreamSubscription<List<Build>>? _buildsSubscription;
+  StreamSubscription<List<InstalledAddon>>? _addonsSubscription;
+  StreamSubscription<List<PythonPackage>>? _packagesSubscription;
 
   void start() {
     _profilesSubscription ??= _repository.watchAll().listen(
-      (value) => profiles.value = value,
+      (value) {
+        profiles.value = value;
+        profilesLoaded.value = true;
+        profilesError.value = null;
+        unawaited(refreshSizes());
+      },
+      onError: (Object error) {
+        profilesError.value = AppError.from(error, retryable: true);
+      },
     );
+    _buildsSubscription ??= _database.buildsDao.watchAll().listen(
+      (builds) => buildsById.value = {for (final build in builds) build.id: build},
+    );
+    _addonsSubscription ??= _database.installedAddonsDao.watchAll().listen(
+      (addons) => addonCounts.value = _countByProfile(addons.map((addon) => addon.profileId)),
+    );
+    _packagesSubscription ??= _database.pythonPackagesDao.watchAll().listen(
+      (packages) =>
+          packageCounts.value = _countByProfile(packages.map((package) => package.profileId)),
+    );
+  }
+
+  Future<void> refreshSizes() async {
+    final profiles = await _repository.getAll();
+    final sizes = <String, int>{};
+    for (final profile in profiles) {
+      sizes[profile.id] = await _directorySize(_paths.profilePaths(profile.id).root);
+    }
+    profileSizes.value = sizes;
+  }
+
+  Map<String, int> _countByProfile(Iterable<String> profileIds) {
+    final counts = <String, int>{};
+    for (final id in profileIds) {
+      counts[id] = (counts[id] ?? 0) + 1;
+    }
+    return counts;
+  }
+
+  Future<int> _directorySize(String root) async {
+    final directory = Directory(root);
+    if (!directory.existsSync()) {
+      return 0;
+    }
+    var total = 0;
+    await for (final entity in directory.list(recursive: true, followLinks: false)) {
+      if (entity is File) {
+        try {
+          total += await entity.length();
+        } on FileSystemException {
+          // Files can disappear while walking; skip them.
+        }
+      }
+    }
+    return total;
   }
 
   bool isRunning(String profileId) => runningProfiles.value.contains(profileId);
@@ -102,20 +164,32 @@ class ProfilesController {
     required String name,
     required String buildId,
     String? description,
-  }) {
-    return _repository.create(name: name, buildId: buildId, description: description);
+  }) async {
+    final result = await _repository.create(
+      name: name,
+      buildId: buildId,
+      description: description,
+    );
+    if (result.isOk) {
+      unawaited(refreshSizes());
+    }
+    return result;
   }
 
   Future<Result<Profile>> duplicate({
     required String profileId,
     required String name,
     bool copyPayload = false,
-  }) {
-    return _repository.duplicate(
+  }) async {
+    final result = await _repository.duplicate(
       profileId: profileId,
       name: name,
       copyPayload: copyPayload,
     );
+    if (result.isOk) {
+      unawaited(refreshSizes());
+    }
+    return result;
   }
 
   Future<Result<Profile>> rename({required String profileId, required String name}) {
@@ -129,7 +203,13 @@ class ProfilesController {
     return _repository.setBuild(profileId: profileId, buildId: buildId);
   }
 
-  Future<Result<void>> delete(String profileId) => _repository.delete(profileId);
+  Future<Result<void>> delete(String profileId) async {
+    final result = await _repository.delete(profileId);
+    if (result.isOk) {
+      unawaited(refreshSizes());
+    }
+    return result;
+  }
 
   Future<LaunchResult> launch({
     required String profileId,
@@ -268,5 +348,11 @@ class ProfilesController {
   void dispose() {
     _profilesSubscription?.cancel();
     _profilesSubscription = null;
+    _buildsSubscription?.cancel();
+    _buildsSubscription = null;
+    _addonsSubscription?.cancel();
+    _addonsSubscription = null;
+    _packagesSubscription?.cancel();
+    _packagesSubscription = null;
   }
 }

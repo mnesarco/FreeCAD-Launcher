@@ -160,6 +160,318 @@ abstract class AppLocalizations {
   /// **'Create a profile to launch FreeCAD with its own settings, addons and Python packages.'**
   String get profilesEmptyMessage;
 
+  /// No description provided for @profilesNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New profile'**
+  String get profilesNew;
+
+  /// No description provided for @profilesCreateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create profile'**
+  String get profilesCreateTitle;
+
+  /// No description provided for @profilesEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get profilesEditTitle;
+
+  /// No description provided for @profilesName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get profilesName;
+
+  /// No description provided for @profilesBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'Build'**
+  String get profilesBuild;
+
+  /// No description provided for @profilesChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel'**
+  String get profilesChannel;
+
+  /// No description provided for @profilesPythonVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Python'**
+  String get profilesPythonVersion;
+
+  /// No description provided for @profilesCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get profilesCreate;
+
+  /// No description provided for @profilesSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get profilesSave;
+
+  /// No description provided for @profilesCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the profile'**
+  String get profilesCreateFailed;
+
+  /// No description provided for @profilesEditFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update the profile'**
+  String get profilesEditFailed;
+
+  /// No description provided for @profilesBuildChangedWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'The new build uses a different Python version; addons and packages may need reinstalling.'**
+  String get profilesBuildChangedWarning;
+
+  /// No description provided for @profilesDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get profilesDuplicate;
+
+  /// No description provided for @profilesDuplicateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate profile'**
+  String get profilesDuplicateTitle;
+
+  /// No description provided for @profilesDuplicateConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Config only'**
+  String get profilesDuplicateConfig;
+
+  /// No description provided for @profilesDuplicatePayload.
+  ///
+  /// In en, this message translates to:
+  /// **'Full payload'**
+  String get profilesDuplicatePayload;
+
+  /// No description provided for @profilesDuplicatePayloadHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Also copy Mod, Python packages and macros'**
+  String get profilesDuplicatePayloadHint;
+
+  /// No description provided for @profilesDuplicateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not duplicate the profile'**
+  String get profilesDuplicateFailed;
+
+  /// No description provided for @profilesDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get profilesDelete;
+
+  /// No description provided for @profilesDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this profile?'**
+  String get profilesDeleteTitle;
+
+  /// No description provided for @profilesDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The profile directory and all of its data will be deleted. Shared builds are not affected.'**
+  String get profilesDeleteMessage;
+
+  /// No description provided for @profilesDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the profile'**
+  String get profilesDeleteFailed;
+
+  /// No description provided for @profilesLaunch.
+  ///
+  /// In en, this message translates to:
+  /// **'Launch'**
+  String get profilesLaunch;
+
+  /// No description provided for @profilesRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get profilesRunning;
+
+  /// No description provided for @profilesLaunchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Launch failed'**
+  String get profilesLaunchFailed;
+
+  /// No description provided for @profilesQuarantineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove quarantine?'**
+  String get profilesQuarantineTitle;
+
+  /// No description provided for @profilesQuarantineMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'macOS flagged this app as downloaded. Removing the quarantine attribute is needed to launch it. Only continue if you trust this build.'**
+  String get profilesQuarantineMessage;
+
+  /// No description provided for @profilesQuarantineRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove and launch'**
+  String get profilesQuarantineRemove;
+
+  /// No description provided for @profilesLastUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last used'**
+  String get profilesLastUsed;
+
+  /// No description provided for @profilesNeverUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get profilesNeverUsed;
+
+  /// No description provided for @profilesSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get profilesSize;
+
+  /// No description provided for @profilesAddons.
+  ///
+  /// In en, this message translates to:
+  /// **'Addons'**
+  String get profilesAddons;
+
+  /// No description provided for @profilesPackages.
+  ///
+  /// In en, this message translates to:
+  /// **'Packages'**
+  String get profilesPackages;
+
+  /// No description provided for @profilesHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get profilesHealth;
+
+  /// No description provided for @profilesLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading profiles…'**
+  String get profilesLoading;
+
+  /// No description provided for @profilesLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load profiles'**
+  String get profilesLoadFailed;
+
+  /// No description provided for @profilesBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get profilesBack;
+
+  /// No description provided for @profilesNoBuildsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No usable build'**
+  String get profilesNoBuildsTitle;
+
+  /// No description provided for @profilesNoBuildsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Install a FreeCAD version with a detected Python interpreter before creating a profile.'**
+  String get profilesNoBuildsMessage;
+
+  /// No description provided for @profilesTabOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get profilesTabOverview;
+
+  /// No description provided for @profilesTabAddons.
+  ///
+  /// In en, this message translates to:
+  /// **'Addons'**
+  String get profilesTabAddons;
+
+  /// No description provided for @profilesTabPython.
+  ///
+  /// In en, this message translates to:
+  /// **'Python'**
+  String get profilesTabPython;
+
+  /// No description provided for @profilesTabMacros.
+  ///
+  /// In en, this message translates to:
+  /// **'Macros'**
+  String get profilesTabMacros;
+
+  /// No description provided for @profilesTabConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Config'**
+  String get profilesTabConfig;
+
+  /// No description provided for @profilesTabBackups.
+  ///
+  /// In en, this message translates to:
+  /// **'Backups'**
+  String get profilesTabBackups;
+
+  /// No description provided for @profilesComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'This section arrives in a later milestone.'**
+  String get profilesComingSoon;
+
+  /// No description provided for @profilesPaths.
+  ///
+  /// In en, this message translates to:
+  /// **'Paths'**
+  String get profilesPaths;
+
+  /// No description provided for @profilesProfileHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile home'**
+  String get profilesProfileHome;
+
+  /// No description provided for @profilesConfigFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Config files'**
+  String get profilesConfigFiles;
+
+  /// No description provided for @profilesConfigMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Created on first launch'**
+  String get profilesConfigMissing;
+
+  /// No description provided for @profilesStatusMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Build missing'**
+  String get profilesStatusMissing;
+
+  /// No description provided for @profilesStatusBroken.
+  ///
+  /// In en, this message translates to:
+  /// **'Build broken'**
+  String get profilesStatusBroken;
+
   /// No description provided for @versionsEmptyTitle.
   ///
   /// In en, this message translates to:

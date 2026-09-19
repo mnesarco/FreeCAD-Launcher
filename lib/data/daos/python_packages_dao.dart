@@ -8,6 +8,9 @@ part 'python_packages_dao.g.dart';
 class PythonPackagesDao extends DatabaseAccessor<AppDatabase> with _$PythonPackagesDaoMixin {
   PythonPackagesDao(super.db);
 
+  Stream<List<PythonPackage>> watchAll() =>
+      (select(pythonPackages)..orderBy([(t) => OrderingTerm.asc(t.name)])).watch();
+
   Stream<List<PythonPackage>> watchByProfile(String profileId) =>
       (select(pythonPackages)
             ..where((t) => t.profileId.equals(profileId))

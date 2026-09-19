@@ -8,6 +8,9 @@ part 'installed_addons_dao.g.dart';
 class InstalledAddonsDao extends DatabaseAccessor<AppDatabase> with _$InstalledAddonsDaoMixin {
   InstalledAddonsDao(super.db);
 
+  Stream<List<InstalledAddon>> watchAll() =>
+      (select(installedAddons)..orderBy([(t) => OrderingTerm.asc(t.displayName)])).watch();
+
   Stream<List<InstalledAddon>> watchByProfile(String profileId) =>
       (select(installedAddons)
             ..where((t) => t.profileId.equals(profileId))

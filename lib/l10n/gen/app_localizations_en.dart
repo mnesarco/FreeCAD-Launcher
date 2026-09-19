@@ -44,6 +44,167 @@ class AppLocalizationsEn extends AppLocalizations {
       'Create a profile to launch FreeCAD with its own settings, addons and Python packages.';
 
   @override
+  String get profilesNew => 'New profile';
+
+  @override
+  String get profilesCreateTitle => 'Create profile';
+
+  @override
+  String get profilesEditTitle => 'Edit profile';
+
+  @override
+  String get profilesName => 'Name';
+
+  @override
+  String get profilesBuild => 'Build';
+
+  @override
+  String get profilesChannel => 'Channel';
+
+  @override
+  String get profilesPythonVersion => 'Python';
+
+  @override
+  String get profilesCreate => 'Create';
+
+  @override
+  String get profilesSave => 'Save';
+
+  @override
+  String get profilesCreateFailed => 'Could not create the profile';
+
+  @override
+  String get profilesEditFailed => 'Could not update the profile';
+
+  @override
+  String get profilesBuildChangedWarning =>
+      'The new build uses a different Python version; addons and packages may need reinstalling.';
+
+  @override
+  String get profilesDuplicate => 'Duplicate';
+
+  @override
+  String get profilesDuplicateTitle => 'Duplicate profile';
+
+  @override
+  String get profilesDuplicateConfig => 'Config only';
+
+  @override
+  String get profilesDuplicatePayload => 'Full payload';
+
+  @override
+  String get profilesDuplicatePayloadHint =>
+      'Also copy Mod, Python packages and macros';
+
+  @override
+  String get profilesDuplicateFailed => 'Could not duplicate the profile';
+
+  @override
+  String get profilesDelete => 'Delete';
+
+  @override
+  String get profilesDeleteTitle => 'Delete this profile?';
+
+  @override
+  String get profilesDeleteMessage =>
+      'The profile directory and all of its data will be deleted. Shared builds are not affected.';
+
+  @override
+  String get profilesDeleteFailed => 'Could not delete the profile';
+
+  @override
+  String get profilesLaunch => 'Launch';
+
+  @override
+  String get profilesRunning => 'Running';
+
+  @override
+  String get profilesLaunchFailed => 'Launch failed';
+
+  @override
+  String get profilesQuarantineTitle => 'Remove quarantine?';
+
+  @override
+  String get profilesQuarantineMessage =>
+      'macOS flagged this app as downloaded. Removing the quarantine attribute is needed to launch it. Only continue if you trust this build.';
+
+  @override
+  String get profilesQuarantineRemove => 'Remove and launch';
+
+  @override
+  String get profilesLastUsed => 'Last used';
+
+  @override
+  String get profilesNeverUsed => 'Never';
+
+  @override
+  String get profilesSize => 'Size';
+
+  @override
+  String get profilesAddons => 'Addons';
+
+  @override
+  String get profilesPackages => 'Packages';
+
+  @override
+  String get profilesHealth => 'Health';
+
+  @override
+  String get profilesLoading => 'Loading profiles…';
+
+  @override
+  String get profilesLoadFailed => 'Could not load profiles';
+
+  @override
+  String get profilesBack => 'Back';
+
+  @override
+  String get profilesNoBuildsTitle => 'No usable build';
+
+  @override
+  String get profilesNoBuildsMessage =>
+      'Install a FreeCAD version with a detected Python interpreter before creating a profile.';
+
+  @override
+  String get profilesTabOverview => 'Overview';
+
+  @override
+  String get profilesTabAddons => 'Addons';
+
+  @override
+  String get profilesTabPython => 'Python';
+
+  @override
+  String get profilesTabMacros => 'Macros';
+
+  @override
+  String get profilesTabConfig => 'Config';
+
+  @override
+  String get profilesTabBackups => 'Backups';
+
+  @override
+  String get profilesComingSoon => 'This section arrives in a later milestone.';
+
+  @override
+  String get profilesPaths => 'Paths';
+
+  @override
+  String get profilesProfileHome => 'Profile home';
+
+  @override
+  String get profilesConfigFiles => 'Config files';
+
+  @override
+  String get profilesConfigMissing => 'Created on first launch';
+
+  @override
+  String get profilesStatusMissing => 'Build missing';
+
+  @override
+  String get profilesStatusBroken => 'Build broken';
+
+  @override
   String get versionsEmptyTitle => 'No FreeCAD versions installed';
 
   @override

@@ -429,3 +429,24 @@ Template:
   FreeCAD (per spec) and tracking state dies with the app.
 - **Refs**: spec 04 §4.3, spec 02 FR-2.5, `lib/state/profiles_controller.dart`,
   `TASKS.md` M3-05, D-030
+
+### D-032 — Profiles UI: cards, dialogs and detail skeleton
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: M3-06; the Profiles section was a placeholder even though the repository,
+  controller and launch runtime were ready.
+- **Decision**:
+  - Profiles view: live cards (name, build version/channel, Python, addon/package counts, size,
+    last used, running badge, health chip) driven by `ProfilesController` signals, with
+    loading/empty/error states. Create dialog offers only installed builds with a detected
+    Python (D-027); duplicate dialog asks config vs full payload (D-028); delete confirms.
+  - Profile detail: six tabs — functional Overview (build/health, paths, config files, last log)
+    plus Addons/Python/Macros/Config/Backups placeholders until M4/M5 (M5-08 wires them).
+  - Launch is triggered from card and detail with the quarantine consent dialog (D-030); running
+    state comes from `runningProfiles`.
+  - Profile sizes are computed asynchronously into `profileSizes` (cards show them when ready)
+    rather than blocking the list.
+- **Consequences**: Widget tests must pre-seed data in `setUp` because drift stream queries
+  opened under `testWidgets`' fake async block later writes; documented in the test file.
+- **Refs**: spec 03 §2.3, spec 02 FR-2.1..2.5, `lib/ui/profiles/**`, `lib/state/profiles_controller.dart`,
+  `TASKS.md` M3-06, D-027, D-028, D-030
