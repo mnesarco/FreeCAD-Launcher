@@ -9,6 +9,7 @@ import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/addons/addon_icon.dart';
+import 'package:freecad_launcher/ui/addons/collections_view.dart';
 import 'package:freecad_launcher/ui/addons/requirements_dialog.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 
@@ -69,11 +70,7 @@ class _AddonsViewState extends State<AddonsView> {
                   searchController: _searchController,
                   onOpen: (addon) => setState(() => _selectedAddonId = addon.id),
                 ),
-                EmptyState(
-                  icon: Icons.inventory_outlined,
-                  title: l10n.addonsTabCollections,
-                  message: l10n.addonsCollectionsSoon,
-                ),
+                const CollectionsTab(),
               ],
             ),
           ),

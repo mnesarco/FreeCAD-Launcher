@@ -1,0 +1,632 @@
+import 'package:flutter/material.dart';
+import 'package:signals_flutter/signals_flutter.dart';
+
+import 'package:freecad_launcher/data/database.dart';
+import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/bundles/bundle_rules.dart';
+import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
+import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/state/bundles_controller.dart';
+import 'package:freecad_launcher/ui/addons/addon_icon.dart';
+import 'package:freecad_launcher/ui/widgets/empty_state.dart';
+
+class CollectionsTab extends StatefulWidget {
+  const CollectionsTab({super.key});
+
+  @override
+  State<CollectionsTab> createState() => _CollectionsTabState();
+}
+
+class _CollectionsTabState extends State<CollectionsTab> {
+  String? _selectedBundleId;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    AppScope.of(context).bundles.start();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final controller = AppScope.of(context).bundles;
+    final selectedId = _selectedBundleId;
+    if (selectedId != null && controller.byId(selectedId) != null) {
+      return BundleDetailView(
+        bundleId: selectedId,
+        onBack: () => setState(() => _selectedBundleId = null),
+      );
+    }
+
+    final bundles = controller.bundles.watch(context);
+    final items = controller.items.watch(context);
+    final loading = controller.loading.watch(context);
+    final error = controller.error.watch(context);
+
+    Widget body;
+    if (loading && bundles.isEmpty) {
+      body = const Center(child: CircularProgressIndicator());
+    } else if (error != null && bundles.isEmpty) {
+      body = EmptyState(
+        icon: Icons.error_outline,
+        title: l10n.bundlesLoadFailed,
+        message: error.toString(),
+      );
+    } else if (bundles.isEmpty) {
+      body = EmptyState(
+        icon: Icons.inventory_outlined,
+        title: l10n.bundlesEmptyTitle,
+        message: l10n.bundlesEmptyMessage,
+        action: FilledButton.icon(
+          onPressed: () => _createBundle(context),
+          icon: const Icon(Icons.add),
+          label: Text(l10n.bundlesCreate),
+        ),
+      );
+    } else {
+      body = ListView.builder(
+        padding: const EdgeInsets.all(12),
+        itemCount: bundles.length,
+        itemBuilder: (context, index) {
+          final bundle = bundles[index];
+          final count = items.where((item) => item.bundleId == bundle.id).length;
+          return Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            child: ListTile(
+              leading: const Icon(Icons.inventory_2_outlined),
+              title: Text(bundle.name),
+              subtitle: Text(
+                [
+                  if ((bundle.description ?? '').isNotEmpty) bundle.description!,
+                  l10n.bundlesItemCount(count),
+                ].join('\n'),
+              ),
+              isThreeLine: (bundle.description ?? '').isNotEmpty,
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => setState(() => _selectedBundleId = bundle.id),
+            ),
+          );
+        },
+      );
+    }
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.addonsTabCollections,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              FilledButton.icon(
+                onPressed: () => _createBundle(context),
+                icon: const Icon(Icons.add),
+                label: Text(l10n.bundlesCreate),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(child: body),
+      ],
+    );
+  }
+
+  Future<void> _createBundle(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final bundle = await showDialog<Bundle>(
+      context: context,
+      builder: (context) => const BundleEditDialog(),
+    );
+    if (bundle == null || !mounted) {
+      return;
+    }
+    messenger.showSnackBar(SnackBar(content: Text(l10n.bundlesCreated)));
+    setState(() => _selectedBundleId = bundle.id);
+  }
+}
+
+class BundleDetailView extends StatefulWidget {
+  const BundleDetailView({super.key, required this.bundleId, required this.onBack});
+
+  final String bundleId;
+  final VoidCallback onBack;
+
+  @override
+  State<BundleDetailView> createState() => _BundleDetailViewState();
+}
+
+class _BundleDetailViewState extends State<BundleDetailView> {
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final services = AppScope.of(context);
+    final controller = services.bundles;
+    final bundle = controller.byId(widget.bundleId);
+    if (bundle == null) {
+      return Column(
+        children: [
+          _Header(title: l10n.addonsTabCollections, onBack: widget.onBack),
+          Expanded(
+            child: EmptyState(
+              icon: Icons.error_outline,
+              title: l10n.bundlesLoadFailed,
+              message: l10n.bundlesEmptyMessage,
+            ),
+          ),
+        ],
+      );
+    }
+    final items = controller.itemsFor(bundle.id);
+
+    return Column(
+      children: [
+        _Header(
+          title: bundle.name,
+          onBack: widget.onBack,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: l10n.bundlesEdit,
+              onPressed: () => _edit(context, bundle),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              tooltip: l10n.bundlesDelete,
+              onPressed: () => _delete(context, bundle),
+            ),
+          ],
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              if ((bundle.description ?? '').isNotEmpty) ...[
+                Text(bundle.description!, style: Theme.of(context).textTheme.bodyMedium),
+                const SizedBox(height: 12),
+              ],
+              Card(
+                margin: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${l10n.bundlesItems} · ${l10n.bundlesItemCount(items.length)}',
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                          ),
+                          FilledButton.tonalIcon(
+                            onPressed: () => _addAddon(context, bundle),
+                            icon: const Icon(Icons.add),
+                            label: Text(l10n.bundlesAddAddon),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      if (items.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Text(
+                            l10n.bundlesNoItems,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        )
+                      else
+                        for (final item in items) _BundleItemTile(bundleId: bundle.id, item: item),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _edit(BuildContext context, Bundle bundle) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final updated = await showDialog<Bundle>(
+      context: context,
+      builder: (context) => BundleEditDialog(bundle: bundle),
+    );
+    if (updated == null || !mounted) {
+      return;
+    }
+    messenger.showSnackBar(SnackBar(content: Text(l10n.bundlesSaved)));
+  }
+
+  Future<void> _delete(BuildContext context, Bundle bundle) async {
+    final l10n = AppLocalizations.of(context);
+    final controller = AppScope.of(context).bundles;
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.bundlesDeleteTitle),
+        content: Text('${bundle.name}\n\n${l10n.bundlesDeleteMessage}'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.bundlesCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.bundlesDelete),
+          ),
+        ],
+      ),
+    );
+    if (!(confirmed ?? false) || !mounted) {
+      return;
+    }
+    final result = await controller.delete(bundle.id);
+    if (!mounted) {
+      return;
+    }
+    result.fold(
+      (_) {
+        messenger.showSnackBar(SnackBar(content: Text(l10n.bundlesDeleted)));
+        widget.onBack();
+      },
+      (error) => messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.bundlesDeleteFailed}: $error')),
+      ),
+    );
+  }
+
+  Future<void> _addAddon(BuildContext context, Bundle bundle) async {
+    final addon = await showDialog<Addon>(
+      context: context,
+      builder: (context) => AddAddonDialog(bundleId: bundle.id),
+    );
+    if (addon == null || !context.mounted) {
+      return;
+    }
+    final controller = AppScope.of(context).bundles;
+    await controller.addItem(
+      bundleId: bundle.id,
+      addonId: addon.id,
+      gitRef: addon.primaryBranch.gitRef,
+    );
+  }
+}
+
+class _BundleItemTile extends StatelessWidget {
+  const _BundleItemTile({required this.bundleId, required this.item});
+
+  final String bundleId;
+  final BundleItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final services = AppScope.of(context);
+    final addon = services.addons.byId(item.addonId);
+    final metadata = addon?.primaryBranch.metadata;
+    final value = item.gitRef ?? addon?.primaryBranch.gitRef;
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: AddonIcon(base64Data: metadata?.iconBase64, size: 32),
+      title: Text(addon?.displayName ?? item.addonId),
+      subtitle: addon == null
+          ? Text('${l10n.bundlesUnknownAddon}  ·  ${item.gitRef ?? ''}'.trim())
+          : Row(
+              children: [
+                Text(l10n.bundlesBranch),
+                const SizedBox(width: 8),
+                DropdownButton<String>(
+                  value: value,
+                  isDense: true,
+                  items: [
+                    for (final branch in addon.branches)
+                      DropdownMenuItem(value: branch.gitRef, child: Text(branch.gitRef)),
+                    if (value != null &&
+                        !addon.branches.any((branch) => branch.gitRef == value))
+                      DropdownMenuItem(value: value, child: Text(value)),
+                  ],
+                  onChanged: (ref) => services.bundles.setItemBranch(
+                    bundleId: bundleId,
+                    addonId: item.addonId,
+                    gitRef: ref,
+                  ),
+                ),
+              ],
+            ),
+      trailing: IconButton(
+        icon: const Icon(Icons.close),
+        tooltip: l10n.bundlesRemoveItem,
+        onPressed: () => services.bundles.removeItem(
+          bundleId: bundleId,
+          addonId: item.addonId,
+        ),
+      ),
+    );
+  }
+}
+
+class BundleEditDialog extends StatefulWidget {
+  const BundleEditDialog({super.key, this.bundle});
+
+  final Bundle? bundle;
+
+  @override
+  State<BundleEditDialog> createState() => _BundleEditDialogState();
+}
+
+class _BundleEditDialogState extends State<BundleEditDialog> {
+  late final TextEditingController _name = TextEditingController(text: widget.bundle?.name);
+  late final TextEditingController _description = TextEditingController(
+    text: widget.bundle?.description,
+  );
+  String? _profileId;
+  String? _error;
+  bool _saving = false;
+
+  bool get _isEdit => widget.bundle != null;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _description.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final services = AppScope.of(context);
+    final profiles = services.profiles.profiles.watch(context);
+    final controller = services.bundles;
+
+    return AlertDialog(
+      title: Text(_isEdit ? l10n.bundlesEdit : l10n.bundlesCreate),
+      content: SizedBox(
+        width: 420,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _name,
+              autofocus: true,
+              decoration: InputDecoration(labelText: l10n.bundlesName),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _description,
+              decoration: InputDecoration(labelText: l10n.bundlesDescription),
+            ),
+            if (!_isEdit && profiles.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              InputDecorator(
+                decoration: InputDecoration(
+                  isDense: true,
+                  labelText: l10n.bundlesFromProfile,
+                ),
+                child: DropdownButton<String?>(
+                  value: _profileId,
+                  isDense: true,
+                  isExpanded: true,
+                  hint: Text(l10n.bundlesFromProfileNone),
+                  items: [
+                    for (final profile in profiles)
+                      DropdownMenuItem(value: profile.id, child: Text(profile.name)),
+                  ],
+                  onChanged: (value) => setState(() => _profileId = value),
+                ),
+              ),
+            ],
+            if (_error != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _error!,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : () => Navigator.of(context).pop(),
+          child: Text(l10n.bundlesCancel),
+        ),
+        FilledButton(
+          onPressed: _saving ? null : () => _save(context, controller),
+          child: Text(l10n.bundlesSave),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _save(BuildContext context, BundlesController controller) async {
+    final l10n = AppLocalizations.of(context);
+    final currentId = widget.bundle?.id;
+    final issue = await controller.checkName(_name.text, currentBundleId: currentId);
+    if (issue != null) {
+      setState(() => _error = switch (issue) {
+        BundleNameIssue.empty => l10n.bundlesNameEmpty,
+        BundleNameIssue.tooLong => l10n.bundlesNameTooLong,
+        BundleNameIssue.duplicate => l10n.bundlesNameTaken,
+        BundleNameIssue.controlCharacters => l10n.bundlesNameEmpty,
+      });
+      return;
+    }
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    final profileId = _profileId;
+    final result = widget.bundle == null
+        ? (profileId == null
+              ? await controller.create(
+                  name: _name.text,
+                  description: _description.text,
+                )
+              : await controller.createFromProfile(
+                  profileId: profileId,
+                  name: _name.text,
+                  description: _description.text,
+                ))
+        : await controller.update(
+            bundleId: widget.bundle!.id,
+            name: _name.text,
+            description: _description.text,
+          );
+    if (!mounted) {
+      return;
+    }
+    result.fold(
+      (bundle) => Navigator.of(context).pop(bundle),
+      (error) => setState(() {
+        _saving = false;
+        _error = error.toString();
+      }),
+    );
+  }
+}
+
+class AddAddonDialog extends StatefulWidget {
+  const AddAddonDialog({super.key, required this.bundleId});
+
+  final String bundleId;
+
+  @override
+  State<AddAddonDialog> createState() => _AddAddonDialogState();
+}
+
+class _AddAddonDialogState extends State<AddAddonDialog> {
+  String _query = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final services = AppScope.of(context);
+    final addons = services.addons.addons.watch(context);
+    final items = services.bundles.itemsFor(widget.bundleId).map((item) => item.addonId).toSet();
+    final matches = _matches(addons);
+
+    return AlertDialog(
+      title: Text(l10n.bundlesAddAddonTitle),
+      content: SizedBox(
+        width: 520,
+        height: 380,
+        child: Column(
+          children: [
+            TextField(
+              onChanged: (value) => setState(() => _query = value),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: l10n.bundlesSearchHint,
+                isDense: true,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: matches.isEmpty
+                  ? Center(child: Text(l10n.bundlesNoMatches))
+                  : ListView.builder(
+                      itemCount: matches.length,
+                      itemBuilder: (context, index) {
+                        final addon = matches[index];
+                        final alreadyAdded = items.contains(addon.id);
+                        return ListTile(
+                          leading: AddonIcon(
+                            base64Data: addon.primaryBranch.metadata?.iconBase64,
+                            size: 32,
+                          ),
+                          title: Text(addon.displayName),
+                          subtitle: Text(
+                            addon.description,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: alreadyAdded
+                              ? Chip(
+                                  label: Text(l10n.addonsInstalledBadge),
+                                  visualDensity: VisualDensity.compact,
+                                )
+                              : FilledButton.tonal(
+                                  onPressed: () => Navigator.of(context).pop(addon),
+                                  child: Text(l10n.bundlesAddAddon),
+                                ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.bundlesCancel),
+        ),
+      ],
+    );
+  }
+
+  List<Addon> _matches(List<Addon> addons) {
+    final query = _query.trim().toLowerCase();
+    if (query.isEmpty) {
+      return addons;
+    }
+    if (query.startsWith('#')) {
+      final tag = query.substring(1);
+      return [
+        for (final addon in addons)
+          if (addon.tags.any((candidate) => candidate.toLowerCase().contains(tag))) addon,
+      ];
+    }
+    return [
+      for (final addon in addons)
+        if (addon.id.toLowerCase().contains(query) ||
+            addon.displayName.toLowerCase().contains(query) ||
+            addon.description.toLowerCase().contains(query))
+          addon,
+    ];
+  }
+}
+
+class _Header extends StatelessWidget {
+  const _Header({required this.title, required this.onBack, this.actions = const []});
+
+  final String title;
+  final VoidCallback onBack;
+  final List<Widget> actions;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            tooltip: l10n.addonsBack,
+            onPressed: onBack,
+          ),
+          Expanded(
+            child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+          ),
+          ...actions,
+        ],
+      ),
+    );
+  }
+}

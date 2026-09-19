@@ -769,3 +769,34 @@ Template:
   `FreeCAD/AddonManager` `MacroCacheCreator.py`, `addonmanager_workers_startup.py`,
   `addonmanager_macro.py`, `addonmanager_preferences_defaults.json`; real FreeCAD 1.0.2 probe;
   `lib/data/catalog/addon_catalog.dart`; `TASKS.md` S4; D-005, D-037
+
+### D-045 — Collections: controller, validation and Collections tab (M5-01)
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: FR-5.1 asks to create/edit bundles from a profile's installed addons; the spec
+  reserved the Addons **Collections** tab (03 §2.4) and the `bundles`/`bundle_items` tables
+  already exist in schema v2. Apply/export/import belong to M5-02/M5-03.
+- **Decision**:
+  - `BundlesController` (state) owns the drift tables through `BundlesDao`: `bundles`/`items`
+    signals fed by `watchAll()` plus a new `watchAllItems()` (one item stream; counts and
+    per-bundle lists derive from it), `start()`/`dispose()`, and CRUD — `create` (optional
+    `initialItems(bundleId)` builder), `createFromProfile` (copies `installed_addons` rows with
+    their `gitRef`), `update` (name/description), `delete` (items cascade), `addItem`,
+    `removeItem`, `setItemBranch` (upsert on the composite PK).
+  - Name rules mirror profiles: trimmed, 1–64 chars, no control characters, case-insensitive
+    unique. `checkName` is async and queries the DAO (not the live signal), so validation works
+    before `start()`; the dialog localizes the four `BundleNameIssue` cases.
+  - `BundlesDao.save` now inserts `bundle.toCompanion(false)` — drift's default `toCompanion(true)`
+    would drop null fields and make it impossible to clear `description` on update.
+  - Item semantics: `gitRef = null` means "default branch"; the add dialog seeds items with the
+    addon's primary branch and the detail row can re-branch or remove. Catalog-unknown addon ids
+    are kept and shown as "Not in catalog" (bundles can outlive catalog changes).
+  - UI (Collections tab, replacing the placeholder): bundle list with item counts; create/edit
+    dialog with an optional "start from profile" seed; detail with an addon picker (search incl.
+    `#tag`, already-added state) and delete confirmation. Apply/Export/Import buttons are
+    deferred to M5-02/M5-03 to avoid dead ends.
+- **Consequences**: M5-02 can consume `itemsFor(bundleId)` directly; M5-03 must validate imported
+  ids against the catalog; no schema change (v2 stays).
+- **Refs**: spec 02 FR-5.1, spec 03 §2.4, spec 05 `bundles`/`bundle_items`,
+  `lib/state/bundles_controller.dart`, `lib/domain/bundles/bundle_rules.dart`,
+  `lib/ui/addons/collections_view.dart`, `TASKS.md` M5-01

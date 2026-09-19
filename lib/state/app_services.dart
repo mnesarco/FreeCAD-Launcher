@@ -26,6 +26,7 @@ import 'package:freecad_launcher/platform/python_probe.dart';
 import 'package:freecad_launcher/platform/seven_zip_extractor.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:freecad_launcher/state/builds_controller.dart';
+import 'package:freecad_launcher/state/bundles_controller.dart';
 import 'package:freecad_launcher/state/jobs_controller.dart';
 import 'package:freecad_launcher/state/profiles_controller.dart';
 import 'package:freecad_launcher/state/python_controller.dart';
@@ -160,6 +161,8 @@ class AppServices {
 
   late final SettingsController settings = SettingsController(cliWrapper: cliWrapper);
 
+  late final BundlesController bundles = BundlesController(database: database);
+
   late final PythonController python = PythonController(
     database: database,
     paths: paths,
@@ -180,6 +183,7 @@ class AppServices {
     profiles.dispose();
     addons.dispose();
     python.dispose();
+    bundles.dispose();
     jobs.dispose();
     await database.close();
   }

@@ -17,7 +17,8 @@ class BundlesDao extends DatabaseAccessor<AppDatabase> with _$BundlesDaoMixin {
   Future<Bundle?> getById(String id) =>
       (select(bundles)..where((t) => t.id.equals(id))).getSingleOrNull();
 
-  Future<void> save(Bundle bundle) => into(bundles).insertOnConflictUpdate(bundle);
+  Future<void> save(Bundle bundle) =>
+      into(bundles).insertOnConflictUpdate(bundle.toCompanion(false));
 
   Future<int> deleteById(String id) => (delete(bundles)..where((t) => t.id.equals(id))).go();
 
@@ -25,6 +26,14 @@ class BundlesDao extends DatabaseAccessor<AppDatabase> with _$BundlesDaoMixin {
       (select(bundleItems)
             ..where((t) => t.bundleId.equals(bundleId))
             ..orderBy([(t) => OrderingTerm.asc(t.addonId)]))
+          .watch();
+
+  Stream<List<BundleItem>> watchAllItems() =>
+      (select(bundleItems)
+            ..orderBy([
+              (t) => OrderingTerm.asc(t.bundleId),
+              (t) => OrderingTerm.asc(t.addonId),
+            ]))
           .watch();
 
   Future<List<BundleItem>> getItems(String bundleId) =>

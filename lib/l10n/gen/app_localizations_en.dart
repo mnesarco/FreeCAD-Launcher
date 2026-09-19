@@ -444,8 +444,107 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addonsTabCollections => 'Collections';
 
   @override
-  String get addonsCollectionsSoon =>
-      'Collections arrive in a later milestone.';
+  String get bundlesCreate => 'New collection';
+
+  @override
+  String get bundlesEmptyTitle => 'No collections yet';
+
+  @override
+  String get bundlesEmptyMessage =>
+      'Create a collection to save a set of addons and apply it to a profile.';
+
+  @override
+  String get bundlesName => 'Name';
+
+  @override
+  String get bundlesDescription => 'Description';
+
+  @override
+  String get bundlesFromProfile => 'Start from profile';
+
+  @override
+  String get bundlesFromProfileNone => 'Empty collection';
+
+  @override
+  String get bundlesItems => 'Addons';
+
+  @override
+  String bundlesItemCount(int count) {
+    return '$count addon(s)';
+  }
+
+  @override
+  String get bundlesNoItems => 'No addons in this collection yet.';
+
+  @override
+  String get bundlesAddAddon => 'Add addon';
+
+  @override
+  String get bundlesAddAddonTitle => 'Add addon to collection';
+
+  @override
+  String get bundlesSearchHint => 'Search addons, use #tag';
+
+  @override
+  String get bundlesNoMatches => 'No matching addons.';
+
+  @override
+  String get bundlesBranch => 'Branch';
+
+  @override
+  String get bundlesRemoveItem => 'Remove';
+
+  @override
+  String get bundlesEdit => 'Edit collection';
+
+  @override
+  String get bundlesDeleteTitle => 'Delete collection';
+
+  @override
+  String get bundlesDeleteMessage =>
+      'The collection is removed. Addons installed from it are not affected.';
+
+  @override
+  String get bundlesDelete => 'Delete';
+
+  @override
+  String get bundlesSave => 'Save';
+
+  @override
+  String get bundlesCancel => 'Cancel';
+
+  @override
+  String get bundlesCreated => 'Collection created';
+
+  @override
+  String get bundlesSaved => 'Collection saved';
+
+  @override
+  String get bundlesDeleted => 'Collection deleted';
+
+  @override
+  String get bundlesCreateFailed => 'Could not create the collection';
+
+  @override
+  String get bundlesSaveFailed => 'Could not save the collection';
+
+  @override
+  String get bundlesDeleteFailed => 'Could not delete the collection';
+
+  @override
+  String get bundlesLoadFailed => 'Could not load the collections.';
+
+  @override
+  String get bundlesNameEmpty => 'Enter a name.';
+
+  @override
+  String get bundlesNameTooLong => 'Name is too long (max 64 characters).';
+
+  @override
+  String get bundlesNameTaken => 'A collection with this name already exists.';
+
+  @override
+  String get bundlesUnknownAddon => 'Not in catalog';
 
   @override
   String get addonsSearchHint => 'Search addons, use #tag';

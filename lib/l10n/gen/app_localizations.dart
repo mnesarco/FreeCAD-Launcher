@@ -928,11 +928,203 @@ abstract class AppLocalizations {
   /// **'Collections'**
   String get addonsTabCollections;
 
-  /// No description provided for @addonsCollectionsSoon.
+  /// No description provided for @bundlesCreate.
   ///
   /// In en, this message translates to:
-  /// **'Collections arrive in a later milestone.'**
-  String get addonsCollectionsSoon;
+  /// **'New collection'**
+  String get bundlesCreate;
+
+  /// No description provided for @bundlesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No collections yet'**
+  String get bundlesEmptyTitle;
+
+  /// No description provided for @bundlesEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a collection to save a set of addons and apply it to a profile.'**
+  String get bundlesEmptyMessage;
+
+  /// No description provided for @bundlesName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get bundlesName;
+
+  /// No description provided for @bundlesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get bundlesDescription;
+
+  /// No description provided for @bundlesFromProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Start from profile'**
+  String get bundlesFromProfile;
+
+  /// No description provided for @bundlesFromProfileNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty collection'**
+  String get bundlesFromProfileNone;
+
+  /// No description provided for @bundlesItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Addons'**
+  String get bundlesItems;
+
+  /// No description provided for @bundlesItemCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} addon(s)'**
+  String bundlesItemCount(int count);
+
+  /// No description provided for @bundlesNoItems.
+  ///
+  /// In en, this message translates to:
+  /// **'No addons in this collection yet.'**
+  String get bundlesNoItems;
+
+  /// No description provided for @bundlesAddAddon.
+  ///
+  /// In en, this message translates to:
+  /// **'Add addon'**
+  String get bundlesAddAddon;
+
+  /// No description provided for @bundlesAddAddonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add addon to collection'**
+  String get bundlesAddAddonTitle;
+
+  /// No description provided for @bundlesSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search addons, use #tag'**
+  String get bundlesSearchHint;
+
+  /// No description provided for @bundlesNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching addons.'**
+  String get bundlesNoMatches;
+
+  /// No description provided for @bundlesBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch'**
+  String get bundlesBranch;
+
+  /// No description provided for @bundlesRemoveItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get bundlesRemoveItem;
+
+  /// No description provided for @bundlesEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit collection'**
+  String get bundlesEdit;
+
+  /// No description provided for @bundlesDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete collection'**
+  String get bundlesDeleteTitle;
+
+  /// No description provided for @bundlesDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The collection is removed. Addons installed from it are not affected.'**
+  String get bundlesDeleteMessage;
+
+  /// No description provided for @bundlesDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get bundlesDelete;
+
+  /// No description provided for @bundlesSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get bundlesSave;
+
+  /// No description provided for @bundlesCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get bundlesCancel;
+
+  /// No description provided for @bundlesCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Collection created'**
+  String get bundlesCreated;
+
+  /// No description provided for @bundlesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Collection saved'**
+  String get bundlesSaved;
+
+  /// No description provided for @bundlesDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Collection deleted'**
+  String get bundlesDeleted;
+
+  /// No description provided for @bundlesCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the collection'**
+  String get bundlesCreateFailed;
+
+  /// No description provided for @bundlesSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the collection'**
+  String get bundlesSaveFailed;
+
+  /// No description provided for @bundlesDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the collection'**
+  String get bundlesDeleteFailed;
+
+  /// No description provided for @bundlesLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the collections.'**
+  String get bundlesLoadFailed;
+
+  /// No description provided for @bundlesNameEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name.'**
+  String get bundlesNameEmpty;
+
+  /// No description provided for @bundlesNameTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Name is too long (max 64 characters).'**
+  String get bundlesNameTooLong;
+
+  /// No description provided for @bundlesNameTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'A collection with this name already exists.'**
+  String get bundlesNameTaken;
+
+  /// No description provided for @bundlesUnknownAddon.
+  ///
+  /// In en, this message translates to:
+  /// **'Not in catalog'**
+  String get bundlesUnknownAddon;
 
   /// No description provided for @addonsSearchHint.
   ///
