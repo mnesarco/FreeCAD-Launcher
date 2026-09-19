@@ -6,6 +6,7 @@ import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/pip_runner.dart';
 import 'package:freecad_launcher/platform/process.dart';
 import 'package:freecad_launcher/platform/python_env.dart';
+import 'package:freecad_launcher/platform/python_uninstaller.dart';
 import 'package:path/path.dart' as p;
 
 void main() {
@@ -62,6 +63,19 @@ void main() {
       // ignore: avoid_print
       print('import six -> ${probe.stdout.trim()}');
       expect(probe.isSuccess, isTrue);
+
+      final removed = await const PythonUninstaller().uninstall(
+        targetDirectory: target,
+        packageName: 'six',
+      );
+      // ignore: avoid_print
+      print('uninstall removed=$removed');
+      expect(removed, greaterThan(0));
+      expect(File(p.join(target, 'six.py')).existsSync(), isFalse);
+      expect(
+        Directory(p.join(target, 'six-1.17.0.dist-info')).existsSync(),
+        isFalse,
+      );
 
       root.deleteSync(recursive: true);
     },

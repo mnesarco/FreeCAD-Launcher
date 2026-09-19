@@ -27,6 +27,7 @@ import 'package:freecad_launcher/platform/seven_zip_extractor.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:freecad_launcher/state/builds_controller.dart';
 import 'package:freecad_launcher/state/profiles_controller.dart';
+import 'package:freecad_launcher/state/python_controller.dart';
 import 'package:freecad_launcher/state/settings_controller.dart';
 
 class AppServices {
@@ -154,6 +155,13 @@ class AppServices {
 
   late final SettingsController settings = SettingsController(cliWrapper: cliWrapper);
 
+  late final PythonController python = PythonController(
+    database: database,
+    paths: paths,
+    pipRunner: pipRunner,
+    pythonResolver: pythonEnvResolver,
+  );
+
   static Future<AppServices> bootstrap() async {
     final paths = await AppPaths.resolve();
     await paths.ensureBaseDirectories();
@@ -165,6 +173,7 @@ class AppServices {
     builds.dispose();
     profiles.dispose();
     addons.dispose();
+    python.dispose();
     await database.close();
   }
 }

@@ -659,3 +659,24 @@ Template:
   real `six` install verified via the extracted interpreter (`import six` ok).
 - **Refs**: spec 06 §4.1/§4.2/§4.3, spec 02 FR-4.7/FR-6, `lib/domain/python/requirements_parser.dart`,
   `lib/platform/python_env.dart`, `lib/platform/pip_runner.dart`, `TASKS.md` M4-05, M4-06, D-006, D-036
+
+### D-042 — Python packages tab and RECORD-based uninstall
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: M4-07; S3/D-036 chose RECORD-based removal, and the Python tab needed install,
+  list and remove wired for a profile.
+- **Decision**:
+  - `PythonUninstaller` normalizes the package name, finds matching `*.dist-info` directories,
+    deletes RECORD-listed files that resolve inside the target (rejecting escapes with an
+    error), prunes emptied directories and removes the dist-info. Missing dist-info → error.
+  - `PythonController` watches `python_packages`, installs pasted specs (reusing
+    `parseRequirements`) through the shared pip queue, records rows with `source = manual`, and
+    uninstalls files + row; per-profile `installing`/`uninstalling`/`errors` signals drive the
+    UI.
+  - Profile detail **Python** tab: install dialog (one package per line), list with source
+    labels, remove confirmation, empty state.
+- **Consequences**: Manual pip flows are now usable without addons; M5-08 can reuse the tab for
+  requirements provenance. Real `six` install + RECORD uninstall verified (9 files removed).
+- **Refs**: spec 03 §2.3, spec 02 FR-6, `lib/platform/python_uninstaller.dart`,
+  `lib/state/python_controller.dart`, `lib/ui/profiles/profile_detail_view.dart`,
+  `TASKS.md` M4-07, D-036

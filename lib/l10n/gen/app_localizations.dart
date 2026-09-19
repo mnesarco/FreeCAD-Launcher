@@ -412,6 +412,84 @@ abstract class AppLocalizations {
   /// **'Python'**
   String get profilesTabPython;
 
+  /// No description provided for @pythonEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Python packages'**
+  String get pythonEmptyTitle;
+
+  /// No description provided for @pythonEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Install packages into this profile\'s AdditionalPythonPackages; system Python is untouched.'**
+  String get pythonEmptyMessage;
+
+  /// No description provided for @pythonInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Install packages'**
+  String get pythonInstall;
+
+  /// No description provided for @pythonInstallTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Install Python packages'**
+  String get pythonInstallTitle;
+
+  /// No description provided for @pythonSpecs.
+  ///
+  /// In en, this message translates to:
+  /// **'One package per line, e.g. numpy==1.26.4'**
+  String get pythonSpecs;
+
+  /// No description provided for @pythonInstallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Install failed'**
+  String get pythonInstallFailed;
+
+  /// No description provided for @pythonInstalledMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Packages installed'**
+  String get pythonInstalledMessage;
+
+  /// No description provided for @pythonRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get pythonRemove;
+
+  /// No description provided for @pythonRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this package?'**
+  String get pythonRemoveTitle;
+
+  /// No description provided for @pythonRemoveMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The package files are removed from this profile. System Python is untouched.'**
+  String get pythonRemoveMessage;
+
+  /// No description provided for @pythonRemovedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Package removed'**
+  String get pythonRemovedMessage;
+
+  /// No description provided for @pythonRemoveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove the package'**
+  String get pythonRemoveFailed;
+
+  /// No description provided for @pythonSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get pythonSource;
+
   /// No description provided for @profilesTabMacros.
   ///
   /// In en, this message translates to:

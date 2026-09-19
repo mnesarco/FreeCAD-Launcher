@@ -175,6 +175,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profilesTabPython => 'Python';
 
   @override
+  String get pythonEmptyTitle => 'No Python packages';
+
+  @override
+  String get pythonEmptyMessage =>
+      'Install packages into this profile\'s AdditionalPythonPackages; system Python is untouched.';
+
+  @override
+  String get pythonInstall => 'Install packages';
+
+  @override
+  String get pythonInstallTitle => 'Install Python packages';
+
+  @override
+  String get pythonSpecs => 'One package per line, e.g. numpy==1.26.4';
+
+  @override
+  String get pythonInstallFailed => 'Install failed';
+
+  @override
+  String get pythonInstalledMessage => 'Packages installed';
+
+  @override
+  String get pythonRemove => 'Remove';
+
+  @override
+  String get pythonRemoveTitle => 'Remove this package?';
+
+  @override
+  String get pythonRemoveMessage =>
+      'The package files are removed from this profile. System Python is untouched.';
+
+  @override
+  String get pythonRemovedMessage => 'Package removed';
+
+  @override
+  String get pythonRemoveFailed => 'Could not remove the package';
+
+  @override
+  String get pythonSource => 'Source';
+
+  @override
   String get profilesTabMacros => 'Macros';
 
   @override

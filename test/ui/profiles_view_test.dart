@@ -64,6 +64,9 @@ void main() {
           version: '0.4.68',
         ),
       );
+      await services.database.pythonPackagesDao.save(
+        samplePackage(profileId: profile.id, name: 'numpy', version: '1.26.4'),
+      );
     });
 
     testWidgets('renders the card with real data', (tester) async {
@@ -105,6 +108,24 @@ void main() {
       expect(find.textContaining('FREECAD_USER_HOME'), findsWidgets);
       expect(find.text('Environment overrides'), findsOneWidget);
     });
+    testWidgets('lists Python packages in the profile detail', (tester) async {
+      await pumpProfiles(tester);
+      await tester.tap(find.text('Dev'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      await tester.tap(
+        find.descendant(of: find.byType(TabBar), matching: find.text('Python')),
+      );
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      expect(find.text('numpy'), findsOneWidget);
+      expect(find.textContaining('v1.26.4'), findsOneWidget);
+    });
+
     testWidgets('shows installed addons in the profile detail', (tester) async {
       await pumpProfiles(tester);
       await tester.tap(find.text('Dev'));

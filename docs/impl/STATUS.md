@@ -4,11 +4,11 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-19
-- **Current milestone**: M4 — Addons and Python (S3, M4-01..M4-06 done; M4-07 next)
+- **Current milestone**: M4 — Addons and Python (S3, M4-01..M4-07 done; M4-08 next)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-19
-- **Next action**: start `M4-07` (Python packages UI + DB + RECORD-based uninstall), then M4-08
-  job queue. M3 exit review and Windows/macOS manual checks remain open.
+- **Next action**: start `M4-08` (job queue UI: status bar summary, jobs view with
+  progress/cancel/retry/logs). M3 exit review and Windows/macOS manual checks remain open.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -131,7 +131,11 @@
     (`pythonPath` → nearby → bundled → AppImage extraction), `PipRunner` with sanitized env,
     per-run logs, output tail and a global serialization queue; `python_packages` rows recorded
     per requirement. Real `six` install verified via the extracted interpreter.
-  - 305 tests green (8 manual probes skipped), analyze clean, app builds and launches.
+  - M4-07 — **D-042**: RECORD-based `PythonUninstaller` (normalized dist-info lookup, unsafe
+    path rejection, empty-dir pruning) + `PythonController` (manual pip install with
+    `source=manual` rows, uninstall files + row, per-profile signals) and the profile **Python**
+    tab (install dialog, list, remove). Real `six` install + uninstall verified (9 files).
+  - 315 tests green (8 manual probes skipped), analyze clean, app builds and launches.
 
 ## Session log
 
@@ -180,6 +184,7 @@
 | 2026-09-19 | M4 | Profile detail Addons tab lists installed addons | M4-11 | `lib/state/profiles_controller.dart`, `lib/ui/profiles/profile_detail_view.dart`, `test/ui/profiles_view_test.dart` |
 | 2026-09-19 | M4 | D-040 addon update detection, backups and removal | M4-04 | `docs/impl/DECISIONS.md`, `lib/state/addons_controller.dart`, `lib/ui/addons/addons_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M4 | D-041 requirements parser, consent and pip installation | M4-05, M4-06 | `docs/impl/DECISIONS.md`, `lib/domain/python/**`, `lib/platform/python_*.dart`, `lib/platform/pip_runner.dart`, `lib/state/addons_controller.dart`, `lib/ui/addons/**`, `test/**` |
+| 2026-09-19 | M4 | D-042 Python packages tab and RECORD-based uninstall | M4-07 | `docs/impl/DECISIONS.md`, `lib/platform/python_uninstaller.dart`, `lib/state/python_controller.dart`, `lib/state/app_services.dart`, `lib/ui/profiles/profile_detail_view.dart`, `lib/l10n/**`, `test/**` |
 
 ## Standing notes for the next agent
 

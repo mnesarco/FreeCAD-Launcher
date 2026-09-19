@@ -438,7 +438,7 @@ class AddonsController {
       final result = await runner.install(
         pythonPath: interpreter,
         targetDirectory: targetDirectory,
-        packages: requirements.map(_requirementSpec).toList(),
+        packages: requirements.map(requirementSpec).toList(),
         label: addon.id,
       );
       if (!result.isSuccess) {
@@ -466,11 +466,6 @@ class AddonsController {
     }
   }
 
-  String _requirementSpec(PythonRequirement requirement) {
-    final extras = requirement.extras.isEmpty ? '' : '[${requirement.extras.join(',')}]';
-    final marker = requirement.marker.isEmpty ? '' : '; ${requirement.marker}';
-    return '${requirement.name}$extras${requirement.specifier}$marker';
-  }
 
   void clearInstallError(String addonId) {
     installErrors.value = {...installErrors.value}..remove(addonId);

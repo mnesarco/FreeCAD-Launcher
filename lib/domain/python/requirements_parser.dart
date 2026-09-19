@@ -27,6 +27,12 @@ class PythonRequirement {
   }
 }
 
+String requirementSpec(PythonRequirement requirement) {
+  final extras = requirement.extras.isEmpty ? '' : '[${requirement.extras.join(',')}]';
+  final marker = requirement.marker.isEmpty ? '' : '; ${requirement.marker}';
+  return '${requirement.name}$extras${requirement.specifier}$marker';
+}
+
 List<PythonRequirement> parseRequirements(String text) {
   final requirements = <PythonRequirement>[];
   for (final rawLine in text.split('\n')) {

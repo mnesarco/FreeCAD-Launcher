@@ -94,7 +94,7 @@ class ProfileDetailView extends StatelessWidget {
               children: [
                 _OverviewTab(profile: current, buildInfo: build),
                 _ProfileAddonsTab(profileId: current.id),
-                _ComingSoonTab(icon: Icons.terminal_outlined, label: l10n.profilesTabPython),
+                _ProfilePythonTab(profileId: current.id),
                 _ComingSoonTab(icon: Icons.auto_fix_high_outlined, label: l10n.profilesTabMacros),
                 _ComingSoonTab(icon: Icons.tune_outlined, label: l10n.profilesTabConfig),
                 _ComingSoonTab(icon: Icons.backup_outlined, label: l10n.profilesTabBackups),
@@ -301,6 +301,198 @@ class _ProfileAddonsTab extends StatelessWidget {
           subtitle: Text(subtitle),
         );
       },
+    );
+  }
+}
+
+class _ProfilePythonTab extends StatefulWidget {
+  const _ProfilePythonTab({required this.profileId});
+
+  final String profileId;
+
+  @override
+  State<_ProfilePythonTab> createState() => _ProfilePythonTabState();
+}
+
+class _ProfilePythonTabState extends State<_ProfilePythonTab> {
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_started) {
+      _started = true;
+      AppScope.of(context).python.start();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final controller = AppScope.of(context).python;
+    final installed = controller.packages.watch(context).where(
+      (package) => package.profileId == widget.profileId,
+    ).toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    final installing = controller.installing.watch(context).contains(widget.profileId);
+    final error = controller.errors.watch(context)[widget.profileId];
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: Row(
+            children: [
+              if (error != null)
+                Expanded(
+                  child: Text(
+                    '${l10n.pythonInstallFailed}: $error',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                )
+              else
+                const Spacer(),
+              FilledButton.tonalIcon(
+                onPressed: installing ? null : () => _install(context),
+                icon: installing
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.add),
+                label: Text(l10n.pythonInstall),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: installed.isEmpty
+              ? EmptyState(
+                  icon: Icons.terminal_outlined,
+                  title: l10n.pythonEmptyTitle,
+                  message: l10n.pythonEmptyMessage,
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.all(8),
+                  itemCount: installed.length,
+                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final package = installed[index];
+                    final subtitle = [
+                      if ((package.version ?? '').isNotEmpty) 'v${package.version}',
+                      '${l10n.pythonSource}: ${package.source}',
+                    ].join('  ·  ');
+                    return ListTile(
+                      leading: const Icon(Icons.terminal_outlined),
+                      title: Text(package.name),
+                      subtitle: Text(subtitle),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete_outline),
+                        tooltip: l10n.pythonRemove,
+                        onPressed: () => _uninstall(context, package.name),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _install(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final controller = AppScope.of(context).python;
+    final textController = TextEditingController();
+    final specText = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.pythonInstallTitle),
+        content: SizedBox(
+          width: 420,
+          child: TextField(
+            controller: textController,
+            autofocus: true,
+            maxLines: 5,
+            minLines: 3,
+            decoration: InputDecoration(hintText: l10n.pythonSpecs),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l10n.versionsCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(textController.text),
+            child: Text(l10n.pythonInstall),
+          ),
+        ],
+      ),
+    );
+    textController.dispose();
+    if (specText == null || specText.trim().isEmpty || !context.mounted) {
+      return;
+    }
+    final messenger = ScaffoldMessenger.of(context);
+    final result = await controller.install(
+      profileId: widget.profileId,
+      specText: specText,
+    );
+    if (!context.mounted) {
+      return;
+    }
+    result.fold(
+      (_) => messenger.showSnackBar(
+        SnackBar(content: Text(l10n.pythonInstalledMessage)),
+      ),
+      (failure) => messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.pythonInstallFailed}: $failure')),
+      ),
+    );
+  }
+
+  Future<void> _uninstall(BuildContext context, String packageName) async {
+    final l10n = AppLocalizations.of(context);
+    final controller = AppScope.of(context).python;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.pythonRemoveTitle),
+        content: Text('$packageName\n\n${l10n.pythonRemoveMessage}'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.versionsCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.pythonRemove),
+          ),
+        ],
+      ),
+    );
+    if (!(confirmed ?? false) || !context.mounted) {
+      return;
+    }
+    final messenger = ScaffoldMessenger.of(context);
+    final result = await controller.uninstall(
+      profileId: widget.profileId,
+      packageName: packageName,
+    );
+    if (!context.mounted) {
+      return;
+    }
+    result.fold(
+      (_) => messenger.showSnackBar(
+        SnackBar(content: Text(l10n.pythonRemovedMessage)),
+      ),
+      (error) => messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.pythonRemoveFailed}: $error')),
+      ),
     );
   }
 }

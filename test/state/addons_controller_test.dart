@@ -7,62 +7,19 @@ import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
-import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/platform/addon_installer.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/pip_runner.dart';
-import 'package:freecad_launcher/platform/process.dart';
 import 'package:freecad_launcher/platform/python_env.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:path/path.dart' as p;
 
 import '../data/test_fixtures.dart';
 import '../helpers/fake_addon_catalog.dart';
+import '../helpers/fake_pip.dart';
 import '../helpers/fake_download.dart';
 import '../helpers/test_database.dart';
-
-class FakePipRunner extends PipRunner {
-  FakePipRunner()
-    : super(processRunner: ProcessRunner(), paths: AppPaths(dataRoot: '/tmp'));
-
-  bool success = true;
-  final List<({String pythonPath, String targetDirectory, List<String> packages})> calls = [];
-
-  @override
-  Future<PipResult> install({
-    required String pythonPath,
-    required String targetDirectory,
-    required List<String> packages,
-    required String label,
-    void Function(String line)? onOutput,
-    Duration timeout = const Duration(minutes: 30),
-  }) async {
-    calls.add((pythonPath: pythonPath, targetDirectory: targetDirectory, packages: packages));
-    return PipResult(
-      exitCode: success ? 0 : 1,
-      logPath: '/tmp/pip.log',
-      outputTail: success ? '' : 'pip failed',
-    );
-  }
-}
-
-class FakePythonEnvResolver extends PythonEnvResolver {
-  FakePythonEnvResolver(this.pythonPath) : super(processRunner: ProcessRunner());
-
-  final String? pythonPath;
-
-  @override
-  Future<String?> resolve({
-    required BuildKind kind,
-    required String buildDirectory,
-    required String executablePath,
-    String? storedPythonPath,
-    void Function(String line)? onOutput,
-  }) async {
-    return pythonPath;
-  }
-}
 
 Addon addon(
   String id, {
