@@ -8,6 +8,7 @@ import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/ui/profiles/config_snapshots_view.dart';
 import 'package:freecad_launcher/ui/profiles/launch_command_dialog.dart';
 import 'package:freecad_launcher/ui/profiles/profile_actions.dart';
 import 'package:freecad_launcher/ui/profiles/profile_dialogs.dart';
@@ -96,8 +97,8 @@ class ProfileDetailView extends StatelessWidget {
                 _ProfileAddonsTab(profileId: current.id),
                 _ProfilePythonTab(profileId: current.id),
                 _ComingSoonTab(icon: Icons.auto_fix_high_outlined, label: l10n.profilesTabMacros),
-                _ComingSoonTab(icon: Icons.tune_outlined, label: l10n.profilesTabConfig),
-                _ComingSoonTab(icon: Icons.backup_outlined, label: l10n.profilesTabBackups),
+                ProfileConfigTab(profileId: current.id),
+                ProfileBackupsTab(profileId: current.id),
               ],
             ),
           ),

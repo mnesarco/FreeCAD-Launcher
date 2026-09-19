@@ -19,7 +19,8 @@ import 'package:freecad_launcher/platform/dmg_extractor.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/host.dart';
 import 'package:freecad_launcher/platform/launch.dart';
-import 'package:freecad_launcher/platform/macro_file_actions.dart';
+import 'package:freecad_launcher/platform/config_snapshots.dart';
+import 'package:freecad_launcher/platform/file_actions.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/pip_runner.dart';
 import 'package:freecad_launcher/platform/process.dart';
@@ -128,6 +129,7 @@ class AppServices {
     paths: paths,
     platform: hostPlatform,
     runtime: launchRuntime,
+    configSnapshots: configSnapshots,
   );
 
   late final AddonInstaller addonInstaller = AddonInstaller(downloader: downloader);
@@ -174,10 +176,12 @@ class AppServices {
 
   late final SettingsController settings = SettingsController(cliWrapper: cliWrapper);
 
-  late final MacroFileActions macroFiles = MacroFileActions(
+  late final FileActions fileActions = FileActions(
     processRunner: processRunner,
     platform: hostPlatform,
   );
+
+  late final ConfigSnapshotService configSnapshots = const ConfigSnapshotService();
 
   late final BundlesController bundles = BundlesController(database: database);
 

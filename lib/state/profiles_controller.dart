@@ -11,6 +11,7 @@ import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/profiles/launch_plan.dart';
+import 'package:freecad_launcher/platform/config_snapshots.dart';
 import 'package:freecad_launcher/platform/launch.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/process.dart';
@@ -62,12 +63,14 @@ class ProfilesController {
     required AppPaths paths,
     required BuildPlatform platform,
     required FreeCadRuntime runtime,
+    ConfigSnapshotService configSnapshots = const ConfigSnapshotService(),
     DateTime Function()? clock,
   }) : _database = database,
        _repository = repository,
        _paths = paths,
        _platform = platform,
        _runtime = runtime,
+       _configSnapshots = configSnapshots,
        _clock = clock ?? DateTime.now;
 
   final AppDatabase _database;
@@ -75,7 +78,10 @@ class ProfilesController {
   final AppPaths _paths;
   final BuildPlatform _platform;
   final FreeCadRuntime _runtime;
+  final ConfigSnapshotService _configSnapshots;
   final DateTime Function() _clock;
+
+  final configSnapshots = signal<Map<String, List<ConfigSnapshot>>>({});
 
   final profiles = signal<List<Profile>>([]);
   final profilesLoaded = signal(false);
@@ -373,6 +379,55 @@ class ProfilesController {
     final safeName = profile.name.replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '_');
     final stamp = _clock().toIso8601String().replaceAll(RegExp(r'[:.]'), '-');
     return File(p.join(_paths.logsDir, 'launch-$safeName-$stamp.log'));
+  }
+
+  void refreshConfigSnapshots(String profileId) {
+    configSnapshots.value = {
+      ...configSnapshots.value,
+      profileId: _configSnapshots.list(_paths.profilePaths(profileId).root),
+    };
+  }
+
+  Future<Result<ConfigSnapshot?>> createConfigSnapshot(String profileId) async {
+    try {
+      final snapshot = await _configSnapshots.create(
+        profileRoot: _paths.profilePaths(profileId).root,
+        now: _clock(),
+      );
+      refreshConfigSnapshots(profileId);
+      return Ok(snapshot);
+    } on Object catch (failure) {
+      return Err(AppError.from(failure, retryable: true));
+    }
+  }
+
+  Future<Result<void>> restoreConfigSnapshot(
+    String profileId,
+    ConfigSnapshot snapshot,
+  ) async {
+    try {
+      await _configSnapshots.restore(
+        profileRoot: _paths.profilePaths(profileId).root,
+        snapshot: snapshot,
+      );
+      refreshConfigSnapshots(profileId);
+      return const Ok(null);
+    } on Object catch (failure) {
+      return Err(AppError.from(failure, retryable: true));
+    }
+  }
+
+  Future<Result<void>> deleteConfigSnapshot(
+    String profileId,
+    ConfigSnapshot snapshot,
+  ) async {
+    try {
+      await _configSnapshots.delete(snapshot);
+      refreshConfigSnapshots(profileId);
+      return const Ok(null);
+    } on Object catch (failure) {
+      return Err(AppError.from(failure, retryable: true));
+    }
   }
 
   void dispose() {

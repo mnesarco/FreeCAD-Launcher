@@ -240,6 +240,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profilesConfigMissing => 'Created on first launch';
 
   @override
+  String get profilesConfigOpenFolder => 'Open profile folder';
+
+  @override
+  String get profilesConfigBackup => 'Back up config';
+
+  @override
+  String get profilesConfigBackupDone => 'Config backed up';
+
+  @override
+  String get profilesConfigNothing =>
+      'No user.cfg or system.cfg to back up yet.';
+
+  @override
+  String get profilesConfigSnapshots => 'Snapshots';
+
+  @override
+  String get profilesConfigSnapshotsEmpty => 'No config snapshots yet.';
+
+  @override
+  String get profilesConfigRestore => 'Restore';
+
+  @override
+  String get profilesConfigRestoreTitle => 'Restore config snapshot';
+
+  @override
+  String get profilesConfigRestoreMessage =>
+      'The current user.cfg and system.cfg are replaced by this snapshot.';
+
+  @override
+  String get profilesConfigRestored => 'Config restored';
+
+  @override
+  String get profilesConfigDeleteSnapshot => 'Delete snapshot';
+
+  @override
+  String get profilesConfigSnapshotDeleted => 'Snapshot deleted';
+
+  @override
+  String get profilesConfigFailed => 'Config action failed';
+
+  @override
   String get profilesStatusMissing => 'Build missing';
 
   @override

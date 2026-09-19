@@ -538,6 +538,84 @@ abstract class AppLocalizations {
   /// **'Created on first launch'**
   String get profilesConfigMissing;
 
+  /// No description provided for @profilesConfigOpenFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Open profile folder'**
+  String get profilesConfigOpenFolder;
+
+  /// No description provided for @profilesConfigBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up config'**
+  String get profilesConfigBackup;
+
+  /// No description provided for @profilesConfigBackupDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Config backed up'**
+  String get profilesConfigBackupDone;
+
+  /// No description provided for @profilesConfigNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'No user.cfg or system.cfg to back up yet.'**
+  String get profilesConfigNothing;
+
+  /// No description provided for @profilesConfigSnapshots.
+  ///
+  /// In en, this message translates to:
+  /// **'Snapshots'**
+  String get profilesConfigSnapshots;
+
+  /// No description provided for @profilesConfigSnapshotsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No config snapshots yet.'**
+  String get profilesConfigSnapshotsEmpty;
+
+  /// No description provided for @profilesConfigRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get profilesConfigRestore;
+
+  /// No description provided for @profilesConfigRestoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore config snapshot'**
+  String get profilesConfigRestoreTitle;
+
+  /// No description provided for @profilesConfigRestoreMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The current user.cfg and system.cfg are replaced by this snapshot.'**
+  String get profilesConfigRestoreMessage;
+
+  /// No description provided for @profilesConfigRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Config restored'**
+  String get profilesConfigRestored;
+
+  /// No description provided for @profilesConfigDeleteSnapshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete snapshot'**
+  String get profilesConfigDeleteSnapshot;
+
+  /// No description provided for @profilesConfigSnapshotDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Snapshot deleted'**
+  String get profilesConfigSnapshotDeleted;
+
+  /// No description provided for @profilesConfigFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Config action failed'**
+  String get profilesConfigFailed;
+
   /// No description provided for @profilesStatusMissing.
   ///
   /// In en, this message translates to:

@@ -927,3 +927,35 @@ Template:
 - **Refs**: spec 02 FR-7.1/7.3/7.4, spec 04 §"user home", `lib/platform/macro_scanner.dart`,
   `lib/platform/macro_file_actions.dart`, `lib/state/macros_controller.dart`,
   `lib/ui/macros/macros_view.dart`, `TASKS.md` M5-05, D-044, D-048
+
+### D-050 — Config paths, snapshots and backup cap (M5-06)
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: FR-8.1 wants config/data paths plus `user.cfg`/`system.cfg` presence and an
+  "open config dir" action; FR-8.2 wants timestamped backup/restore inside the profile. The
+  Config and Backups profile tabs were placeholders.
+- **Decision**:
+  - `ConfigSnapshotService` (platform) snapshots `<profile>/user.cfg` and
+    `<profile>/system.cfg` into `<profile>/backups/config-<UTC timestamp>Z/` using the same
+    timestamp format as addon backups (D-040); it returns null when neither file exists, lists
+    snapshots newest-first (creation time parsed from the directory name, filesystem mtime as
+    fallback), restores by copying files back over the profile root, deletes snapshots and keeps
+    at most `maxSnapshots` (default 10) by pruning the oldest after each create.
+  - All snapshot IO is synchronous inside async methods (small files), so the flows stay usable
+    in widget tests and avoid partial state; `ConfigSnapshotException` wraps failures.
+  - `ProfilesController` owns the per-profile snapshot signal
+    (`configSnapshots`), refreshes it on demand, and exposes `createConfigSnapshot`,
+    `restoreConfigSnapshot`, `deleteConfigSnapshot` returning `Result`s (service injected via
+    AppServices).
+  - `FileActions` (renamed from the macro-only helper) gains `openDirectory`; the profile
+    **Config** tab shows root/user.cfg/system.cfg/backups with sizes or "Created on first
+    launch", an "Open profile folder" action, "Back up config" (snackbar on create or when
+    there is nothing to back up) and the snapshot list; the **Backups** tab shows the snapshot
+    list with restore (confirmation) and delete. Reset and the preference browser stay v0.2
+    (FR-8.3/8.4); manifest export/import arrives with M5-07.
+- **Consequences**: M5-08 can treat Config/Backups as wired; snapshots are not recorded in the
+  DB (filesystem is the source of truth, consistent with profile backups); restoring does not
+  auto-snapshot the current files first (the list makes that explicit).
+- **Refs**: spec 02 FR-8.1/8.2, spec 03 §2.2, `lib/platform/config_snapshots.dart`,
+  `lib/platform/file_actions.dart`, `lib/state/profiles_controller.dart`,
+  `lib/ui/profiles/config_snapshots_view.dart`, `TASKS.md` M5-06, D-028, D-040

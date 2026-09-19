@@ -3,8 +3,8 @@ import 'package:path/path.dart' as p;
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/platform/process.dart';
 
-class MacroFileActions {
-  const MacroFileActions({required ProcessRunner processRunner, required BuildPlatform platform})
+class FileActions {
+  const FileActions({required ProcessRunner processRunner, required BuildPlatform platform})
     : _processRunner = processRunner,
       _platform = platform;
 
@@ -19,6 +19,10 @@ class MacroFileActions {
     await _run(_openCommand(path));
   }
 
+  Future<void> openDirectory(String directory) async {
+    await _run(_directoryCommand(directory));
+  }
+
   Future<void> _run(List<String> command) async {
     await _processRunner.run(
       ProcessSpec(executable: command.first, arguments: command.skip(1).toList()),
@@ -30,6 +34,14 @@ class MacroFileActions {
       BuildPlatform.linux => ['xdg-open', p.dirname(path)],
       BuildPlatform.macos => ['open', '-R', path],
       BuildPlatform.windows => ['explorer.exe', '/select,$path'],
+    };
+  }
+
+  List<String> _directoryCommand(String directory) {
+    return switch (_platform) {
+      BuildPlatform.linux => ['xdg-open', directory],
+      BuildPlatform.macos => ['open', directory],
+      BuildPlatform.windows => ['explorer.exe', directory],
     };
   }
 

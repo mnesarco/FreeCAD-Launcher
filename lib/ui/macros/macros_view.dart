@@ -129,12 +129,12 @@ class _InstalledMacroTile extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.open_in_new),
               tooltip: l10n.macrosOpen,
-              onPressed: () => _run(context, () => services.macroFiles.open(path)),
+              onPressed: () => _run(context, () => services.fileActions.open(path)),
             ),
             IconButton(
               icon: const Icon(Icons.folder_open_outlined),
               tooltip: l10n.macrosReveal,
-              onPressed: () => _run(context, () => services.macroFiles.reveal(path)),
+              onPressed: () => _run(context, () => services.fileActions.reveal(path)),
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline),
