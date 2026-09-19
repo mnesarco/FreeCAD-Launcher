@@ -31,10 +31,19 @@ class CustomImportException implements Exception {
 enum InstallStage { hashing, downloading, installing, detectingPython }
 
 class InstallProgress {
-  const InstallProgress({required this.stage, this.fraction});
+  const InstallProgress({
+    required this.stage,
+    this.fraction,
+    this.receivedBytes,
+    this.totalBytes,
+    this.bytesPerSecond,
+  });
 
   final InstallStage stage;
   final double? fraction;
+  final int? receivedBytes;
+  final int? totalBytes;
+  final int? bytesPerSecond;
 }
 
 class BuildsController {
@@ -77,6 +86,7 @@ class BuildsController {
   final installErrors = signal<Map<String, AppError>>({});
 
   final Map<String, CancellationToken> _tokens = {};
+  final Map<String, DateTime> _downloadStartedAt = {};
   StreamSubscription<List<Build>>? _buildsSubscription;
 
   BuildPlatform get platform => _platform;
@@ -187,6 +197,7 @@ class BuildsController {
     final buildId = candidate.id;
     final token = CancellationToken();
     _tokens[buildId] = token;
+    _startDownloadTracking(buildId);
     _setProgress(buildId, const InstallProgress(stage: InstallStage.downloading, fraction: 0));
 
     try {
@@ -197,10 +208,7 @@ class BuildsController {
         fileName: candidate.assetName,
         expectedSha256: expected,
         cancellationToken: token,
-        onProgress: (progress) => _setProgress(
-          buildId,
-          InstallProgress(stage: InstallStage.downloading, fraction: progress.fraction),
-        ),
+        onProgress: (progress) => _onDownloadProgress(buildId, progress),
       );
 
       _setProgress(buildId, const InstallProgress(stage: InstallStage.installing));
@@ -247,6 +255,7 @@ class BuildsController {
       return Err(appError);
     } finally {
       _tokens.remove(buildId);
+      _downloadStartedAt.remove(buildId);
       installProgress.value = {...installProgress.value}..remove(buildId);
     }
   }
@@ -299,6 +308,7 @@ class BuildsController {
     final token = CancellationToken();
     _tokens[buildId] = token;
     if (isUrl) {
+      _startDownloadTracking(buildId);
       _setProgress(buildId, const InstallProgress(stage: InstallStage.downloading, fraction: 0));
     }
 
@@ -347,6 +357,7 @@ class BuildsController {
             fileName: fileName ?? Uri.parse(trimmed).path.split('/').last,
             expectedSha256: effectiveSha,
             cancellationToken: token,
+            onProgress: (progress) => _onDownloadProgress(buildId, progress),
           );
           archivePath = download.path;
           effectiveSha = download.sha256;
@@ -422,6 +433,7 @@ class BuildsController {
       return Err(appError);
     } finally {
       _tokens.remove(buildId);
+      _downloadStartedAt.remove(buildId);
       installProgress.value = {...installProgress.value}..remove(buildId);
     }
   }
@@ -530,6 +542,31 @@ class BuildsController {
     } on Object {
       return null;
     }
+  }
+
+  void _startDownloadTracking(String buildId) {
+    _downloadStartedAt[buildId] = _clock();
+  }
+
+  void _onDownloadProgress(String buildId, DownloadProgress progress) {
+    int? bytesPerSecond;
+    final started = _downloadStartedAt[buildId];
+    if (started != null) {
+      final seconds = _clock().difference(started).inMilliseconds / 1000;
+      if (seconds > 0.5) {
+        bytesPerSecond = (progress.receivedBytes / seconds).round();
+      }
+    }
+    _setProgress(
+      buildId,
+      InstallProgress(
+        stage: InstallStage.downloading,
+        fraction: progress.fraction,
+        receivedBytes: progress.receivedBytes,
+        totalBytes: progress.totalBytes,
+        bytesPerSecond: bytesPerSecond,
+      ),
+    );
   }
 
   Future<String> _hashWithProgress(String buildId, String path) {

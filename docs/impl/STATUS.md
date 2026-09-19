@@ -58,7 +58,10 @@
     both the Available list and the Custom tab.
   - M2-18 — **D-025**: successful catalog installs and custom imports switch to the Installed
     tab; failures stay on the current tab.
-  - 194 tests green (2 manual network probes skipped), analyze clean, app builds and launches.
+  - M2-19 — **D-026**: "download hangs" was a slow-link perception (GitHub release assets
+    measured at ~55–75 KB/s here, ~4 h for 820 MB); the UI now shows transferred/total bytes and
+    speed and the downloader coalesces updates to 1% steps.
+  - 196 tests green (2 manual network probes skipped), analyze clean, app builds and launches.
 
 ## Session log
 
@@ -85,6 +88,7 @@
 | 2026-09-19 | M2 | D-023 custom local AppImages symlinked in place instead of copied | M2-16 | `docs/impl/DECISIONS.md`, `docs/spec/02-requirements.md`, `docs/spec/03-ux.md`, `docs/spec/05-data-model.md`, `lib/platform/build_installer.dart`, `lib/state/builds_controller.dart`, `test/**` |
 | 2026-09-19 | M2 | D-024 opt-in hashing + progress stages for imports | M2-17 | `docs/impl/DECISIONS.md`, `docs/spec/**`, `lib/platform/checksum.dart`, `lib/platform/downloader.dart`, `lib/state/builds_controller.dart`, `lib/ui/builds/builds_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M2 | D-025 navigate to Installed tab after successful install/import | M2-18 | `docs/impl/DECISIONS.md`, `docs/spec/03-ux.md`, `lib/ui/builds/builds_view.dart` |
+| 2026-09-19 | M2 | D-026 download bytes/speed feedback; downloader progress coalescing | M2-19 | `docs/impl/DECISIONS.md`, `docs/spec/03-ux.md`, `lib/platform/downloader.dart`, `lib/state/builds_controller.dart`, `lib/ui/builds/builds_view.dart`, `test/**` |
 
 ## Standing notes for the next agent
 

@@ -276,6 +276,33 @@ void main() {
     expect(stored.sha256, expected);
   });
 
+  test('reports downloaded bytes and totals in install progress', () async {
+    final data = utf8.encode('data');
+    final source = FakeDownloadSourceWithResponses(
+      (uri) async => DownloadStream(bytes: bytesStream(data), contentLength: data.length),
+    );
+    final controller = buildController(source: source);
+    final buildId = candidate().id;
+    final seen = <InstallProgress>[];
+    final dispose = controller.installProgress.subscribe((progressByBuild) {
+      final entry = progressByBuild[buildId];
+      if (entry != null) {
+        seen.add(entry);
+      }
+    });
+
+    await controller.install(candidate());
+    dispose();
+
+    expect(
+      seen.any(
+        (progress) =>
+            progress.receivedBytes == data.length && progress.totalBytes == data.length,
+      ),
+      isTrue,
+    );
+  });
+
   test('install records failures without storing anything', () async {
     final installer = FakeInstaller()..error = const ArchiveExtractionException('boom');
     final controller = buildController(installer: installer);

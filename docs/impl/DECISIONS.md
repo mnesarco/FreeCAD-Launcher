@@ -303,3 +303,21 @@ Template:
 - **Consequences**: `_AvailableBuildTile` and `_CustomTab` capture the `TabController` before
   awaiting, avoiding context use across async gaps.
 - **Refs**: spec 03 §2.2, `lib/ui/builds/builds_view.dart`, `TASKS.md` M2-18, M2-07, M2-08
+
+### D-026 — Download progress shows bytes and speed
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: User-reported "download hangs". Measured on the dev machine: GitHub release
+  assets stream at ~55–75 KB/s (curl and Dart agree), so the 820 MB 1.1.3 AppImage needs
+  ~3–4 h. The UI only showed a bar that moves ~0.1% per 30 s and no byte/speed information,
+  so a slow-but-alive download looked frozen.
+- **Decision**:
+  - `InstallProgress` carries `receivedBytes`, `totalBytes` and `bytesPerSecond` (average since
+    the download started); the Available list and Custom tab show "x / y · z/s" while
+    downloading.
+  - `Downloader` coalesces progress callbacks to 1% steps (256 KiB when the total is unknown)
+    and always emits a final update, bounding UI work for large files without hiding activity.
+- **Consequences**: Slow downloads are visibly alive; no change to transfer behavior. Resume
+  support (Range) and mirror selection remain future work if slow links persist.
+- **Refs**: `lib/platform/downloader.dart`, `lib/state/builds_controller.dart`,
+  `lib/ui/builds/builds_view.dart`, spec 03 §2.2, `TASKS.md` M2-19, M2-04, M2-17

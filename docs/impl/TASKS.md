@@ -57,6 +57,7 @@ covered by tests.
 | M2-16 | Custom local AppImages symlinked instead of copied (D-023): executable check, `referenceInPlace` install request, copy fallback when symlinks unavailable, remove deletes only the link | Installer test asserts a symlink + target size and no chmod; controller test asserts `referenceInPlace` for local and managed copy for URL; analyze/tests green | M2-05, M2-08 | S | DONE |
 | M2-17 | Opt-in hashing + import stage feedback (D-024): hash only when a checksum is given (local files and downloads), nullable `DownloadResult.sha256`, `hashing`/`detectingPython` stages with progress in Available + Custom tabs | Controller/downloader/checksum/installer tests green; local AppImage import no longer hashes when checksum is empty; stage transitions observable via `installProgress` | M2-04, M2-08, M2-15 | M | DONE |
 | M2-18 | Switch to the Installed tab after a successful install/import (D-025) | Available installs and custom imports animate to Installed on success; failures stay on the current tab; manual click-through pending | M2-07 | S | DONE |
+| M2-19 | Download progress shows bytes/speed (D-026): `InstallProgress` byte fields + average speed; downloader coalesces to 1% steps with a final update | Downloader throttle test; controller test asserts byte/total propagation; UI shows "x / y · z/s" during downloads | M2-04, M2-17 | S | DONE |
 
 Exit: stable FreeCAD installs from catalog and launches by hand on Linux, Windows, macOS;
 corrupted download rejected; rate-limit/offline paths verified.

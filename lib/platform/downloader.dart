@@ -105,6 +105,8 @@ class Downloader {
     : _source = source,
       _cacheDirectory = cacheDirectory;
 
+  static const int _progressDeltaBytes = 256 * 1024;
+
   final DownloadSource _source;
   final String _cacheDirectory;
 
@@ -144,8 +146,29 @@ class Downloader {
     }
 
     var received = 0;
+    var lastReported = 0;
+    var lastPercent = -1;
     var sinkClosed = false;
     final sink = part.openWrite();
+    final totalBytes = stream.contentLength;
+
+    void reportProgress({required bool force}) {
+      final bool shouldReport;
+      if (totalBytes != null && totalBytes > 0) {
+        final percent = received * 100 ~/ totalBytes;
+        shouldReport = percent != lastPercent;
+        lastPercent = percent;
+      } else {
+        shouldReport = received - lastReported >= _progressDeltaBytes;
+        lastReported = received;
+      }
+      if (!force && !shouldReport) {
+        return;
+      }
+      onProgress?.call(
+        DownloadProgress(receivedBytes: received, totalBytes: totalBytes),
+      );
+    }
 
     try {
       await for (final chunk in stream.bytes) {
@@ -154,13 +177,12 @@ class Downloader {
         }
         sink.add(chunk);
         received += chunk.length;
-        onProgress?.call(
-          DownloadProgress(receivedBytes: received, totalBytes: stream.contentLength),
-        );
+        reportProgress(force: false);
       }
       await sink.flush();
       await sink.close();
       sinkClosed = true;
+      reportProgress(force: true);
     } on Object {
       if (!sinkClosed) {
         try {

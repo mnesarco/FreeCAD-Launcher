@@ -23,6 +23,18 @@ String _stageLabel(AppLocalizations l10n, InstallStage stage) {
   };
 }
 
+String _progressDetail(InstallProgress progress) {
+  final parts = <String>[
+    if (progress.receivedBytes != null && progress.totalBytes != null)
+      '${formatBytes(progress.receivedBytes!)} / ${formatBytes(progress.totalBytes!)}'
+    else if (progress.receivedBytes != null)
+      formatBytes(progress.receivedBytes!),
+    if (progress.bytesPerSecond != null && progress.bytesPerSecond! > 0)
+      '${formatBytes(progress.bytesPerSecond!)}/s',
+  ];
+  return parts.join('  ·  ');
+}
+
 class BuildsView extends StatefulWidget {
   const BuildsView({super.key});
 
@@ -326,14 +338,24 @@ class _AvailableBuildTile extends StatelessWidget {
 
     Widget trailing;
     if (progress != null) {
+      final detail = _progressDetail(progress);
       trailing = SizedBox(
-        width: 180,
+        width: 220,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             LinearProgressIndicator(value: progress.fraction),
             const SizedBox(height: 4),
+            if (detail.isNotEmpty) ...[
+              Text(
+                detail,
+                style: theme.textTheme.labelSmall,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+            ],
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -598,6 +620,13 @@ class _CustomTabState extends State<_CustomTab> {
             _stageLabel(l10n, progress.stage),
             style: Theme.of(context).textTheme.labelSmall,
           ),
+          if (_progressDetail(progress).isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              _progressDetail(progress),
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+          ],
         ],
       ],
     );

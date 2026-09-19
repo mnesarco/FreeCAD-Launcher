@@ -61,6 +61,20 @@ void main() {
     expect(File(result.path).readAsBytesSync(), data);
   });
 
+  test('coalesces progress updates but always reports completion', () async {
+    final chunks = List.generate(256, (index) => List<int>.filled(65536, index % 256));
+    source
+      ..streamFactory = (() => Stream.fromIterable(chunks))
+      ..contentLength = 256 * 65536;
+    final progress = <DownloadProgress>[];
+
+    await downloader.download(uri: uri, fileName: 'FreeCAD.7z', onProgress: progress.add);
+
+    expect(progress.length, lessThan(chunks.length));
+    expect(progress.last.receivedBytes, 256 * 65536);
+    expect(progress.last.fraction, 1.0);
+  });
+
   test('returns a cached file without opening the source', () async {
     final target = File(p.join(cacheDirectory.path, 'FreeCAD.7z'))..writeAsBytesSync(data);
 
