@@ -7,6 +7,7 @@ import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/profiles/profiles_view.dart';
+import 'package:path/path.dart' as p;
 
 import '../data/test_fixtures.dart';
 
@@ -89,6 +90,32 @@ void main() {
       expect(find.text('Backups'), findsOneWidget);
       expect(find.text('Addons'), findsWidgets);
       expect(find.textContaining('1.1.3'), findsWidgets);
+    });
+
+    testWidgets('lists installed macros in the profile detail', (tester) async {
+      final profile = await services.profilesRepository.getByName('Dev');
+      File(
+        p.join(services.paths.profilePaths(profile!.id).root, 'MyMacro.FCMacro'),
+      ).createSync(recursive: true);
+      await services.database.macrosDao.save(
+        sampleMacro(
+          profileId: profile.id,
+          name: 'MyMacro',
+          fileName: 'MyMacro.FCMacro',
+        ),
+      );
+      await pumpProfiles(tester);
+      await tester.tap(find.text('Dev'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      await tester.tap(find.text('Macros'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      expect(find.text('MyMacro'), findsOneWidget);
     });
 
     testWidgets('shows the launch command dialog', (tester) async {

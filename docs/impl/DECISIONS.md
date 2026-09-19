@@ -959,3 +959,22 @@ Template:
 - **Refs**: spec 02 FR-8.1/8.2, spec 03 §2.2, `lib/platform/config_snapshots.dart`,
   `lib/platform/file_actions.dart`, `lib/state/profiles_controller.dart`,
   `lib/ui/profiles/config_snapshots_view.dart`, `TASKS.md` M5-06, D-028, D-040
+
+### D-051 — Profile detail tab wiring (M5-08, partial: Macros tab)
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: M5-08 asks that every profile-detail tab be functional. Addons (M4-11), Python
+  (M4-07), Config and Backups (M5-06) were done; Macros was still a "coming soon" placeholder.
+- **Decision**:
+  - The installed-macro list is extracted into `InstalledMacrosList`/`InstalledMacroTile`
+    (`ui/macros/installed_macros.dart`) and now backs both the Macros screen **Installed** tab
+    and the profile detail **Macros** tab.
+  - The shared widget ensures `MacrosController.start()` and runs a per-profile `reconcile`
+    when first mounted, so opening the tab picks up files added outside the app without a
+    restart; `_ComingSoonTab` is removed (no remaining placeholders in the detail view).
+  - Manifest export/import buttons for the **Backups** tab remain M5-07; until then the tab
+    offers config snapshots only.
+- **Consequences**: All six profile-detail tabs are functional; M5-07 completes the Backups
+  tab; the Macros screen and profile tab share one implementation.
+- **Refs**: spec 03 §2.2, `lib/ui/macros/installed_macros.dart`,
+  `lib/ui/profiles/profile_detail_view.dart`, `TASKS.md` M5-08, D-049, D-050

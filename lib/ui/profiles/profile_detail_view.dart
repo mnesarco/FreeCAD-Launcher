@@ -8,6 +8,7 @@ import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/ui/macros/installed_macros.dart';
 import 'package:freecad_launcher/ui/profiles/config_snapshots_view.dart';
 import 'package:freecad_launcher/ui/profiles/launch_command_dialog.dart';
 import 'package:freecad_launcher/ui/profiles/profile_actions.dart';
@@ -96,7 +97,7 @@ class ProfileDetailView extends StatelessWidget {
                 _OverviewTab(profile: current, buildInfo: build),
                 _ProfileAddonsTab(profileId: current.id),
                 _ProfilePythonTab(profileId: current.id),
-                _ComingSoonTab(icon: Icons.auto_fix_high_outlined, label: l10n.profilesTabMacros),
+                InstalledMacrosList(profileId: current.id),
                 ProfileConfigTab(profileId: current.id),
                 ProfileBackupsTab(profileId: current.id),
               ],
@@ -494,23 +495,6 @@ class _ProfilePythonTabState extends State<_ProfilePythonTab> {
       (error) => messenger.showSnackBar(
         SnackBar(content: Text('${l10n.pythonRemoveFailed}: $error')),
       ),
-    );
-  }
-}
-
-class _ComingSoonTab extends StatelessWidget {
-  const _ComingSoonTab({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return EmptyState(
-      icon: icon,
-      title: label,
-      message: l10n.profilesComingSoon,
     );
   }
 }
