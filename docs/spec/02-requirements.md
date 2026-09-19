@@ -36,8 +36,9 @@ binary; a corrupted download fails checksum verification and leaves no partial i
 
 ### FR-2 Profiles
 
-- FR-2.1 **[v0.1]** Create a profile with name + build; the directory layout and env vars are
-  created automatically and atomically.
+- FR-2.1 **[v0.1]** Create a profile with name + build; names are trimmed, 1–64 characters and
+  unique case-insensitively, and the build must be installed with a detected Python version
+  (D-027). The directory layout and env vars are created automatically and atomically.
 - FR-2.2 **[v0.1]** Profiles list shows name, FreeCAD version, channel, addon count, Python
   package count, last used, and build health.
 - FR-2.3 **[v0.1]** Editing a profile allows rename and build change; changing to a build with

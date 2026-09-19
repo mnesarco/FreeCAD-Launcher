@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:freecad_launcher/data/catalog/github_releases_client.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
+import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/platform/build_installer.dart';
 import 'package:freecad_launcher/platform/diagnostics.dart';
@@ -71,6 +72,8 @@ class AppServices {
         : null,
     pythonProbe: pythonProbe,
   );
+
+  late final ProfilesRepository profiles = ProfilesRepository(database: database);
 
   late final BuildsController builds =
       _buildsControllerOverride ??

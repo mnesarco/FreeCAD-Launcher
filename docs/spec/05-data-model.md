@@ -45,7 +45,7 @@ Indexes: unique `(platform, arch, channel, version, assetName)`.
 | `name` | text | unique case-insensitive |
 | `description` | text? | |
 | `buildId` | text | FK → `builds.id` |
-| `pythonVersion` | text | copied from build at creation; drives pip target dir |
+| `pythonVersion` | text | copied from the build at creation; the build must be installed with a detected Python (D-027); drives pip target dir |
 | `iconColor` | int? | UI accent, v0.2 |
 | `createdAt`, `updatedAt`, `lastUsedAt` | text | |
 

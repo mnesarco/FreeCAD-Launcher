@@ -4,12 +4,11 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-19
-- **Current milestone**: M2 — Builds (code complete incl. D-020 custom executables; cross-OS and
-  manual UI verification pending)
+- **Current milestone**: M3 — Profiles and launch (M3-01 done; M3-02 next)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-19
-- **Next action**: start **M3** with `M3-01` (profile DAO/repository + name validation +
-  build/Python binding rules), then `M3-02` lifecycle, `M3-03` env integration.
+- **Next action**: start `M3-02` (profile lifecycle: create/duplicate/rename/delete with atomic
+  directory creation), then `M3-03` env integration, `M3-04` launch.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -61,7 +60,10 @@
   - M2-19 — **D-026**: "download hangs" was a slow-link perception (GitHub release assets
     measured at ~55–75 KB/s here, ~4 h for 820 MB); the UI now shows transferred/total bytes and
     speed and the downloader coalesces updates to 1% steps.
-  - 196 tests green (2 manual network probes skipped), analyze clean, app builds and launches.
+  - M3-01 — **D-027**: `ProfilesRepository` + pure rules (`profile_rules.dart`) — trimmed
+    1–64-char case-insensitively unique names; binding requires an installed build with a
+    detected Python; `setBuild` reports `pythonChanged`. 17 new tests.
+  - 213 tests green (2 manual network probes skipped), analyze clean, app builds and launches.
 
 ## Session log
 
@@ -89,6 +91,7 @@
 | 2026-09-19 | M2 | D-024 opt-in hashing + progress stages for imports | M2-17 | `docs/impl/DECISIONS.md`, `docs/spec/**`, `lib/platform/checksum.dart`, `lib/platform/downloader.dart`, `lib/state/builds_controller.dart`, `lib/ui/builds/builds_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M2 | D-025 navigate to Installed tab after successful install/import | M2-18 | `docs/impl/DECISIONS.md`, `docs/spec/03-ux.md`, `lib/ui/builds/builds_view.dart` |
 | 2026-09-19 | M2 | D-026 download bytes/speed feedback; downloader progress coalescing | M2-19 | `docs/impl/DECISIONS.md`, `docs/spec/03-ux.md`, `lib/platform/downloader.dart`, `lib/state/builds_controller.dart`, `lib/ui/builds/builds_view.dart`, `test/**` |
+| 2026-09-19 | M3 | D-027 profile repository, name validation and binding rules | M3-01 | `docs/impl/DECISIONS.md`, `docs/spec/02-requirements.md`, `docs/spec/05-data-model.md`, `lib/domain/profiles/profile_rules.dart`, `lib/data/repositories/profiles_repository.dart`, `lib/state/app_services.dart`, `test/**` |
 
 ## Standing notes for the next agent
 

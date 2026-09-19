@@ -321,3 +321,26 @@ Template:
   support (Range) and mirror selection remain future work if slow links persist.
 - **Refs**: `lib/platform/downloader.dart`, `lib/state/builds_controller.dart`,
   `lib/ui/builds/builds_view.dart`, spec 03 §2.2, `TASKS.md` M2-19, M2-04, M2-17
+
+### D-027 — Profile naming and binding rules (M3-01)
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: FR-2 requires case-insensitive unique names; profiles need a Python version for
+  addons/packages but custom builds can have no detected Python (D-020); builds can be
+  `missing`/`broken` (M2-10). `profiles.pythonVersion` is NOT NULL.
+- **Decision**:
+  - Names are trimmed, 1–64 characters, without control characters, unique
+    case-insensitively. Spaces and unicode are allowed; the profile directory is the UUID, so
+    the name is display-only. The repository enforces uniqueness because the SQLite unique index
+    on `name` is case-sensitive.
+  - A profile can be created or rebound only to a build with `status == installed` and a
+    non-empty `pythonVersion`; `profile.pythonVersion` is copied from the build (schema
+    unchanged). Builds without detected Python are rejected with a message pointing at the
+    interpreter picker.
+  - Rebuilding reports `pythonChanged` so the UI can show the FR-2.3 reinstall warning; a
+    profile keeps its binding if its build later becomes unhealthy (the launch guard lands in
+    M3-04).
+- **Consequences**: The repository is the single writer (`ProfilesRepository`, exposed via
+  `AppServices`); duplicate-name races are not a concern because one controller owns profiles.
+  M3-02 adds atomic directory creation to `create` and directory cleanup to `delete`.
+- **Refs**: spec 02 FR-2.1/FR-2.3, spec 03 §2.3, spec 05 `profiles`, `TASKS.md` M3-01, D-020

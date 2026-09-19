@@ -66,7 +66,7 @@ corrupted download rejected; rate-limit/offline paths verified.
 
 | ID | Task | Done when | Deps | Effort | Status |
 |---|---|---|---|---|---|
-| M3-01 | Profile DAO/repository + name validation + build/Python binding rules | Unit tests for validation and binding rules | M1-04 | M | TODO |
+| M3-01 | Profile DAO/repository + name validation + build/Python binding rules | Unit tests for validation and binding rules | M1-04 | M | DONE |
 | M3-02 | Profile lifecycle: create/duplicate/rename/delete with atomic directory creation | Tests for atomicity (no partial dirs on failure); delete cascades DB | M3-01 | M | TODO |
 | M3-03 | Wire env builder into profile creation/launch; finalize per-OS isolation | Unit matrix green for all OSes; profile dirs verified by hand | M1-05, M3-02 | M | TODO |
 | M3-04 | Launch runtime per build kind: AppImage (FUSE/fallback), archive, dmg, custom; macOS quarantine consent | Manual launch on each OS from a profile dir | M2-05, M2-11, M3-03 | L | TODO |
