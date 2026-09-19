@@ -1,34 +1,54 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:path/path.dart' as p;
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import 'package:freecad_launcher/core/errors.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/profiles/launch_plan.dart';
 import 'package:freecad_launcher/platform/launch.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/process.dart';
 
+class ProfileLaunch {
+  ProfileLaunch({
+    required this.id,
+    required this.profileId,
+    required this.logPath,
+    required this.startedAt,
+    required this.exitCode,
+  });
+
+  final String id;
+  final String profileId;
+  final String logPath;
+  final DateTime startedAt;
+  final Future<int> exitCode;
+}
+
 class LaunchResult {
-  const LaunchResult.started(ProcessHandle this.handle)
+  const LaunchResult.started(ProfileLaunch this.launch)
     : error = null,
       quarantineAppPath = null;
 
   const LaunchResult.quarantineRequired(String this.quarantineAppPath)
-    : handle = null,
+    : launch = null,
       error = null;
 
   const LaunchResult.failure(AppError this.error)
-    : handle = null,
+    : launch = null,
       quarantineAppPath = null;
 
-  final ProcessHandle? handle;
+  final ProfileLaunch? launch;
   final AppError? error;
   final String? quarantineAppPath;
 
-  bool get isStarted => handle != null;
+  bool get isStarted => launch != null;
 
   bool get isQuarantineRequired => quarantineAppPath != null;
 
@@ -42,19 +62,27 @@ class ProfilesController {
     required AppPaths paths,
     required BuildPlatform platform,
     required FreeCadRuntime runtime,
+    DateTime Function()? clock,
   }) : _database = database,
        _repository = repository,
        _paths = paths,
        _platform = platform,
-       _runtime = runtime;
+       _runtime = runtime,
+       _clock = clock ?? DateTime.now;
 
   final AppDatabase _database;
   final ProfilesRepository _repository;
   final AppPaths _paths;
   final BuildPlatform _platform;
   final FreeCadRuntime _runtime;
+  final DateTime Function() _clock;
 
   final profiles = signal<List<Profile>>([]);
+  final runningProfiles = signal<Set<String>>({});
+  final launchLogs = signal<Map<String, String>>({});
+  final lastExitCodes = signal<Map<String, int>>({});
+
+  final Map<String, int> _runningCounts = {};
 
   StreamSubscription<List<Profile>>? _profilesSubscription;
 
@@ -63,6 +91,8 @@ class ProfilesController {
       (value) => profiles.value = value,
     );
   }
+
+  bool isRunning(String profileId) => runningProfiles.value.contains(profileId);
 
   Future<List<Profile>> getAll() => _repository.getAll();
 
@@ -146,13 +176,93 @@ class ProfilesController {
       }
     }
 
+    final logFile = _newLogFile(profile);
+    final logSink = logFile.openWrite();
     try {
       final handle = await _runtime.start(plan);
+      final launch = _trackLaunch(profile, plan, handle, logFile, logSink);
       await _repository.markUsed(profile.id);
-      return LaunchResult.started(handle);
+      return LaunchResult.started(launch);
     } on Object catch (error) {
+      try {
+        await logSink.close();
+      } on Object {
+        // The sink may already be closed.
+      }
+      if (logFile.existsSync()) {
+        logFile.deleteSync();
+      }
       return LaunchResult.failure(AppError.from(error, retryable: true));
     }
+  }
+
+  ProfileLaunch _trackLaunch(
+    Profile profile,
+    LaunchPlan plan,
+    ProcessHandle handle,
+    File logFile,
+    IOSink logSink,
+  ) {
+    final exitCompleter = Completer<int>();
+    logSink
+      ..writeln('# ${_clock().toIso8601String()} profile="${profile.name}"')
+      ..writeln('# ${plan.executable}')
+      ..writeln('# args: ${plan.arguments.join(' ')}')
+      ..writeln('---');
+
+    final stdoutDone = handle.stdout.listen(logSink.add).asFuture<void>();
+    final stderrDone = handle.stderr.listen(logSink.add).asFuture<void>();
+
+    unawaited(() async {
+      final code = await handle.exitCode;
+      _finishLaunch(profile.id, code);
+      if (!exitCompleter.isCompleted) {
+        exitCompleter.complete(code);
+      }
+      await Future.wait([
+        stdoutDone.timeout(const Duration(seconds: 5), onTimeout: () {}),
+        stderrDone.timeout(const Duration(seconds: 5), onTimeout: () {}),
+      ]);
+      try {
+        await logSink.flush();
+      } on Object {
+        // Best-effort flush; the process is already gone.
+      }
+      try {
+        await logSink.close();
+      } on Object {
+        // The sink may already be closed.
+      }
+    }());
+
+    _runningCounts[profile.id] = (_runningCounts[profile.id] ?? 0) + 1;
+    runningProfiles.value = {...runningProfiles.value, profile.id};
+    launchLogs.value = {...launchLogs.value, profile.id: logFile.path};
+
+    return ProfileLaunch(
+      id: const Uuid().v4(),
+      profileId: profile.id,
+      logPath: logFile.path,
+      startedAt: _clock(),
+      exitCode: exitCompleter.future,
+    );
+  }
+
+  void _finishLaunch(String profileId, int exitCode) {
+    final remaining = (_runningCounts[profileId] ?? 1) - 1;
+    if (remaining <= 0) {
+      _runningCounts.remove(profileId);
+      runningProfiles.value = {...runningProfiles.value}..remove(profileId);
+    } else {
+      _runningCounts[profileId] = remaining;
+    }
+    lastExitCodes.value = {...lastExitCodes.value, profileId: exitCode};
+  }
+
+  File _newLogFile(Profile profile) {
+    final safeName = profile.name.replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '_');
+    final stamp = _clock().toIso8601String().replaceAll(RegExp(r'[:.]'), '-');
+    return File(p.join(_paths.logsDir, 'launch-$safeName-$stamp.log'));
   }
 
   void dispose() {

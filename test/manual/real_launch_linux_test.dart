@@ -73,11 +73,15 @@ void main() {
         userArguments: const ['--version'],
       );
       expect(result.isStarted, isTrue);
+      expect(controller.isRunning(profile.id), isTrue);
 
-      final exitCode = await result.handle!.exitCode.timeout(const Duration(minutes: 2));
+      final exitCode = await result.launch!.exitCode.timeout(const Duration(minutes: 2));
       // ignore: avoid_print
-      print('binary=$binary exit=$exitCode');
+      print('binary=$binary exit=$exitCode log=${result.launch!.logPath}');
       expect(exitCode, 0);
+      expect(controller.isRunning(profile.id), isFalse);
+      expect(controller.lastExitCodes.value[profile.id], 0);
+      expect(File(result.launch!.logPath).readAsStringSync(), contains(binary));
       expect((await repository.getById(profile.id))!.lastUsedAt, isNotNull);
 
       controller.dispose();

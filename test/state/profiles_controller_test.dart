@@ -147,6 +147,62 @@ void main() {
       DateTime.utc(2026, 9, 19, 15),
     );
     launcher.handles.single.exit(0);
+    await result.launch!.exitCode;
+    controller.dispose();
+  });
+
+  test('tracks the running profile and streams output to the log', () async {
+    final created = await repository.create(name: 'Dev', buildId: 'build-1');
+    final profile = created.valueOrNull!;
+    final controller = buildController();
+
+    final result = await controller.launch(profileId: profile.id);
+
+    expect(controller.isRunning(profile.id), isTrue);
+    expect(controller.launchLogs.value[profile.id], result.launch!.logPath);
+
+    launcher.handles.single
+      ..emitStdout('hello\n')
+      ..emitStderr('warn\n')
+      ..exit(0);
+
+    expect(await result.launch!.exitCode, 0);
+    for (var attempt = 0;
+        attempt < 250 && controller.isRunning(profile.id);
+        attempt++) {
+      await Future<void>.delayed(const Duration(milliseconds: 2));
+    }
+    expect(controller.isRunning(profile.id), isFalse);
+    expect(controller.lastExitCodes.value[profile.id], 0);
+
+    final log = File(result.launch!.logPath);
+    for (var attempt = 0;
+        attempt < 250 && !log.readAsStringSync().contains('warn');
+        attempt++) {
+      await Future<void>.delayed(const Duration(milliseconds: 2));
+    }
+    final content = log.readAsStringSync();
+    expect(content, contains('hello'));
+    expect(content, contains('warn'));
+    controller.dispose();
+  });
+
+  test('keeps the profile running until all launches exit', () async {
+    final created = await repository.create(name: 'Dev', buildId: 'build-1');
+    final profile = created.valueOrNull!;
+    final controller = buildController();
+
+    final first = await controller.launch(profileId: profile.id);
+    final second = await controller.launch(profileId: profile.id);
+
+    expect(controller.isRunning(profile.id), isTrue);
+    launcher.handles[0].exit(0);
+    await first.launch!.exitCode;
+    expect(controller.isRunning(profile.id), isTrue);
+
+    launcher.handles[1].exit(0);
+    await second.launch!.exitCode;
+    expect(controller.isRunning(profile.id), isFalse);
     controller.dispose();
   });
 
@@ -159,6 +215,7 @@ void main() {
     expect(result.isStarted, isTrue);
     expect(launcher.specs.single.environment['APPIMAGE_EXTRACT_AND_RUN'], '1');
     launcher.handles.single.exit(0);
+    await result.launch!.exitCode;
     controller.dispose();
   });
 
@@ -180,6 +237,7 @@ void main() {
     expect(quarantine.cleared, ['/data/builds/build-1']);
     expect(started.isStarted, isTrue);
     launcher.handles.single.exit(0);
+    await started.launch!.exitCode;
     controller.dispose();
   });
 }

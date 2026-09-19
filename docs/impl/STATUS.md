@@ -4,11 +4,11 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-19
-- **Current milestone**: M3 — Profiles and launch (M3-01..M3-04 done; M3-05 next)
+- **Current milestone**: M3 — Profiles and launch (M3-01..M3-05 done; M3-06 next)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-19
-- **Next action**: start `M3-05` (process tracking: running signal, launch log streaming, exit
-  handling), then `M3-06` profiles UI, `M3-07` launch command viewer.
+- **Next action**: start `M3-06` (profiles UI: list/cards + detail tabs skeleton), then `M3-07`
+  launch command viewer, `M3-08` CLI mode.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -74,7 +74,10 @@
   - M3-04 — **D-030**: `FreeCadRuntime` + `ProfilesController.launch` (blocks unhealthy builds,
     recreates dirs, records `lastUsedAt`); AppImage FUSE fallback via diagnostics; macOS
     quarantine consent flow; real Linux 1.0.2 AppImage launched headless (`--version`, exit 0).
-  - 237 tests green (3 manual network/launch probes skipped), analyze clean, app builds and
+  - M3-05 — **D-031**: refcounted running state (`runningProfiles`), per-launch log files
+    (`logs/launch-<name>-<ts>.log` with command header), `lastExitCodes`, `ProfileLaunch.exitCode`;
+    real manual launch asserts running true→false and log content.
+  - 239 tests green (3 manual network/launch probes skipped), analyze clean, app builds and
     launches.
 
 ## Session log
@@ -107,6 +110,7 @@
 | 2026-09-19 | M3 | D-028 atomic lifecycle (create/duplicate/delete) + payload duplication | M3-02 | `docs/impl/DECISIONS.md`, `docs/spec/02-requirements.md`, `docs/spec/03-ux.md`, `docs/spec/05-data-model.md`, `docs/impl/VERIFICATION.md`, `lib/data/repositories/profiles_repository.dart`, `lib/state/app_services.dart`, `test/**` |
 | 2026-09-19 | M3 | D-029 pure launch plan (executable + argv + env) with per-OS matrix tests | M3-03 | `docs/impl/DECISIONS.md`, `docs/spec/04-architecture.md`, `lib/domain/profiles/launch_plan.dart`, `test/domain/launch_plan_test.dart` |
 | 2026-09-19 | M3 | D-030 launch runtime, profiles controller, FUSE fallback and quarantine consent | M3-04 | `docs/impl/DECISIONS.md`, `docs/spec/02-requirements.md`, `docs/spec/04-architecture.md`, `lib/platform/launch.dart`, `lib/state/profiles_controller.dart`, `lib/state/app_services.dart`, `test/**` |
+| 2026-09-19 | M3 | D-031 process tracking: running signal, launch logs, exit codes | M3-05 | `docs/impl/DECISIONS.md`, `lib/state/profiles_controller.dart`, `test/state/profiles_controller_test.dart`, `test/manual/real_launch_linux_test.dart` |
 
 ## Standing notes for the next agent
 

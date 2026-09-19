@@ -410,3 +410,22 @@ Template:
   verified (`--version`, exit 0); Windows/macOS manual launches remain open.
 - **Refs**: spec 02 FR-2.5, spec 04 §4.2/§4.3, `lib/platform/launch.dart`,
   `lib/state/profiles_controller.dart`, `TASKS.md` M3-04, D-019, D-029
+
+### D-031 — Process tracking: running signal, per-launch logs, exit codes
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: M3-05; spec 04 §4.3 defines a running state per profile and per-launch log files.
+- **Decision**:
+  - `ProfilesController` refcounts launches per profile: `runningProfiles` is a signal Set,
+    `launchLogs` maps profile → latest log path, `lastExitCodes` records exit codes. Re-running
+    a profile is allowed (FR-3.4); running clears only when the last launch exits.
+  - `ProfileLaunch` (id, profileId, logPath, startedAt, `exitCode` future) is returned by
+    `launch`; the CLI (M3-08) will await `exitCode`.
+  - stdout/stderr stream to `logs/launch-<sanitized-name>-<iso>.log` with a header (timestamp,
+    executable, argv). After exit, streams are drained with a 5 s timeout before the log closes,
+    so a lingering child pipe cannot keep the profile "running" forever.
+- **Consequences**: M3-06 renders the running badge from `runningProfiles` and can reveal
+  `launchLogs`; exit codes are available to CLI wrappers; closing the launcher does not kill
+  FreeCAD (per spec) and tracking state dies with the app.
+- **Refs**: spec 04 §4.3, spec 02 FR-2.5, `lib/state/profiles_controller.dart`,
+  `TASKS.md` M3-05, D-030
