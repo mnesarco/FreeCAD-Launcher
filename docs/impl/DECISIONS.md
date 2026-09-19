@@ -450,3 +450,23 @@ Template:
   opened under `testWidgets`' fake async block later writes; documented in the test file.
 - **Refs**: spec 03 §2.3, spec 02 FR-2.1..2.5, `lib/ui/profiles/**`, `lib/state/profiles_controller.dart`,
   `TASKS.md` M3-06, D-027, D-028, D-030
+
+### D-033 — Launch command viewer shows isolation overrides and a copyable shell line
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: FR-2.6 requires revealing the exact executable + env + args; pasting that
+  command must reproduce the isolated environment. The plan's environment contains the whole
+  inherited env, which is noise for display.
+- **Decision**:
+  - `LaunchCommand.fromPlan` keeps only variables whose value differs from the inherited
+    environment, lists sanitized keys that were removed (`PYTHONPATH`, …), and renders a
+    platform shell line: POSIX `KEY='value' 'exe' 'arg' …` with single-quote escaping, Windows
+    `set "KEY=value" && "exe" "arg"`.
+  - `ProfilesController.planFor` returns the launch plan without spawning; the detail header
+    exposes "Show launch command" with a copy button (clipboard) plus the override/removed
+    lists for transparency.
+- **Consequences**: Copy output is shell-pasteable on POSIX and cmd on Windows; widget
+  `planFor` needed `ensureProfileDirectories` to skip existing dirs so fake-async tests do not
+  hit real I/O. Linux manual test executes the generated command via `/bin/sh -c` (exit 0).
+- **Refs**: spec 02 FR-2.6, spec 03 §2.3, `lib/domain/profiles/launch_command.dart`,
+  `lib/ui/profiles/launch_command_dialog.dart`, `TASKS.md` M3-07, D-029, D-030

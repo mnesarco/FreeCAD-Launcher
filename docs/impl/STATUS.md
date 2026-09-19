@@ -4,11 +4,12 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-19
-- **Current milestone**: M3 — Profiles and launch (M3-01..M3-06 done; M3-07 next)
+- **Current milestone**: M3 — Profiles and launch (M3-01..M3-07 done; M3-08 next)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-19
-- **Next action**: start `M3-07` (show launch command viewer + copy), then `M3-08` CLI mode,
-  `M3-09` wrapper generation, `M3-10` isolation E2E.
+- **Next action**: start `M3-08` (CLI mode in `main.dart`: `list`, `run <profile>`,
+  `--version`, `--help`, arg passthrough, exit codes), then `M3-09` wrapper generation,
+  `M3-10` isolation E2E.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -80,7 +81,10 @@
   - M3-06 — **D-032**: Profiles UI — live cards (build/Python/counts/size/last-used/running),
     create/edit/duplicate/delete dialogs, launch with quarantine consent, detail page with six
     tabs (Overview functional, rest placeholders), loading/empty/error states; 3 widget tests.
-  - 242 tests green (3 manual network/launch probes skipped), analyze clean, app builds and
+  - M3-07 — **D-033**: "Show launch command" dialog (isolation overrides + removed vars,
+    POSIX/Windows shell line, clipboard copy); `planFor` returns the plan without spawning;
+    manual test runs the generated command via `/bin/sh -c` (exit 0).
+  - 248 tests green (3 manual network/launch probes skipped), analyze clean, app builds and
     launches.
 
 ## Session log
@@ -115,6 +119,7 @@
 | 2026-09-19 | M3 | D-030 launch runtime, profiles controller, FUSE fallback and quarantine consent | M3-04 | `docs/impl/DECISIONS.md`, `docs/spec/02-requirements.md`, `docs/spec/04-architecture.md`, `lib/platform/launch.dart`, `lib/state/profiles_controller.dart`, `lib/state/app_services.dart`, `test/**` |
 | 2026-09-19 | M3 | D-031 process tracking: running signal, launch logs, exit codes | M3-05 | `docs/impl/DECISIONS.md`, `lib/state/profiles_controller.dart`, `test/state/profiles_controller_test.dart`, `test/manual/real_launch_linux_test.dart` |
 | 2026-09-19 | M3 | D-032 profiles UI: cards, dialogs, detail tabs skeleton | M3-06 | `docs/impl/DECISIONS.md`, `lib/state/profiles_controller.dart`, `lib/data/daos/**`, `lib/ui/profiles/**`, `lib/l10n/**`, `test/ui/**` |
+| 2026-09-19 | M3 | D-033 launch command viewer with isolation overrides and copy | M3-07 | `docs/impl/DECISIONS.md`, `lib/domain/profiles/launch_command.dart`, `lib/state/profiles_controller.dart`, `lib/platform/launch.dart`, `lib/platform/paths.dart`, `lib/ui/profiles/**`, `lib/l10n/**`, `test/**` |
 
 ## Standing notes for the next agent
 

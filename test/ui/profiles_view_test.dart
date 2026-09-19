@@ -78,5 +78,23 @@ void main() {
       expect(find.text('Addons'), findsWidgets);
       expect(find.textContaining('1.1.3'), findsWidgets);
     });
+
+    testWidgets('shows the launch command dialog', (tester) async {
+      await pumpProfiles(tester);
+      await tester.tap(find.text('Dev'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      await tester.tap(find.byTooltip('Show launch command'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      expect(find.text('Launch command'), findsOneWidget);
+      expect(find.textContaining('user.cfg'), findsWidgets);
+      expect(find.textContaining('FREECAD_USER_HOME'), findsWidgets);
+      expect(find.text('Environment overrides'), findsOneWidget);
+    });
   });
 }

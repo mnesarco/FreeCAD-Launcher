@@ -8,6 +8,7 @@ import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/ui/profiles/launch_command_dialog.dart';
 import 'package:freecad_launcher/ui/profiles/profile_actions.dart';
 import 'package:freecad_launcher/ui/profiles/profile_dialogs.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
@@ -40,6 +41,7 @@ class ProfileDetailView extends StatelessWidget {
             onBack: onBack,
             running: false,
             onLaunch: null,
+            onShowCommand: null,
             onEdit: null,
           ),
           Expanded(
@@ -66,6 +68,10 @@ class ProfileDetailView extends StatelessWidget {
             onBack: onBack,
             running: running,
             onLaunch: () => launchProfile(context, current),
+            onShowCommand: () => showLaunchCommandDialog(
+              context,
+              profileId: current.id,
+            ),
             onEdit: () => showProfileFormDialog(
               context,
               controller: controller,
@@ -107,6 +113,7 @@ class _DetailHeader extends StatelessWidget {
     required this.onBack,
     required this.running,
     required this.onLaunch,
+    required this.onShowCommand,
     required this.onEdit,
   });
 
@@ -114,6 +121,7 @@ class _DetailHeader extends StatelessWidget {
   final VoidCallback onBack;
   final bool running;
   final VoidCallback? onLaunch;
+  final VoidCallback? onShowCommand;
   final VoidCallback? onEdit;
 
   @override
@@ -139,6 +147,12 @@ class _DetailHeader extends StatelessWidget {
             ),
             const SizedBox(width: 8),
           ],
+          if (onShowCommand != null)
+            IconButton(
+              icon: const Icon(Icons.terminal_outlined),
+              tooltip: l10n.profilesShowCommand,
+              onPressed: onShowCommand,
+            ),
           if (onEdit != null)
             IconButton(
               icon: const Icon(Icons.edit_outlined),

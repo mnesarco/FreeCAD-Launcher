@@ -472,6 +472,54 @@ abstract class AppLocalizations {
   /// **'Build broken'**
   String get profilesStatusBroken;
 
+  /// No description provided for @profilesShowCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Show launch command'**
+  String get profilesShowCommand;
+
+  /// No description provided for @profilesCommandTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Launch command'**
+  String get profilesCommandTitle;
+
+  /// No description provided for @profilesCommandCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Command copied'**
+  String get profilesCommandCopied;
+
+  /// No description provided for @profilesCommandEnvironment.
+  ///
+  /// In en, this message translates to:
+  /// **'Environment overrides'**
+  String get profilesCommandEnvironment;
+
+  /// No description provided for @profilesCommandRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed variables'**
+  String get profilesCommandRemoved;
+
+  /// No description provided for @profilesCommandFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not build the launch command'**
+  String get profilesCommandFailed;
+
+  /// No description provided for @profilesClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get profilesClose;
+
+  /// No description provided for @profilesCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get profilesCopy;
+
   /// No description provided for @versionsEmptyTitle.
   ///
   /// In en, this message translates to:

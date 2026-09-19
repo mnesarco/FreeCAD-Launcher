@@ -104,6 +104,30 @@ void main() {
     controller.dispose();
   });
 
+  test('planFor returns the isolated plan and blocks unhealthy builds', () async {
+    final created = await repository.create(name: 'Dev', buildId: 'build-1');
+    final profileId = created.valueOrNull!.id;
+    final controller = buildController();
+
+    final result = await controller.planFor(profileId);
+
+    expect(result.isOk, isTrue);
+    final plan = result.valueOrNull!;
+    expect(plan.executable, '/data/builds/build-1');
+    expect(plan.arguments, [
+      '-u',
+      paths.profilePaths(profileId).userCfg,
+      '-s',
+      paths.profilePaths(profileId).systemCfg,
+    ]);
+    expect(plan.environment['FREECAD_USER_HOME'], paths.profilePaths(profileId).root);
+
+    await db.buildsDao.updateStatus('build-1', BuildStatus.missing);
+    expect((await controller.planFor(profileId)).isErr, isTrue);
+    expect((await controller.planFor('nope')).isErr, isTrue);
+    controller.dispose();
+  });
+
   test('launch blocks profiles whose build is not installed', () async {
     final created = await repository.create(name: 'Dev', buildId: 'build-1');
     await db.buildsDao.updateStatus('build-1', BuildStatus.missing);

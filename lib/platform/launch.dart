@@ -68,6 +68,8 @@ class FreeCadRuntime {
   final QuarantineGuard _quarantineGuard;
   final Map<String, String> _environment;
 
+  Map<String, String> get inheritedEnvironment => _environment;
+
   Future<LaunchPlan> planFor({
     required BuildKind kind,
     required String executablePath,

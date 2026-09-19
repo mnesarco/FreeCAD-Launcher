@@ -55,7 +55,11 @@ class AppPaths {
 
   Future<void> ensureProfileDirectories(String profileId, BuildPlatform platform) async {
     for (final path in profilePaths(profileId).directoriesFor(platform)) {
-      await Directory(path).create(recursive: true);
+      final directory = Directory(path);
+      if (directory.existsSync()) {
+        continue;
+      }
+      await directory.create(recursive: true);
     }
   }
 

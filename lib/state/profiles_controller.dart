@@ -211,38 +211,26 @@ class ProfilesController {
     return result;
   }
 
+  Future<Result<LaunchPlan>> planFor(String profileId) async {
+    final resolved = await _resolveLaunch(profileId);
+    if (resolved.isErr) {
+      return Err(resolved.errorOrNull!);
+    }
+    return Ok(resolved.valueOrNull!.plan);
+  }
+
   Future<LaunchResult> launch({
     required String profileId,
     List<String> userArguments = const [],
     bool quarantineConsent = false,
   }) async {
-    final profile = await _repository.getById(profileId);
-    if (profile == null) {
-      return LaunchResult.failure(const AppError(message: 'Profile not found'));
+    final resolved = await _resolveLaunch(profileId, userArguments: userArguments);
+    if (resolved.isErr) {
+      return LaunchResult.failure(resolved.errorOrNull!);
     }
-
-    final build = await _database.buildsDao.getById(profile.buildId);
-    if (build == null) {
-      return LaunchResult.failure(
-        const AppError(message: "This profile's build no longer exists"),
-      );
-    }
-    if (build.status != BuildStatus.installed) {
-      return LaunchResult.failure(
-        AppError(
-          message: 'This build is ${build.status.name} and cannot be launched',
-          detail: 'Verify or repair the build first.',
-        ),
-      );
-    }
-
-    await _paths.ensureProfileDirectories(profile.id, _platform);
-    final plan = await _runtime.planFor(
-      kind: build.kind,
-      executablePath: build.localPath,
-      paths: _paths.profilePaths(profile.id),
-      userArguments: userArguments,
-    );
+    final context = resolved.valueOrNull!;
+    final profile = context.profile;
+    final plan = context.plan;
 
     final appPath = await _runtime.quarantineAppPath(plan.executable);
     if (appPath != null) {
@@ -274,6 +262,38 @@ class ProfilesController {
       }
       return LaunchResult.failure(AppError.from(error, retryable: true));
     }
+  }
+
+  Future<Result<_LaunchContext>> _resolveLaunch(
+    String profileId, {
+    List<String> userArguments = const [],
+  }) async {
+    final profile = await _repository.getById(profileId);
+    if (profile == null) {
+      return Err(const AppError(message: 'Profile not found'));
+    }
+
+    final build = await _database.buildsDao.getById(profile.buildId);
+    if (build == null) {
+      return Err(const AppError(message: "This profile's build no longer exists"));
+    }
+    if (build.status != BuildStatus.installed) {
+      return Err(
+        AppError(
+          message: 'This build is ${build.status.name} and cannot be launched',
+          detail: 'Verify or repair the build first.',
+        ),
+      );
+    }
+
+    await _paths.ensureProfileDirectories(profile.id, _platform);
+    final plan = await _runtime.planFor(
+      kind: build.kind,
+      executablePath: build.localPath,
+      paths: _paths.profilePaths(profile.id),
+      userArguments: userArguments,
+    );
+    return Ok(_LaunchContext(profile: profile, build: build, plan: plan));
   }
 
   ProfileLaunch _trackLaunch(
@@ -355,4 +375,12 @@ class ProfilesController {
     _packagesSubscription?.cancel();
     _packagesSubscription = null;
   }
+}
+
+class _LaunchContext {
+  const _LaunchContext({required this.profile, required this.build, required this.plan});
+
+  final Profile profile;
+  final Build build;
+  final LaunchPlan plan;
 }

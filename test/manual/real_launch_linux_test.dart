@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/profiles/launch_command.dart';
 import 'package:freecad_launcher/platform/diagnostics.dart';
 import 'package:freecad_launcher/platform/launch.dart';
 import 'package:freecad_launcher/platform/paths.dart';
@@ -49,20 +50,21 @@ void main() {
         platform: BuildPlatform.linux,
       );
       final runner = ProcessRunner();
+      final runtime = FreeCadRuntime(
+        processRunner: runner,
+        diagnostics: DiagnosticsService(
+          paths: paths,
+          platform: BuildPlatform.linux,
+          processRunner: runner,
+        ),
+        platform: BuildPlatform.linux,
+      );
       final controller = ProfilesController(
         database: db,
         repository: repository,
         paths: paths,
         platform: BuildPlatform.linux,
-        runtime: FreeCadRuntime(
-          processRunner: runner,
-          diagnostics: DiagnosticsService(
-            paths: paths,
-            platform: BuildPlatform.linux,
-            processRunner: runner,
-          ),
-          platform: BuildPlatform.linux,
-        ),
+        runtime: runtime,
       );
 
       final created = await repository.create(name: 'Smoke', buildId: 'smoke');
@@ -83,6 +85,22 @@ void main() {
       expect(controller.lastExitCodes.value[profile.id], 0);
       expect(File(result.launch!.logPath).readAsStringSync(), contains(binary));
       expect((await repository.getById(profile.id))!.lastUsedAt, isNotNull);
+
+      final planResult = await controller.planFor(profile.id);
+      final command = LaunchCommand.fromPlan(
+        planResult.valueOrNull!,
+        inheritedEnvironment: runtime.inheritedEnvironment,
+      );
+      final shellCommand = command.toShellCommand(platform: BuildPlatform.linux);
+      // ignore: avoid_print
+      print('copied-command: $shellCommand');
+      final shellRun = await Process.run(
+        '/bin/sh',
+        ['-c', shellCommand],
+      ).timeout(const Duration(minutes: 2));
+      // ignore: avoid_print
+      print('copied-command exit=${shellRun.exitCode}');
+      expect(shellRun.exitCode, 0);
 
       controller.dispose();
       await db.close();

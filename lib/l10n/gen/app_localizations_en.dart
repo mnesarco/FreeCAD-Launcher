@@ -205,6 +205,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profilesStatusBroken => 'Build broken';
 
   @override
+  String get profilesShowCommand => 'Show launch command';
+
+  @override
+  String get profilesCommandTitle => 'Launch command';
+
+  @override
+  String get profilesCommandCopied => 'Command copied';
+
+  @override
+  String get profilesCommandEnvironment => 'Environment overrides';
+
+  @override
+  String get profilesCommandRemoved => 'Removed variables';
+
+  @override
+  String get profilesCommandFailed => 'Could not build the launch command';
+
+  @override
+  String get profilesClose => 'Close';
+
+  @override
+  String get profilesCopy => 'Copy';
+
+  @override
   String get versionsEmptyTitle => 'No FreeCAD versions installed';
 
   @override
