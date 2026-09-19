@@ -51,6 +51,9 @@ class AddonInstaller {
       cancellationToken: cancellationToken,
       onProgress: onProgress,
     );
+    if (cancellationToken?.isCancelled ?? false) {
+      throw const AddonInstallException('Addon installation cancelled');
+    }
 
     final staging = '$destinationDirectory.part';
     final backup = '$destinationDirectory.old';

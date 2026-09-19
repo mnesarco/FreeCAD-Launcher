@@ -646,6 +646,42 @@ class AppLocalizationsEn extends AppLocalizations {
       'Install macros from the official catalog into a profile.';
 
   @override
+  String get jobsTitle => 'Jobs';
+
+  @override
+  String get jobsEmpty => 'No jobs yet.';
+
+  @override
+  String get jobsQueued => 'Queued';
+
+  @override
+  String get jobsRunning => 'Running';
+
+  @override
+  String get jobsCompleted => 'Completed';
+
+  @override
+  String get jobsFailed => 'Failed';
+
+  @override
+  String get jobsCancelled => 'Cancelled';
+
+  @override
+  String get jobsCancel => 'Cancel';
+
+  @override
+  String get jobsRetry => 'Retry';
+
+  @override
+  String get jobsClearFinished => 'Clear finished';
+
+  @override
+  String get jobsClose => 'Close';
+
+  @override
+  String get jobsLog => 'Log';
+
+  @override
   String get settingsDataDirectory => 'Data directory';
 
   @override

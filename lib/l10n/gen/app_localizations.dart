@@ -1312,6 +1312,78 @@ abstract class AppLocalizations {
   /// **'Install macros from the official catalog into a profile.'**
   String get macrosEmptyMessage;
 
+  /// No description provided for @jobsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Jobs'**
+  String get jobsTitle;
+
+  /// No description provided for @jobsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No jobs yet.'**
+  String get jobsEmpty;
+
+  /// No description provided for @jobsQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued'**
+  String get jobsQueued;
+
+  /// No description provided for @jobsRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get jobsRunning;
+
+  /// No description provided for @jobsCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get jobsCompleted;
+
+  /// No description provided for @jobsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get jobsFailed;
+
+  /// No description provided for @jobsCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get jobsCancelled;
+
+  /// No description provided for @jobsCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get jobsCancel;
+
+  /// No description provided for @jobsRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get jobsRetry;
+
+  /// No description provided for @jobsClearFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear finished'**
+  String get jobsClearFinished;
+
+  /// No description provided for @jobsClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get jobsClose;
+
+  /// No description provided for @jobsLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Log'**
+  String get jobsLog;
+
   /// No description provided for @settingsDataDirectory.
   ///
   /// In en, this message translates to:

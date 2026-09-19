@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,6 +10,7 @@ import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/asset_classifier.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/builds/release_info.dart';
+import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/platform/archive_extract.dart';
 import 'package:freecad_launcher/platform/build_installer.dart';
 import 'package:freecad_launcher/platform/checksum.dart';
@@ -16,6 +18,7 @@ import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/python_probe.dart';
 import 'package:freecad_launcher/state/builds_controller.dart';
+import 'package:freecad_launcher/state/jobs_controller.dart';
 import 'package:path/path.dart' as p;
 
 import '../data/test_fixtures.dart';
@@ -135,6 +138,7 @@ void main() {
     FakeInstaller? installer,
     FakeReleasesCatalog? catalog,
     PythonProbe? pythonProbe,
+    JobsController? jobs,
     BuildPlatform platform = BuildPlatform.linux,
   }) {
     final downloader = Downloader(
@@ -156,6 +160,7 @@ void main() {
       platform: platform,
       arch: BuildArch.x86_64,
       pythonProbe: pythonProbe,
+      jobs: jobs,
       clock: () => DateTime.utc(2026, 9, 18),
     );
   }
@@ -249,6 +254,68 @@ void main() {
     expect(stored.installedAt, DateTime.utc(2026, 9, 18));
     expect(controller.installProgress.value, isEmpty);
     expect(controller.installErrors.value, isEmpty);
+  });
+
+  test('install runs as a job and stays retryable', () async {
+    final jobs = JobsController();
+    final installer = FakeInstaller();
+    final controller = buildController(installer: installer, jobs: jobs);
+
+    final result = await controller.install(candidate());
+
+    expect(result, isA<Ok<Build>>());
+    final job = jobs.jobs.value.single;
+    expect(job.state, JobState.completed);
+    expect(job.label, contains('1.1.3'));
+    expect(job.fraction, 1);
+    expect(jobs.canRetry(job.id), isTrue);
+    expect(jobs.activeJobs, isEmpty);
+    jobs.dispose();
+    controller.dispose();
+  });
+
+  test('install failures mark the job as failed', () async {
+    final jobs = JobsController();
+    final installer = FakeInstaller()..error = StateError('disk full');
+    final controller = buildController(installer: installer, jobs: jobs);
+
+    final result = await controller.install(candidate());
+
+    expect(result, isA<Err<Build>>());
+    final job = jobs.jobs.value.single;
+    expect(job.state, JobState.failed);
+    expect(job.error, contains('disk full'));
+    jobs.dispose();
+    controller.dispose();
+  });
+
+  test('cancelling an install job aborts the download and cleans up', () async {
+    final jobs = JobsController();
+    final chunks = StreamController<List<int>>();
+    final source = FakeDownloadSourceWithResponses(
+      (uri) async => DownloadStream(bytes: chunks.stream, contentLength: 8192),
+    );
+    final controller = buildController(source: source, jobs: jobs);
+
+    final installFuture = controller.install(candidate());
+    await pumpEventQueue();
+    chunks.add(List<int>.filled(4096, 1));
+    await pumpEventQueue();
+
+    jobs.cancel(jobs.jobs.value.single.id);
+    chunks.add(List<int>.filled(4096, 2));
+    await chunks.close();
+
+    final result = await installFuture;
+    expect(result, isA<Err<Build>>());
+    expect(jobs.jobs.value.single.state, JobState.cancelled);
+    final downloads = Directory(paths.downloadsCacheDir);
+    final leftovers =
+        downloads.existsSync() ? downloads.listSync().whereType<File>().toList() : <File>[];
+    expect(leftovers, isEmpty);
+    expect(await database.buildsDao.getById(candidate().id), isNull);
+    jobs.dispose();
+    controller.dispose();
   });
 
   test('install verifies the checksum sidecar when present', () async {

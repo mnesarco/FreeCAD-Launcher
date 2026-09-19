@@ -26,6 +26,7 @@ import 'package:freecad_launcher/platform/python_probe.dart';
 import 'package:freecad_launcher/platform/seven_zip_extractor.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:freecad_launcher/state/builds_controller.dart';
+import 'package:freecad_launcher/state/jobs_controller.dart';
 import 'package:freecad_launcher/state/profiles_controller.dart';
 import 'package:freecad_launcher/state/python_controller.dart';
 import 'package:freecad_launcher/state/settings_controller.dart';
@@ -52,6 +53,8 @@ class AppServices {
   final AddonsController? _addonsControllerOverride;
 
   late final http.Client _client = _httpClient ?? http.Client();
+
+  late final JobsController jobs = JobsController();
 
   late final DiagnosticsService diagnostics = DiagnosticsService(
     paths: paths,
@@ -133,6 +136,7 @@ class AppServices {
         paths: paths,
         pipRunner: pipRunner,
         pythonResolver: pythonEnvResolver,
+        jobs: jobs,
       );
 
   late final BuildsController builds =
@@ -146,6 +150,7 @@ class AppServices {
         platform: hostPlatform,
         arch: hostArch,
         pythonProbe: pythonProbe,
+        jobs: jobs,
       );
 
   late final CliWrapperInstaller cliWrapper = CliWrapperInstaller(
@@ -160,6 +165,7 @@ class AppServices {
     paths: paths,
     pipRunner: pipRunner,
     pythonResolver: pythonEnvResolver,
+    jobs: jobs,
   );
 
   static Future<AppServices> bootstrap() async {
@@ -174,6 +180,7 @@ class AppServices {
     profiles.dispose();
     addons.dispose();
     python.dispose();
+    jobs.dispose();
     await database.close();
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,12 +8,14 @@ import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/platform/addon_installer.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/pip_runner.dart';
 import 'package:freecad_launcher/platform/python_env.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
+import 'package:freecad_launcher/state/jobs_controller.dart';
 import 'package:path/path.dart' as p;
 
 import '../data/test_fixtures.dart';
@@ -90,12 +93,14 @@ void main() {
   AddonsController controller({
     PipRunner? pipRunner,
     PythonEnvResolver? pythonResolver,
+    JobsController? jobs,
   }) {
     return AddonsController(
       database: db,
       catalog: catalog,
       pipRunner: pipRunner,
       pythonResolver: pythonResolver,
+      jobs: jobs,
       installer: AddonInstaller(
         downloader: Downloader(
           source: downloadSource,
@@ -260,6 +265,49 @@ void main() {
     await pumpEventQueue();
     expect(subject.isInstalledIn('profile-1', 'A2plus'), isTrue);
     subject.dispose();
+  });
+
+  test('cancelling an addon install job removes the partial download', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [addon('A2plus', name: 'A2plus')],
+      freshness: CatalogFreshness.fresh,
+    );
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    final chunks = StreamController<List<int>>();
+    downloadSource.streamFactory = () => chunks.stream;
+    final jobs = JobsController();
+    final subject = controller(jobs: jobs);
+    await subject.load();
+
+    final installFuture = subject.install(
+      addonId: 'A2plus',
+      branchRef: 'master',
+      profileId: 'profile-1',
+    );
+    await pumpEventQueue();
+    chunks.add(List<int>.filled(4096, 1));
+    await pumpEventQueue();
+
+    jobs.cancel(jobs.jobs.value.single.id);
+    chunks.add(List<int>.filled(4096, 2));
+    await chunks.close();
+
+    final result = await installFuture;
+    expect(result.isErr, isTrue);
+    expect(jobs.jobs.value.single.state, JobState.cancelled);
+    final downloads = Directory(p.join(tempDirectory.path, 'downloads'));
+    final leftovers =
+        downloads.existsSync() ? downloads.listSync().whereType<File>().toList() : <File>[];
+    expect(leftovers, isEmpty);
+    expect(
+      Directory(p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'A2plus'))
+          .existsSync(),
+      isFalse,
+    );
+    expect(await db.installedAddonsDao.getByAddon('profile-1', 'A2plus'), isNull);
+    subject.dispose();
+    jobs.dispose();
   });
 
   test('install failure reports the error and records nothing', () async {

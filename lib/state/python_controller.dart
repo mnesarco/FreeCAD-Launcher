@@ -7,11 +7,13 @@ import 'package:uuid/uuid.dart';
 import 'package:freecad_launcher/core/errors.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/database.dart';
+import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/domain/python/requirements_parser.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/pip_runner.dart';
 import 'package:freecad_launcher/platform/python_env.dart';
 import 'package:freecad_launcher/platform/python_uninstaller.dart';
+import 'package:freecad_launcher/state/jobs_controller.dart';
 
 class PythonController {
   PythonController({
@@ -20,12 +22,14 @@ class PythonController {
     required PipRunner pipRunner,
     required PythonEnvResolver pythonResolver,
     PythonUninstaller uninstaller = const PythonUninstaller(),
+    JobsController? jobs,
     DateTime Function()? clock,
   }) : _database = database,
        _paths = paths,
        _pipRunner = pipRunner,
        _pythonResolver = pythonResolver,
        _uninstaller = uninstaller,
+       _jobs = jobs,
        _clock = clock ?? DateTime.now;
 
   final AppDatabase _database;
@@ -33,6 +37,7 @@ class PythonController {
   final PipRunner _pipRunner;
   final PythonEnvResolver _pythonResolver;
   final PythonUninstaller _uninstaller;
+  final JobsController? _jobs;
   final DateTime Function() _clock;
 
   final packages = signal<List<PythonPackage>>([]);
@@ -57,6 +62,32 @@ class PythonController {
   Future<Result<void>> install({
     required String profileId,
     required String specText,
+  }) async {
+    final jobs = _jobs;
+    if (jobs == null) {
+      return _installInternal(profileId: profileId, specText: specText);
+    }
+    final profile = await _database.profilesDao.getById(profileId);
+    final result = await jobs.run<Result<void>>(
+      kind: JobKind.pip,
+      label: 'Install packages (${profile?.name ?? profileId})',
+      profileId: profileId,
+      onRetry: () async {
+        await install(profileId: profileId, specText: specText);
+      },
+      task: (context) => _installInternal(
+        profileId: profileId,
+        specText: specText,
+        context: context,
+      ),
+    );
+    return result ?? const Err(AppError(message: 'Install cancelled'));
+  }
+
+  Future<Result<void>> _installInternal({
+    required String profileId,
+    required String specText,
+    JobContext? context,
   }) async {
     final requirements = parseRequirements(specText)
         .where((requirement) => requirement.valid)
@@ -89,12 +120,14 @@ class PythonController {
         );
       }
       final targetDirectory = _targetDirectory(profile);
+      context?.report(detail: 'Running pip');
       final result = await _pipRunner.install(
         pythonPath: interpreter,
         targetDirectory: targetDirectory,
         packages: requirements.map(requirementSpec).toList(),
         label: _safeLabel(profile.name),
       );
+      context?.setLogPath(result.logPath);
       if (!result.isSuccess) {
         throw PythonUninstallException('pip failed: ${result.outputTail}');
       }
@@ -114,6 +147,7 @@ class PythonController {
     } on Object catch (error) {
       final appError = error is AppError ? error : AppError.from(error, retryable: true);
       errors.value = {...errors.value, profileId: appError};
+      context?.fail(appError.message);
       return Err(appError);
     } finally {
       installing.value = {...installing.value}..remove(profileId);

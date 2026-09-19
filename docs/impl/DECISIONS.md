@@ -680,3 +680,36 @@ Template:
 - **Refs**: spec 03 §2.3, spec 02 FR-6, `lib/platform/python_uninstaller.dart`,
   `lib/state/python_controller.dart`, `lib/ui/profiles/profile_detail_view.dart`,
   `TASKS.md` M4-07, D-036
+
+### D-043 — Job queue: controller, cancellation and status bar/jobs dialog (M4-08)
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: FR-11.1–11.3 ask for a visible job queue with per-job progress, speed, cancel,
+  retry, logs and limits (downloads 2, no parallel installs); spec 04 §3 places it under
+  `state/`. Builds, addon installs/updates and manual pip installs previously reported progress
+  through per-controller signals only.
+- **Decision**:
+  - `Job` (domain) has kind `download|install|pip`, state `queued|running|completed|failed|
+    cancelled`, `fraction`, `detail`, `logPath`, `error`; `JobsController` (state) keeps an
+    in-memory list, FIFO-queues per group with limits (downloads 2, install+pip 1), and
+    `run<T>()` returns `T?` — `null` when cancelled.
+  - `JobContext` exposes progress/detail reporting, `setLogPath` (pip logs), `fail(message)`
+    (controllers mark the job failed while still returning their `Result`), and the job's
+    `CancellationToken`.
+  - Cancellation: `CancellationToken` gained `addListener`; build installs bridge the job token
+    to the build's own token so the downloader deletes the `.part`; addon installs pass the job
+    token to `AddonInstaller`, which re-checks after download before staging/extracting. Pip jobs
+    run through the serialized `PipRunner` and cannot be interrupted mid-run, so cancel takes
+    effect once the current pip invocation finishes.
+  - A task error after cancellation reports `cancelled`, not `failed`.
+  - UI: the shell status bar shows `n · <current label>` while jobs are active and opens a jobs
+    dialog (state chip, progress bar, detail, error, log path, Cancel for active, Retry for
+    failed/cancelled when a retry callback is registered, Clear finished).
+  - `AppServices` creates one shared `JobsController`; builds install, addon install/update and
+    manual pip install run as jobs; retries resubmit the original request.
+- **Consequences**: M6-03 can run batch updates through the same queue; job history is
+  in-memory only (not persisted); retry of an install whose failure was "profile missing" simply
+  fails again (the task revalidates).
+- **Refs**: spec 02 FR-11, spec 04 §3, `lib/domain/jobs/job_types.dart`,
+  `lib/state/jobs_controller.dart`, `lib/ui/jobs/jobs_dialog.dart`,
+  `lib/ui/shell/app_shell.dart`, `lib/core/cancellation.dart`, `TASKS.md` M4-08, D-039, D-041

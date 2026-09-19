@@ -12,11 +12,13 @@ import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show Catalo
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
 import 'package:freecad_launcher/domain/builds/freecad_version.dart';
+import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/domain/python/requirements_parser.dart';
 import 'package:freecad_launcher/platform/addon_installer.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/pip_runner.dart';
 import 'package:freecad_launcher/platform/python_env.dart';
+import 'package:freecad_launcher/state/jobs_controller.dart';
 
 enum AddonInstalledFilter { installed, notInstalled }
 
@@ -28,6 +30,7 @@ class AddonsController {
     required AppPaths paths,
     PipRunner? pipRunner,
     PythonEnvResolver? pythonResolver,
+    JobsController? jobs,
     DateTime Function()? clock,
   }) : _database = database,
        _catalog = catalog,
@@ -35,6 +38,7 @@ class AddonsController {
        _paths = paths,
        _pipRunner = pipRunner,
        _pythonResolver = pythonResolver,
+       _jobs = jobs,
        _clock = clock ?? DateTime.now;
 
   final AppDatabase _database;
@@ -43,6 +47,7 @@ class AddonsController {
   final AppPaths _paths;
   final PipRunner? _pipRunner;
   final PythonEnvResolver? _pythonResolver;
+  final JobsController? _jobs;
   final DateTime Function() _clock;
 
   final addons = signal<List<Addon>>([]);
@@ -272,18 +277,52 @@ class AddonsController {
     required String branchRef,
     required String profileId,
   }) async {
+    final jobs = _jobs;
+    if (jobs == null) {
+      return _updateInternal(
+        addonId: addonId,
+        branchRef: branchRef,
+        profileId: profileId,
+      );
+    }
+    final result = await jobs.run<Result<void>>(
+      kind: JobKind.install,
+      label: 'Update ${byId(addonId)?.displayName ?? addonId}',
+      onRetry: () async {
+        await update(addonId: addonId, branchRef: branchRef, profileId: profileId);
+      },
+      task: (context) => _updateInternal(
+        addonId: addonId,
+        branchRef: branchRef,
+        profileId: profileId,
+        context: context,
+      ),
+    );
+    return result ?? const Err(AppError(message: 'Update cancelled'));
+  }
+
+  Future<Result<void>> _updateInternal({
+    required String addonId,
+    required String branchRef,
+    required String profileId,
+    JobContext? context,
+  }) async {
     if (installedFor(profileId, addonId) == null) {
       return const Err(AppError(message: 'Addon is not installed in this profile'));
     }
     try {
+      context?.report(detail: 'Backing up current addon');
       await _backupAddon(profileId, addonId);
     } on Object catch (error) {
-      return Err(AppError.from(error, retryable: true));
+      final appError = AppError.from(error, retryable: true);
+      context?.fail(appError.message);
+      return Err(appError);
     }
-    final result = await install(
+    final result = await _installInternal(
       addonId: addonId,
       branchRef: branchRef,
       profileId: profileId,
+      context: context,
     );
     if (result.isErr) {
       return Err(AppError(message: 'Update failed: ${result.errorOrNull}'));
@@ -342,6 +381,44 @@ class AddonsController {
     required String profileId,
     bool installRequirements = false,
   }) async {
+    final jobs = _jobs;
+    if (jobs == null) {
+      return _installInternal(
+        addonId: addonId,
+        branchRef: branchRef,
+        profileId: profileId,
+        installRequirements: installRequirements,
+      );
+    }
+    final result = await jobs.run<Result<void>>(
+      kind: JobKind.install,
+      label: 'Install ${byId(addonId)?.displayName ?? addonId}',
+      onRetry: () async {
+        await install(
+          addonId: addonId,
+          branchRef: branchRef,
+          profileId: profileId,
+          installRequirements: installRequirements,
+        );
+      },
+      task: (context) => _installInternal(
+        addonId: addonId,
+        branchRef: branchRef,
+        profileId: profileId,
+        installRequirements: installRequirements,
+        context: context,
+      ),
+    );
+    return result ?? const Err(AppError(message: 'Install cancelled'));
+  }
+
+  Future<Result<void>> _installInternal({
+    required String addonId,
+    required String branchRef,
+    required String profileId,
+    bool installRequirements = false,
+    JobContext? context,
+  }) async {
     final addon = byId(addonId);
     if (addon == null) {
       return const Err(AppError(message: 'Addon not found'));
@@ -355,12 +432,21 @@ class AddonsController {
     installing.value = {...installing.value, addonId};
     installErrors.value = {...installErrors.value}..remove(addonId);
     try {
+      context?.report(detail: 'Downloading addon');
       await _installer.install(
         zipUri: Uri.parse(branch.zipUrl),
         destinationDirectory: p.join(_paths.profilePaths(profileId).mod, addon.id),
         downloadDirectory: _paths.downloadsCacheDir,
         assetName: '${addon.id}-${branch.gitRef}.zip',
+        cancellationToken: context?.token,
+        onProgress: (progress) => context?.report(
+          fraction: progress.fraction,
+          receivedBytes: progress.receivedBytes,
+          totalBytes: progress.totalBytes,
+          detail: 'Downloading addon',
+        ),
       );
+      context?.report(detail: 'Installing files');
       final now = _clock();
       await _database.installedAddonsDao.save(
         InstalledAddon(
@@ -378,17 +464,20 @@ class AddonsController {
         ),
       );
       if (installRequirements && branch.hasRequirements) {
+        context?.report(detail: 'Installing Python packages');
         await _installRequirements(
           profile: profile,
           addon: addon,
           branch: branch,
           installedAt: now,
+          context: context,
         );
       }
       return const Ok(null);
     } on Object catch (error) {
       final appError = error is AppError ? error : AppError.from(error, retryable: true);
       installErrors.value = {...installErrors.value, addonId: appError};
+      context?.fail(appError.message);
       return Err(appError);
     } finally {
       installing.value = {...installing.value}..remove(addonId);
@@ -400,6 +489,7 @@ class AddonsController {
     required Addon addon,
     required AddonBranch branch,
     required DateTime installedAt,
+    JobContext? context,
   }) async {
     final requirements = parseRequirements(
       branch.metadata?.requirements ?? '',
@@ -441,6 +531,7 @@ class AddonsController {
         packages: requirements.map(requirementSpec).toList(),
         label: addon.id,
       );
+      context?.setLogPath(result.logPath);
       if (!result.isSuccess) {
         throw AddonInstallException('pip failed: ${result.outputTail}');
       }

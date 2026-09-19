@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:freecad_launcher/core/constants.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/ui/addons/addons_view.dart';
 import 'package:freecad_launcher/ui/builds/builds_view.dart';
 import 'package:freecad_launcher/ui/home/home_view.dart';
+import 'package:freecad_launcher/ui/jobs/jobs_dialog.dart';
 import 'package:freecad_launcher/ui/macros/macros_view.dart';
 import 'package:freecad_launcher/ui/profiles/profiles_view.dart';
 import 'package:freecad_launcher/ui/settings/settings_view.dart';
+import 'package:freecad_launcher/state/app_services.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -112,6 +115,9 @@ class _StatusBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final jobs = AppScope.of(context).jobs.jobs.watch(context);
+    final active = jobs.where((job) => job.isActive).toList();
+
     return Container(
       height: 28,
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -122,6 +128,20 @@ class _StatusBar extends StatelessWidget {
       child: Row(
         children: [
           Text(l10n.appTitle, style: theme.textTheme.labelSmall),
+          if (active.isNotEmpty) ...[
+            const SizedBox(width: 12),
+            TextButton(
+              onPressed: () => showJobsDialog(context),
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+              child: Text(
+                '${active.length}  ·  ${active.first.label}',
+                style: theme.textTheme.labelSmall,
+              ),
+            ),
+          ],
           const Spacer(),
           Text(appVersion, style: theme.textTheme.labelSmall),
         ],

@@ -13,11 +13,13 @@ import 'package:freecad_launcher/data/catalog/releases_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/asset_classifier.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/platform/build_installer.dart';
 import 'package:freecad_launcher/platform/checksum.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/python_probe.dart';
+import 'package:freecad_launcher/state/jobs_controller.dart';
 
 class CustomImportException implements Exception {
   const CustomImportException(this.message);
@@ -56,6 +58,7 @@ class BuildsController {
     required BuildPlatform platform,
     required String arch,
     PythonProbe? pythonProbe,
+    JobsController? jobs,
     DateTime Function()? clock,
   }) : _database = database,
        _catalog = catalog,
@@ -65,6 +68,7 @@ class BuildsController {
        _platform = platform,
        _arch = arch,
        _pythonProbe = pythonProbe,
+       _jobs = jobs,
        _clock = clock ?? DateTime.now;
 
   final AppDatabase _database;
@@ -75,6 +79,7 @@ class BuildsController {
   final BuildPlatform _platform;
   final String _arch;
   final PythonProbe? _pythonProbe;
+  final JobsController? _jobs;
   final DateTime Function() _clock;
 
   final installedBuilds = signal<List<Build>>([]);
@@ -194,11 +199,31 @@ class BuildsController {
   }
 
   Future<Result<Build>> install(BuildCandidate candidate) async {
+    final jobs = _jobs;
+    if (jobs == null) {
+      return _installLocked(candidate, null);
+    }
+    final result = await jobs.run<Result<Build>>(
+      kind: JobKind.install,
+      label: 'Install FreeCAD ${candidate.versionLabel}',
+      onRetry: () async {
+        await install(candidate);
+      },
+      task: (context) => _installLocked(candidate, context),
+    );
+    return result ?? const Err(AppError(message: 'Install cancelled'));
+  }
+
+  Future<Result<Build>> _installLocked(
+    BuildCandidate candidate,
+    JobContext? context,
+  ) async {
     final buildId = candidate.id;
     final token = CancellationToken();
     _tokens[buildId] = token;
+    context?.token.addListener(token.cancel);
     _startDownloadTracking(buildId);
-    _setProgress(buildId, const InstallProgress(stage: InstallStage.downloading, fraction: 0));
+    _setProgress(buildId, const InstallProgress(stage: InstallStage.downloading, fraction: 0), context: context);
 
     try {
       final expected = await _fetchExpectedChecksum(candidate, token);
@@ -208,10 +233,10 @@ class BuildsController {
         fileName: candidate.assetName,
         expectedSha256: expected,
         cancellationToken: token,
-        onProgress: (progress) => _onDownloadProgress(buildId, progress),
+        onProgress: (progress) => _onDownloadProgress(buildId, progress, context: context),
       );
 
-      _setProgress(buildId, const InstallProgress(stage: InstallStage.installing));
+      _setProgress(buildId, const InstallProgress(stage: InstallStage.installing), context: context);
       final installed = await _installer.install(
         InstallRequest(
           buildId: buildId,
@@ -222,6 +247,7 @@ class BuildsController {
           onDetectingPython: () => _setProgress(
             buildId,
             const InstallProgress(stage: InstallStage.detectingPython),
+            context: context,
           ),
         ),
       );
@@ -252,6 +278,7 @@ class BuildsController {
     } on Object catch (error) {
       final appError = error is AppError ? error : AppError.from(error, retryable: true);
       installErrors.value = {...installErrors.value, buildId: appError};
+      context?.fail(appError.message);
       return Err(appError);
     } finally {
       _tokens.remove(buildId);
@@ -548,7 +575,11 @@ class BuildsController {
     _downloadStartedAt[buildId] = _clock();
   }
 
-  void _onDownloadProgress(String buildId, DownloadProgress progress) {
+  void _onDownloadProgress(
+    String buildId,
+    DownloadProgress progress, {
+    JobContext? context,
+  }) {
     int? bytesPerSecond;
     final started = _downloadStartedAt[buildId];
     if (started != null) {
@@ -557,16 +588,14 @@ class BuildsController {
         bytesPerSecond = (progress.receivedBytes / seconds).round();
       }
     }
-    _setProgress(
-      buildId,
-      InstallProgress(
-        stage: InstallStage.downloading,
-        fraction: progress.fraction,
-        receivedBytes: progress.receivedBytes,
-        totalBytes: progress.totalBytes,
-        bytesPerSecond: bytesPerSecond,
-      ),
+    final value = InstallProgress(
+      stage: InstallStage.downloading,
+      fraction: progress.fraction,
+      receivedBytes: progress.receivedBytes,
+      totalBytes: progress.totalBytes,
+      bytesPerSecond: bytesPerSecond,
     );
+    _setProgress(buildId, value, context: context);
   }
 
   Future<String> _hashWithProgress(String buildId, String path) {
@@ -588,8 +617,30 @@ class BuildsController {
     );
   }
 
-  void _setProgress(String buildId, InstallProgress progress) {
+  void _setProgress(
+    String buildId,
+    InstallProgress progress, {
+    JobContext? context,
+  }) {
     installProgress.value = {...installProgress.value, buildId: progress};
+    if (context != null) {
+      context.report(
+        fraction: progress.fraction,
+        detail: _stageDetail(progress.stage),
+        receivedBytes: progress.receivedBytes,
+        totalBytes: progress.totalBytes,
+        bytesPerSecond: progress.bytesPerSecond,
+      );
+    }
+  }
+
+  String _stageDetail(InstallStage stage) {
+    return switch (stage) {
+      InstallStage.hashing => 'Hashing',
+      InstallStage.downloading => 'Downloading',
+      InstallStage.installing => 'Installing',
+      InstallStage.detectingPython => 'Detecting Python',
+    };
   }
 
   void dispose() {
