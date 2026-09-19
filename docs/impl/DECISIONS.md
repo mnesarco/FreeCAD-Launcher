@@ -367,3 +367,23 @@ Template:
   work); full-payload duplicates verify with the copy size; `ProfilesRepository` now requires
   `AppPaths` + host platform.
 - **Refs**: spec 02 FR-2.4, spec 03 §2.3, spec 05 `profiles`, `TASKS.md` M3-02, D-027
+
+### D-029 — Pure launch plan composes executable, argv and env
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: Spec 04 defines a profile launch as a pure function of (build, profile, args, OS)
+  → (executable, argv, env). The env builder and path mapping existed from M1-05, but nothing
+  composed the pieces for M3-04 to execute.
+- **Decision**: `LaunchPlanBuilder.build` (pure domain) returns `(executable, argv, env)`:
+  - executable is the build's recorded `localPath` (installer already resolves AppImage/archive/
+    dmg/custom layouts);
+  - arguments are user args first, then `-u <profile>/user.cfg -s <profile>/system.cfg`
+    (always appended for clarity; "optional" in spec 04 means FreeCAD does not require them);
+    `--single-instance` is never added (D-005);
+  - environment comes from `LaunchEnvironment.build` (sanitized inherited vars, per-OS dirs,
+    `APPIMAGE_EXTRACT_AND_RUN=1` only on Linux when requested).
+- **Consequences**: M3-04 only needs to ensure the profile directories exist and spawn the plan;
+  a unit test asserts every directory the plan references is part of
+  `ProfilePaths.directoriesFor(platform)`.
+- **Refs**: spec 04 §4.1/§4.2, `lib/domain/profiles/launch_plan.dart`, `TASKS.md` M3-03, M3-04,
+  D-005

@@ -4,11 +4,11 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-19
-- **Current milestone**: M3 — Profiles and launch (M3-01/M3-02 done; M3-03 next)
+- **Current milestone**: M3 — Profiles and launch (M3-01..M3-03 done; M3-04 next)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-19
-- **Next action**: start `M3-03` (wire the env builder into profile creation/launch; finalize
-  per-OS isolation), then `M3-04` launch, `M3-05` process tracking.
+- **Next action**: start `M3-04` (launch runtime per build kind: AppImage FUSE/fallback, archive,
+  dmg, custom; macOS quarantine consent), then `M3-05` process tracking, `M3-06` profiles UI.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -67,7 +67,10 @@
     after, rollback on failure); `delete` removes the directory then the row (FK cascades);
     `duplicate` copies config by default or the full payload on request (UI will ask);
     duplicating an unhealthy profile is allowed.
-  - 218 tests green (2 manual network probes skipped), analyze clean, app builds and launches.
+  - M3-03 — **D-029**: `LaunchPlanBuilder` composes the pure launch plan (executable + user args
+    + `-u/-s` config flags + per-OS sanitized env, AppImage fallback flag); unit matrix covers
+    Linux/Windows/macOS and asserts every env directory is part of the created layout.
+  - 224 tests green (2 manual network probes skipped), analyze clean, app builds and launches.
 
 ## Session log
 
@@ -97,6 +100,7 @@
 | 2026-09-19 | M2 | D-026 download bytes/speed feedback; downloader progress coalescing | M2-19 | `docs/impl/DECISIONS.md`, `docs/spec/03-ux.md`, `lib/platform/downloader.dart`, `lib/state/builds_controller.dart`, `lib/ui/builds/builds_view.dart`, `test/**` |
 | 2026-09-19 | M3 | D-027 profile repository, name validation and binding rules | M3-01 | `docs/impl/DECISIONS.md`, `docs/spec/02-requirements.md`, `docs/spec/05-data-model.md`, `lib/domain/profiles/profile_rules.dart`, `lib/data/repositories/profiles_repository.dart`, `lib/state/app_services.dart`, `test/**` |
 | 2026-09-19 | M3 | D-028 atomic lifecycle (create/duplicate/delete) + payload duplication | M3-02 | `docs/impl/DECISIONS.md`, `docs/spec/02-requirements.md`, `docs/spec/03-ux.md`, `docs/spec/05-data-model.md`, `docs/impl/VERIFICATION.md`, `lib/data/repositories/profiles_repository.dart`, `lib/state/app_services.dart`, `test/**` |
+| 2026-09-19 | M3 | D-029 pure launch plan (executable + argv + env) with per-OS matrix tests | M3-03 | `docs/impl/DECISIONS.md`, `docs/spec/04-architecture.md`, `lib/domain/profiles/launch_plan.dart`, `test/domain/launch_plan_test.dart` |
 
 ## Standing notes for the next agent
 

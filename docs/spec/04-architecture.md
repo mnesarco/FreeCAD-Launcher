@@ -120,8 +120,10 @@ Notes:
 | Archive (macOS) | `<build>/FreeCAD.app/Contents/MacOS/FreeCAD` | spawn directly to keep env; strip quarantine on install with user consent |
 | Custom | user-selected executable (referenced in place) | env still applied; Python detected via headless probe (`FreeCADCmd` or `--console`) with manual fallback (D-020) |
 
-Optional explicit args: `-u <profile>/user.cfg -s <profile>/system.cfg` are passed for clarity
-even though `FREECAD_USER_HOME` already places them there.
+Explicit args: user arguments come first, then `-u <profile>/user.cfg -s <profile>/system.cfg`
+are always appended for clarity even though `FREECAD_USER_HOME` already places them there.
+`--single-instance` is never passed. `LaunchPlanBuilder` composes executable + argv + env as a
+pure function (D-029).
 
 ### 4.3 Process tracking
 
