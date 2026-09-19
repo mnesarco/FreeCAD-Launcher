@@ -47,6 +47,9 @@ binary; a corrupted download fails checksum verification and leaves no partial i
   payload) and delete a profile (confirmation, optional "keep exported backup"). Directory
   creation is atomic (D-028).
 - FR-2.5 **[v0.1]** Launch a profile in-app; running state is shown while the process lives.
+  Launch is blocked while the build is `missing`/`broken`; on a FUSE-less Linux system the
+  AppImage runs with `APPIMAGE_EXTRACT_AND_RUN=1`; macOS quarantine removal is offered with
+  consent (D-030).
 - FR-2.6 **[v0.1]** "Show launch command" reveals the exact executable + env + args.
 - FR-2.7 **[v0.1]** Deleting a profile never deletes shared builds.
 - FR-2.8 **[v0.2]** Profile templates (empty / inherit from existing / from a bundle).

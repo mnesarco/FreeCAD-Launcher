@@ -205,6 +205,10 @@ class ProfilesRepository {
     return Ok(ProfileBuildChange(profile: updated, pythonChanged: pythonChanged));
   }
 
+  Future<void> markUsed(String profileId, {DateTime? at}) {
+    return _database.profilesDao.touchLastUsed(profileId, at ?? _clock());
+  }
+
   Future<Result<void>> delete(String profileId) async {
     final profile = await _database.profilesDao.getById(profileId);
     if (profile == null) {

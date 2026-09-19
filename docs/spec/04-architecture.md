@@ -127,6 +127,9 @@ pure function (D-029).
 
 ### 4.3 Process tracking
 
+- Launch is blocked while the build status is not `installed`; profile directories are
+  re-created immediately before spawning (D-005), and on macOS a quarantined `.app` requires
+  explicit consent before `xattr -dr` runs and the launch proceeds (D-030).
 - `Process.start(..., mode: normal)` per launch; the app keeps a handle while it lives and
   exposes a `running` signal per profile. If the launcher exits, FreeCAD keeps running.
 - stdout/stderr are streamed to a per-launch log file under `logs/launch-<profile>-<ts>.log`.

@@ -4,18 +4,19 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-19
-- **Current milestone**: M3 — Profiles and launch (M3-01..M3-03 done; M3-04 next)
+- **Current milestone**: M3 — Profiles and launch (M3-01..M3-04 done; M3-05 next)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-19
-- **Next action**: start `M3-04` (launch runtime per build kind: AppImage FUSE/fallback, archive,
-  dmg, custom; macOS quarantine consent), then `M3-05` process tracking, `M3-06` profiles UI.
+- **Next action**: start `M3-05` (process tracking: running signal, launch log streaming, exit
+  handling), then `M3-06` profiles UI, `M3-07` launch command viewer.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
   - Real Windows `.7z` extraction and macOS `.dmg` install still need those OSes (Windows CI
     once a remote exists; macOS needs a machine). Linux is verified end-to-end.
   - Manual UI click-throughs (install from Versions, custom import incl. executable + Python
-    fallback dialog) and a FUSE-less Linux launch are pending; logic is covered by tests.
+    fallback dialog) are pending; headless profile launch is verified on Linux, GUI launch and
+    Windows/macOS launches are pending the M3 UI and those OSes.
 - **In progress**: none
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
@@ -70,7 +71,11 @@
   - M3-03 — **D-029**: `LaunchPlanBuilder` composes the pure launch plan (executable + user args
     + `-u/-s` config flags + per-OS sanitized env, AppImage fallback flag); unit matrix covers
     Linux/Windows/macOS and asserts every env directory is part of the created layout.
-  - 224 tests green (2 manual network probes skipped), analyze clean, app builds and launches.
+  - M3-04 — **D-030**: `FreeCadRuntime` + `ProfilesController.launch` (blocks unhealthy builds,
+    recreates dirs, records `lastUsedAt`); AppImage FUSE fallback via diagnostics; macOS
+    quarantine consent flow; real Linux 1.0.2 AppImage launched headless (`--version`, exit 0).
+  - 237 tests green (3 manual network/launch probes skipped), analyze clean, app builds and
+    launches.
 
 ## Session log
 
@@ -101,6 +106,7 @@
 | 2026-09-19 | M3 | D-027 profile repository, name validation and binding rules | M3-01 | `docs/impl/DECISIONS.md`, `docs/spec/02-requirements.md`, `docs/spec/05-data-model.md`, `lib/domain/profiles/profile_rules.dart`, `lib/data/repositories/profiles_repository.dart`, `lib/state/app_services.dart`, `test/**` |
 | 2026-09-19 | M3 | D-028 atomic lifecycle (create/duplicate/delete) + payload duplication | M3-02 | `docs/impl/DECISIONS.md`, `docs/spec/02-requirements.md`, `docs/spec/03-ux.md`, `docs/spec/05-data-model.md`, `docs/impl/VERIFICATION.md`, `lib/data/repositories/profiles_repository.dart`, `lib/state/app_services.dart`, `test/**` |
 | 2026-09-19 | M3 | D-029 pure launch plan (executable + argv + env) with per-OS matrix tests | M3-03 | `docs/impl/DECISIONS.md`, `docs/spec/04-architecture.md`, `lib/domain/profiles/launch_plan.dart`, `test/domain/launch_plan_test.dart` |
+| 2026-09-19 | M3 | D-030 launch runtime, profiles controller, FUSE fallback and quarantine consent | M3-04 | `docs/impl/DECISIONS.md`, `docs/spec/02-requirements.md`, `docs/spec/04-architecture.md`, `lib/platform/launch.dart`, `lib/state/profiles_controller.dart`, `lib/state/app_services.dart`, `test/**` |
 
 ## Standing notes for the next agent
 

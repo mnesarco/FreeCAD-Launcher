@@ -387,3 +387,26 @@ Template:
   `ProfilePaths.directoriesFor(platform)`.
 - **Refs**: spec 04 §4.1/§4.2, `lib/domain/profiles/launch_plan.dart`, `TASKS.md` M3-03, M3-04,
   D-005
+
+### D-030 — Launch runtime and profiles controller
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: M3-04 needed the executable half of the launch model: per-kind/runtime behavior
+  (AppImage FUSE fallback, macOS quarantine) and an orchestrator that guards and records
+  launches. The UI arrives in M3-06.
+- **Decision**:
+  - `FreeCadRuntime` (platform) builds the plan via `LaunchPlanBuilder`: for Linux AppImages it
+    sets `APPIMAGE_EXTRACT_AND_RUN=1` when `DiagnosticsService.fuseAvailable()` is false;
+    archive/dmg/custom just use the recorded `localPath`.
+  - `ProfilesController.launch` blocks when the build is not `installed`, re-creates the profile
+    directories (D-005), starts the process, and updates `lastUsedAt`. It returns
+    `LaunchResult` (started / quarantineRequired / failure) instead of throwing.
+  - macOS quarantine: if the `.app` bundle has `com.apple.quarantine`, launch returns
+    `quarantineRequired`; only an explicit consent triggers `xattr -dr` (D-019 refined) and then
+    the launch. Other platforms never check.
+  - M3-05 owns the running signal and log streaming; M3-04 returns the process handle.
+- **Consequences**: M3-06 only needs to render `LaunchResult` (consent dialog + error) and the
+  CLI (M3-08) can reuse the controller. Headless Linux launch of the real 1.0.2 AppImage
+  verified (`--version`, exit 0); Windows/macOS manual launches remain open.
+- **Refs**: spec 02 FR-2.5, spec 04 §4.2/§4.3, `lib/platform/launch.dart`,
+  `lib/state/profiles_controller.dart`, `TASKS.md` M3-04, D-019, D-029

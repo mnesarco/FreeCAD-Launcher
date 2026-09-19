@@ -14,11 +14,13 @@ import 'package:freecad_launcher/platform/diagnostics.dart';
 import 'package:freecad_launcher/platform/dmg_extractor.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/host.dart';
+import 'package:freecad_launcher/platform/launch.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/process.dart';
 import 'package:freecad_launcher/platform/python_probe.dart';
 import 'package:freecad_launcher/platform/seven_zip_extractor.dart';
 import 'package:freecad_launcher/state/builds_controller.dart';
+import 'package:freecad_launcher/state/profiles_controller.dart';
 
 class AppServices {
   AppServices({
@@ -73,10 +75,25 @@ class AppServices {
     pythonProbe: pythonProbe,
   );
 
-  late final ProfilesRepository profiles = ProfilesRepository(
+  late final ProfilesRepository profilesRepository = ProfilesRepository(
     database: database,
     paths: paths,
     platform: hostPlatform,
+  );
+
+  late final FreeCadRuntime launchRuntime = FreeCadRuntime(
+    processRunner: processRunner,
+    diagnostics: diagnostics,
+    platform: hostPlatform,
+    quarantineGuard: XattrQuarantineGuard(processRunner),
+  );
+
+  late final ProfilesController profiles = ProfilesController(
+    database: database,
+    repository: profilesRepository,
+    paths: paths,
+    platform: hostPlatform,
+    runtime: launchRuntime,
   );
 
   late final BuildsController builds =
@@ -101,6 +118,7 @@ class AppServices {
 
   Future<void> close() async {
     builds.dispose();
+    profiles.dispose();
     await database.close();
   }
 }

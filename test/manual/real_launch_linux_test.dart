@@ -1,0 +1,94 @@
+import 'dart:io';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:freecad_launcher/data/database.dart';
+import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
+import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/platform/diagnostics.dart';
+import 'package:freecad_launcher/platform/launch.dart';
+import 'package:freecad_launcher/platform/paths.dart';
+import 'package:freecad_launcher/platform/process.dart';
+import 'package:freecad_launcher/state/profiles_controller.dart';
+
+void main() {
+  final binary = Platform.environment['FCL_LAUNCH_BINARY'] ??
+      '/home/mnesarco/devel/toolkits/freecad/'
+          'FreeCAD_1.0.2-conda-Linux-x86_64-py311.AppImage';
+
+  test(
+    'launches a real AppImage inside an isolated profile',
+    () async {
+      final root = Directory('/tmp/opencode/fcl_launch_smoke');
+      if (root.existsSync()) {
+        root.deleteSync(recursive: true);
+      }
+      final paths = AppPaths(dataRoot: root.path);
+      await paths.ensureBaseDirectories();
+      final db = AppDatabase.inMemory();
+      final now = DateTime.now().toUtc();
+      await db.buildsDao.save(
+        Build(
+          id: 'smoke',
+          kind: BuildKind.appimage,
+          version: 'smoke',
+          channel: BuildChannel.custom,
+          platform: BuildPlatform.linux,
+          arch: BuildArch.x86_64,
+          localPath: binary,
+          pythonVersion: '3.11',
+          status: BuildStatus.installed,
+          verified: false,
+          installedAt: now,
+          updatedAt: now,
+        ),
+      );
+
+      final repository = ProfilesRepository(
+        database: db,
+        paths: paths,
+        platform: BuildPlatform.linux,
+      );
+      final runner = ProcessRunner();
+      final controller = ProfilesController(
+        database: db,
+        repository: repository,
+        paths: paths,
+        platform: BuildPlatform.linux,
+        runtime: FreeCadRuntime(
+          processRunner: runner,
+          diagnostics: DiagnosticsService(
+            paths: paths,
+            platform: BuildPlatform.linux,
+            processRunner: runner,
+          ),
+          platform: BuildPlatform.linux,
+        ),
+      );
+
+      final created = await repository.create(name: 'Smoke', buildId: 'smoke');
+      final profile = created.valueOrNull!;
+
+      final result = await controller.launch(
+        profileId: profile.id,
+        userArguments: const ['--version'],
+      );
+      expect(result.isStarted, isTrue);
+
+      final exitCode = await result.handle!.exitCode.timeout(const Duration(minutes: 2));
+      // ignore: avoid_print
+      print('binary=$binary exit=$exitCode');
+      expect(exitCode, 0);
+      expect((await repository.getById(profile.id))!.lastUsedAt, isNotNull);
+
+      controller.dispose();
+      await db.close();
+      if (root.existsSync()) {
+        root.deleteSync(recursive: true);
+      }
+    },
+    skip: Platform.environment['FCL_REAL_LAUNCH'] != '1'
+        ? 'Manual test: set FCL_REAL_LAUNCH=1 to launch a real AppImage'
+        : null,
+    timeout: const Timeout(Duration(minutes: 5)),
+  );
+}
