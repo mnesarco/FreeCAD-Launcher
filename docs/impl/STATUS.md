@@ -8,9 +8,9 @@
   Collections, macros, config, export (S4 spike, then M5-01)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-19
-- **Next action**: start `S4` (macro catalog spike), then `M5-01` (bundles). Manual M4 UI
-  click-throughs (jobs dialog, consent flow, install/update/remove from the UI) and the
-  Windows/macOS manual checks remain open.
+- **Next action**: start `M5-01` (bundles model/DAO/CRUD). `M5-04` (macro catalog client) is
+  unblocked by S4/D-044. Manual M4 UI click-throughs (jobs dialog, consent flow,
+  install/update/remove from the UI) and the Windows/macOS manual checks remain open.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -142,6 +142,11 @@
     build/addon downloads abort and delete `.part` files, and the status-bar summary + jobs
     dialog (progress, log path, Cancel/Retry). Builds install, addon install/update and manual
     pip install are wired through the shared queue; 13 new tests (incl. cancel cleanup).
+  - S4 — **D-044**: macro catalog source verified — official `addons.freecad.org/macro_cache.zip`
+    (+`.sha256`, same pattern as the addon catalog; 262 macros with embedded code/metadata/license,
+    generated from `FreeCAD/FreeCAD-macros` + wiki). Placement confirmed on real FreeCAD 1.0.2
+    (`getUserMacroDir` == profile root under `FREECAD_USER_HOME`); license is per macro (172/262
+    unlicensed) and will be shown and persisted (schema v3 in M5-05). No API/rate-limit concerns.
   - 332 tests green (8 manual probes skipped), analyze clean, app builds and launches.
 
 ## Session log
@@ -192,6 +197,7 @@
 | 2026-09-19 | M4 | D-040 addon update detection, backups and removal | M4-04 | `docs/impl/DECISIONS.md`, `lib/state/addons_controller.dart`, `lib/ui/addons/addons_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M4 | D-041 requirements parser, consent and pip installation | M4-05, M4-06 | `docs/impl/DECISIONS.md`, `lib/domain/python/**`, `lib/platform/python_*.dart`, `lib/platform/pip_runner.dart`, `lib/state/addons_controller.dart`, `lib/ui/addons/**`, `test/**` |
 | 2026-09-19 | M4 | D-042 Python packages tab and RECORD-based uninstall | M4-07 | `docs/impl/DECISIONS.md`, `lib/platform/python_uninstaller.dart`, `lib/state/python_controller.dart`, `lib/state/app_services.dart`, `lib/ui/profiles/profile_detail_view.dart`, `lib/l10n/**`, `test/**` |
+| 2026-09-19 | S4 | D-044 macro catalog source: addons.freecad.org cache, format, placement and license handling | S4 | `docs/impl/DECISIONS.md`, `docs/spec/06-integrations.md` |
 | 2026-09-19 | M4 | D-043 job queue (controller, cancel/retry, status bar + jobs dialog) and wiring for builds/addons/pip | M4-08 | `docs/impl/DECISIONS.md`, `docs/impl/TASKS.md`, `lib/domain/jobs/job_types.dart`, `lib/state/jobs_controller.dart`, `lib/state/*_controller.dart`, `lib/state/app_services.dart`, `lib/core/cancellation.dart`, `lib/platform/addon_installer.dart`, `lib/ui/jobs/jobs_dialog.dart`, `lib/ui/shell/app_shell.dart`, `lib/l10n/**`, `test/**` |
 
 ## Standing notes for the next agent

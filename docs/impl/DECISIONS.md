@@ -713,3 +713,59 @@ Template:
 - **Refs**: spec 02 FR-11, spec 04 §3, `lib/domain/jobs/job_types.dart`,
   `lib/state/jobs_controller.dart`, `lib/ui/jobs/jobs_dialog.dart`,
   `lib/ui/shell/app_shell.dart`, `lib/core/cancellation.dart`, `TASKS.md` M4-08, D-039, D-041
+
+### D-044 — Macro catalog source, cache format and license handling (S4)
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: spec 06 §3 named `FreeCAD/FreeCAD-macros` as the candidate source and asked S4 to
+  verify the repo/API, URL stability and license before M5-04/M5-05.
+- **Findings** (all verified 2026-09-19):
+  - `FreeCAD/FreeCAD-macros` is the official repo (org-owned, active, default branch `master`);
+    `.FCMacro` files live in category directories and carry in-file metadata (`__Name__`,
+    `__Comment__`, `__Author__`, `__Version__`, `__License__` as SPDX, `__Files__`, …). The repo
+    has **no repository-level license** (GitHub license: null), so licensing is per macro.
+  - FreeCAD's AddonManager (submodule `FreeCAD/AddonManager`) does not read the repo directly:
+    `MacroCacheCreator` runs server-side, merges git macros (66) with wiki macros
+    (`wiki.freecad.org/Macros_recipes`, 196; a git copy wins duplicates), validates icons and
+    publishes **`https://addons.freecad.org/macro_cache.zip`** plus a **`.sha256`** sidecar — the
+    same service and pattern as `addon_catalog_cache.zip` (D-037). The official client refreshes
+    by comparing the `.sha256` sidecar before downloading the 5.2 MB zip
+    (`addonmanager_workers_startup.py`).
+  - The zip contains one `macro_cache.json` keyed by macro name: 262 entries today with the full
+    macro `code`, `comment`/`desc`, `author`, `date`, `version`, `license`, `wiki`/`url`,
+    `on_git`/`on_wiki`, `src_filename` (git path includes category), base64 `icon_data` +
+    `icon_extension`/`xpm`, `other_files` (inconsistently a list or a Python-repr string) and
+    base64 `other_files_data`. Every entry currently carries `code`.
+  - Install semantics (from `Macro.install`): write `code` to `<macro_dir>/<filename>` (git:
+    `src_filename` basename; wiki: `filename_from_url` or `<Name>.FCMacro` with spaces → `_`), then
+    write `other_files_data` at their relative paths (skip empty keys and the `"ICON"` sentinel)
+    and the icon as `basename(icon)` when `icon_data` exists (`<Name>_icon.xpm` for the 4 XPM
+    macros).
+  - Placement verified on real FreeCAD 1.0.2 (AppImage macro probe): with `FREECAD_USER_HOME` set,
+    `FreeCAD.getUserMacroDir(True)` equals the profile root, so catalog macros install directly
+    into `<profile>/` (the scanner also checks `<profile>/Macro/`, per spec 04 §"user home").
+  - License reality: 172/262 macros declare no license, the rest are mostly LGPL variants, one is
+    "All rights reserved".
+- **Decision**:
+  - v0.1 macro source = `addons.freecad.org/macro_cache.zip` (host/URL overridable for tests),
+    consumed like `AddonCatalog`: cached zip in the app cache dir, TTL + stale fallback +
+    `catalog_cache` row (`macros:catalog`). Fetch the `.sha256` sidecar first; if unchanged, keep
+    the cached payload. Verify the downloaded zip against the sidecar through
+    `Downloader(expectedSha256:)`; a mismatch is an error (stale cache if available).
+  - Parse into a `MacroCatalogEntry` (domain): name, comment, author, date, version, license,
+    wiki/url, onGit/onWiki, srcFilename (+ category from the second git path segment), code,
+    icon/iconXpm, otherFiles map. Normalize `other_files` shapes; skip entries missing `code`.
+  - License: show the per-macro `license` (SPDX or "Unknown" when empty) in the catalog detail and
+    the install confirmation; never block installation (matching FreeCAD). Persist it for
+    installed catalog macros via schema v3 (`macros.license`, nullable) in M5-05 so the profile
+    macro list and manifests carry provenance; migration v2→v3 with build_runner codegen.
+  - M5-04 install needs no git clone, GitHub API or token (no rate limits); it stages
+    `<profile>/<filename>.part` and renames atomically like addon installs. `catalogCommit`
+    stays null until v0.2; the cache `date` field can seed hash-based update checks later.
+- **Consequences**: M5-04/M5-05 have an exact source, format and placement; schema v3 ships with
+  M5-05; wiki-sourced macros depend on upstream cache quality (currently all parse); category is
+  only available for git-sourced macros; the GitHub token remains unnecessary for macros.
+- **Refs**: spec 06 §3, spec 02 FR-7, spec 04 §"user home", verified against
+  `FreeCAD/AddonManager` `MacroCacheCreator.py`, `addonmanager_workers_startup.py`,
+  `addonmanager_macro.py`, `addonmanager_preferences_defaults.json`; real FreeCAD 1.0.2 probe;
+  `lib/data/catalog/addon_catalog.dart`; `TASKS.md` S4; D-005, D-037

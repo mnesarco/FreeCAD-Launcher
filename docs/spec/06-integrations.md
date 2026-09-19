@@ -107,8 +107,11 @@ cache format. Integration rules for v2:
 
 ## 3. Macro catalog
 
-- Primary source: the official macros repository `FreeCAD/FreeCAD-macros` on GitHub
-  (verify during spike S4; the FreeCAD wiki links macros there).
+- Primary source: the official prebuilt macro cache `https://addons.freecad.org/macro_cache.zip`
+  (plus `.sha256`), generated server-side by FreeCAD's AddonManager from the official
+  `FreeCAD/FreeCAD-macros` repository merged with wiki macros (`wiki.freecad.org/Macros_recipes`,
+  git copies win). The zip holds `macro_cache.json` with full macro code, metadata, SPDX
+  `license` and base64 icons. Verified in spike S4 (decision D-044).
 - v0.1 capabilities: list/search macros in the repo, download a single `.FCMacro` into the
   profile, delete, reveal, open externally.
 - Update checks are file-hash based, deferred to v0.2 (needs a cached index).
