@@ -397,6 +397,147 @@ class AppLocalizationsEn extends AppLocalizations {
       'Browse the official catalog and install workbenches into a profile.';
 
   @override
+  String get addonsTabCatalog => 'Catalog';
+
+  @override
+  String get addonsTabCollections => 'Collections';
+
+  @override
+  String get addonsCollectionsSoon =>
+      'Collections arrive in a later milestone.';
+
+  @override
+  String get addonsSearchHint => 'Search addons, use #tag';
+
+  @override
+  String get addonsFilterAll => 'All';
+
+  @override
+  String get addonsFilterContent => 'Content';
+
+  @override
+  String get addonsContentWorkbench => 'Workbench';
+
+  @override
+  String get addonsContentMacro => 'Macro';
+
+  @override
+  String get addonsContentPreferencePack => 'Preference pack';
+
+  @override
+  String get addonsContentBundle => 'Bundle';
+
+  @override
+  String get addonsContentOther => 'Other';
+
+  @override
+  String get addonsFilterInstalled => 'Installed';
+
+  @override
+  String get addonsFilterNotInstalled => 'Not installed';
+
+  @override
+  String get addonsFilterInstalledState => 'Installed state';
+
+  @override
+  String get addonsFilters => 'Filters';
+
+  @override
+  String get addonsFilterClear => 'Clear filters';
+
+  @override
+  String get addonsClearSearch => 'Clear search';
+
+  @override
+  String get addonsFilterFreecad => 'FreeCAD';
+
+  @override
+  String get addonsFilterAnyVersion => 'Any version';
+
+  @override
+  String get addonsRefresh => 'Refresh';
+
+  @override
+  String get addonsStale =>
+      'Using a cached catalog; newer addons may be missing.';
+
+  @override
+  String get addonsLoadFailed => 'Could not load the addon catalog.';
+
+  @override
+  String get addonsCatalogEmptyTitle => 'Catalog is empty';
+
+  @override
+  String get addonsCatalogEmptyMessage =>
+      'Refresh to download the addon catalog.';
+
+  @override
+  String get addonsFilteredEmpty => 'No addons match the current filters.';
+
+  @override
+  String addonsInstalledIn(int count) {
+    return 'Installed in $count profile(s)';
+  }
+
+  @override
+  String get addonsInstalledBadge => 'Installed';
+
+  @override
+  String get addonsVersion => 'Version';
+
+  @override
+  String get addonsLicense => 'License';
+
+  @override
+  String get addonsAuthors => 'Authors';
+
+  @override
+  String get addonsRepository => 'Repository';
+
+  @override
+  String get addonsOpenRepository => 'Open repository';
+
+  @override
+  String get addonsFreecadRange => 'FreeCAD range';
+
+  @override
+  String get addonsLastUpdate => 'Last update';
+
+  @override
+  String get addonsContent => 'Content';
+
+  @override
+  String get addonsTags => 'Tags';
+
+  @override
+  String get addonsBranches => 'Branches';
+
+  @override
+  String get addonsRequirements => 'Python requirements';
+
+  @override
+  String get addonsRequirementsYes => 'Found';
+
+  @override
+  String get addonsRequirementsNo => 'None';
+
+  @override
+  String get addonsInstall => 'Install';
+
+  @override
+  String get addonsInstallSoon =>
+      'The install engine arrives in the next milestone.';
+
+  @override
+  String get addonsBack => 'Back';
+
+  @override
+  String get addonsNone => 'None';
+
+  @override
+  String get addonsAny => 'Any';
+
+  @override
   String get macrosEmptyTitle => 'No macros';
 
   @override

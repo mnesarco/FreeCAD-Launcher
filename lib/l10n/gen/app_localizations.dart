@@ -838,6 +838,276 @@ abstract class AppLocalizations {
   /// **'Browse the official catalog and install workbenches into a profile.'**
   String get addonsEmptyMessage;
 
+  /// No description provided for @addonsTabCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog'**
+  String get addonsTabCatalog;
+
+  /// No description provided for @addonsTabCollections.
+  ///
+  /// In en, this message translates to:
+  /// **'Collections'**
+  String get addonsTabCollections;
+
+  /// No description provided for @addonsCollectionsSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Collections arrive in a later milestone.'**
+  String get addonsCollectionsSoon;
+
+  /// No description provided for @addonsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search addons, use #tag'**
+  String get addonsSearchHint;
+
+  /// No description provided for @addonsFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get addonsFilterAll;
+
+  /// No description provided for @addonsFilterContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Content'**
+  String get addonsFilterContent;
+
+  /// No description provided for @addonsContentWorkbench.
+  ///
+  /// In en, this message translates to:
+  /// **'Workbench'**
+  String get addonsContentWorkbench;
+
+  /// No description provided for @addonsContentMacro.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro'**
+  String get addonsContentMacro;
+
+  /// No description provided for @addonsContentPreferencePack.
+  ///
+  /// In en, this message translates to:
+  /// **'Preference pack'**
+  String get addonsContentPreferencePack;
+
+  /// No description provided for @addonsContentBundle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bundle'**
+  String get addonsContentBundle;
+
+  /// No description provided for @addonsContentOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get addonsContentOther;
+
+  /// No description provided for @addonsFilterInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed'**
+  String get addonsFilterInstalled;
+
+  /// No description provided for @addonsFilterNotInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Not installed'**
+  String get addonsFilterNotInstalled;
+
+  /// No description provided for @addonsFilterInstalledState.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed state'**
+  String get addonsFilterInstalledState;
+
+  /// No description provided for @addonsFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get addonsFilters;
+
+  /// No description provided for @addonsFilterClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get addonsFilterClear;
+
+  /// No description provided for @addonsClearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get addonsClearSearch;
+
+  /// No description provided for @addonsFilterFreecad.
+  ///
+  /// In en, this message translates to:
+  /// **'FreeCAD'**
+  String get addonsFilterFreecad;
+
+  /// No description provided for @addonsFilterAnyVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Any version'**
+  String get addonsFilterAnyVersion;
+
+  /// No description provided for @addonsRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get addonsRefresh;
+
+  /// No description provided for @addonsStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Using a cached catalog; newer addons may be missing.'**
+  String get addonsStale;
+
+  /// No description provided for @addonsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the addon catalog.'**
+  String get addonsLoadFailed;
+
+  /// No description provided for @addonsCatalogEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog is empty'**
+  String get addonsCatalogEmptyTitle;
+
+  /// No description provided for @addonsCatalogEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh to download the addon catalog.'**
+  String get addonsCatalogEmptyMessage;
+
+  /// No description provided for @addonsFilteredEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No addons match the current filters.'**
+  String get addonsFilteredEmpty;
+
+  /// No description provided for @addonsInstalledIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed in {count} profile(s)'**
+  String addonsInstalledIn(int count);
+
+  /// No description provided for @addonsInstalledBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed'**
+  String get addonsInstalledBadge;
+
+  /// No description provided for @addonsVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get addonsVersion;
+
+  /// No description provided for @addonsLicense.
+  ///
+  /// In en, this message translates to:
+  /// **'License'**
+  String get addonsLicense;
+
+  /// No description provided for @addonsAuthors.
+  ///
+  /// In en, this message translates to:
+  /// **'Authors'**
+  String get addonsAuthors;
+
+  /// No description provided for @addonsRepository.
+  ///
+  /// In en, this message translates to:
+  /// **'Repository'**
+  String get addonsRepository;
+
+  /// No description provided for @addonsOpenRepository.
+  ///
+  /// In en, this message translates to:
+  /// **'Open repository'**
+  String get addonsOpenRepository;
+
+  /// No description provided for @addonsFreecadRange.
+  ///
+  /// In en, this message translates to:
+  /// **'FreeCAD range'**
+  String get addonsFreecadRange;
+
+  /// No description provided for @addonsLastUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Last update'**
+  String get addonsLastUpdate;
+
+  /// No description provided for @addonsContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Content'**
+  String get addonsContent;
+
+  /// No description provided for @addonsTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get addonsTags;
+
+  /// No description provided for @addonsBranches.
+  ///
+  /// In en, this message translates to:
+  /// **'Branches'**
+  String get addonsBranches;
+
+  /// No description provided for @addonsRequirements.
+  ///
+  /// In en, this message translates to:
+  /// **'Python requirements'**
+  String get addonsRequirements;
+
+  /// No description provided for @addonsRequirementsYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Found'**
+  String get addonsRequirementsYes;
+
+  /// No description provided for @addonsRequirementsNo.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get addonsRequirementsNo;
+
+  /// No description provided for @addonsInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get addonsInstall;
+
+  /// No description provided for @addonsInstallSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'The install engine arrives in the next milestone.'**
+  String get addonsInstallSoon;
+
+  /// No description provided for @addonsBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get addonsBack;
+
+  /// No description provided for @addonsNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get addonsNone;
+
+  /// No description provided for @addonsAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Any'**
+  String get addonsAny;
+
   /// No description provided for @macrosEmptyTitle.
   ///
   /// In en, this message translates to:

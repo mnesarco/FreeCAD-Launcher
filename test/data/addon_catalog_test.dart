@@ -46,7 +46,10 @@ void main() {
     tempDirectory = Directory.systemTemp.createTempSync('fcl_addon_catalog');
     addonsDirectory = p.join(tempDirectory.path, 'addons');
     source = FakeDownloadSource();
-    downloader = Downloader(source: source, cacheDirectory: addonsDirectory);
+    downloader = Downloader(
+      source: source,
+      cacheDirectory: p.join(tempDirectory.path, 'downloads'),
+    );
     db = createTestDatabase();
     now = DateTime.utc(2026, 9, 19, 12);
   });
@@ -77,6 +80,12 @@ void main() {
     expect(first.addons.single.id, 'A2plus');
     expect(source.requests, hasLength(1));
     expect(File(subject.payloadPath).existsSync(), isTrue);
+    expect(
+      File(
+        p.join(tempDirectory.path, 'downloads', AddonCatalog.payloadFileName),
+      ).existsSync(),
+      isFalse,
+    );
 
     final second = await subject.load();
 

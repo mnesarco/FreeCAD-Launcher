@@ -18,19 +18,41 @@ class FreeCadLauncherApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        theme: ThemeData(
-          useMaterial3: true,
-          brightness: Brightness.light,
-          colorSchemeSeed: Colors.blueGrey,
-        ),
-        darkTheme: ThemeData(
-          useMaterial3: true,
-          brightness: Brightness.dark,
-          colorSchemeSeed: Colors.blueGrey,
-        ),
+        theme: buildAppTheme(Brightness.light),
+        darkTheme: buildAppTheme(Brightness.dark),
         themeMode: ThemeMode.dark,
         home: const AppShell(),
       ),
     );
   }
+}
+
+ThemeData buildAppTheme(Brightness brightness) {
+  final scheme = ColorScheme.fromSeed(
+    seedColor: Colors.blueGrey,
+    brightness: brightness,
+  );
+  const radius = BorderRadius.all(Radius.circular(8));
+  const border = OutlineInputBorder(borderRadius: radius);
+
+  return ThemeData(
+    useMaterial3: true,
+    brightness: brightness,
+    colorScheme: scheme,
+    inputDecorationTheme: InputDecorationThemeData(
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      border: border,
+      enabledBorder: border.copyWith(
+        borderSide: BorderSide(color: scheme.outline),
+      ),
+      focusedBorder: border.copyWith(
+        borderSide: BorderSide(color: scheme.primary, width: 1.6),
+      ),
+      errorBorder: border.copyWith(borderSide: BorderSide(color: scheme.error)),
+      focusedErrorBorder: border.copyWith(
+        borderSide: BorderSide(color: scheme.error, width: 1.6),
+      ),
+    ),
+  );
 }

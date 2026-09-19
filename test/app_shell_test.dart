@@ -1,8 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/app.dart';
+import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
+import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
+import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
+import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+
+import 'helpers/fake_addon_catalog.dart';
+import 'helpers/fake_download.dart';
 
 void main() {
   late AppDatabase database;
@@ -13,6 +20,20 @@ void main() {
     services = AppServices(
       paths: AppPaths(dataRoot: '/tmp/freecad_launcher_test'),
       database: database,
+      addonsController: AddonsController(
+        database: database,
+        catalog: (FakeAddonCatalog(
+          downloader: Downloader(
+            source: FakeDownloadSource(),
+            cacheDirectory: '/tmp/freecad_launcher_test/addons',
+          ),
+          dao: database.catalogCacheDao,
+          cacheDirectory: '/tmp/freecad_launcher_test/addons',
+        )..result = const AddonCatalogResult(
+          addons: [],
+          freshness: CatalogFreshness.fresh,
+        )),
+      ),
     );
   });
 
@@ -43,7 +64,7 @@ void main() {
 
     await tester.tap(find.text('Addons'));
     await tester.pumpAndSettle();
-    expect(find.text('No addons installed'), findsOneWidget);
+    expect(find.text('Catalog is empty'), findsOneWidget);
 
     await tester.tap(find.text('Macros'));
     await tester.pumpAndSettle();

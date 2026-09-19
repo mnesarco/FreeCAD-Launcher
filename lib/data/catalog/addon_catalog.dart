@@ -92,6 +92,7 @@ class AddonCatalog {
       await _downloader.download(
         uri: _sourceUrl,
         fileName: payloadFileName,
+        directory: _cacheDirectory,
       );
       final addons = await _parseCachedPayload();
       await _dao.put(

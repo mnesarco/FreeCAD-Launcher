@@ -561,3 +561,25 @@ Template:
   (`addon_stats.json`) remain optional and unimplemented.
 - **Refs**: `addon_index_spec.md`, spec 06 §2, `lib/domain/addons/addon.dart`,
   `lib/data/catalog/addon_catalog*.dart`, `TASKS.md` M4-01, M4-02, D-007
+
+### D-038 — Addon catalog controller and UI
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: M4-02; the catalog data layer existed (D-037) but the Addons section was still
+  a placeholder.
+- **Decision**:
+  - `AddonsController` owns catalog loading plus filter state (`query`, content type, installed
+    state, FreeCAD version) with a computed `filteredAddons`; it watches `installed_addons`
+    (badge counts) and `builds` (version dropdown) and keeps per-addon branch selection.
+  - Catalog tab: search supports `#tag` via `Addon.matchesQuery`, filters for content type,
+    installed state and installed FreeCAD versions (primary-branch min/max compared with
+    `FreeCadVersion`; unparsable bounds are unbounded), stale-cache banner, lazy
+    `GridView.builder` of cards with base64 SVG/PNG icons (fallback icon).
+  - Detail page: description, version/license/authors/range/last-update/content/tags/
+    requirements, repository link (`url_launcher`), branch radio list, and an Install button
+    that stays disabled with a note until M4-03 wires the install engine.
+  - The Collections tab remains a placeholder (M5-01).
+- **Consequences**: `AppServices.addons` is injectable for tests; M4-03 adds the profile picker
+  and install action to the detail page; M4-04 reuses the controller for updates.
+- **Refs**: spec 03 §2.4, spec 02 FR-4, `lib/state/addons_controller.dart`,
+  `lib/ui/addons/**`, `TASKS.md` M4-02, M4-03, M5-01, D-037

@@ -113,12 +113,14 @@ class Downloader {
   Future<DownloadResult> download({
     required Uri uri,
     required String fileName,
+    String? directory,
     String? expectedSha256,
     void Function(DownloadProgress progress)? onProgress,
     CancellationToken? cancellationToken,
   }) async {
-    await Directory(_cacheDirectory).create(recursive: true);
-    final target = File(p.join(_cacheDirectory, fileName));
+    final targetDirectory = directory ?? _cacheDirectory;
+    await Directory(targetDirectory).create(recursive: true);
+    final target = File(p.join(targetDirectory, fileName));
     final part = File('${target.path}.part');
 
     final expected = expectedSha256?.toLowerCase();

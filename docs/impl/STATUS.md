@@ -4,12 +4,12 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-19
-- **Current milestone**: M4 — Addons and Python (S3, M4-01 done; M4-02 next)
+- **Current milestone**: M4 — Addons and Python (S3, M4-01, M4-02 done; M4-03 next)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-19
-- **Next action**: start `M4-02` (catalog UI: search text + `#tag`, filters, grid, addon detail
-  with branches and install action), then M4-03 install engine. M3 exit review and Windows/macOS
-  manual checks remain open; `m3-complete` tag exists.
+- **Next action**: start `M4-03` (addon install engine: `zip_url` download, safe extract,
+  `<profile>/Mod/<id>` placement, DB record), then M4-04 updates/remove, M4-05 requirements,
+  M4-06 pip runner. M3 exit review and Windows/macOS manual checks remain open.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -100,7 +100,23 @@
   - M4-01 — **D-037**: addon domain models + `package.xml` parser, branch URL fallback to the
     CDN base, `AddonCatalog` with 6 h TTL / stale fallback / `addons:catalog` cache row.
     Real catalog parses to 167 addons / 175 branches (one entry has no install URL).
-  - 269 tests green (6 manual probes skipped), analyze clean, app builds and launches.
+  - M4-02 — **D-038**: `AddonsController` (query/`#tag`, content, installed, FreeCAD-version
+    filters + computed view, installed counts, branch selection) and the catalog UI (stale
+    banner, lazy grid with icons, detail with metadata/branches; Install disabled until M4-03).
+  - Fix — "Could not load the addon catalog": `Downloader` wrote to its own cache dir while
+    `AddonCatalog` parsed `cache/addons/`; `download(directory:)` now targets the catalog dir
+    (regression test uses separate directories). Orphaned downloads-cache zip removed.
+  - Fix — catalog search retained its filter after visiting a detail but cleared the input
+    (disposed `TextEditingController`); the field now lives in `AddonsView` and has a clear
+    button, with a widget regression test.
+  - M4-09 — desktop input theme: compact, rounded, fully outlined fields and dropdowns via
+    `buildAppTheme`/`InputDecorationThemeData` (8 px radius); addon filter dropdowns wrapped in
+    `InputDecorator`; theme regression test added.
+  - M4-10 — addon content and installed-state filters are now multi-select checkable menu items
+    (hamburger with active-count badge, clear action); empty or both-checked selections mean "no
+    filter". The hamburger sits in the search/refresh row; the FreeCAD-version filter row only
+    appears when installed versions exist. Controller and widget tests cover multiple checks.
+  - 278 tests green (6 manual probes skipped), analyze clean, app builds and launches.
 
 ## Session log
 
@@ -140,6 +156,11 @@
 | 2026-09-19 | M3 | AGENTS.md refresh (tracked again) + M3-10 isolation E2E on Linux | M3-10 | `AGENTS.md`, `docs/impl/STATUS.md`, `docs/impl/VERIFICATION.md`, `test/manual/isolation_e2e_linux_test.dart` |
 | 2026-09-19 | M4 | S3 pip-uninstall spike; RECORD-based removal decision | S3 | `docs/impl/DECISIONS.md`, `docs/spec/06-integrations.md` |
 | 2026-09-19 | M4 | D-037 addon catalog models, parser and cached client | M4-01 | `docs/impl/DECISIONS.md`, `lib/domain/addons/addon.dart`, `lib/data/catalog/addon_catalog*.dart`, `lib/state/app_services.dart`, `test/**` |
+| 2026-09-19 | M4 | D-038 addon catalog controller and UI (search/filters/grid/detail) | M4-02 | `docs/impl/DECISIONS.md`, `lib/state/addons_controller.dart`, `lib/ui/addons/**`, `lib/l10n/**`, `test/**` |
+| 2026-09-19 | M4 | Fix addon catalog download/parse directory mismatch | M4-02 | `lib/platform/downloader.dart`, `lib/data/catalog/addon_catalog.dart`, `test/data/addon_catalog_test.dart` |
+| 2026-09-19 | M4 | Fix catalog search state after detail navigation | M4-02 | `lib/ui/addons/addons_view.dart`, `test/ui/addons_view_test.dart` |
+| 2026-09-19 | M4 | Compact rounded outlined input theme; bordered dropdown filters | M4-09 | `docs/spec/03-ux.md`, `lib/app.dart`, `lib/ui/addons/addons_view.dart`, `test/ui/app_theme_test.dart` |
+| 2026-09-19 | M4 | Multi-select checkable filter menu for addon content/installed filters | M4-10 | `docs/spec/03-ux.md`, `lib/state/addons_controller.dart`, `lib/ui/addons/addons_view.dart`, `lib/l10n/**`, `test/**` |
 
 ## Standing notes for the next agent
 

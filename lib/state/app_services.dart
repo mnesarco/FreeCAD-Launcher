@@ -21,6 +21,7 @@ import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/process.dart';
 import 'package:freecad_launcher/platform/python_probe.dart';
 import 'package:freecad_launcher/platform/seven_zip_extractor.dart';
+import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:freecad_launcher/state/builds_controller.dart';
 import 'package:freecad_launcher/state/profiles_controller.dart';
 import 'package:freecad_launcher/state/settings_controller.dart';
@@ -32,9 +33,11 @@ class AppServices {
     ProcessRunner? processRunner,
     http.Client? httpClient,
     BuildsController? buildsController,
+    AddonsController? addonsController,
   }) : processRunner = processRunner ?? ProcessRunner(),
        _httpClient = httpClient,
-       _buildsControllerOverride = buildsController;
+       _buildsControllerOverride = buildsController,
+       _addonsControllerOverride = addonsController;
 
   final AppPaths paths;
   final AppDatabase database;
@@ -42,6 +45,7 @@ class AppServices {
 
   final http.Client? _httpClient;
   final BuildsController? _buildsControllerOverride;
+  final AddonsController? _addonsControllerOverride;
 
   late final http.Client _client = _httpClient ?? http.Client();
 
@@ -105,6 +109,10 @@ class AppServices {
     runtime: launchRuntime,
   );
 
+  late final AddonsController addons =
+      _addonsControllerOverride ??
+      AddonsController(database: database, catalog: addonCatalog);
+
   late final BuildsController builds =
       _buildsControllerOverride ??
       BuildsController(
@@ -135,6 +143,7 @@ class AppServices {
   Future<void> close() async {
     builds.dispose();
     profiles.dispose();
+    addons.dispose();
     await database.close();
   }
 }
