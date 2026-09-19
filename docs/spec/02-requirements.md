@@ -43,8 +43,9 @@ binary; a corrupted download fails checksum verification and leaves no partial i
   package count, last used, and build health.
 - FR-2.3 **[v0.1]** Editing a profile allows rename and build change; changing to a build with
   a different Python version warns that installed addons/Python packages may need reinstall.
-- FR-2.4 **[v0.1]** Duplicate a profile (fresh id, copied config) and delete a profile
-  (confirmation, optional "keep exported backup").
+- FR-2.4 **[v0.1]** Duplicate a profile (fresh id; the user chooses config files only or the full
+  payload) and delete a profile (confirmation, optional "keep exported backup"). Directory
+  creation is atomic (D-028).
 - FR-2.5 **[v0.1]** Launch a profile in-app; running state is shown while the process lives.
 - FR-2.6 **[v0.1]** "Show launch command" reveals the exact executable + env + args.
 - FR-2.7 **[v0.1]** Deleting a profile never deletes shared builds.

@@ -344,3 +344,26 @@ Template:
   `AppServices`); duplicate-name races are not a concern because one controller owns profiles.
   M3-02 adds atomic directory creation to `create` and directory cleanup to `delete`.
 - **Refs**: spec 02 FR-2.1/FR-2.3, spec 03 §2.3, spec 05 `profiles`, `TASKS.md` M3-01, D-020
+
+### D-028 — Profile lifecycle is atomic; duplicate asks config vs payload
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: M3-02 needed atomic directory creation and a concrete meaning for FR-2.4's
+  "duplicate (fresh id, copied config)". Copying the full payload can mean gigabytes, so the
+  user chose to be asked at duplicate time.
+- **Decision**:
+  - Profile directories are staged under `profiles/<id>.part`, fully populated, then renamed to
+    `profiles/<id>`; the DB row is inserted after the rename and removed (along with the
+    directory) if the insert fails. Failures leave no partial directories or rows.
+  - `delete` removes the directory first, then the DB row (FK cascades addons/packages/macros);
+    if the DB delete fails the row remains and the reconciler marks it missing.
+  - `rename` only changes the DB name (directories are id-based).
+  - `duplicate(copyPayload: false)` copies `user.cfg`/`system.cfg` into a fresh layout.
+    `copyPayload: true` additionally copies `Mod/`, `AdditionalPythonPackages/`, root
+    `*.FCMacro`/`Macro/`, and the addon/package/macro rows (fresh ids; `targetDir` rewritten to
+    the new profile). The UI asks which mode (FR-2.4). Duplicating a profile whose build is
+    unhealthy is allowed; the copy keeps the binding.
+- **Consequences**: A hard crash can leave a stale `profiles/<id>.part` (cleanup is future
+  work); full-payload duplicates verify with the copy size; `ProfilesRepository` now requires
+  `AppPaths` + host platform.
+- **Refs**: spec 02 FR-2.4, spec 03 §2.3, spec 05 `profiles`, `TASKS.md` M3-02, D-027

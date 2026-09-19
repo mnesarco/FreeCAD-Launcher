@@ -39,6 +39,10 @@ Indexes: unique `(platform, arch, channel, version, assetName)`.
 
 ### `profiles`
 
+Profile directories are created atomically: the layout is staged in `profiles/<id>.part`,
+populated, then renamed to `profiles/<id>`; the DB row is inserted only after the rename and
+removed on failure (D-028).
+
 | Column | Type | Notes |
 |---|---|---|
 | `id` | text (uuid) | PK; directory name `profiles/<id>/` |

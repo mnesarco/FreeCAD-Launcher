@@ -78,13 +78,14 @@ PythonPackage samplePackage({
   String name = 'numpy',
   String? version = '1.26.4',
   String source = 'manual',
+  String? targetDir,
 }) {
   return PythonPackage(
     id: id,
     profileId: profileId,
     name: name,
     version: version,
-    targetDir: '/data/profiles/$profileId/AdditionalPythonPackages/py311',
+    targetDir: targetDir ?? '/data/profiles/$profileId/AdditionalPythonPackages/py311',
     source: source,
     installedAt: _baseTime,
   );

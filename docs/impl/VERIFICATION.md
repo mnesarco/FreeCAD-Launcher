@@ -75,6 +75,9 @@ and quarantine handling.
 - [ ] "Show launch command" output, when pasted into a shell, reproduces the launch
 - [ ] AppImage on a FUSE-less system launches via the extract-and-run fallback
 - [ ] macOS `.app` launches from `builds/` with quarantine handled
+- [ ] Create/duplicate failures leave no partial `profiles/<id>.part` directories or DB rows
+      (D-028)
+- [ ] Duplicate asks config-only vs full payload and copies the chosen contents
 
 ### M4 — Addons and Python
 

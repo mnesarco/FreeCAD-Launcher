@@ -73,7 +73,11 @@ class AppServices {
     pythonProbe: pythonProbe,
   );
 
-  late final ProfilesRepository profiles = ProfilesRepository(database: database);
+  late final ProfilesRepository profiles = ProfilesRepository(
+    database: database,
+    paths: paths,
+    platform: hostPlatform,
+  );
 
   late final BuildsController builds =
       _buildsControllerOverride ??
