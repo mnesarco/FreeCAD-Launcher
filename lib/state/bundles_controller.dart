@@ -6,7 +6,16 @@ import 'package:uuid/uuid.dart';
 import 'package:freecad_launcher/core/errors.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/database.dart';
+import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/bundles/bundle_json.dart';
 import 'package:freecad_launcher/domain/bundles/bundle_rules.dart';
+
+class BundleImportResult {
+  const BundleImportResult({required this.bundle, required this.unresolvedAddonIds});
+
+  final Bundle bundle;
+  final List<String> unresolvedAddonIds;
+}
 
 class BundlesController {
   BundlesController({required AppDatabase database, DateTime Function()? clock})
@@ -219,6 +228,69 @@ class BundlesController {
     String? gitRef,
   }) {
     return addItem(bundleId: bundleId, addonId: addonId, gitRef: gitRef);
+  }
+
+  Result<String> exportJson(String bundleId) {
+    final bundle = byId(bundleId);
+    if (bundle == null) {
+      return const Err(AppError(message: 'Collection not found'));
+    }
+    return Ok(
+      encodeBundleJson(
+        BundleJson(
+          name: bundle.name,
+          description: bundle.description,
+          items: [
+            for (final item in itemsFor(bundleId))
+              BundleJsonItem(addonId: item.addonId, gitRef: item.gitRef),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<Result<BundleImportResult>> importJson({
+    required String json,
+    required List<Addon> catalog,
+    String? name,
+  }) async {
+    final decoded = decodeBundleJson(json);
+    if (decoded.isErr) {
+      return Err(decoded.errorOrNull!);
+    }
+    final data = decoded.valueOrNull!;
+    final bundleName = (name ?? data.name).trim();
+    final issue = await checkName(bundleName);
+    if (issue != null) {
+      return Err(AppError(message: nameIssueMessage(issue)));
+    }
+    final catalogIds = {for (final addon in catalog) addon.id};
+    final unresolved = <String>[];
+    final seen = <String>{};
+    final items = <BundleJsonItem>[];
+    for (final item in data.items) {
+      if (!seen.add(item.addonId)) {
+        continue;
+      }
+      if (!catalogIds.contains(item.addonId)) {
+        unresolved.add(item.addonId);
+      }
+      items.add(item);
+    }
+    final created = await create(
+      name: bundleName,
+      description: data.description,
+      initialItems: (bundleId) => [
+        for (final item in items)
+          BundleItem(bundleId: bundleId, addonId: item.addonId, gitRef: item.gitRef),
+      ],
+    );
+    return created.fold(
+      (bundle) => Ok(
+        BundleImportResult(bundle: bundle, unresolvedAddonIds: unresolved),
+      ),
+      (error) => Err(error),
+    );
   }
 
   String? _cleanDescription(String? description) {

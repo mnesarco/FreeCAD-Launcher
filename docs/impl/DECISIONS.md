@@ -832,3 +832,31 @@ Template:
 - **Refs**: spec 02 FR-5.2, spec 03 §2.4, `lib/domain/bundles/bundle_planner.dart`,
   `lib/state/bundle_apply_controller.dart`, `lib/ui/addons/collections_view.dart`,
   `TASKS.md` M5-02, D-040, D-043, D-045
+
+### D-047 — Bundle JSON export/import: codec, unresolved entries and name clashes (M5-03)
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: spec 05 §4.1 defines bundle JSON (`schema`, `name`, `description`, `addons` with
+  `id`/`git_ref`) and asks for import validation plus "warn and keep unresolved entries".
+- **Decision**:
+  - Pure codec in `domain/bundles/bundle_json.dart`: `encodeBundleJson` writes schema 1 (2-space
+    JSON) and `decodeBundleJson` returns a `Result`. Import rejects non-object payloads, invalid
+    JSON, `schema != 1` and an empty/omitted name; it normalizes/trims values, drops malformed
+    addon entries and treats non-string/blank `git_ref` as null.
+  - `BundlesController.exportJson(bundleId)` serializes the stored bundle; `importJson({json,
+    catalog, name})` validates the (override-able) name with the existing bundle rules, keeps
+    the first occurrence of repeated addon ids, and creates the bundle with all items. Unknown
+    catalog ids are kept and returned in `BundleImportResult.unresolvedAddonIds` — no schema
+    change, because the detail item list already renders them as "Not in catalog".
+  - UI: **Import** on the Collections header (file picker → dialog with editable name, addon
+    count and unresolved warning) and **Export** on the bundle detail (`getSaveLocation`,
+    sanitized filename). Import errors show inline; success snackbars mention unresolved counts.
+  - Name clashes are resolved by the user: the import dialog pre-fills the JSON name and uses the
+    same live validation as create, instead of silently suffixing (M5-07 will define manifest
+    name-clash handling separately).
+- **Consequences**: M5-07 can reuse the codec/validation patterns; import does not auto-install
+  and unresolved items remain listed/removable; export/import relies on `file_selector`, already
+  used by the custom-build importer.
+- **Refs**: spec 05 §4.1, spec 02 FR-5.3, `lib/domain/bundles/bundle_json.dart`,
+  `lib/state/bundles_controller.dart`, `lib/ui/addons/collections_view.dart`,
+  `TASKS.md` M5-03, D-045

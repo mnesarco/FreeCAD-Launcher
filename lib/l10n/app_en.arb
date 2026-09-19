@@ -222,6 +222,34 @@
     }
   },
   "bundlesApplyClose": "Close",
+  "bundlesExport": "Export",
+  "bundlesExported": "Collection exported",
+  "bundlesExportFailed": "Could not export the collection",
+  "bundlesImport": "Import",
+  "bundlesImportTitle": "Import collection",
+  "bundlesImportName": "Name",
+  "bundlesImportAddons": "Addons: {count}",
+  "@bundlesImportAddons": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bundlesImportUnresolved": "Not in catalog: {count}",
+  "@bundlesImportUnresolved": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bundlesImportFailed": "Could not import the collection",
+  "bundlesImported": "Collection imported",
+  "bundlesImportedUnresolved": "Imported, but {count} addons are not in the catalog",
+  "@bundlesImportedUnresolved": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bundlesImportFile": "Bundle JSON file",
+  "bundlesJsonFiles": "JSON files",
   "addonsSearchHint": "Search addons, use #tag",
   "addonsFilterAll": "All",
   "addonsFilterContent": "Content",

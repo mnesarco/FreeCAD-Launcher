@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/data/database.dart';
+import 'package:freecad_launcher/domain/addons/addon.dart';
 import 'package:freecad_launcher/domain/bundles/bundle_rules.dart';
 import 'package:freecad_launcher/state/bundles_controller.dart';
 
@@ -140,6 +141,87 @@ void main() {
     expect(items.firstWhere((item) => item.addonId == 'MacroTool').gitRef, isNull);
   });
 
+  test('exports and re-imports a bundle', () async {
+    final created = (await controller.create(
+      name: 'Mechanical',
+      description: 'CAD + FEM',
+      initialItems: (bundleId) => [
+        sampleBundleItem(bundleId: bundleId, addonId: 'A2plus', gitRef: 'master'),
+        sampleBundleItem(bundleId: bundleId, addonId: 'Fasteners', gitRef: null),
+      ],
+    )).valueOrNull!;
+    controller.start();
+    await pumpEventQueue();
+
+    final encoded = controller.exportJson(created.id);
+    expect(encoded.isOk, isTrue);
+    final json = encoded.valueOrNull!;
+    expect(json, contains('"name": "Mechanical"'));
+
+    final imported = await controller.importJson(
+      json: json,
+      catalog: [addon('A2plus'), addon('Fasteners')],
+      name: 'Mechanical copy',
+    );
+    await pumpEventQueue();
+
+    expect(imported.isOk, isTrue);
+    final result = imported.valueOrNull!;
+    expect(result.unresolvedAddonIds, isEmpty);
+    final items = controller.itemsFor(result.bundle.id);
+    expect(items.map((item) => item.addonId).toSet(), {'A2plus', 'Fasteners'});
+    expect(items.firstWhere((item) => item.addonId == 'A2plus').gitRef, 'master');
+    expect(controller.bundles.value, hasLength(2));
+  });
+
+  test('keeps unresolved addons on import and reports them', () async {
+    const json = '''
+{
+  "schema": 1,
+  "name": "Imported",
+  "addons": [
+    {"id": "A2plus", "git_ref": "master"},
+    {"id": "Ghost", "git_ref": null},
+    {"id": "Ghost", "git_ref": "master"}
+  ]
+}
+''';
+    final imported = await controller.importJson(
+      json: json,
+      catalog: [addon('A2plus')],
+    );
+    controller.start();
+    await pumpEventQueue();
+
+    expect(imported.isOk, isTrue);
+    final result = imported.valueOrNull!;
+    expect(result.unresolvedAddonIds, ['Ghost']);
+    final items = controller.itemsFor(result.bundle.id);
+    expect(items, hasLength(2));
+    expect(items.map((item) => item.addonId).toSet(), {'A2plus', 'Ghost'});
+  });
+
+  test('rejects duplicate names and invalid JSON on import', () async {
+    await controller.create(name: 'Mechanical');
+    await pumpEventQueue();
+
+    const json = '{"schema": 1, "name": "Mechanical", "addons": []}';
+    expect((await controller.importJson(json: json, catalog: [])).isErr, isTrue);
+    expect(
+      (await controller.importJson(
+        json: json,
+        catalog: [],
+        name: 'Other',
+      )).isOk,
+      isTrue,
+    );
+    expect(
+      (await controller.importJson(json: 'not json', catalog: [])).isErr,
+      isTrue,
+    );
+    expect(controller.exportJson('missing').isErr, isTrue);
+  });
+
   test('checkName reports the issue and messages', () async {
     expect(await controller.checkName(''), BundleNameIssue.empty);
     expect(controller.nameIssueMessage(BundleNameIssue.duplicate), contains('already exists'));
@@ -148,4 +230,32 @@ void main() {
       contains('$maxBundleNameLength'),
     );
   });
+}
+
+
+Addon addon(String id) {
+  return Addon(
+    id: id,
+    branches: [
+      AddonBranch(
+        gitRef: 'master',
+        displayName: 'master',
+        repositoryUrl: 'https://example.invalid/$id',
+        zipUrl: 'https://example.invalid/$id.zip',
+        curated: true,
+        sparseCache: false,
+        metadata: AddonMetadata(
+          name: id,
+          description: '',
+          version: '1.0.0',
+          license: 'MIT',
+          minPython: '3.10',
+          tags: const [],
+          people: const [],
+          content: const {AddonContentType.workbench},
+          requirements: '',
+        ),
+      ),
+    ],
+  );
 }

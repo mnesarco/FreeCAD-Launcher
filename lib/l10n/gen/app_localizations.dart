@@ -1246,6 +1246,84 @@ abstract class AppLocalizations {
   /// **'Close'**
   String get bundlesApplyClose;
 
+  /// No description provided for @bundlesExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get bundlesExport;
+
+  /// No description provided for @bundlesExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Collection exported'**
+  String get bundlesExported;
+
+  /// No description provided for @bundlesExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not export the collection'**
+  String get bundlesExportFailed;
+
+  /// No description provided for @bundlesImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get bundlesImport;
+
+  /// No description provided for @bundlesImportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import collection'**
+  String get bundlesImportTitle;
+
+  /// No description provided for @bundlesImportName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get bundlesImportName;
+
+  /// No description provided for @bundlesImportAddons.
+  ///
+  /// In en, this message translates to:
+  /// **'Addons: {count}'**
+  String bundlesImportAddons(int count);
+
+  /// No description provided for @bundlesImportUnresolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Not in catalog: {count}'**
+  String bundlesImportUnresolved(int count);
+
+  /// No description provided for @bundlesImportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not import the collection'**
+  String get bundlesImportFailed;
+
+  /// No description provided for @bundlesImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Collection imported'**
+  String get bundlesImported;
+
+  /// No description provided for @bundlesImportedUnresolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported, but {count} addons are not in the catalog'**
+  String bundlesImportedUnresolved(int count);
+
+  /// No description provided for @bundlesImportFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Bundle JSON file'**
+  String get bundlesImportFile;
+
+  /// No description provided for @bundlesJsonFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'JSON files'**
+  String get bundlesJsonFiles;
+
   /// No description provided for @addonsSearchHint.
   ///
   /// In en, this message translates to:

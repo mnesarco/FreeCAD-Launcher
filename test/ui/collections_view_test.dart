@@ -12,7 +12,9 @@ import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/state/bundles_controller.dart';
 import 'package:freecad_launcher/ui/addons/addons_view.dart';
+import 'package:freecad_launcher/ui/addons/collections_view.dart';
 import 'package:path/path.dart' as p;
 
 import '../data/test_fixtures.dart';
@@ -144,6 +146,82 @@ void main() {
 
     expect(find.text('A collection with this name already exists.'), findsOneWidget);
     expect(find.byType(AlertDialog), findsOneWidget);
+  });
+
+  testWidgets('imports a bundle JSON and warns about unresolved addons', (tester) async {
+    await services.addons.load();
+    services.bundles.start();
+    await tester.pumpWidget(
+      AppScope(
+        services: services,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => showDialog<BundleImportResult>(
+                  context: context,
+                  builder: (context) => const BundleImportDialog(
+                    jsonText:
+                        '{"schema":1,"name":"Imported","addons":['
+                        '{"id":"A2plus","git_ref":"master"},'
+                        '{"id":"Ghost","git_ref":null}]}',
+                  ),
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await settle(tester);
+
+    expect(find.text('Import collection'), findsOneWidget);
+    expect(find.text('Addons: 2'), findsOneWidget);
+    expect(find.text('Not in catalog: 1'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Import'));
+    await settle(tester);
+
+    final bundle = services.bundles.bundles.value.single;
+    expect(bundle.name, 'Imported');
+    expect(
+      services.bundles.itemsFor(bundle.id).map((item) => item.addonId).toSet(),
+      {'A2plus', 'Ghost'},
+    );
+  });
+
+  testWidgets('rejects an import with an invalid schema', (tester) async {
+    await tester.pumpWidget(
+      AppScope(
+        services: services,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  builder: (context) => const BundleImportDialog(
+                    jsonText: '{"schema":9,"name":"X","addons":[]}',
+                  ),
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await settle(tester);
+
+    expect(find.textContaining('Unsupported bundle schema'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Import'), findsNothing);
   });
 
   testWidgets('previews an install action for a missing addon', (tester) async {

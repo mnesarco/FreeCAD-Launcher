@@ -618,6 +618,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bundlesApplyClose => 'Close';
 
   @override
+  String get bundlesExport => 'Export';
+
+  @override
+  String get bundlesExported => 'Collection exported';
+
+  @override
+  String get bundlesExportFailed => 'Could not export the collection';
+
+  @override
+  String get bundlesImport => 'Import';
+
+  @override
+  String get bundlesImportTitle => 'Import collection';
+
+  @override
+  String get bundlesImportName => 'Name';
+
+  @override
+  String bundlesImportAddons(int count) {
+    return 'Addons: $count';
+  }
+
+  @override
+  String bundlesImportUnresolved(int count) {
+    return 'Not in catalog: $count';
+  }
+
+  @override
+  String get bundlesImportFailed => 'Could not import the collection';
+
+  @override
+  String get bundlesImported => 'Collection imported';
+
+  @override
+  String bundlesImportedUnresolved(int count) {
+    return 'Imported, but $count addons are not in the catalog';
+  }
+
+  @override
+  String get bundlesImportFile => 'Bundle JSON file';
+
+  @override
+  String get bundlesJsonFiles => 'JSON files';
+
+  @override
   String get addonsSearchHint => 'Search addons, use #tag';
 
   @override

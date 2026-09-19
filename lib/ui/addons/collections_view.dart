@@ -1,8 +1,13 @@
+import 'dart:io';
+
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
+import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/bundles/bundle_json.dart';
 import 'package:freecad_launcher/domain/bundles/bundle_planner.dart';
 import 'package:freecad_launcher/domain/bundles/bundle_rules.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
@@ -104,6 +109,12 @@ class _CollectionsTabState extends State<CollectionsTab> {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
+              OutlinedButton.icon(
+                onPressed: _importBundle,
+                icon: const Icon(Icons.file_open_outlined),
+                label: Text(l10n.bundlesImport),
+              ),
+              const SizedBox(width: 8),
               FilledButton.icon(
                 onPressed: () => _createBundle(context),
                 icon: const Icon(Icons.add),
@@ -116,6 +127,40 @@ class _CollectionsTabState extends State<CollectionsTab> {
         Expanded(child: body),
       ],
     );
+  }
+
+  Future<void> _importBundle() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final file = await openFile(
+      acceptedTypeGroups: [
+        XTypeGroup(label: l10n.bundlesImportFile, extensions: const ['json']),
+      ],
+    );
+    if (file == null || !mounted) {
+      return;
+    }
+    final text = await File(file.path).readAsString();
+    if (!mounted) {
+      return;
+    }
+    final result = await showDialog<BundleImportResult>(
+      context: context,
+      builder: (dialogContext) => BundleImportDialog(jsonText: text),
+    );
+    if (result == null || !mounted) {
+      return;
+    }
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          result.unresolvedAddonIds.isEmpty
+              ? l10n.bundlesImported
+              : l10n.bundlesImportedUnresolved(result.unresolvedAddonIds.length),
+        ),
+      ),
+    );
+    setState(() => _selectedBundleId = result.bundle.id);
   }
 
   Future<void> _createBundle(BuildContext context) async {
@@ -172,6 +217,11 @@ class _BundleDetailViewState extends State<BundleDetailView> {
           title: bundle.name,
           onBack: widget.onBack,
           actions: [
+            IconButton(
+              icon: const Icon(Icons.file_download_outlined),
+              tooltip: l10n.bundlesExport,
+              onPressed: () => _export(context, bundle),
+            ),
             IconButton(
               icon: const Icon(Icons.edit_outlined),
               tooltip: l10n.bundlesEdit,
@@ -240,6 +290,39 @@ class _BundleDetailViewState extends State<BundleDetailView> {
         ),
       ],
     );
+  }
+
+  Future<void> _export(BuildContext context, Bundle bundle) async {
+    final l10n = AppLocalizations.of(context);
+    final controller = AppScope.of(context).bundles;
+    final messenger = ScaffoldMessenger.of(context);
+    final encoded = controller.exportJson(bundle.id);
+    encoded.fold(
+      (json) => null,
+      (error) => messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.bundlesExportFailed}: $error')),
+      ),
+    );
+    final json = encoded.valueOrNull;
+    if (json == null) {
+      return;
+    }
+    final fileName = '${bundle.name.replaceAll(RegExp(r'[^A-Za-z0-9._ -]'), '_')}.json';
+    final location = await getSaveLocation(suggestedName: fileName);
+    if (location == null || !mounted) {
+      return;
+    }
+    try {
+      await File(location.path).writeAsString(json);
+      if (!mounted) {
+        return;
+      }
+      messenger.showSnackBar(SnackBar(content: Text(l10n.bundlesExported)));
+    } on Object catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.bundlesExportFailed}: $error')),
+      );
+    }
   }
 
   Future<void> _edit(BuildContext context, Bundle bundle) async {
@@ -848,6 +931,139 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
       return;
     }
     setState(() => _summary = summary);
+  }
+}
+
+class BundleImportDialog extends StatefulWidget {
+  const BundleImportDialog({super.key, required this.jsonText});
+
+  final String jsonText;
+
+  @override
+  State<BundleImportDialog> createState() => _BundleImportDialogState();
+}
+
+class _BundleImportDialogState extends State<BundleImportDialog> {
+  late final TextEditingController _name;
+  late final Result<BundleJson> _decoded;
+  String? _error;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _decoded = decodeBundleJson(widget.jsonText);
+    _name = TextEditingController(text: _decoded.valueOrNull?.name ?? '');
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final decoded = _decoded.valueOrNull;
+
+    return AlertDialog(
+      title: Text(l10n.bundlesImportTitle),
+      content: SizedBox(
+        width: 420,
+        child: decoded == null
+            ? Text(_decoded.errorOrNull?.toString() ?? l10n.bundlesImportFailed)
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: _name,
+                    autofocus: true,
+                    decoration: InputDecoration(labelText: l10n.bundlesImportName),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(l10n.bundlesImportAddons(decoded.items.length)),
+                  if (_unresolved(decoded).isNotEmpty)
+                    Text(
+                      l10n.bundlesImportUnresolved(_unresolved(decoded).length),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  if ((decoded.description ?? '').isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(decoded.description!),
+                  ],
+                  if (_error != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      _error!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : () => Navigator.of(context).pop(),
+          child: Text(l10n.bundlesCancel),
+        ),
+        if (decoded != null)
+          FilledButton(
+            onPressed: _saving ? null : () => _import(context, decoded),
+            child: Text(l10n.bundlesImport),
+          ),
+      ],
+    );
+  }
+
+  List<String> _unresolved(BundleJson decoded) {
+    final catalog = AppScope.of(context).addons.addons.watch(context);
+    final ids = {for (final addon in catalog) addon.id};
+    return [
+      for (final item in decoded.items)
+        if (!ids.contains(item.addonId)) item.addonId,
+    ];
+  }
+
+  Future<void> _import(BuildContext context, BundleJson decoded) async {
+    final l10n = AppLocalizations.of(context);
+    final services = AppScope.of(context);
+    final name = _name.text;
+    final issue = await services.bundles.checkName(name);
+    if (issue != null) {
+      setState(() => _error = switch (issue) {
+        BundleNameIssue.empty => l10n.bundlesNameEmpty,
+        BundleNameIssue.tooLong => l10n.bundlesNameTooLong,
+        BundleNameIssue.duplicate => l10n.bundlesNameTaken,
+        BundleNameIssue.controlCharacters => l10n.bundlesNameEmpty,
+      });
+      return;
+    }
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    final catalog = services.addons.addons.value;
+    final result = await services.bundles.importJson(
+      json: widget.jsonText,
+      catalog: catalog,
+      name: name,
+    );
+    if (!mounted) {
+      return;
+    }
+    result.fold(
+      (imported) => Navigator.of(context).pop(imported),
+      (error) => setState(() {
+        _saving = false;
+        _error = error.toString();
+      }),
+    );
   }
 }
 
