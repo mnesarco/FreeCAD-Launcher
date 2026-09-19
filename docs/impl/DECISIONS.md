@@ -490,3 +490,21 @@ Template:
   opened the GUI, so it was stopped) — passthrough/exit-code propagation is unit-tested.
   Windows/macOS shell checks remain.
 - **Refs**: spec 02 FR-3.1..3.4, `lib/cli/cli.dart`, `lib/main.dart`, `TASKS.md` M3-08, M3-09
+
+### D-035 — CLI wrapper generation and PATH reporting
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: FR-3.2 asks for an on-request platform wrapper with PATH availability reported.
+- **Decision**:
+  - `CliWrapperInstaller` writes `~/.local/bin/freecad-launcher` on Linux/macOS
+    (`#!/bin/sh` + `exec "<app>" "$@"`, chmod 755 via `ProcessRunner`) or
+    `%LOCALAPPDATA%\FreeCADLauncher\bin\freecad-launcher.cmd` on Windows (`@echo off` + `%*`).
+  - The wrapped target is `$APPIMAGE` when the launcher runs as an AppImage (transient mount
+    paths would break), otherwise `Platform.resolvedExecutable`.
+  - PATH checking is report-only; shell profiles are never edited. Settings shows the wrapper
+    path, installed/PATH status, and install/remove via `SettingsController` signals.
+- **Consequences**: Moving/updating the launcher requires reinstalling the wrapper; the Windows
+  directory must be added to PATH manually. Linux manual test installed the wrapper into a temp
+  home and ran it directly — it proxied to the built CLI and printed the version.
+- **Refs**: spec 02 FR-3.2, spec 03 §2.6, `lib/platform/cli_wrapper.dart`,
+  `lib/state/settings_controller.dart`, `TASKS.md` M3-09, M3-08

@@ -856,6 +856,66 @@ abstract class AppLocalizations {
   /// **'Data directory'**
   String get settingsDataDirectory;
 
+  /// No description provided for @settingsCliWrapper.
+  ///
+  /// In en, this message translates to:
+  /// **'Command-line launcher'**
+  String get settingsCliWrapper;
+
+  /// No description provided for @settingsCliWrapperInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed'**
+  String get settingsCliWrapperInstalled;
+
+  /// No description provided for @settingsCliWrapperNotInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Not installed'**
+  String get settingsCliWrapperNotInstalled;
+
+  /// No description provided for @settingsCliWrapperOnPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Available on PATH'**
+  String get settingsCliWrapperOnPath;
+
+  /// No description provided for @settingsCliWrapperNotOnPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Not on PATH — add {directory} to PATH to use it from a fresh shell'**
+  String settingsCliWrapperNotOnPath(String directory);
+
+  /// No description provided for @settingsCliWrapperInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Install wrapper'**
+  String get settingsCliWrapperInstall;
+
+  /// No description provided for @settingsCliWrapperRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove wrapper'**
+  String get settingsCliWrapperRemove;
+
+  /// No description provided for @settingsCliWrapperInstalledMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrapper installed'**
+  String get settingsCliWrapperInstalledMessage;
+
+  /// No description provided for @settingsCliWrapperRemovedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrapper removed'**
+  String get settingsCliWrapperRemovedMessage;
+
+  /// No description provided for @settingsCliWrapperFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update the wrapper'**
+  String get settingsCliWrapperFailed;
+
   /// No description provided for @settingsVersion.
   ///
   /// In en, this message translates to:

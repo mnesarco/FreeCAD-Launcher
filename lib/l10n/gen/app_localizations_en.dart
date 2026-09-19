@@ -407,6 +407,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDataDirectory => 'Data directory';
 
   @override
+  String get settingsCliWrapper => 'Command-line launcher';
+
+  @override
+  String get settingsCliWrapperInstalled => 'Installed';
+
+  @override
+  String get settingsCliWrapperNotInstalled => 'Not installed';
+
+  @override
+  String get settingsCliWrapperOnPath => 'Available on PATH';
+
+  @override
+  String settingsCliWrapperNotOnPath(String directory) {
+    return 'Not on PATH — add $directory to PATH to use it from a fresh shell';
+  }
+
+  @override
+  String get settingsCliWrapperInstall => 'Install wrapper';
+
+  @override
+  String get settingsCliWrapperRemove => 'Remove wrapper';
+
+  @override
+  String get settingsCliWrapperInstalledMessage => 'Wrapper installed';
+
+  @override
+  String get settingsCliWrapperRemovedMessage => 'Wrapper removed';
+
+  @override
+  String get settingsCliWrapperFailed => 'Could not update the wrapper';
+
+  @override
   String get settingsVersion => 'Version';
 
   @override

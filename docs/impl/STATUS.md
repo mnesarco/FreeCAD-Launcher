@@ -4,11 +4,11 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-19
-- **Current milestone**: M3 — Profiles and launch (M3-01..M3-08 done; M3-09 next)
+- **Current milestone**: M3 — Profiles and launch (M3-01..M3-09 done; M3-10 next)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-19
-- **Next action**: start `M3-09` (CLI wrapper generation `.sh`/`.cmd` + PATH guidance), then
-  `M3-10` isolation E2E.
+- **Next action**: start `M3-10` (isolation E2E: two profiles, same build, independent
+  config/Mod/macros/temp).
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -86,8 +86,11 @@
   - M3-08 — **D-034**: CLI mode (`list`, `run`, `--version`, `--help`, `--` passthrough) with
     defined exit codes; Linux release shell checks pass; `run` launched the real Pixi profile
     (GUI build ignores `--version`).
-  - 254 tests green (3 manual network/launch probes skipped), analyze clean, app builds and
-    launches.
+  - M3-09 — **D-035**: CLI wrapper installer (`~/.local/bin/freecad-launcher` /
+    `%LOCALAPPDATA%\…\freecad-launcher.cmd`), `$APPIMAGE`-aware target, PATH status report-only,
+    Settings card with install/remove; manual Linux wrapper ran the built CLI (`--version`).
+  - 259 tests green (4 manual network/launch/wrapper probes skipped), analyze clean, app builds
+    and launches.
 
 ## Session log
 
@@ -123,6 +126,7 @@
 | 2026-09-19 | M3 | D-032 profiles UI: cards, dialogs, detail tabs skeleton | M3-06 | `docs/impl/DECISIONS.md`, `lib/state/profiles_controller.dart`, `lib/data/daos/**`, `lib/ui/profiles/**`, `lib/l10n/**`, `test/ui/**` |
 | 2026-09-19 | M3 | D-033 launch command viewer with isolation overrides and copy | M3-07 | `docs/impl/DECISIONS.md`, `lib/domain/profiles/launch_command.dart`, `lib/state/profiles_controller.dart`, `lib/platform/launch.dart`, `lib/platform/paths.dart`, `lib/ui/profiles/**`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M3 | D-034 CLI mode (list/run/help/version, passthrough, exit codes) | M3-08 | `docs/impl/DECISIONS.md`, `lib/cli/cli.dart`, `lib/main.dart`, `test/cli/cli_test.dart` |
+| 2026-09-19 | M3 | D-035 CLI wrapper installer + settings card + PATH reporting | M3-09 | `docs/impl/DECISIONS.md`, `docs/spec/03-ux.md`, `lib/platform/cli_wrapper.dart`, `lib/state/settings_controller.dart`, `lib/state/app_services.dart`, `lib/ui/settings/settings_view.dart`, `lib/l10n/**`, `test/**` |
 
 ## Standing notes for the next agent
 

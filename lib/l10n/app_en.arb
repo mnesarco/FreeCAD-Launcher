@@ -127,6 +127,21 @@
   "macrosEmptyTitle": "No macros",
   "macrosEmptyMessage": "Install macros from the official catalog into a profile.",
   "settingsDataDirectory": "Data directory",
+  "settingsCliWrapper": "Command-line launcher",
+  "settingsCliWrapperInstalled": "Installed",
+  "settingsCliWrapperNotInstalled": "Not installed",
+  "settingsCliWrapperOnPath": "Available on PATH",
+  "settingsCliWrapperNotOnPath": "Not on PATH — add {directory} to PATH to use it from a fresh shell",
+  "@settingsCliWrapperNotOnPath": {
+    "placeholders": {
+      "directory": {"type": "String"}
+    }
+  },
+  "settingsCliWrapperInstall": "Install wrapper",
+  "settingsCliWrapperRemove": "Remove wrapper",
+  "settingsCliWrapperInstalledMessage": "Wrapper installed",
+  "settingsCliWrapperRemovedMessage": "Wrapper removed",
+  "settingsCliWrapperFailed": "Could not update the wrapper",
   "settingsVersion": "Version",
   "settingsLicense": "License",
   "settingsDiagnostics": "Diagnostics",

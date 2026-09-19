@@ -10,6 +10,7 @@ import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/platform/build_installer.dart';
+import 'package:freecad_launcher/platform/cli_wrapper.dart';
 import 'package:freecad_launcher/platform/diagnostics.dart';
 import 'package:freecad_launcher/platform/dmg_extractor.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
@@ -21,6 +22,7 @@ import 'package:freecad_launcher/platform/python_probe.dart';
 import 'package:freecad_launcher/platform/seven_zip_extractor.dart';
 import 'package:freecad_launcher/state/builds_controller.dart';
 import 'package:freecad_launcher/state/profiles_controller.dart';
+import 'package:freecad_launcher/state/settings_controller.dart';
 
 class AppServices {
   AppServices({
@@ -108,6 +110,13 @@ class AppServices {
         arch: hostArch,
         pythonProbe: pythonProbe,
       );
+
+  late final CliWrapperInstaller cliWrapper = CliWrapperInstaller(
+    platform: hostPlatform,
+    processRunner: processRunner,
+  );
+
+  late final SettingsController settings = SettingsController(cliWrapper: cliWrapper);
 
   static Future<AppServices> bootstrap() async {
     final paths = await AppPaths.resolve();

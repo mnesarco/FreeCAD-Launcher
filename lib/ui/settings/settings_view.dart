@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:freecad_launcher/core/constants.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
@@ -15,6 +16,16 @@ class SettingsView extends StatefulWidget {
 class _SettingsViewState extends State<SettingsView> {
   DiagnosticsReport? _report;
   bool _running = false;
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_started) {
+      _started = true;
+      AppScope.of(context).settings.refreshWrapper();
+    }
+  }
 
   Future<void> _runDiagnostics() async {
     setState(() => _running = true);
@@ -28,11 +39,42 @@ class _SettingsViewState extends State<SettingsView> {
     });
   }
 
+  Future<void> _toggleWrapper(BuildContext context, bool installed) async {
+    final l10n = AppLocalizations.of(context);
+    final settings = AppScope.of(context).settings;
+    final result = installed
+        ? await settings.removeWrapper()
+        : await settings.installWrapper();
+    if (!context.mounted) {
+      return;
+    }
+    final message = result.fold(
+      (_) => installed
+          ? l10n.settingsCliWrapperRemovedMessage
+          : l10n.settingsCliWrapperInstalledMessage,
+      (error) => '${l10n.settingsCliWrapperFailed}: $error',
+    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final services = AppScope.of(context);
     final results = _report?.results ?? const <DiagnosticResult>[];
+
+    final settings = services.settings;
+    final wrapperInstalled = settings.wrapperInstalled.watch(context);
+    final wrapperOnPath = settings.wrapperOnPath.watch(context);
+    final wrapperPath = settings.wrapperPath.watch(context);
+    final wrapperDirectory = settings.wrapperDirectory.watch(context);
+    final wrapperBusy = settings.wrapperBusy.watch(context);
+
+    final wrapperStatus = !wrapperInstalled
+        ? l10n.settingsCliWrapperNotInstalled
+        : wrapperOnPath
+        ? l10n.settingsCliWrapperOnPath
+        : l10n.settingsCliWrapperNotOnPath(wrapperDirectory ?? '');
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -51,6 +93,26 @@ class _SettingsViewState extends State<SettingsView> {
           leading: const Icon(Icons.description_outlined),
           title: Text(l10n.settingsLicense),
           subtitle: const Text('GPL-3.0-or-later'),
+        ),
+        const Divider(height: 32),
+        ListTile(
+          leading: const Icon(Icons.terminal_outlined),
+          title: Text(l10n.settingsCliWrapper),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(wrapperPath),
+              Text(wrapperStatus, style: Theme.of(context).textTheme.bodySmall),
+            ],
+          ),
+          trailing: FilledButton.tonal(
+            onPressed: wrapperBusy ? null : () => _toggleWrapper(context, wrapperInstalled),
+            child: Text(
+              wrapperInstalled
+                  ? l10n.settingsCliWrapperRemove
+                  : l10n.settingsCliWrapperInstall,
+            ),
+          ),
         ),
         const Divider(height: 32),
         Padding(

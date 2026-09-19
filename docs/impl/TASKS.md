@@ -74,7 +74,7 @@ corrupted download rejected; rate-limit/offline paths verified.
 | M3-06 | Profiles UI: list/cards + detail tabs skeleton (Overview/Addons/Python/Macros/Config/Backups) | Navigable with real data; empty/loading/error states | M1-07, M3-02 | L | DONE |
 | M3-07 | "Show launch command" viewer + copy (env + argv) | Manual: copied command launches the same isolated env | M3-03 | S | DONE |
 | M3-08 | CLI mode in `main.dart`: `list`, `run <profile>`, `--version`, `--help`, arg passthrough after `--`, exit codes | Shell tests/manual on each OS; UI starts when no args | M1-06, M3-04 | M | DONE |
-| M3-09 | CLI wrapper generation (`.sh` / `.cmd`) + PATH guidance + settings path | Manual: `freecad-launcher run` works from a fresh shell | M3-08 | M | TODO |
+| M3-09 | CLI wrapper generation (`.sh` / `.cmd`) + PATH guidance + settings path | Manual: `freecad-launcher run` works from a fresh shell | M3-08 | M | DONE |
 | M3-10 | Isolation E2E: two profiles, same build, independent config/Mod/macros/temp | Verified on each OS with screenshots/logs in session notes | M3-03, M3-04 | S | TODO |
 
 Exit: two profiles are provably isolated; `freecad-launcher run <profile>` works from a fresh
