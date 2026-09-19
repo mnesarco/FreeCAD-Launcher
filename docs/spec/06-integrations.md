@@ -145,9 +145,11 @@ launcher when one exists, e.g. macOS `Contents/MacOS/FreeCAD` sets its own env).
   the `--target` + `AdditionalPythonPackages` mechanism is used instead of env manipulation.
 - Pip output is streamed to a job log; a spinner plus "resolving…" state is shown because pip
   can be silent for a while. Network failures report the raw pip tail.
-- Uninstall (v0.1): use `<python> -m pip uninstall --target` is unreliable; instead pip-install
-  a fresh resolution into a temp dir to compute removals, or delete the package directory and
-  refresh the DB. Spike S3 decides; until then removal is best-effort with a warning.
+- `--upgrade` is mandatory: without it pip warns and skips when the target directory already
+  contains the package (verified pip 24.0).
+- Uninstall (v0.1): RECORD-based removal (S3/D-036) — parse every `<name>-*.dist-info/RECORD`,
+  delete files that stay inside the target, prune empty dirs, then delete the dist-info.
+  Updates uninstall first, then install with `--upgrade` (pip leaves the old dist-info behind).
 - Concurrency: never allow two pip jobs in the same profile; packaging installs are serialized
   globally as well (package DB locks).
 

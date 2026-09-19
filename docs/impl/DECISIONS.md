@@ -508,3 +508,30 @@ Template:
   home and ran it directly — it proxied to the built CLI and printed the version.
 - **Refs**: spec 02 FR-3.2, spec 03 §2.6, `lib/platform/cli_wrapper.dart`,
   `lib/state/settings_controller.dart`, `TASKS.md` M3-09, M3-08
+
+### D-036 — Python package removal is RECORD-based; updates uninstall first (S3)
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: S3 needed a reliable removal procedure for `pip install --target`.
+  Tested with Python 3.12 / pip 24.0:
+  - `pip uninstall --target` does not exist (`no such option: --target`).
+  - `pip install --target` without `--upgrade` prints a warning and leaves the package
+    untouched (exit 0) when the directory already exists.
+  - `pip install --target --upgrade` installs the new version but leaves the previous
+    `*.dist-info` behind (e.g. `packaging-24.1.dist-info` next to `packaging-24.2.dist-info`).
+- **Decision**:
+  - Install/update invocation is `<python> -m pip install --upgrade --target <dir> <spec>`;
+    `--upgrade` is mandatory.
+  - Uninstall: find every `<normalized-name>-*.dist-info` under the target, parse `RECORD`
+    (CSV), delete listed files that resolve inside the target (reject absolute paths and `..`
+    escapes), prune emptied directories bottom-up, then delete the dist-info directory.
+    `RECORD` includes `__pycache__/*.pyc` entries, so those are removed as well. Verified:
+    `six` was fully removed (root `__pycache__` pruned) while `packaging` stayed intact.
+  - Update: uninstall the installed package first, then install with `--upgrade` — avoids
+    stale dist-info and files shared between versions.
+  - `--target` installs do not create console scripts outside the target, so nothing else
+    needs cleaning.
+- **Consequences**: M4-04/M4-07 implement uninstall as file removal via `ProcessRunner`-free
+  Dart I/O plus DB row deletion; safety guards mirror archive extraction; a partially failed
+  uninstall surfaces as a job error and the reconciler keeps the DB row until files are gone.
+- **Refs**: spec 06 §4.2, `TASKS.md` S3, M4-04, M4-06, M4-07, D-006

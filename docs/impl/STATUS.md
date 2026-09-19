@@ -4,13 +4,12 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-19
-- **Current milestone**: M3 — Profiles and launch (all tasks done; Linux verified — M3 exit
-  review and Windows/macOS manual checks pending)
+- **Current milestone**: M4 — Addons and Python (started; S3 done, M4-01 next)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-19
-- **Next action**: run the M3 exit checklist in `VERIFICATION.md` on Linux, complete the
-  Windows/macOS launch/isolation checks when those OSes are available, then decide the
-  `v2` → `main` merge (D-015) before starting **M4** (`S3` pip-uninstall spike, addon catalog).
+- **Next action**: start `M4-01` (addon catalog client + cache + parser per
+  `addon_index_spec.md`), then M4-02 catalog UI, M4-03 install engine. M3 exit review and
+  Windows/macOS manual checks remain open; `m3-complete` tag exists.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -95,6 +94,9 @@
   - M3-10 — isolation E2E verified on Linux: two profiles on the same 1.0.2 AppImage wrote
     distinct markers into `FREECAD_USER_HOME`, `HOME`, `TMPDIR` and `Mod/`; deleting one profile
     left the other intact (paths in the session log).
+  - S3 — **D-036**: pip has no `--target` uninstall; `--upgrade` is mandatory and leaves old
+    dist-info. Removal is RECORD-based (delete files inside the target, prune empty dirs);
+    updates uninstall first then reinstall. Tested with Python 3.12 / pip 24.0.
   - 259 tests green (5 manual network/launch/wrapper/isolation probes skipped), analyze clean,
     app builds and launches.
 
@@ -134,6 +136,7 @@
 | 2026-09-19 | M3 | D-034 CLI mode (list/run/help/version, passthrough, exit codes) | M3-08 | `docs/impl/DECISIONS.md`, `lib/cli/cli.dart`, `lib/main.dart`, `test/cli/cli_test.dart` |
 | 2026-09-19 | M3 | D-035 CLI wrapper installer + settings card + PATH reporting | M3-09 | `docs/impl/DECISIONS.md`, `docs/spec/03-ux.md`, `lib/platform/cli_wrapper.dart`, `lib/state/settings_controller.dart`, `lib/state/app_services.dart`, `lib/ui/settings/settings_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M3 | AGENTS.md refresh (tracked again) + M3-10 isolation E2E on Linux | M3-10 | `AGENTS.md`, `docs/impl/STATUS.md`, `docs/impl/VERIFICATION.md`, `test/manual/isolation_e2e_linux_test.dart` |
+| 2026-09-19 | M4 | S3 pip-uninstall spike; RECORD-based removal decision | S3 | `docs/impl/DECISIONS.md`, `docs/spec/06-integrations.md` |
 
 ## Standing notes for the next agent
 
