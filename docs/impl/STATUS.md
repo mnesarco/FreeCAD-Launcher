@@ -137,4 +137,5 @@
 - M2 exit criteria are locally green; only cross-OS manual checks and the first CI run remain.
 - Start M3 with `M3-01`; profiles are the core of the product, so keep `docs/spec/05-data-model.md`
   and D-005 (isolation env matrix) in view.
-- `AGENTS.md` is locally git-excluded (`.git/info/exclude`); it is not part of commits.
+- `AGENTS.md` is tracked again (no longer git-excluded); keep it in sync with `docs/impl/`
+  when conventions or the project state change.
