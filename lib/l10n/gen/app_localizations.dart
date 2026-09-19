@@ -1702,6 +1702,96 @@ abstract class AppLocalizations {
   /// **'Install macros from the official catalog into a profile.'**
   String get macrosEmptyMessage;
 
+  /// No description provided for @macrosSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search macros'**
+  String get macrosSearchHint;
+
+  /// No description provided for @macrosRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get macrosRefresh;
+
+  /// No description provided for @macrosInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get macrosInstall;
+
+  /// No description provided for @macrosInstalledMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro installed'**
+  String get macrosInstalledMessage;
+
+  /// No description provided for @macrosInstallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not install the macro'**
+  String get macrosInstallFailed;
+
+  /// No description provided for @macrosLicenseUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown license'**
+  String get macrosLicenseUnknown;
+
+  /// No description provided for @macrosNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No macros match the current search.'**
+  String get macrosNoMatches;
+
+  /// No description provided for @macrosCatalogEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog is empty'**
+  String get macrosCatalogEmptyTitle;
+
+  /// No description provided for @macrosCatalogEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh to download the macro catalog.'**
+  String get macrosCatalogEmptyMessage;
+
+  /// No description provided for @macrosLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the macro catalog.'**
+  String get macrosLoadFailed;
+
+  /// No description provided for @macrosStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Using a cached catalog; newer macros may be missing.'**
+  String get macrosStale;
+
+  /// No description provided for @macrosAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'Author'**
+  String get macrosAuthor;
+
+  /// No description provided for @macrosVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get macrosVersion;
+
+  /// No description provided for @macrosUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated'**
+  String get macrosUpdated;
+
+  /// No description provided for @macrosClearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get macrosClearSearch;
+
   /// No description provided for @jobsTitle.
   ///
   /// In en, this message translates to:

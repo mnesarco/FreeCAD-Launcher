@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/catalog/github_releases_client.dart';
+import 'package:freecad_launcher/data/catalog/macro_catalog.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
@@ -29,6 +30,7 @@ import 'package:freecad_launcher/state/builds_controller.dart';
 import 'package:freecad_launcher/state/bundle_apply_controller.dart';
 import 'package:freecad_launcher/state/bundles_controller.dart';
 import 'package:freecad_launcher/state/jobs_controller.dart';
+import 'package:freecad_launcher/state/macros_controller.dart';
 import 'package:freecad_launcher/state/profiles_controller.dart';
 import 'package:freecad_launcher/state/python_controller.dart';
 import 'package:freecad_launcher/state/settings_controller.dart';
@@ -41,10 +43,12 @@ class AppServices {
     http.Client? httpClient,
     BuildsController? buildsController,
     AddonsController? addonsController,
+    MacrosController? macrosController,
   }) : processRunner = processRunner ?? ProcessRunner(),
        _httpClient = httpClient,
        _buildsControllerOverride = buildsController,
-       _addonsControllerOverride = addonsController;
+       _addonsControllerOverride = addonsController,
+       _macrosControllerOverride = macrosController;
 
   final AppPaths paths;
   final AppDatabase database;
@@ -53,6 +57,7 @@ class AppServices {
   final http.Client? _httpClient;
   final BuildsController? _buildsControllerOverride;
   final AddonsController? _addonsControllerOverride;
+  final MacrosController? _macrosControllerOverride;
 
   late final http.Client _client = _httpClient ?? http.Client();
 
@@ -81,6 +86,12 @@ class AppServices {
     downloader: downloader,
     dao: database.catalogCacheDao,
     cacheDirectory: paths.addonsCacheDir,
+  );
+
+  late final MacroCatalog macroCatalog = MacroCatalog(
+    downloader: downloader,
+    dao: database.catalogCacheDao,
+    cacheDirectory: paths.macrosCacheDir,
   );
 
   late final PythonProbe pythonProbe = ProcessPythonProbe(processRunner: processRunner);
@@ -164,6 +175,15 @@ class AppServices {
 
   late final BundlesController bundles = BundlesController(database: database);
 
+  late final MacrosController macros =
+      _macrosControllerOverride ??
+      MacrosController(
+        database: database,
+        catalog: macroCatalog,
+        paths: paths,
+        jobs: jobs,
+      );
+
   late final BundleApplyController bundleApply = BundleApplyController(
     install: ({
       required String addonId,
@@ -204,6 +224,7 @@ class AppServices {
     addons.dispose();
     python.dispose();
     bundles.dispose();
+    macros.dispose();
     jobs.dispose();
     await database.close();
   }

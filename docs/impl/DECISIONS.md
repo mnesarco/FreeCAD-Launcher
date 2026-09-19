@@ -860,3 +860,39 @@ Template:
 - **Refs**: spec 05 §4.1, spec 02 FR-5.3, `lib/domain/bundles/bundle_json.dart`,
   `lib/state/bundles_controller.dart`, `lib/ui/addons/collections_view.dart`,
   `TASKS.md` M5-03, D-045
+
+### D-048 — Macro catalog client, installer and Macros screen (M5-04)
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: S4/D-044 selected `addons.freecad.org/macro_cache.zip` (+`.sha256`) as the official
+  source; M5-04 needs the client and single-macro install before M5-05 adds the scanner.
+- **Decision**:
+  - `MacroCatalog` (data) mirrors `AddonCatalog`: 6 h TTL, `catalog_cache` key `macros:catalog`,
+    stale-cache fallback, `MacroCatalogException` when nothing is cached. It additionally fetches
+    the tiny `.sha256` sidecar first and skips the ~5 MB zip when the hash is unchanged, verifies
+    the downloaded zip with `Downloader(expectedSha256:)` (mismatch → error; stale fallback when a
+    cache exists) and stores the verified hash in the cache row `etag`.
+  - `parseMacroCatalog` (domain) maps `macro_cache.json` values to `MacroCatalogEntry`
+    (code, comment/description, author, date, version, license, wiki/url, onGit/onWiki,
+    `src_filename` + derived category, icon name/base64/extension, XPM, `other_files`,
+    `other_files_data`), normalizes the two upstream `other_files` shapes (`list` and
+    Python-repr string), skips entries without code and sorts by name. `fileName` follows
+    FreeCAD's rules (git basename → wiki `filename_from_url` → `<Name>.FCMacro` with spaces → `_`).
+  - `MacroInstaller` (platform) writes `code` atomically (`.part` → rename) into the profile root
+    (`FREECAD_USER_HOME` = macro dir, D-044), decodes `other_files_data` as base64 (skipping the
+    `"ICON"` sentinel, empty keys and unsafe paths) and writes the icon (XPM as
+    `<Name>_icon.xpm`, otherwise the icon basename); existing files are replaced.
+  - `MacrosController` (state): catalog signals + search filter, `installedMacros` watched from
+    `macrosDao.watchAll()`, `install` runs through the jobs queue (retryable, cancel-aware),
+    upserts a `macros` row with `source = catalog` (reinstall keeps id/installedAt) and exposes
+    per-macro `installing`/`installErrors`.
+  - UI: the Macros screen now renders the catalog (search, refresh, stale banner, profile picker,
+    license or "Unknown license", Installed badge, Install button); the installed-file list,
+    delete/reveal/open actions and filesystem reconciliation remain M5-05.
+- **Consequences**: M5-05 builds the installed list/scanner on `installedMacros`; license is only
+  displayed here (persistence is part of M5-05 per D-044); `macros.catalogCommit` stays null until
+  v0.2 hash-based updates.
+- **Refs**: spec 06 §3, spec 02 FR-7.2, `lib/data/catalog/macro_catalog.dart`,
+  `lib/domain/macros/macro_catalog_entry.dart`, `lib/platform/macro_installer.dart`,
+  `lib/state/macros_controller.dart`, `lib/ui/macros/macros_view.dart`,
+  `TASKS.md` M5-04, D-044

@@ -861,6 +861,53 @@ class AppLocalizationsEn extends AppLocalizations {
       'Install macros from the official catalog into a profile.';
 
   @override
+  String get macrosSearchHint => 'Search macros';
+
+  @override
+  String get macrosRefresh => 'Refresh';
+
+  @override
+  String get macrosInstall => 'Install';
+
+  @override
+  String get macrosInstalledMessage => 'Macro installed';
+
+  @override
+  String get macrosInstallFailed => 'Could not install the macro';
+
+  @override
+  String get macrosLicenseUnknown => 'Unknown license';
+
+  @override
+  String get macrosNoMatches => 'No macros match the current search.';
+
+  @override
+  String get macrosCatalogEmptyTitle => 'Catalog is empty';
+
+  @override
+  String get macrosCatalogEmptyMessage =>
+      'Refresh to download the macro catalog.';
+
+  @override
+  String get macrosLoadFailed => 'Could not load the macro catalog.';
+
+  @override
+  String get macrosStale =>
+      'Using a cached catalog; newer macros may be missing.';
+
+  @override
+  String get macrosAuthor => 'Author';
+
+  @override
+  String get macrosVersion => 'Version';
+
+  @override
+  String get macrosUpdated => 'Updated';
+
+  @override
+  String get macrosClearSearch => 'Clear search';
+
+  @override
   String get jobsTitle => 'Jobs';
 
   @override

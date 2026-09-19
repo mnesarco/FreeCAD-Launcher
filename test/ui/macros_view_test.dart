@@ -1,0 +1,123 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:freecad_launcher/data/catalog/macro_catalog.dart';
+import 'package:freecad_launcher/data/database.dart';
+import 'package:freecad_launcher/domain/macros/macro_catalog_entry.dart';
+import 'package:freecad_launcher/domain/macros/macro_types.dart';
+import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
+import 'package:freecad_launcher/platform/downloader.dart';
+import 'package:freecad_launcher/platform/paths.dart';
+import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/state/macros_controller.dart';
+import 'package:freecad_launcher/ui/macros/macros_view.dart';
+import '../data/test_fixtures.dart';
+import '../helpers/fake_download.dart';
+
+MacroCatalogEntry _entry(String name, String comment) {
+  return MacroCatalogEntry(
+    name: name,
+    code: 'print(1)',
+    comment: comment,
+    onGit: true,
+    srcFilename: 'FreeCAD-macros/Utility/$name.FCMacro',
+  );
+}
+
+void main() {
+  late Directory tempDirectory;
+  late AppDatabase db;
+  late AppServices services;
+  late MacrosController controller;
+
+  setUp(() {
+    tempDirectory = Directory.systemTemp.createTempSync('fcl_macros_ui');
+    final paths = AppPaths(dataRoot: tempDirectory.path);
+    db = AppDatabase.inMemory();
+    controller = MacrosController(
+      database: db,
+      catalog: MacroCatalog(
+        downloader: Downloader(
+          source: FakeDownloadSource(),
+          cacheDirectory: paths.macrosCacheDir,
+        ),
+        dao: db.catalogCacheDao,
+        cacheDirectory: paths.macrosCacheDir,
+      ),
+      paths: paths,
+    );
+    controller.loaded.value = true;
+    controller.macros.value = [
+      _entry('Foto', 'Camera helper'),
+      _entry('TreeHelper', 'BIM tools'),
+    ];
+    services = AppServices(paths: paths, database: db, macrosController: controller);
+  });
+
+  tearDown(() async {
+    await services.close();
+    if (tempDirectory.existsSync()) {
+      tempDirectory.deleteSync(recursive: true);
+    }
+  });
+
+  Future<void> settle(WidgetTester tester) async {
+    for (var frame = 0; frame < 12; frame++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+  }
+
+  Future<void> pumpMacros(WidgetTester tester) async {
+    await tester.pumpWidget(
+      AppScope(
+        services: services,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: MacrosView()),
+        ),
+      ),
+    );
+    await settle(tester);
+  }
+
+  testWidgets('renders the catalog and filters by search', (tester) async {
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    await pumpMacros(tester);
+
+    expect(find.text('Foto'), findsOneWidget);
+    expect(find.text('TreeHelper'), findsOneWidget);
+    expect(find.textContaining('Unknown license'), findsNWidgets(2));
+    expect(find.text('Install'), findsNWidgets(2));
+    expect(find.text('Default'), findsWidgets);
+
+    await tester.enterText(find.byType(TextField), 'camera');
+    await settle(tester);
+
+    expect(find.text('Foto'), findsOneWidget);
+    expect(find.text('TreeHelper'), findsNothing);
+  });
+
+  testWidgets('shows the installed badge for an installed macro', (tester) async {
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    await db.macrosDao.save(
+      sampleMacro(
+        profileId: 'profile-1',
+        name: 'Foto',
+        fileName: 'Foto.FCMacro',
+        source: MacroSource.catalog,
+      ),
+    );
+    await pumpMacros(tester);
+
+    expect(find.text('Installed'), findsOneWidget);
+    expect(find.text('Install'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'camera');
+    await settle(tester);
+    expect(find.text('Installed'), findsOneWidget);
+  });
+}

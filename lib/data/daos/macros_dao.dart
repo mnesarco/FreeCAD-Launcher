@@ -8,6 +8,14 @@ part 'macros_dao.g.dart';
 class MacrosDao extends DatabaseAccessor<AppDatabase> with _$MacrosDaoMixin {
   MacrosDao(super.db);
 
+  Stream<List<Macro>> watchAll() =>
+      (select(macros)
+            ..orderBy([
+              (t) => OrderingTerm.asc(t.profileId),
+              (t) => OrderingTerm.asc(t.name),
+            ]))
+          .watch();
+
   Stream<List<Macro>> watchByProfile(String profileId) =>
       (select(macros)
             ..where((t) => t.profileId.equals(profileId))

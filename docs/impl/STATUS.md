@@ -8,8 +8,8 @@
   Collections, macros, config, export (S4 spike, then M5-01)
 - **Active branch**: `v2`
 - **Last session**: 2026-09-19
-- **Next action**: start `M5-04` (macro catalog client + install single macro, per S4/D-044).
-  Manual M4/M5 UI click-throughs and the Windows/macOS manual checks remain open.
+- **Next action**: start `M5-05` (macro scanner + installed list/delete/reveal/open). Manual
+  M4/M5 UI click-throughs and the Windows/macOS manual checks remain open.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -158,7 +158,11 @@
     skipping), `exportJson`/`importJson` with dedupe and `unresolvedAddonIds`, and the
     Import/Export UI (file picker dialogs, editable name to resolve clashes, unresolved
     warnings). 10 new tests.
-  - 366 tests green (8 manual probes skipped), analyze clean, app builds and launches.
+  - M5-04 — **D-048**: `MacroCatalog` (official `macro_cache.zip` + `.sha256`, sidecar hash
+    short-circuit, verified zip) and `parseMacroCatalog`; `MacroInstaller` (atomic code write,
+    base64 aux files, XPM/icon) and `MacrosController` (jobs-wrapped install, catalog rows); the
+    Macros screen lists the catalog with search/profile picker/install. 18 new tests.
+  - 384 tests green (8 manual probes skipped), analyze clean, app builds and launches.
 
 ## Session log
 
@@ -208,6 +212,7 @@
 | 2026-09-19 | M4 | D-040 addon update detection, backups and removal | M4-04 | `docs/impl/DECISIONS.md`, `lib/state/addons_controller.dart`, `lib/ui/addons/addons_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M4 | D-041 requirements parser, consent and pip installation | M4-05, M4-06 | `docs/impl/DECISIONS.md`, `lib/domain/python/**`, `lib/platform/python_*.dart`, `lib/platform/pip_runner.dart`, `lib/state/addons_controller.dart`, `lib/ui/addons/**`, `test/**` |
 | 2026-09-19 | M4 | D-042 Python packages tab and RECORD-based uninstall | M4-07 | `docs/impl/DECISIONS.md`, `lib/platform/python_uninstaller.dart`, `lib/state/python_controller.dart`, `lib/state/app_services.dart`, `lib/ui/profiles/profile_detail_view.dart`, `lib/l10n/**`, `test/**` |
+| 2026-09-19 | M5 | D-048 macro catalog client, installer and Macros screen | M5-04 | `docs/impl/DECISIONS.md`, `lib/domain/macros/**`, `lib/data/catalog/macro_catalog.dart`, `lib/data/daos/macros_dao.dart`, `lib/platform/macro_installer.dart`, `lib/platform/paths.dart`, `lib/state/macros_controller.dart`, `lib/state/app_services.dart`, `lib/ui/macros/**`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M5 | D-047 bundle JSON export/import with validation and unresolved handling | M5-03 | `docs/impl/DECISIONS.md`, `lib/domain/bundles/bundle_json.dart`, `lib/state/bundles_controller.dart`, `lib/ui/addons/collections_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M5 | D-046 bundle apply planner, sequential runner and preview dialog | M5-02 | `docs/impl/DECISIONS.md`, `lib/domain/addons/addon_update_rules.dart`, `lib/domain/bundles/bundle_planner.dart`, `lib/state/bundle_apply_controller.dart`, `lib/state/addons_controller.dart`, `lib/state/app_services.dart`, `lib/ui/addons/collections_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M5 | D-045 bundles controller + Collections tab (create/edit/items, profile seed) | M5-01 | `docs/impl/DECISIONS.md`, `lib/domain/bundles/bundle_rules.dart`, `lib/state/bundles_controller.dart`, `lib/state/app_services.dart`, `lib/data/daos/bundles_dao.dart`, `lib/ui/addons/collections_view.dart`, `lib/ui/addons/addons_view.dart`, `lib/l10n/**`, `test/**` |

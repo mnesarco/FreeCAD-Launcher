@@ -4,12 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/app.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
 import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
+import 'package:freecad_launcher/data/catalog/macro_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/platform/addon_installer.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
+import 'package:freecad_launcher/state/macros_controller.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 
 import 'helpers/fake_addon_catalog.dart';
@@ -45,6 +47,18 @@ void main() {
           freshness: CatalogFreshness.fresh,
         )),
       ),
+      macrosController: MacrosController(
+        database: database,
+        catalog: MacroCatalog(
+          downloader: Downloader(
+            source: FakeDownloadSource(),
+            cacheDirectory: '/tmp/freecad_launcher_test/macros',
+          ),
+          dao: database.catalogCacheDao,
+          cacheDirectory: '/tmp/freecad_launcher_test/macros',
+        ),
+        paths: AppPaths(dataRoot: '/tmp/freecad_launcher_test'),
+      )..loaded.value = true,
     );
   });
 
@@ -108,7 +122,7 @@ void main() {
 
     await tester.tap(find.text('Macros'));
     await tester.pumpAndSettle();
-    expect(find.text('No macros'), findsOneWidget);
+    expect(find.text('Catalog is empty'), findsOneWidget);
 
     await tester.tap(find.text('Settings'));
     await tester.pumpAndSettle();
