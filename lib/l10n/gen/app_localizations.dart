@@ -1798,6 +1798,12 @@ abstract class AppLocalizations {
   /// **'Install'**
   String get macrosInstall;
 
+  /// No description provided for @macrosSelectProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the target profile'**
+  String get macrosSelectProfile;
+
   /// No description provided for @macrosInstalledMessage.
   ///
   /// In en, this message translates to:

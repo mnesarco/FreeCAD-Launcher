@@ -96,7 +96,13 @@ void main() {
     expect(find.text('TreeHelper'), findsOneWidget);
     expect(find.textContaining('Unknown license'), findsNWidgets(2));
     expect(find.text('Install'), findsNWidgets(2));
-    expect(find.text('Default'), findsWidgets);
+
+    await tester.tap(find.text('Install').first);
+    await settle(tester);
+    expect(find.text('Select the target profile'), findsOneWidget);
+    expect(find.text('Default'), findsOneWidget);
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await settle(tester);
 
     await tester.enterText(find.byType(TextField), 'camera');
     await settle(tester);
@@ -125,11 +131,24 @@ void main() {
 
     await tester.tap(find.text('Catalog'));
     await settle(tester);
-    expect(find.widgetWithText(Chip, 'Installed'), findsOneWidget);
-    expect(find.text('Install'), findsOneWidget);
+    expect(find.textContaining('Installed in 1 profile'), findsOneWidget);
+    expect(find.text('Install'), findsNWidgets(2));
+
+    await tester.tap(find.text('Install').first);
+    await settle(tester);
+    expect(find.text('Select the target profile'), findsOneWidget);
+    final installButton = tester.widget<FilledButton>(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(FilledButton, 'Install'),
+      ),
+    );
+    expect(installButton.onPressed, isNull);
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await settle(tester);
 
     await tester.enterText(find.byType(TextField), 'camera');
     await settle(tester);
-    expect(find.widgetWithText(Chip, 'Installed'), findsOneWidget);
+    expect(find.textContaining('Installed in 1 profile'), findsOneWidget);
   });
 }

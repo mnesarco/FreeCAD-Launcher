@@ -911,6 +911,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get macrosInstall => 'Install';
 
   @override
+  String get macrosSelectProfile => 'Select the target profile';
+
+  @override
   String get macrosInstalledMessage => 'Macro installed';
 
   @override

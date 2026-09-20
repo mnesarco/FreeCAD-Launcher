@@ -334,6 +334,7 @@
   "macrosSearchHint": "Search macros",
   "macrosRefresh": "Refresh",
   "macrosInstall": "Install",
+  "macrosSelectProfile": "Select the target profile",
   "macrosInstalledMessage": "Macro installed",
   "macrosInstallFailed": "Could not install the macro",
   "macrosLicenseUnknown": "Unknown license",

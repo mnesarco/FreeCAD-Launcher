@@ -103,12 +103,6 @@ class _CatalogTab extends StatelessWidget {
     final installing = controller.installing.watch(context);
     final installErrors = controller.installErrors.watch(context);
     final installedRows = controller.installedMacros.watch(context);
-    final profiles = services.profiles.profiles.watch(context);
-
-    var profileId = controller.selectedProfileId.watch(context);
-    if (profileId == null || !profiles.any((profile) => profile.id == profileId)) {
-      profileId = profiles.isEmpty ? null : profiles.first.id;
-    }
 
     Widget body;
     if (loading && macros.isEmpty) {
@@ -141,17 +135,15 @@ class _CatalogTab extends StatelessWidget {
         itemCount: filtered.length,
         itemBuilder: (context, index) {
           final macro = filtered[index];
-          final isInstalled = profileId != null &&
-              installedRows.any(
-                (row) => row.profileId == profileId && row.fileName == macro.fileName,
-              );
+          final installedCount = installedRows
+              .where((row) => row.fileName == macro.fileName)
+              .length;
           return _CatalogMacroTile(
             macro: macro,
-            isInstalled: isInstalled,
+            installedCount: installedCount,
             isInstalling: installing.contains(macro.name),
-            canInstall: profileId != null && !isInstalled,
             error: installErrors[macro.name],
-            onInstall: profileId == null ? null : () => _install(context, macro, profileId!),
+            onInstall: () => _install(context, macro),
           );
         },
       );
@@ -200,21 +192,25 @@ class _CatalogTab extends StatelessWidget {
             ],
           ),
         ),
-        _ProfilePicker(profileId: profileId, profiles: profiles),
         const SizedBox(height: 8),
         Expanded(child: body),
       ],
     );
   }
 
-  Future<void> _install(
-    BuildContext context,
-    MacroCatalogEntry macro,
-    String profileId,
-  ) async {
+  Future<void> _install(BuildContext context, MacroCatalogEntry macro) async {
     final l10n = AppLocalizations.of(context);
+    final services = AppScope.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final result = await AppScope.of(context).macros.install(
+    final profileId = await showDialog<String>(
+      context: context,
+      builder: (context) => _InstallMacroDialog(macro: macro),
+    );
+    if (profileId == null || !context.mounted) {
+      return;
+    }
+    services.macros.selectedProfileId.value = profileId;
+    final result = await services.macros.install(
       name: macro.name,
       profileId: profileId,
     );
@@ -228,6 +224,81 @@ class _CatalogTab extends StatelessWidget {
       (error) => messenger.showSnackBar(
         SnackBar(content: Text('${l10n.macrosInstallFailed}: $error')),
       ),
+    );
+  }
+}
+
+class _InstallMacroDialog extends StatefulWidget {
+  const _InstallMacroDialog({required this.macro});
+
+  final MacroCatalogEntry macro;
+
+  @override
+  State<_InstallMacroDialog> createState() => _InstallMacroDialogState();
+}
+
+class _InstallMacroDialogState extends State<_InstallMacroDialog> {
+  String? _profileId;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final services = AppScope.of(context);
+    final profiles = services.profiles.profiles.watch(context);
+    final installedRows = services.macros.installedMacros.watch(context);
+
+    bool isInstalled(String profileId) => installedRows.any(
+      (row) => row.profileId == profileId && row.fileName == widget.macro.fileName,
+    );
+
+    var selected = _profileId;
+    if (selected == null) {
+      for (final profile in profiles) {
+        if (!isInstalled(profile.id)) {
+          selected = profile.id;
+          break;
+        }
+      }
+    }
+
+    return AlertDialog(
+      title: Text(l10n.macrosSelectProfile),
+      content: SizedBox(
+        width: 380,
+        child: profiles.isEmpty
+            ? Text(l10n.addonsNoProfiles)
+            : RadioGroup<String>(
+                groupValue: selected,
+                onChanged: (value) => setState(() => _profileId = value),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final profile in profiles)
+                      RadioListTile<String>(
+                        value: profile.id,
+                        enabled: !isInstalled(profile.id),
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(profile.name),
+                        subtitle: isInstalled(profile.id)
+                            ? Text(l10n.addonsInstalledBadge)
+                            : null,
+                      ),
+                  ],
+                ),
+              ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.bundlesCancel),
+        ),
+        if (profiles.isNotEmpty)
+          FilledButton(
+            onPressed: selected == null ? null : () => Navigator.of(context).pop(selected),
+            child: Text(l10n.macrosInstall),
+          ),
+      ],
     );
   }
 }
@@ -276,19 +347,17 @@ class _ProfilePicker extends StatelessWidget {
 class _CatalogMacroTile extends StatelessWidget {
   const _CatalogMacroTile({
     required this.macro,
-    required this.isInstalled,
+    required this.installedCount,
     required this.isInstalling,
-    required this.canInstall,
     required this.error,
     required this.onInstall,
   });
 
   final MacroCatalogEntry macro;
-  final bool isInstalled;
+  final int installedCount;
   final bool isInstalling;
-  final bool canInstall;
   final String? error;
-  final VoidCallback? onInstall;
+  final VoidCallback onInstall;
 
   @override
   Widget build(BuildContext context) {
@@ -313,21 +382,28 @@ class _CatalogMacroTile extends StatelessWidget {
               : theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
         ),
         isThreeLine: true,
-        trailing: isInstalled
-            ? Chip(
-                label: Text(l10n.addonsInstalledBadge),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (installedCount > 0) ...[
+              Chip(
+                label: Text(l10n.addonsInstalledIn(installedCount)),
                 visualDensity: VisualDensity.compact,
-              )
-            : FilledButton.tonal(
-                onPressed: canInstall && !isInstalling ? onInstall : null,
-                child: isInstalling
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.macrosInstall),
               ),
+              const SizedBox(width: 8),
+            ],
+            FilledButton.tonal(
+              onPressed: isInstalling ? null : onInstall,
+              child: isInstalling
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(l10n.macrosInstall),
+            ),
+          ],
+        ),
       ),
     );
   }

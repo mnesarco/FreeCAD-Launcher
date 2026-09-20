@@ -1022,3 +1022,25 @@ Template:
   re-forces it; `getUserMacroDir()` (no argument) still reports FreeCAD's internal default.
 - **Refs**: spec 04 §"user home", spec 06 §3, `lib/platform/freecad_preferences.dart`,
   `lib/state/profiles_controller.dart`, `TASKS.md` M5-05, D-052
+
+### D-054 — Macro catalog installs pick the profile in a dialog
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: The Macros **Catalog** tab followed the Addons screen pattern (a target-profile
+  dropdown above the list); for browsing a read-mostly catalog with many rows that is noisy, and
+  it implied a single target for the whole screen.
+- **Decision**:
+  - The Catalog tab no longer shows a profile dropdown. Every macro row keeps an **Install**
+  button (disabled only while that macro is installing); installed macros additionally show an
+  `Installed in N profile(s)` chip.
+  - Clicking Install opens a `Select the target profile` dialog: radio list of profiles,
+    preselecting the first profile that does not have the macro; profiles that already have it
+    are disabled and labelled "Installed"; with no profiles the dialog only explains how to
+    proceed. Confirming installs into the chosen profile and updates `selectedProfileId`, so the
+    Installed tab follows.
+  - The Installed tab keeps its profile dropdown (it lists one profile at a time).
+- **Consequences**: Installing the same macro into several profiles is a two-click flow; the
+  catalog report stays clean; l10n adds `macrosSelectProfile` (reusing `addonsInstalledIn` for
+  the count chip).
+- **Refs**: spec 03 §2.5, `lib/ui/macros/macros_view.dart`, `test/ui/macros_view_test.dart`,
+  TASKS.md M5-04, D-048
