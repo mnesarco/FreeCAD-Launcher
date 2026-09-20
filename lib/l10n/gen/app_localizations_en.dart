@@ -1278,4 +1278,42 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String updatesUpdateSelected(int count) {
+    return 'Update selected ($count)';
+  }
+
+  @override
+  String get updatesSelectAll => 'Select all';
+
+  @override
+  String updatesApplyingCount(int completed, int total) {
+    return 'Updating $completed/$total…';
+  }
+
+  @override
+  String updatesSummaryUpdated(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count updated',
+      one: '1 updated',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String updatesSummaryFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count failed',
+      one: '1 failed',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get updatesRetryFailed => 'Retry failed';
 }

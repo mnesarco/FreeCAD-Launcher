@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
-import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
+import 'package:freecad_launcher/data/catalog/releases_catalog.dart'
+    show CatalogFreshness;
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
@@ -70,7 +71,11 @@ void main() {
     );
     catalog.result = AddonCatalogResult(
       addons: [
-        _addon('A2plus', version: '1.2', lastUpdateTime: DateTime.utc(2026, 9, 19)),
+        _addon(
+          'A2plus',
+          version: '1.2',
+          lastUpdateTime: DateTime.utc(2026, 9, 19),
+        ),
       ],
       freshness: CatalogFreshness.fresh,
     );
@@ -138,7 +143,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('shows the update count and opens the summary sheet', (tester) async {
+  testWidgets('shows the update count and opens the summary sheet', (
+    tester,
+  ) async {
     await pumpChip(tester);
 
     expect(find.text('1 update'), findsOneWidget);
@@ -173,5 +180,34 @@ void main() {
     await pumpChip(tester);
 
     expect(find.text('1 update'), findsNothing);
+  });
+
+  testWidgets('pre-checks outdated addons and toggles the selection', (
+    tester,
+  ) async {
+    await pumpChip(tester);
+    await tester.tap(find.text('1 update'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CheckboxListTile), findsOneWidget);
+    expect(find.text('Update selected (1)'), findsOneWidget);
+
+    await tester.tap(find.byType(CheckboxListTile));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Update selected (0)'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.widgetWithText(FilledButton, 'Update selected (0)'),
+          )
+          .onPressed,
+      isNull,
+    );
+
+    await tester.tap(find.text('Select all'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Update selected (1)'), findsOneWidget);
   });
 }

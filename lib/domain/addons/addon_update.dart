@@ -15,3 +15,31 @@ class AddonUpdate {
   final String? installedVersion;
   final String? catalogVersion;
 }
+
+enum AddonUpdateApplyStatus { updated, failed }
+
+class AddonUpdateApplyResult {
+  const AddonUpdateApplyResult({
+    required this.update,
+    required this.status,
+    this.error,
+  });
+
+  final AddonUpdate update;
+  final AddonUpdateApplyStatus status;
+  final String? error;
+}
+
+class AddonUpdateApplySummary {
+  const AddonUpdateApplySummary(this.results);
+
+  final List<AddonUpdateApplyResult> results;
+
+  int count(AddonUpdateApplyStatus status) =>
+      results.where((result) => result.status == status).length;
+
+  List<AddonUpdateApplyResult> get failures => [
+    for (final result in results)
+      if (result.status == AddonUpdateApplyStatus.failed) result,
+  ];
+}

@@ -122,7 +122,7 @@ import recreates the addon set.
 |---|---|---|---|---|---|
 | M6-01 | Addon update checks + badges (profile, addon list) | Manual: outdated addon flagged; no auto-install | M6-10, M4-04 | M | DONE |
 | M6-02 | Build update checks + badges (stable channel) | Manual: newer stable release flagged | M2-02, M2-03 | S | DONE |
-| M6-03 | Batch update flow ("Update all" with per-item toggles) | Manual batch through job queue with summary | M6-01, M6-02, M4-08 | M | TODO |
+| M6-03 | Batch update flow ("Update all" with per-item toggles) | Manual batch through job queue with summary | M6-01, M6-02, M4-08 | M | DONE |
 | M6-04 | Settings screen: theme, data dir, cadence, cache, logs, about, license | Manual full pass; settings persisted | M1-07 | M | TODO |
 | M6-05 | Cache management: sizes, per-item clear, download cache retention | Manual: sizes accurate; clearing frees space; catalogs refetch | M2-03 | S | TODO |
 | M6-06 | Debug bundle export (logs + versions + diagnostics, redacted) | Manual export review: no secrets, useful content | M1-08 | S | TODO |

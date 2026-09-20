@@ -523,5 +523,42 @@
         "type": "int"
       }
     }
-  }
+  },
+  "updatesUpdateSelected": "Update selected ({count})",
+  "@updatesUpdateSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updatesSelectAll": "Select all",
+  "updatesApplyingCount": "Updating {completed}/{total}…",
+  "@updatesApplyingCount": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "updatesSummaryUpdated": "{count, plural, =1{1 updated} other{{count} updated}}",
+  "@updatesSummaryUpdated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updatesSummaryFailed": "{count, plural, =1{1 failed} other{{count} failed}}",
+  "@updatesSummaryFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updatesRetryFailed": "Retry failed"
 }

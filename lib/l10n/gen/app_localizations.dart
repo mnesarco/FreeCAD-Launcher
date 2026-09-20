@@ -2445,6 +2445,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =0{No updates} =1{1 update} other{{count} updates}}'**
   String updatesBadge(int count);
+
+  /// No description provided for @updatesUpdateSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Update selected ({count})'**
+  String updatesUpdateSelected(int count);
+
+  /// No description provided for @updatesSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get updatesSelectAll;
+
+  /// No description provided for @updatesApplyingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating {completed}/{total}…'**
+  String updatesApplyingCount(int completed, int total);
+
+  /// No description provided for @updatesSummaryUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 updated} other{{count} updated}}'**
+  String updatesSummaryUpdated(int count);
+
+  /// No description provided for @updatesSummaryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 failed} other{{count} failed}}'**
+  String updatesSummaryFailed(int count);
+
+  /// No description provided for @updatesRetryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry failed'**
+  String get updatesRetryFailed;
 }
 
 class _AppLocalizationsDelegate

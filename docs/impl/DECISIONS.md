@@ -1205,3 +1205,29 @@ Template:
   test is revised; the prototype look is restored without reviving prototype code.
 - **Refs**: spec 03 §1, `lib/app.dart`, `lib/ui/widgets/form_row.dart`,
   `test/ui/app_theme_test.dart`, `TASKS.md` M6-11, prototype-final `lib/view/widgets.dart`
+
+### D-060 — Batch addon updates ("Update all") (M6-03)
+- **Date**: 2026-09-20
+- **Status**: Accepted
+- **Context**: FR-10.3/10.4 and spec 03 §3.6 ask for a batch flow with per-item toggles from the
+  update badge; D-057 anticipated M6-03 consuming the same state, and D-046's bundle apply
+  already established the sequential/summary pattern. In-place build updates are v0.2 (B-02), so
+  the batch covers addons only. Two scope questions were confirmed with the product owner.
+- **Decision**:
+  - `UpdatesController.applyUpdates(List<AddonUpdate>)` runs the selected items sequentially via
+    `AddonsController.update` (each one a job through the shared queue), tracks
+    `applying`/`applyCompleted`/`applyTotal`/`applyCurrentAddonId`, is failure-tolerant and
+    returns an `AddonUpdateApplySummary` (updated/failed + error per item).
+  - The summary sheet pre-checks every outdated addon, offers per-item toggles and an
+    "Update selected (N)" button; while running it shows aggregate progress and the current
+    addon; afterwards it shows "N updated"/"M failed" with "Retry failed" (reruns only the
+    failures). Toggle state is UI-local (`_unchecked`), so newly detected updates start checked
+    and failures stay checked after a run.
+  - Build entries remain informational (no update action until B-02); pinned addons never reach
+    the list (D-056); nothing runs without an explicit confirmation.
+- **Consequences**: no new persistence or schema; per-item jobs are visible in the status bar and
+  jobs dialog as usual; after a successful run the outdated list shrinks reactively while the
+  summary remains visible in the sheet.
+- **Refs**: spec 03 §3.6, spec 02 FR-10.3/10.4, `lib/state/updates_controller.dart`,
+  `lib/ui/updates/updates_summary_sheet.dart`, `TASKS.md` M6-03, D-008, D-043, D-046, D-056,
+  D-057

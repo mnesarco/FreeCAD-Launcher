@@ -33,6 +33,10 @@ class UpdatesController {
   final checking = signal(false);
   final addonLastCheckedAt = signal<DateTime?>(null);
   final buildLastCheckedAt = signal<DateTime?>(null);
+  final applying = signal(false);
+  final applyCompleted = signal(0);
+  final applyTotal = signal(0);
+  final applyCurrentAddonId = signal<String?>(null);
 
   late final lastCheckedAt = computed<DateTime?>(() {
     final addon = addonLastCheckedAt.value;
@@ -58,7 +62,10 @@ class UpdatesController {
       if (addon == null) {
         continue;
       }
-      final branch = _addons.branchOf(addon, installed.gitRef ?? addon.primaryBranch.gitRef);
+      final branch = _addons.branchOf(
+        addon,
+        installed.gitRef ?? addon.primaryBranch.gitRef,
+      );
       final changed = addonContentChanged(
         catalogLastUpdate: branch.lastUpdateTime,
         catalogVersion: branch.metadata?.version,
@@ -80,7 +87,9 @@ class UpdatesController {
       );
     }
     result.sort((a, b) {
-      final byName = a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase());
+      final byName = a.displayName.toLowerCase().compareTo(
+        b.displayName.toLowerCase(),
+      );
       if (byName != 0) {
         return byName;
       }
@@ -149,6 +158,40 @@ class UpdatesController {
   List<AddonUpdate> forProfile(String profileId) =>
       outdatedByProfile.value[profileId] ?? const [];
 
+  Future<AddonUpdateApplySummary> applyUpdates(
+    List<AddonUpdate> updates,
+  ) async {
+    applying.value = true;
+    applyTotal.value = updates.length;
+    applyCompleted.value = 0;
+    applyCurrentAddonId.value = null;
+    final results = <AddonUpdateApplyResult>[];
+    try {
+      for (final update in updates) {
+        applyCurrentAddonId.value = update.addonId;
+        final result = await _addons.update(
+          addonId: update.addonId,
+          branchRef: update.branchRef,
+          profileId: update.profileId,
+        );
+        results.add(
+          AddonUpdateApplyResult(
+            update: update,
+            status: result.isOk
+                ? AddonUpdateApplyStatus.updated
+                : AddonUpdateApplyStatus.failed,
+            error: result.isErr ? '${result.errorOrNull}' : null,
+          ),
+        );
+        applyCompleted.value = results.length;
+      }
+    } finally {
+      applying.value = false;
+      applyCurrentAddonId.value = null;
+    }
+    return AddonUpdateApplySummary(results);
+  }
+
   void start() {
     if (_started) {
       return;
@@ -176,21 +219,29 @@ class UpdatesController {
       if (!_addons.loaded.value && !_addons.loading.value) {
         await _addons.load();
       }
-      if (_builds.availableBuilds.value.isEmpty && !_builds.loadingCatalog.value) {
+      if (_builds.availableBuilds.value.isEmpty &&
+          !_builds.loadingCatalog.value) {
         await _builds.loadCatalog();
       }
       final addonsReachable =
           _addons.addons.value.isNotEmpty || _addons.error.value == null;
       final buildsReachable =
-          _builds.availableBuilds.value.isNotEmpty || _builds.catalogError.value == null;
+          _builds.availableBuilds.value.isNotEmpty ||
+          _builds.catalogError.value == null;
       if (!addonsReachable && !buildsReachable) {
         return null;
       }
       final now = _clock();
       addonLastCheckedAt.value = now;
       buildLastCheckedAt.value = now;
-      await _settingsDao.setValue(addonUpdateLastCheckedKey, now.toIso8601String());
-      await _settingsDao.setValue(buildUpdateLastCheckedKey, now.toIso8601String());
+      await _settingsDao.setValue(
+        addonUpdateLastCheckedKey,
+        now.toIso8601String(),
+      );
+      await _settingsDao.setValue(
+        buildUpdateLastCheckedKey,
+        now.toIso8601String(),
+      );
       return outdatedCount.value;
     } finally {
       checking.value = false;
