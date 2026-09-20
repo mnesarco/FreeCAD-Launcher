@@ -36,8 +36,10 @@ class _AddonsViewState extends State<AddonsView> {
     super.didChangeDependencies();
     if (!_started) {
       _started = true;
-      AppScope.of(context).addons.start();
-      AppScope.of(context).profiles.start();
+      final services = AppScope.of(context);
+      services.addons.start();
+      services.profiles.start();
+      services.updates.start();
     }
   }
 
@@ -86,6 +88,20 @@ class _CatalogTab extends StatelessWidget {
   final TextEditingController searchController;
   final ValueChanged<Addon> onOpen;
 
+  Future<void> _checkUpdates(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final count = await AppScope.of(context).updates.check();
+    if (!context.mounted) {
+      return;
+    }
+    final message = switch (count) {
+      null => l10n.updatesCheckFailed,
+      0 => l10n.updatesNone,
+      final found => l10n.updatesBadge(found),
+    };
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -100,6 +116,12 @@ class _CatalogTab extends StatelessWidget {
     final versions = controller.freecadVersions.watch(context);
     final installedCounts = controller.installedCounts.watch(context);
     final query = controller.query.watch(context);
+    final updates = AppScope.of(context).updates;
+    final checking = updates.checking.watch(context);
+    final outdatedByAddon = <String, int>{};
+    for (final update in updates.outdated.watch(context)) {
+      outdatedByAddon[update.addonId] = (outdatedByAddon[update.addonId] ?? 0) + 1;
+    }
 
     Widget body;
     if (loading && addons.isEmpty) {
@@ -141,6 +163,7 @@ class _CatalogTab extends StatelessWidget {
           return _AddonCard(
             addon: addon,
             installedCount: installedCounts[addon.id] ?? 0,
+            updateCount: outdatedByAddon[addon.id] ?? 0,
             onTap: () => onOpen(addon),
           );
         },
@@ -189,6 +212,11 @@ class _CatalogTab extends StatelessWidget {
               const _FilterMenu(),
               const SizedBox(width: 4),
               IconButton(
+                icon: const Icon(Icons.system_update_alt),
+                tooltip: l10n.updatesCheck,
+                onPressed: checking ? null : () => _checkUpdates(context),
+              ),
+              IconButton(
                 icon: const Icon(Icons.refresh),
                 tooltip: l10n.addonsRefresh,
                 onPressed: loading ? null : () => controller.load(forceRefresh: true),
@@ -231,11 +259,13 @@ class _AddonCard extends StatelessWidget {
   const _AddonCard({
     required this.addon,
     required this.installedCount,
+    this.updateCount = 0,
     required this.onTap,
   });
 
   final Addon addon;
   final int installedCount;
+  final int updateCount;
   final VoidCallback onTap;
 
   @override
@@ -276,7 +306,14 @@ class _AddonCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (installedCount > 0)
+                  if (updateCount > 0)
+                    Chip(
+                      avatar: const Icon(Icons.system_update_alt, size: 16),
+                      label: Text(l10n.updatesBadge(updateCount)),
+                      backgroundColor: theme.colorScheme.tertiaryContainer,
+                      visualDensity: VisualDensity.compact,
+                    )
+                  else if (installedCount > 0)
                     Chip(
                       label: Text(l10n.addonsInstalledBadge),
                       visualDensity: VisualDensity.compact,
@@ -367,8 +404,10 @@ class _AddonDetailViewState extends State<AddonDetailView> {
         installedRows.any(
           (row) => row.profileId == profileId && row.addonId == currentAddon.id,
         );
+    final pinned =
+        profileId != null && controller.isPinned(profileId, currentAddon.id);
     final updateAvailable =
-        profileId != null && controller.isUpdateAvailable(profileId, currentAddon.id);
+        !pinned && profileId != null && controller.isUpdateAvailable(profileId, currentAddon.id);
     final installError = controller.installErrors.watch(context)[currentAddon.id];
     final requirementsError =
         controller.requirementsErrors.watch(context)[currentAddon.id];
@@ -489,7 +528,12 @@ class _AddonDetailViewState extends State<AddonDetailView> {
                         Row(
                           children: [
                             if (installedInSelected)
-                              if (updateAvailable)
+                              if (pinned)
+                                Chip(
+                                  avatar: const Icon(Icons.push_pin, size: 16),
+                                  label: Text(l10n.addonsPinned),
+                                )
+                              else if (updateAvailable)
                                 FilledButton.icon(
                                   onPressed: installing
                                       ? null

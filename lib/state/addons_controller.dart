@@ -245,6 +245,41 @@ class AddonsController {
     return null;
   }
 
+  bool isPinned(String profileId, String addonId) {
+    return installedFor(profileId, addonId)?.pinnedAt != null;
+  }
+
+  Future<Result<void>> pin({required String addonId, required String profileId}) {
+    return _setPinned(profileId: profileId, addonId: addonId, pinned: true);
+  }
+
+  Future<Result<void>> unpin({required String addonId, required String profileId}) {
+    return _setPinned(profileId: profileId, addonId: addonId, pinned: false);
+  }
+
+  Future<Result<void>> _setPinned({
+    required String profileId,
+    required String addonId,
+    required bool pinned,
+  }) async {
+    if (installedFor(profileId, addonId) == null) {
+      return const Err(AppError(message: 'Addon is not installed in this profile'));
+    }
+    try {
+      final updated = await _database.installedAddonsDao.setPinnedAt(
+        profileId,
+        addonId,
+        pinned ? _clock() : null,
+      );
+      if (updated == 0) {
+        return const Err(AppError(message: 'Addon is not installed in this profile'));
+      }
+      return const Ok(null);
+    } on Object catch (error) {
+      return Err(AppError.from(error, retryable: true));
+    }
+  }
+
   bool isUpdateAvailable(String profileId, String addonId) {
     final installed = installedFor(profileId, addonId);
     if (installed == null) {
@@ -300,6 +335,9 @@ class AddonsController {
   }) async {
     if (installedFor(profileId, addonId) == null) {
       return const Err(AppError(message: 'Addon is not installed in this profile'));
+    }
+    if (isPinned(profileId, addonId)) {
+      return const Err(AppError(message: 'Addon is pinned; unpin it before updating'));
     }
     try {
       context?.report(detail: 'Backing up current addon');

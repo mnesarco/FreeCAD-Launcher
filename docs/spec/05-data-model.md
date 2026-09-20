@@ -67,6 +67,7 @@ removed on failure (D-028).
 | `catalogLastUpdate` | text? | catalog `last_update_time` at install time (update detection) |
 | `sourceUrl` | text? | zip URL used |
 | `hasRequirements` | bool | |
+| `pinnedAt` | text? | frozen version: non-null = pinned (checked per profile+addon row; each profile pins independently) |
 
 Index: unique `(profileId, addonId)`.
 
@@ -206,7 +207,7 @@ Validation on import: `schema == 1`, non-empty name, each `id` exists in the cat
   "exported_at": "2026-09-18T10:00:00Z",
   "source": { "os": "linux", "arch": "x86_64" },
   "profile": { "name": "My Profile", "build": "1.1.3", "channel": "stable", "python": "3.11" },
-  "addons": [{ "id": "A2plus", "git_ref": "master", "version": "0.4.60" }],
+  "addons": [{ "id": "A2plus", "git_ref": "master", "version": "0.4.60", "pinned": true }],
   "python_packages": [{ "name": "numpy", "version": "1.26.4", "source": "requirements" }],
   "bundles": ["Mechanical"],
   "config_files": ["user.cfg", "system.cfg"],
@@ -221,6 +222,8 @@ Notes:
   a detected Python, and otherwise lists every usable build in the preview with a warning.
 - `python_packages` are reinstalled from the manifest (source recorded; `addon:<id>` rows are
   covered by the addon install), not copied.
+- `addons[].pinned` (optional, default false) freezes that addon in the imported profile after
+  reinstall; pinning is per profile, so manifests from different profiles may disagree.
 - `config` is the optional embedded text of `user.cfg`/`system.cfg` (only these keys, ≤ 4 MiB),
   which makes "config intent" portable without addon payloads. Import writes it, rewrites
   `MacroPath` to the new profile's `Macros/` (D-053), and reports absolute paths found in the

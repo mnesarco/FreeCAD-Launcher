@@ -1748,6 +1748,17 @@ class $InstalledAddonsTable extends InstalledAddons
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _pinnedAtMeta = const VerificationMeta(
+    'pinnedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> pinnedAt = GeneratedColumn<DateTime>(
+    'pinned_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1761,6 +1772,7 @@ class $InstalledAddonsTable extends InstalledAddons
     catalogLastUpdate,
     sourceUrl,
     hasRequirements,
+    pinnedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1861,6 +1873,12 @@ class $InstalledAddonsTable extends InstalledAddons
         ),
       );
     }
+    if (data.containsKey('pinned_at')) {
+      context.handle(
+        _pinnedAtMeta,
+        pinnedAt.isAcceptableOrUnknown(data['pinned_at']!, _pinnedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -1918,6 +1936,10 @@ class $InstalledAddonsTable extends InstalledAddons
         DriftSqlType.bool,
         data['${effectivePrefix}has_requirements'],
       )!,
+      pinnedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}pinned_at'],
+      ),
     );
   }
 
@@ -1939,6 +1961,7 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
   final DateTime? catalogLastUpdate;
   final String? sourceUrl;
   final bool hasRequirements;
+  final DateTime? pinnedAt;
   const InstalledAddon({
     required this.id,
     required this.profileId,
@@ -1951,6 +1974,7 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
     this.catalogLastUpdate,
     this.sourceUrl,
     required this.hasRequirements,
+    this.pinnedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1974,6 +1998,9 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
       map['source_url'] = Variable<String>(sourceUrl);
     }
     map['has_requirements'] = Variable<bool>(hasRequirements);
+    if (!nullToAbsent || pinnedAt != null) {
+      map['pinned_at'] = Variable<DateTime>(pinnedAt);
+    }
     return map;
   }
 
@@ -1998,6 +2025,9 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
           ? const Value.absent()
           : Value(sourceUrl),
       hasRequirements: Value(hasRequirements),
+      pinnedAt: pinnedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pinnedAt),
     );
   }
 
@@ -2020,6 +2050,7 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
       ),
       sourceUrl: serializer.fromJson<String?>(json['sourceUrl']),
       hasRequirements: serializer.fromJson<bool>(json['hasRequirements']),
+      pinnedAt: serializer.fromJson<DateTime?>(json['pinnedAt']),
     );
   }
   @override
@@ -2037,6 +2068,7 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
       'catalogLastUpdate': serializer.toJson<DateTime?>(catalogLastUpdate),
       'sourceUrl': serializer.toJson<String?>(sourceUrl),
       'hasRequirements': serializer.toJson<bool>(hasRequirements),
+      'pinnedAt': serializer.toJson<DateTime?>(pinnedAt),
     };
   }
 
@@ -2052,6 +2084,7 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
     Value<DateTime?> catalogLastUpdate = const Value.absent(),
     Value<String?> sourceUrl = const Value.absent(),
     bool? hasRequirements,
+    Value<DateTime?> pinnedAt = const Value.absent(),
   }) => InstalledAddon(
     id: id ?? this.id,
     profileId: profileId ?? this.profileId,
@@ -2066,6 +2099,7 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
         : this.catalogLastUpdate,
     sourceUrl: sourceUrl.present ? sourceUrl.value : this.sourceUrl,
     hasRequirements: hasRequirements ?? this.hasRequirements,
+    pinnedAt: pinnedAt.present ? pinnedAt.value : this.pinnedAt,
   );
   InstalledAddon copyWithCompanion(InstalledAddonsCompanion data) {
     return InstalledAddon(
@@ -2088,6 +2122,7 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
       hasRequirements: data.hasRequirements.present
           ? data.hasRequirements.value
           : this.hasRequirements,
+      pinnedAt: data.pinnedAt.present ? data.pinnedAt.value : this.pinnedAt,
     );
   }
 
@@ -2104,7 +2139,8 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
           ..write('updatedAt: $updatedAt, ')
           ..write('catalogLastUpdate: $catalogLastUpdate, ')
           ..write('sourceUrl: $sourceUrl, ')
-          ..write('hasRequirements: $hasRequirements')
+          ..write('hasRequirements: $hasRequirements, ')
+          ..write('pinnedAt: $pinnedAt')
           ..write(')'))
         .toString();
   }
@@ -2122,6 +2158,7 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
     catalogLastUpdate,
     sourceUrl,
     hasRequirements,
+    pinnedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -2137,7 +2174,8 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
           other.updatedAt == this.updatedAt &&
           other.catalogLastUpdate == this.catalogLastUpdate &&
           other.sourceUrl == this.sourceUrl &&
-          other.hasRequirements == this.hasRequirements);
+          other.hasRequirements == this.hasRequirements &&
+          other.pinnedAt == this.pinnedAt);
 }
 
 class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
@@ -2152,6 +2190,7 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
   final Value<DateTime?> catalogLastUpdate;
   final Value<String?> sourceUrl;
   final Value<bool> hasRequirements;
+  final Value<DateTime?> pinnedAt;
   final Value<int> rowid;
   const InstalledAddonsCompanion({
     this.id = const Value.absent(),
@@ -2165,6 +2204,7 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
     this.catalogLastUpdate = const Value.absent(),
     this.sourceUrl = const Value.absent(),
     this.hasRequirements = const Value.absent(),
+    this.pinnedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   InstalledAddonsCompanion.insert({
@@ -2179,6 +2219,7 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
     this.catalogLastUpdate = const Value.absent(),
     this.sourceUrl = const Value.absent(),
     this.hasRequirements = const Value.absent(),
+    this.pinnedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        profileId = Value(profileId),
@@ -2198,6 +2239,7 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
     Expression<DateTime>? catalogLastUpdate,
     Expression<String>? sourceUrl,
     Expression<bool>? hasRequirements,
+    Expression<DateTime>? pinnedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2212,6 +2254,7 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
       if (catalogLastUpdate != null) 'catalog_last_update': catalogLastUpdate,
       if (sourceUrl != null) 'source_url': sourceUrl,
       if (hasRequirements != null) 'has_requirements': hasRequirements,
+      if (pinnedAt != null) 'pinned_at': pinnedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2228,6 +2271,7 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
     Value<DateTime?>? catalogLastUpdate,
     Value<String?>? sourceUrl,
     Value<bool>? hasRequirements,
+    Value<DateTime?>? pinnedAt,
     Value<int>? rowid,
   }) {
     return InstalledAddonsCompanion(
@@ -2242,6 +2286,7 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
       catalogLastUpdate: catalogLastUpdate ?? this.catalogLastUpdate,
       sourceUrl: sourceUrl ?? this.sourceUrl,
       hasRequirements: hasRequirements ?? this.hasRequirements,
+      pinnedAt: pinnedAt ?? this.pinnedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2282,6 +2327,9 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
     if (hasRequirements.present) {
       map['has_requirements'] = Variable<bool>(hasRequirements.value);
     }
+    if (pinnedAt.present) {
+      map['pinned_at'] = Variable<DateTime>(pinnedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2302,6 +2350,7 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
           ..write('catalogLastUpdate: $catalogLastUpdate, ')
           ..write('sourceUrl: $sourceUrl, ')
           ..write('hasRequirements: $hasRequirements, ')
+          ..write('pinnedAt: $pinnedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6008,6 +6057,7 @@ typedef $$InstalledAddonsTableCreateCompanionBuilder =
       Value<DateTime?> catalogLastUpdate,
       Value<String?> sourceUrl,
       Value<bool> hasRequirements,
+      Value<DateTime?> pinnedAt,
       Value<int> rowid,
     });
 typedef $$InstalledAddonsTableUpdateCompanionBuilder =
@@ -6023,6 +6073,7 @@ typedef $$InstalledAddonsTableUpdateCompanionBuilder =
       Value<DateTime?> catalogLastUpdate,
       Value<String?> sourceUrl,
       Value<bool> hasRequirements,
+      Value<DateTime?> pinnedAt,
       Value<int> rowid,
     });
 
@@ -6112,6 +6163,11 @@ class $$InstalledAddonsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<DateTime> get pinnedAt => $composableBuilder(
+    column: $table.pinnedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$ProfilesTableFilterComposer get profileId {
     final $$ProfilesTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -6195,6 +6251,11 @@ class $$InstalledAddonsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get pinnedAt => $composableBuilder(
+    column: $table.pinnedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$ProfilesTableOrderingComposer get profileId {
     final $$ProfilesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -6266,6 +6327,9 @@ class $$InstalledAddonsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<DateTime> get pinnedAt =>
+      $composableBuilder(column: $table.pinnedAt, builder: (column) => column);
+
   $$ProfilesTableAnnotationComposer get profileId {
     final $$ProfilesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -6331,6 +6395,7 @@ class $$InstalledAddonsTableTableManager
                 Value<DateTime?> catalogLastUpdate = const Value.absent(),
                 Value<String?> sourceUrl = const Value.absent(),
                 Value<bool> hasRequirements = const Value.absent(),
+                Value<DateTime?> pinnedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => InstalledAddonsCompanion(
                 id: id,
@@ -6344,6 +6409,7 @@ class $$InstalledAddonsTableTableManager
                 catalogLastUpdate: catalogLastUpdate,
                 sourceUrl: sourceUrl,
                 hasRequirements: hasRequirements,
+                pinnedAt: pinnedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -6359,6 +6425,7 @@ class $$InstalledAddonsTableTableManager
                 Value<DateTime?> catalogLastUpdate = const Value.absent(),
                 Value<String?> sourceUrl = const Value.absent(),
                 Value<bool> hasRequirements = const Value.absent(),
+                Value<DateTime?> pinnedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => InstalledAddonsCompanion.insert(
                 id: id,
@@ -6372,6 +6439,7 @@ class $$InstalledAddonsTableTableManager
                 catalogLastUpdate: catalogLastUpdate,
                 sourceUrl: sourceUrl,
                 hasRequirements: hasRequirements,
+                pinnedAt: pinnedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

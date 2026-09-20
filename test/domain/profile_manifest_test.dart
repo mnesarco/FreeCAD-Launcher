@@ -14,7 +14,7 @@ ProfileManifest sampleManifest() {
       python: '3.11',
     ),
     addons: const [
-      ManifestAddon(id: 'A2plus', gitRef: 'master', version: '0.4.60'),
+      ManifestAddon(id: 'A2plus', gitRef: 'master', version: '0.4.60', pinned: true),
       ManifestAddon(id: 'Fasteners'),
     ],
     pythonPackages: const [
@@ -49,7 +49,9 @@ void main() {
     expect(manifest.addons.length, 2);
     expect(manifest.addons.first.id, 'A2plus');
     expect(manifest.addons.first.gitRef, 'master');
+    expect(manifest.addons.first.pinned, isTrue);
     expect(manifest.addons.last.gitRef, isNull);
+    expect(manifest.addons.last.pinned, isFalse);
     expect(manifest.pythonPackages.first.source, 'requirements');
     expect(manifest.pythonPackages.last.version, isNull);
     expect(manifest.bundles, ['Mechanical']);
@@ -68,6 +70,7 @@ void main() {
       'id': 'A2plus',
       'git_ref': 'master',
       'version': '0.4.60',
+      'pinned': true,
     });
   });
 

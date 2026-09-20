@@ -122,7 +122,12 @@ class ProfileManifestController {
         ),
         addons: [
           for (final addon in addons)
-            ManifestAddon(id: addon.addonId, gitRef: addon.gitRef, version: addon.version),
+            ManifestAddon(
+              id: addon.addonId,
+              gitRef: addon.gitRef,
+              version: addon.version,
+              pinned: addon.pinnedAt != null,
+            ),
         ],
         pythonPackages: [
           for (final package in packages)
@@ -226,6 +231,9 @@ class ProfileManifestController {
         );
         if (result.isOk) {
           addonsInstalled.add(addon.id);
+          if (addon.pinned) {
+            await _database.installedAddonsDao.setPinnedAt(profile.id, addon.id, _clock());
+          }
         } else {
           addonsFailed.add('${addon.id}: ${result.errorOrNull}');
         }

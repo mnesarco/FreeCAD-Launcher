@@ -10,6 +10,7 @@ import 'package:freecad_launcher/ui/jobs/jobs_dialog.dart';
 import 'package:freecad_launcher/ui/macros/macros_view.dart';
 import 'package:freecad_launcher/ui/profiles/profiles_view.dart';
 import 'package:freecad_launcher/ui/settings/settings_view.dart';
+import 'package:freecad_launcher/ui/updates/updates_status_chip.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 
 class AppShell extends StatefulWidget {
@@ -142,6 +143,7 @@ class _StatusBar extends StatelessWidget {
               ),
             ),
           ],
+          const UpdatesStatusChip(),
           const Spacer(),
           Text(appVersion, style: theme.textTheme.labelSmall),
         ],

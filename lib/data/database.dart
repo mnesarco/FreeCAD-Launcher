@@ -52,7 +52,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.inMemory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -63,6 +63,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 3) {
         await m.addColumn(macros, macros.license);
         await m.addColumn(macros, macros.sizeBytes);
+      }
+      if (from < 4) {
+        await m.addColumn(installedAddons, installedAddons.pinnedAt);
       }
     },
     beforeOpen: (details) async {

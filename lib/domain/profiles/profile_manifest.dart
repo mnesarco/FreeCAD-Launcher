@@ -26,11 +26,12 @@ class ManifestProfileInfo {
 }
 
 class ManifestAddon {
-  const ManifestAddon({required this.id, this.gitRef, this.version});
+  const ManifestAddon({required this.id, this.gitRef, this.version, this.pinned = false});
 
   final String id;
   final String? gitRef;
   final String? version;
+  final bool pinned;
 }
 
 class ManifestPackage {
@@ -103,6 +104,7 @@ String encodeProfileManifest(ProfileManifest manifest) {
           'id': addon.id,
           if (addon.gitRef != null) 'git_ref': addon.gitRef,
           'version': addon.version,
+          if (addon.pinned) 'pinned': true,
         },
     ],
     'python_packages': [
@@ -208,6 +210,7 @@ Result<ProfileManifest> decodeProfileManifest(String text) {
           id: id,
           gitRef: _trimmedString(entry['git_ref']),
           version: _trimmedString(entry['version']),
+          pinned: entry['pinned'] == true,
         ),
       );
     }

@@ -41,6 +41,11 @@ class InstalledAddonsDao extends DatabaseAccessor<AppDatabase> with _$InstalledA
             ..where((t) => t.profileId.equals(profileId) & t.addonId.equals(addonId)))
           .go();
 
+  Future<int> setPinnedAt(String profileId, String addonId, DateTime? pinnedAt) =>
+      (update(installedAddons)
+            ..where((t) => t.profileId.equals(profileId) & t.addonId.equals(addonId)))
+          .write(InstalledAddonsCompanion(pinnedAt: Value(pinnedAt)));
+
   Future<int> deleteByProfile(String profileId) =>
       (delete(installedAddons)..where((t) => t.profileId.equals(profileId))).go();
 }

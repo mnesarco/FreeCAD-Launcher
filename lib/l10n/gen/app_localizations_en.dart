@@ -1228,4 +1228,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diagnosticsStatusNotApplicable => 'Not applicable';
+
+  @override
+  String get addonsPin => 'Pin version';
+
+  @override
+  String get addonsUnpin => 'Unpin version';
+
+  @override
+  String get addonsPinned => 'Pinned';
+
+  @override
+  String get addonsPinFailed => 'Could not change the pin';
+
+  @override
+  String get addonsUpdateBadge => 'Update available';
+
+  @override
+  String get updatesCheck => 'Check updates';
+
+  @override
+  String get updatesTitle => 'Updates available';
+
+  @override
+  String get updatesNone => 'No updates found';
+
+  @override
+  String get updatesCheckFailed => 'Could not check for updates';
+
+  @override
+  String updatesLastChecked(String when) {
+    return 'Last checked: $when';
+  }
+
+  @override
+  String updatesBadge(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count updates',
+      one: '1 update',
+      zero: 'No updates',
+    );
+    return '$_temp0';
+  }
 }

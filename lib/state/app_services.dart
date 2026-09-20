@@ -39,6 +39,7 @@ import 'package:freecad_launcher/state/profile_manifest_controller.dart';
 import 'package:freecad_launcher/state/profiles_controller.dart';
 import 'package:freecad_launcher/state/python_controller.dart';
 import 'package:freecad_launcher/state/settings_controller.dart';
+import 'package:freecad_launcher/state/updates_controller.dart';
 
 class AppServices {
   AppServices({
@@ -50,12 +51,14 @@ class AppServices {
     AddonsController? addonsController,
     MacrosController? macrosController,
     ProfileManifestController? manifestsController,
+    UpdatesController? updatesController,
   }) : processRunner = processRunner ?? ProcessRunner(),
        _httpClient = httpClient,
        _buildsControllerOverride = buildsController,
        _addonsControllerOverride = addonsController,
        _macrosControllerOverride = macrosController,
-       _manifestsControllerOverride = manifestsController;
+       _manifestsControllerOverride = manifestsController,
+       _updatesControllerOverride = updatesController;
 
   final AppPaths paths;
   final AppDatabase database;
@@ -66,6 +69,7 @@ class AppServices {
   final AddonsController? _addonsControllerOverride;
   final MacrosController? _macrosControllerOverride;
   final ProfileManifestController? _manifestsControllerOverride;
+  final UpdatesController? _updatesControllerOverride;
 
   late final http.Client _client = _httpClient ?? http.Client();
 
@@ -226,6 +230,10 @@ class AppServices {
     pythonResolver: pythonEnvResolver,
     jobs: jobs,
   );
+
+  late final UpdatesController updates =
+      _updatesControllerOverride ??
+      UpdatesController(addons: addons, settingsDao: database.settingsDao);
 
   late final ProfileManifestController manifests =
       _manifestsControllerOverride ??

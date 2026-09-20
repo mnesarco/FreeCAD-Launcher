@@ -2367,6 +2367,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not applicable'**
   String get diagnosticsStatusNotApplicable;
+
+  /// No description provided for @addonsPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin version'**
+  String get addonsPin;
+
+  /// No description provided for @addonsUnpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin version'**
+  String get addonsUnpin;
+
+  /// No description provided for @addonsPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get addonsPinned;
+
+  /// No description provided for @addonsPinFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change the pin'**
+  String get addonsPinFailed;
+
+  /// No description provided for @addonsUpdateBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get addonsUpdateBadge;
+
+  /// No description provided for @updatesCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Check updates'**
+  String get updatesCheck;
+
+  /// No description provided for @updatesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates available'**
+  String get updatesTitle;
+
+  /// No description provided for @updatesNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No updates found'**
+  String get updatesNone;
+
+  /// No description provided for @updatesCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check for updates'**
+  String get updatesCheckFailed;
+
+  /// No description provided for @updatesLastChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Last checked: {when}'**
+  String updatesLastChecked(String when);
+
+  /// No description provided for @updatesBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No updates} =1{1 update} other{{count} updates}}'**
+  String updatesBadge(int count);
 }
 
 class _AppLocalizationsDelegate

@@ -743,6 +743,7 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
               gitRef: row.gitRef,
               version: row.version,
               catalogLastUpdate: row.catalogLastUpdate,
+              pinned: row.pinnedAt != null,
             ),
       ],
     );
@@ -905,6 +906,7 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
       return l10n.bundlesApplyBranchMissing(item.branchRef ?? '');
     }
     final parts = [
+      if (item.pinned) l10n.addonsPinned,
       if (item.branchRef != null) item.branchRef!,
       if (item.action == BundleItemAction.update && item.catalogVersion != null)
         '${item.installedVersion ?? '?'} → ${item.catalogVersion}',

@@ -277,6 +277,10 @@ class _ProfileAddonsTab extends StatelessWidget {
       ..sort(
         (a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()),
       );
+    final outdatedIds = {
+      for (final update in AppScope.of(context).updates.outdated.watch(context))
+        if (update.profileId == profileId) update.addonId,
+    };
 
     if (installed.isEmpty) {
       return EmptyState(
@@ -297,12 +301,48 @@ class _ProfileAddonsTab extends StatelessWidget {
           if ((addon.gitRef ?? '').isNotEmpty) addon.gitRef!,
           formatProfileDateTime(l10n, addon.installedAt),
         ].join('  ·  ');
+        final pinned = addon.pinnedAt != null;
         return ListTile(
           leading: const Icon(Icons.extension_outlined),
           title: Text(addon.displayName),
           subtitle: Text(subtitle),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (outdatedIds.contains(addon.addonId))
+                Chip(
+                  label: Text(l10n.addonsUpdateBadge),
+                  visualDensity: VisualDensity.compact,
+                ),
+              if (pinned)
+                Chip(
+                  avatar: const Icon(Icons.push_pin, size: 16),
+                  label: Text(l10n.addonsPinned),
+                  visualDensity: VisualDensity.compact,
+                ),
+              IconButton(
+                tooltip: pinned ? l10n.addonsUnpin : l10n.addonsPin,
+                icon: Icon(pinned ? Icons.push_pin : Icons.push_pin_outlined),
+                onPressed: () => _togglePin(context, addon),
+              ),
+            ],
+          ),
         );
       },
+    );
+  }
+
+  Future<void> _togglePin(BuildContext context, InstalledAddon addon) async {
+    final l10n = AppLocalizations.of(context);
+    final controller = AppScope.of(context).addons;
+    final result = addon.pinnedAt == null
+        ? await controller.pin(addonId: addon.addonId, profileId: addon.profileId)
+        : await controller.unpin(addonId: addon.addonId, profileId: addon.profileId);
+    if (!context.mounted || result.isOk) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${l10n.addonsPinFailed}: ${result.errorOrNull}')),
     );
   }
 }

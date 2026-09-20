@@ -109,6 +109,9 @@ FCL_REAL_ISOLATION=1 flutter test test/manual/isolation_e2e_linux_test.dart
 ### M6 — Updates and polish
 
 - [ ] Addon and build update badges appear only when newer content exists
+- [ ] Pinned addons never badge or update in that profile; other profiles still see their own
+      updates; bundle apply reports them as skipped; the v3 → v4 migration opens an old DB
+- [ ] Manifest export/import round-trips pinned addons
 - [ ] Batch update applies only confirmed items and reports per-item results
 - [ ] All screens pass the state checklist below
 - [ ] Keyboard shortcuts from `../spec/03-ux.md` §4 work

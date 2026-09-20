@@ -496,5 +496,30 @@
   "diagnosticsStatusOk": "OK",
   "diagnosticsStatusWarning": "Warning",
   "diagnosticsStatusError": "Error",
-  "diagnosticsStatusNotApplicable": "Not applicable"
+  "diagnosticsStatusNotApplicable": "Not applicable",
+  "addonsPin": "Pin version",
+  "addonsUnpin": "Unpin version",
+  "addonsPinned": "Pinned",
+  "addonsPinFailed": "Could not change the pin",
+  "addonsUpdateBadge": "Update available",
+  "updatesCheck": "Check updates",
+  "updatesTitle": "Updates available",
+  "updatesNone": "No updates found",
+  "updatesCheckFailed": "Could not check for updates",
+  "updatesLastChecked": "Last checked: {when}",
+  "@updatesLastChecked": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "updatesBadge": "{count, plural, =0{No updates} =1{1 update} other{{count} updates}}",
+  "@updatesBadge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

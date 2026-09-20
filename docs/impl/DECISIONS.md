@@ -1098,3 +1098,55 @@ Template:
   `lib/domain/profiles/profile_manifest.dart`, `lib/state/profile_manifest_controller.dart`,
   `lib/ui/profiles/profile_manifest_dialogs.dart`, `TASKS.md` M5-07, D-028, D-041, D-046, D-047,
   D-053
+
+### D-056 — Addon pinning/freeze per profile (M6-10)
+- **Date**: 2026-09-20
+- **Status**: Accepted
+- **Context**: users need to freeze an addon version in a profile so a working setup is not
+  changed by update checks or bundle apply (FR-4.10, requested mid-M6). Addons live per profile
+  (`<profile>/Mod/<id>`, unique row per `(profileId, addonId)`), so a pin is naturally scoped to
+  one profile; different profiles may install/pin different branches or versions of the same addon.
+- **Decision**:
+  - `installed_addons.pinnedAt` (nullable timestamp, schema v4 via `onUpgrade` addColumn) — pinned
+    means non-null; pin records the moment, unpin clears it. `AddonsController.pin`/`unpin`
+    return `Result`; `installedAddons` keeps the rows, so `isPinned(profileId, addonId)` is cheap.
+  - Hard freeze: `UpdatesController.outdated` skips pinned rows (no badge anywhere for that
+    profile; other profiles still badge); `AddonsController.update` refuses pinned addons with an
+    explicit error (unpin first); `planBundleApply` maps a pinned installed entry to `skip` with
+    `pinned: true` (never update); the catalog detail hides Update and shows a Pinned chip for the
+    selected profile; the profile Addons tab shows a Pinned chip plus a pin/unpin action.
+  - The manifest carries `addons[].pinned` (additive optional field, schema 1); import reinstalls
+    and re-pins those ids. Pin is per profile, so two manifests may disagree without conflict.
+- **Consequences**: schema v4 (drift migration), update flow (D-040) unchanged for unpinned
+  addons, M6-01 badges respect pinning, bundle preview shows pinned items as skipped. Pinning is
+  not a semver range — it freezes at the installed version until unpinned/reinstalled.
+- **Refs**: spec 02 FR-4.10, spec 03 §2.3/§2.4/§3.6, spec 05 §3/§4.2,
+  `lib/data/tables/installed_addons.dart`, `lib/state/addons_controller.dart`,
+  `lib/domain/bundles/bundle_planner.dart`, `TASKS.md` M6-10, D-005, D-039, D-040, D-046, D-055
+
+### D-057 — Addon update checks and badges via a dedicated UpdatesController (M6-01)
+- **Date**: 2026-09-20
+- **Status**: Accepted
+- **Context**: FR-10.1/10.4 require checking addon updates against the cached catalog, badging
+  affected profiles/addons, a "Check" action and cached timestamps. D-040 already defines the
+  pure update rule and the per-item update flow; M6-02 (builds) and M6-03 (batch) will extend the
+  same surface. Four scope questions were confirmed with the product owner.
+- **Decision**:
+  - New `UpdatesController` (`state/updates_controller.dart`) aggregates addon update state:
+    `outdated`/`outdatedByProfile` computed from the catalog + `installed_addons` (so it reacts
+    to installs, removals and catalog loads), plus `checking` and `lastCheckedAt` signals.
+  - `check()` recomputes against the already-cached catalog (loads it only when absent), never
+    forces a network refresh, persists `updates.addons.lastCheckedAt` in `settings` and returns
+    the outdated count (null when the catalog is unavailable). Notify-only; no auto-install.
+  - Badges everywhere: status-bar `N updates` chip opening a summary sheet (grouped by profile,
+    version change + branch, last-checked line, Check button), profile cards, the profile Addons
+    tab rows, and Addons catalog cards (a check action lives in the catalog header). Pinned
+    addons (D-056) are excluded per profile.
+  - M6-02 adds builds to `UpdatesController`; M6-03 consumes the same state for batch updates.
+- **Consequences**: update state is derived, so no duplicate persistence beyond the timestamp;
+  the status-bar chip appears as soon as a loaded catalog detects outdated rows, even before the
+  first explicit check; the summary sheet is informational (per-item update stays in the addon
+  detail until M6-03).
+- **Refs**: spec 02 FR-10.1/10.3/10.4, spec 03 §1/§2.2/§2.3/§2.4/§3.6,
+  `lib/state/updates_controller.dart`, `lib/ui/updates/updates_summary_sheet.dart`,
+  `TASKS.md` M6-01, D-008, D-040, D-056

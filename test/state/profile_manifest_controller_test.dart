@@ -123,6 +123,11 @@ void main() {
       await db.installedAddonsDao.save(
         sampleAddon(profileId: profile.id, addonId: 'A2plus', version: '0.4.60'),
       );
+      await db.installedAddonsDao.setPinnedAt(
+        profile.id,
+        'A2plus',
+        DateTime.utc(2026, 9, 20, 9),
+      );
       await db.pythonPackagesDao.save(
         samplePackage(profileId: profile.id, name: 'numpy', source: 'requirements'),
       );
@@ -151,6 +156,7 @@ void main() {
       expect(manifest.profile.python, '3.11');
       expect(manifest.addons.single.id, 'A2plus');
       expect(manifest.addons.single.version, '0.4.60');
+      expect(manifest.addons.single.pinned, isTrue);
       expect(manifest.pythonPackages.single.name, 'numpy');
       expect(manifest.pythonPackages.single.source, 'requirements');
       expect(manifest.bundles, ['Mechanical']);
@@ -230,6 +236,14 @@ void main() {
                   installRequirements: installRequirements,
                 ),
               );
+              await db.installedAddonsDao.save(
+                sampleAddon(
+                  id: 'row-$addonId',
+                  profileId: profileId,
+                  addonId: addonId,
+                  gitRef: branchRef,
+                ),
+              );
               return const Ok(null);
             },
         installPackages:
@@ -244,7 +258,7 @@ void main() {
         name: 'Dev',
         configPath: '/home/ana/tools',
         addons: const [
-          ManifestAddon(id: 'A2plus', gitRef: 'master'),
+          ManifestAddon(id: 'A2plus', gitRef: 'master', pinned: true),
           ManifestAddon(id: 'Fasteners'),
         ],
         packages: const [
@@ -288,6 +302,14 @@ void main() {
       expect(requirementsCall.specText, 'numpy==1.26.4');
       final manualCall = packageCalls.firstWhere((call) => call.source == 'manual');
       expect(manualCall.specText, 'six');
+
+      final pinnedRow = await db.installedAddonsDao.getByAddon(outcome.profile.id, 'A2plus');
+      expect(pinnedRow!.pinnedAt, isNotNull);
+      final unpinnedRow = await db.installedAddonsDao.getByAddon(
+        outcome.profile.id,
+        'Fasteners',
+      );
+      expect(unpinnedRow!.pinnedAt, isNull);
 
       final configFile = File(paths.profilePaths(outcome.profile.id).userCfg);
       final config = configFile.readAsStringSync();

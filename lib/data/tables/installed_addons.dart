@@ -26,6 +26,8 @@ class InstalledAddons extends Table {
 
   BoolColumn get hasRequirements => boolean().withDefault(const Constant(false))();
 
+  DateTimeColumn get pinnedAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 

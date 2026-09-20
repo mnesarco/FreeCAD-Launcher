@@ -16,12 +16,14 @@ class BundlePlanInstalledAddon {
     this.gitRef,
     this.version,
     this.catalogLastUpdate,
+    this.pinned = false,
   });
 
   final String addonId;
   final String? gitRef;
   final String? version;
   final DateTime? catalogLastUpdate;
+  final bool pinned;
 }
 
 enum BundleItemAction { install, update, skip, unavailable }
@@ -35,6 +37,7 @@ class BundleApplyPlanItem {
     this.installedVersion,
     this.catalogVersion,
     this.hasRequirements = false,
+    this.pinned = false,
   });
 
   final String addonId;
@@ -44,6 +47,7 @@ class BundleApplyPlanItem {
   final String? installedVersion;
   final String? catalogVersion;
   final bool hasRequirements;
+  final bool pinned;
 
   bool get isActionable =>
       action == BundleItemAction.install || action == BundleItemAction.update;
@@ -129,7 +133,20 @@ BundleApplyPlan planBundleApply({
       installedCatalogLastUpdate: row.catalogLastUpdate,
       installedVersion: row.version,
     );
-    if (branchChanged || contentChanged) {
+    if (row.pinned) {
+      items.add(
+        BundleApplyPlanItem(
+          addonId: entry.addonId,
+          action: BundleItemAction.skip,
+          addonName: addon.displayName,
+          branchRef: targetRef,
+          installedVersion: row.version,
+          catalogVersion: branch.metadata?.version,
+          hasRequirements: hasRequirements,
+          pinned: true,
+        ),
+      );
+    } else if (branchChanged || contentChanged) {
       items.add(
         BundleApplyPlanItem(
           addonId: entry.addonId,

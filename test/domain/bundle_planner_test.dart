@@ -142,4 +142,24 @@ void main() {
     expect(plan.hasRequirements, isTrue);
     expect(plan.items.single.hasRequirements, isTrue);
   });
+
+  test('skips pinned addons even when an update is available', () {
+    final plan = planBundleApply(
+      entries: const [BundlePlanEntry(addonId: 'A2plus', gitRef: 'dev')],
+      catalog: [addon('A2plus', version: '2.0.0', branches: const ['master', 'dev'])],
+      installed: const [
+        BundlePlanInstalledAddon(
+          addonId: 'A2plus',
+          gitRef: 'master',
+          version: '1.0.0',
+          pinned: true,
+        ),
+      ],
+    );
+
+    final item = plan.items.single;
+    expect(item.action, BundleItemAction.skip);
+    expect(item.pinned, isTrue);
+    expect(plan.actionable, isEmpty);
+  });
 }

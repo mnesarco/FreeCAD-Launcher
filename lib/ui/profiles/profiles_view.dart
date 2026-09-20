@@ -142,6 +142,8 @@ class _ProfileCard extends StatelessWidget {
     final build = builds[profile.buildId];
     final running = controller.runningProfiles.watch(context).contains(profile.id);
     final addons = controller.addonCounts.watch(context)[profile.id] ?? 0;
+    final updatesOutdated =
+        AppScope.of(context).updates.outdatedByProfile.watch(context)[profile.id]?.length ?? 0;
     final packages = controller.packageCounts.watch(context)[profile.id] ?? 0;
     final size = controller.profileSizes.watch(context)[profile.id];
 
@@ -186,6 +188,14 @@ class _ProfileCard extends StatelessWidget {
                       ? l10n.profilesStatusMissing
                       : l10n.profilesStatusBroken,
                 ),
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+            if (updatesOutdated > 0) ...[
+              const SizedBox(width: 8),
+              Chip(
+                avatar: const Icon(Icons.system_update_alt, size: 16),
+                label: Text(l10n.updatesBadge(updatesOutdated)),
                 visualDensity: VisualDensity.compact,
               ),
             ],

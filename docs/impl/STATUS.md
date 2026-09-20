@@ -4,12 +4,12 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-20
-- **Current milestone**: M5 — Collections, macros, config, export complete (S4, M5-01..M5-08
-  done); next: M6 — Updates and polish (M6-01)
+- **Current milestone**: M6 — Updates and polish (M6-10 pinning and M6-01 addon update
+  badges done); next: M6-02 — build update checks + badges
 - **Active branch**: `v2`
 - **Last session**: 2026-09-20
-- **Next action**: start `M6-01` (addon update checks + badges in the profile and addon list);
-  manual M4/M5 UI click-throughs and the Windows/macOS manual checks remain open.
+- **Next action**: start `M6-02` (build update checks + badges, stable channel); manual M4/M5 UI
+  click-throughs and the Windows/macOS manual checks remain open.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -192,7 +192,20 @@
     bytes/speed, stage + Cancel) and overflowed the tile bottom; the progress bar/stage/detail now
     live in the subtitle (which grows the tile) with only Cancel in the trailing. Regression widget
     test `test/ui/builds_view_test.dart` overflows on the old layout.
-  - 420 tests green (8 manual probes skipped), analyze clean, app builds and launches.
+  - M6-10 — **D-056**: addon pinning/freeze per profile: schema v4 (`installed_addons.pinnedAt`
+    + migration), `AddonsController.pin`/`unpin`, hard freeze (update blocked, `UpdatesController`
+    skips pinned rows, `planBundleApply` reports pinned as skip), pin/unpin UI in the profile
+    Addons tab, Pinned chip in the catalog detail, `addons[].pinned` in the manifest (export and
+    import re-pin). Per-profile scope: other profiles still see their own updates.
+  - M6-01 — **D-057**: `UpdatesController` (addon checks against the cached catalog, per-profile
+    `outdated`/`outdatedByProfile`, persisted `updates.addons.lastCheckedAt`) and badges on all
+    surfaces: status-bar chip + summary sheet (grouped by profile, Check action), profile cards,
+    profile Addons tab rows and catalog cards, plus a Check action in the addons header.
+    Notify-only, no auto-install; pinned addons are excluded per profile.
+  - 428 tests green (8 manual probes skipped), analyze clean, app builds and launches. Runtime
+    visual pass via the Dart/Flutter MCP/VM service on the real dev DB: v3 → v4 migration applied,
+    badge rendered with an aged unpinned addon and disappeared when only a pinned addon was
+    outdated (temporary dev-data changes were restored exactly afterwards).
 
 ## Session log
 
@@ -256,6 +269,8 @@
 | 2026-09-19 | M4 | D-043 job queue (controller, cancel/retry, status bar + jobs dialog) and wiring for builds/addons/pip | M4-08 | `docs/impl/DECISIONS.md`, `docs/impl/TASKS.md`, `lib/domain/jobs/job_types.dart`, `lib/state/jobs_controller.dart`, `lib/state/*_controller.dart`, `lib/state/app_services.dart`, `lib/core/cancellation.dart`, `lib/platform/addon_installer.dart`, `lib/ui/jobs/jobs_dialog.dart`, `lib/ui/shell/app_shell.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-20 | M5 | D-055 profile manifest export/import (codec, controller, UI, cross-OS test); M5 complete | M5-07 | `docs/impl/DECISIONS.md`, `docs/spec/05-data-model.md`, `lib/domain/profiles/profile_manifest.dart`, `lib/state/profile_manifest_controller.dart`, `lib/state/python_controller.dart`, `lib/state/app_services.dart`, `lib/ui/profiles/profile_manifest_dialogs.dart`, `lib/ui/profiles/profiles_view.dart`, `lib/ui/profiles/config_snapshots_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-20 | Fix | Versions/Available install progress moved into the tile subtitle, fixing bottom overflow | Fix | `lib/ui/builds/builds_view.dart`, `test/ui/builds_view_test.dart` |
+| 2026-09-20 | M6 | D-056 addon pinning per profile (schema v4, pin/unpin UI, update block, bundle skip, manifest) | M6-10 | `docs/impl/DECISIONS.md`, `docs/spec/02-requirements.md`, `docs/spec/03-ux.md`, `docs/spec/05-data-model.md`, `lib/data/**`, `lib/domain/addons/addon_update.dart`, `lib/domain/bundles/bundle_planner.dart`, `lib/domain/profiles/profile_manifest.dart`, `lib/state/**`, `lib/ui/**`, `lib/l10n/**`, `test/**` |
+| 2026-09-20 | M6 | D-057 addon update checks + badges on all surfaces (UpdatesController, status-bar sheet, profile/addon badges, check action) | M6-01 | `docs/impl/DECISIONS.md`, `docs/impl/VERIFICATION.md`, `docs/spec/03-ux.md`, `lib/domain/addons/addon_update.dart`, `lib/state/updates_controller.dart`, `lib/state/app_services.dart`, `lib/ui/updates/**`, `lib/ui/shell/app_shell.dart`, `lib/ui/profiles/**`, `lib/ui/addons/addons_view.dart`, `lib/l10n/**`, `test/**` |
 
 ## Standing notes for the next agent
 

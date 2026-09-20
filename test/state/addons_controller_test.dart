@@ -461,6 +461,48 @@ void main() {
     subject.dispose();
   });
 
+  test('pins and unpins an installed addon, blocking updates while pinned', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [addon('A2plus')],
+      freshness: CatalogFreshness.fresh,
+    );
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    await db.installedAddonsDao.save(sampleAddon(addonId: 'A2plus'));
+    final subject = controller();
+    await subject.load();
+    subject.start();
+    await pumpEventQueue();
+
+    expect(subject.isPinned('profile-1', 'A2plus'), isFalse);
+    expect((await subject.pin(addonId: 'A2plus', profileId: 'profile-1')).isOk, isTrue);
+    await pumpEventQueue();
+    expect(subject.isPinned('profile-1', 'A2plus'), isTrue);
+    expect(
+      (await db.installedAddonsDao.getByAddon('profile-1', 'A2plus'))!.pinnedAt,
+      DateTime.utc(2026, 9, 19, 16),
+    );
+
+    final update = await subject.update(
+      addonId: 'A2plus',
+      branchRef: 'master',
+      profileId: 'profile-1',
+    );
+    expect(update.isErr, isTrue);
+    expect('${update.errorOrNull}', contains('pinned'));
+
+    expect((await subject.unpin(addonId: 'A2plus', profileId: 'profile-1')).isOk, isTrue);
+    await pumpEventQueue();
+    expect(subject.isPinned('profile-1', 'A2plus'), isFalse);
+    expect(
+      (await db.installedAddonsDao.getByAddon('profile-1', 'A2plus'))!.pinnedAt,
+      isNull,
+    );
+
+    expect((await subject.pin(addonId: 'Nope', profileId: 'profile-1')).isErr, isTrue);
+    subject.dispose();
+  });
+
   test('installs declared requirements with pip and records the packages', () async {
     catalog.result = AddonCatalogResult(
       addons: [
