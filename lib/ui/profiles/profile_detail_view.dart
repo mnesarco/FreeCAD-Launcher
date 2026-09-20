@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -8,11 +9,13 @@ import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/ui/addons/addon_icon.dart';
 import 'package:freecad_launcher/ui/macros/installed_macros.dart';
 import 'package:freecad_launcher/ui/profiles/config_snapshots_view.dart';
 import 'package:freecad_launcher/ui/profiles/launch_command_dialog.dart';
 import 'package:freecad_launcher/ui/profiles/profile_actions.dart';
 import 'package:freecad_launcher/ui/profiles/profile_dialogs.dart';
+import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
 
@@ -102,7 +105,10 @@ class ProfileDetailView extends StatelessWidget {
                 _OverviewTab(profile: current, buildInfo: build),
                 _ProfileAddonsTab(profileId: current.id),
                 _ProfilePythonTab(profileId: current.id),
-                InstalledMacrosList(profileId: current.id),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: InstalledMacrosList(profileId: current.id),
+                ),
                 ProfileConfigTab(profileId: current.id),
                 ProfileBackupsTab(profileId: current.id),
               ],
@@ -147,11 +153,7 @@ class _DetailHeader extends StatelessWidget {
             child: Text(title, style: Theme.of(context).textTheme.titleLarge),
           ),
           if (running) ...[
-            Chip(
-              avatar: const Icon(Icons.play_arrow, size: 16),
-              label: Text(l10n.profilesRunning),
-              visualDensity: VisualDensity.compact,
-            ),
+            CompactBadge(icon: Icons.play_arrow, label: l10n.profilesRunning),
             const SizedBox(width: 8),
           ],
           if (onShowCommand != null)
@@ -286,10 +288,26 @@ class _OverviewTab extends StatelessWidget {
   }
 }
 
-class _ProfileAddonsTab extends StatelessWidget {
+class _ProfileAddonsTab extends StatefulWidget {
   const _ProfileAddonsTab({required this.profileId});
 
   final String profileId;
+
+  @override
+  State<_ProfileAddonsTab> createState() => _ProfileAddonsTabState();
+}
+
+class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_started) {
+      _started = true;
+      unawaited(AppScope.of(context).addons.ensureCachedCatalog());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -298,7 +316,7 @@ class _ProfileAddonsTab extends StatelessWidget {
     final installed =
         controller.installedAddons
             .watch(context)
-            .where((addon) => addon.profileId == profileId)
+            .where((addon) => addon.profileId == widget.profileId)
             .toList()
           ..sort(
             (a, b) => a.displayName.toLowerCase().compareTo(
@@ -307,7 +325,11 @@ class _ProfileAddonsTab extends StatelessWidget {
           );
     final outdatedIds = {
       for (final update in AppScope.of(context).updates.outdated.watch(context))
-        if (update.profileId == profileId) update.addonId,
+        if (update.profileId == widget.profileId) update.addonId,
+    };
+    final catalogById = {
+      for (final addon in AppScope.of(context).addons.addons.watch(context))
+        addon.id: addon,
     };
 
     if (installed.isEmpty) {
@@ -331,23 +353,19 @@ class _ProfileAddonsTab extends StatelessWidget {
         ].join('  ·  ');
         final pinned = addon.pinnedAt != null;
         return ListTile(
-          leading: const Icon(Icons.extension_outlined),
+          leading: AddonIcon(
+            base64Data: catalogById[addon.addonId]?.primaryBranch.metadata?.iconBase64,
+            size: 36,
+          ),
           title: Text(addon.displayName),
           subtitle: Text(subtitle),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (outdatedIds.contains(addon.addonId))
-                Chip(
-                  label: Text(l10n.addonsUpdateBadge),
-                  visualDensity: VisualDensity.compact,
-                ),
+                CompactBadge(label: l10n.addonsUpdateBadge),
               if (pinned)
-                Chip(
-                  avatar: const Icon(Icons.push_pin, size: 16),
-                  label: Text(l10n.addonsPinned),
-                  visualDensity: VisualDensity.compact,
-                ),
+                CompactBadge(icon: Icons.push_pin, label: l10n.addonsPinned),
               IconButton(
                 tooltip: pinned ? l10n.addonsUnpin : l10n.addonsPin,
                 icon: Icon(pinned ? Icons.push_pin : Icons.push_pin_outlined),

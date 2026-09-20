@@ -152,6 +152,16 @@ class AddonsController {
     }
   }
 
+  Future<void> ensureCachedCatalog() async {
+    if (loaded.value || loading.value || addons.value.isNotEmpty) {
+      return;
+    }
+    final cached = await _catalog.cachedAddons();
+    if (cached != null && cached.isNotEmpty) {
+      addons.value = cached;
+    }
+  }
+
   bool isCompatibleWith(Addon addon, String version) {
     final target = FreeCadVersion.tryParse(version);
     if (target == null) {

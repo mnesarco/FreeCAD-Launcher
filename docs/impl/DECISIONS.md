@@ -1190,10 +1190,11 @@ Template:
   - `InputDecorationThemeData` is revised: 4 px corner radius (supersedes the M4-09 8 px value),
     Flutter's dense default content padding, scheme-colored enabled/focused/error borders,
     `isDense: true`.
-  - Shared widgets in `lib/ui/widgets/form_row.dart`: `FormRow` (fixed 130 px label column with
+  - Shared widgets in `lib/ui/widgets/form_row.dart`: `FormRow` (fixed 195 px label column with
     optional icon and colon, 12 px gap, `Expanded` field, top alignment, 12 px bottom spacing)
     plus thin `FormTextField`/`FormDropdown` wrappers. Converted forms drop `labelText` and use
-    hints inside the field.
+    hints inside the field. The 195 px width (prototype value 130 px, widened ~50% on 2026-09-20
+    after visual review) keeps longer labels such as "Version label (optional):" on one line.
   - Applied to dialogs and inline labeled forms: profile create/edit + duplicate, custom build
     import (form constrained to 640 px), manifest import, bundle create/edit/apply/import, Python
     specs (multiline, label top-aligned), and the addon detail install-target picker. Labeled

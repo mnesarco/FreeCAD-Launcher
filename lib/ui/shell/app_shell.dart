@@ -6,6 +6,7 @@ import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/ui/addons/addons_view.dart';
 import 'package:freecad_launcher/ui/builds/builds_view.dart';
 import 'package:freecad_launcher/ui/home/home_view.dart';
+import 'package:freecad_launcher/ui/icons.dart';
 import 'package:freecad_launcher/ui/jobs/jobs_dialog.dart';
 import 'package:freecad_launcher/ui/macros/macros_view.dart';
 import 'package:freecad_launcher/ui/profiles/profiles_view.dart';
@@ -40,8 +41,8 @@ class _AppShellState extends State<AppShell> {
         view: const ProfilesView(),
       ),
       _Section(
-        icon: Icons.inventory_2_outlined,
-        selectedIcon: Icons.inventory_2,
+        icon: FreeCADIcons.freecad,
+        selectedIcon: FreeCADIcons.freecad,
         label: l10n.navVersions,
         view: const BuildsView(),
       ),

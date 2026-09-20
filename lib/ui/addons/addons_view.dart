@@ -12,6 +12,8 @@ import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/addons/addon_icon.dart';
 import 'package:freecad_launcher/ui/addons/collections_view.dart';
 import 'package:freecad_launcher/ui/addons/requirements_dialog.dart';
+import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
+import 'package:freecad_launcher/ui/widgets/compact_dropdown.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
 
@@ -215,6 +217,24 @@ class _CatalogTab extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
+              if (versions.isNotEmpty) ...[
+                IntrinsicWidth(
+                  child: CompactDropdown<String?>(
+                    value: freecadFilter,
+                    hint: Text(l10n.addonsFilterFreecad),
+                    items: [
+                      DropdownMenuItem(
+                        value: null,
+                        child: Text(l10n.addonsFilterAnyVersion),
+                      ),
+                      for (final version in versions)
+                        DropdownMenuItem(value: version, child: Text(version)),
+                    ],
+                    onChanged: controller.setFreecadFilter,
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
               const _FilterMenu(),
               const SizedBox(width: 4),
               IconButton(
@@ -232,30 +252,6 @@ class _CatalogTab extends StatelessWidget {
             ],
           ),
         ),
-        if (versions.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Wrap(
-              spacing: 12,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                _CompactDropdown<String?>(
-                  value: freecadFilter,
-                  hint: Text(l10n.addonsFilterFreecad),
-                  items: [
-                    DropdownMenuItem(
-                      value: null,
-                      child: Text(l10n.addonsFilterAnyVersion),
-                    ),
-                    for (final version in versions)
-                      DropdownMenuItem(value: version, child: Text(version)),
-                  ],
-                  onChanged: controller.setFreecadFilter,
-                ),
-              ],
-            ),
-          ),
         const SizedBox(height: 8),
         Expanded(child: body),
       ],
@@ -315,17 +311,13 @@ class _AddonCard extends StatelessWidget {
                     ),
                   ),
                   if (updateCount > 0)
-                    Chip(
-                      avatar: const Icon(Icons.system_update_alt, size: 16),
-                      label: Text(l10n.updatesBadge(updateCount)),
+                    CompactBadge(
+                      icon: Icons.system_update_alt,
+                      label: l10n.updatesBadge(updateCount),
                       backgroundColor: theme.colorScheme.tertiaryContainer,
-                      visualDensity: VisualDensity.compact,
                     )
                   else if (installedCount > 0)
-                    Chip(
-                      label: Text(l10n.addonsInstalledBadge),
-                      visualDensity: VisualDensity.compact,
-                    ),
+                    CompactBadge(label: l10n.addonsInstalledBadge),
                 ],
               ),
               const SizedBox(height: 8),
@@ -342,11 +334,7 @@ class _AddonCard extends StatelessWidget {
                   spacing: 4,
                   children: [
                     for (final tag in addon.tags.take(3))
-                      Chip(
-                        label: Text(tag, style: theme.textTheme.labelSmall),
-                        visualDensity: VisualDensity.compact,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
+                      CompactBadge(label: tag),
                   ],
                 ),
             ],
@@ -408,7 +396,9 @@ class _AddonDetailViewState extends State<AddonDetailView> {
       profileId = profiles.isEmpty ? null : profiles.first.id;
     }
     final currentAddon = addon;
-    final selectedRef = controller.branchRefFor(currentAddon);
+    final selectedBranches = controller.selectedBranches.watch(context);
+    final selectedRef =
+        selectedBranches[currentAddon.id] ?? currentAddon.primaryBranch.gitRef;
     final metadata = currentAddon.primaryBranch.metadata;
     final installedRows = controller.installedAddons.watch(context);
     final installedCount =
@@ -452,7 +442,7 @@ class _AddonDetailViewState extends State<AddonDetailView> {
               ),
               if (installedCount > 0) ...[
                 const SizedBox(height: 8),
-                Chip(label: Text(l10n.addonsInstalledIn(installedCount))),
+                CompactBadge(label: l10n.addonsInstalledIn(installedCount)),
               ],
               const SizedBox(height: 16),
               _InfoCard(
@@ -564,9 +554,9 @@ class _AddonDetailViewState extends State<AddonDetailView> {
                           children: [
                             if (installedInSelected)
                               if (pinned)
-                                Chip(
-                                  avatar: const Icon(Icons.push_pin, size: 16),
-                                  label: Text(l10n.addonsPinned),
+                                CompactBadge(
+                                  icon: Icons.push_pin,
+                                  label: l10n.addonsPinned,
                                 )
                               else if (updateAvailable)
                                 FilledButton.icon(
@@ -581,7 +571,7 @@ class _AddonDetailViewState extends State<AddonDetailView> {
                                   label: Text(l10n.addonsUpdate),
                                 )
                               else
-                                Chip(label: Text(l10n.addonsInstalledBadge))
+                                CompactBadge(label: l10n.addonsInstalledBadge)
                             else
                               FilledButton.icon(
                                 onPressed: canInstall
@@ -886,39 +876,6 @@ String _contentLabel(AppLocalizations l10n, AddonContentType content) {
     AddonContentType.bundle => l10n.addonsContentBundle,
     AddonContentType.other => l10n.addonsContentOther,
   };
-}
-
-class _CompactDropdown<T> extends StatelessWidget {
-  const _CompactDropdown({
-    required this.value,
-    this.hint,
-    required this.items,
-    required this.onChanged,
-  });
-
-  final T? value;
-  final Widget? hint;
-  final List<DropdownMenuItem<T>> items;
-  final ValueChanged<T?>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return InputDecorator(
-      decoration: const InputDecoration(
-        isDense: true,
-        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<T>(
-          value: value,
-          hint: hint,
-          isDense: true,
-          items: items,
-          onChanged: onChanged,
-        ),
-      ),
-    );
-  }
 }
 
 class _FilterMenu extends StatelessWidget {

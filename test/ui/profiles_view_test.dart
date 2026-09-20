@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/data/database.dart';
+import 'package:freecad_launcher/domain/addons/addon.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/ui/addons/addon_icon.dart';
 import 'package:freecad_launcher/ui/profiles/profiles_view.dart';
 import 'package:path/path.dart' as p;
 
@@ -167,6 +169,56 @@ void main() {
 
       expect(find.text('A2plus'), findsOneWidget);
       expect(find.textContaining('v0.4.68'), findsOneWidget);
+    });
+
+    testWidgets('shows the catalog icon for installed addons', (tester) async {
+      const iconBase64 =
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+      services.addons.addons.value = [
+        Addon(
+          id: 'A2plus',
+          branches: [
+            AddonBranch(
+              gitRef: 'master',
+              displayName: 'master',
+              repositoryUrl: 'https://example.invalid/A2plus',
+              zipUrl: 'https://example.invalid/A2plus.zip',
+              curated: true,
+              sparseCache: false,
+              metadata: AddonMetadata(
+                name: 'A2plus',
+                description: '',
+                version: '0.4.68',
+                license: 'MIT',
+                minPython: '3.10',
+                tags: const [],
+                people: const [],
+                content: const {AddonContentType.workbench},
+                requirements: '',
+                iconBase64: iconBase64,
+              ),
+            ),
+          ],
+        ),
+      ];
+      await pumpProfiles(tester);
+      await tester.tap(find.text('Dev'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      await tester.tap(find.text('Addons'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      final icon = tester.widget<AddonIcon>(
+        find.descendant(
+          of: find.widgetWithText(ListTile, 'A2plus'),
+          matching: find.byType(AddonIcon),
+        ),
+      );
+      expect(icon.base64Data, iconBase64);
     });
   });
 }

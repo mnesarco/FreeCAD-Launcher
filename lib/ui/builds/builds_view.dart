@@ -13,6 +13,8 @@ import 'package:freecad_launcher/domain/builds/build_update.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/builds_controller.dart';
+import 'package:freecad_launcher/ui/icons.dart';
+import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 
@@ -141,35 +143,27 @@ class _InstalledBuildTile extends StatelessWidget {
     ].join('  ·  ');
 
     return ListTile(
-      leading: const Icon(Icons.inventory_2_outlined),
+      leading: const Icon(FreeCADIcons.freecad),
       title: Row(
         children: [
           Text(buildInfo.version),
           const SizedBox(width: 8),
-          Chip(
-            label: Text(buildInfo.channel.name),
-            visualDensity: VisualDensity.compact,
-          ),
+          CompactBadge(label: buildInfo.channel.name),
           if (buildInfo.status != BuildStatus.installed) ...[
             const SizedBox(width: 8),
-            Chip(
-              avatar: const Icon(Icons.warning_amber_outlined, size: 16),
-              label: Text(
-                buildInfo.status == BuildStatus.missing
-                    ? l10n.versionsStatusMissing
-                    : l10n.versionsStatusBroken,
-              ),
-              visualDensity: VisualDensity.compact,
+            CompactBadge(
+              icon: Icons.warning_amber_outlined,
+              label: buildInfo.status == BuildStatus.missing
+                  ? l10n.versionsStatusMissing
+                  : l10n.versionsStatusBroken,
             ),
           ],
           if (buildUpdate != null) ...[
             const SizedBox(width: 8),
-            Chip(
-              avatar: const Icon(Icons.system_update_alt, size: 16),
-              label: Text(
-                '${buildUpdate.installedVersion} → ${buildUpdate.latestVersion}',
-              ),
-              visualDensity: VisualDensity.compact,
+            CompactBadge(
+              icon: Icons.system_update_alt,
+              label:
+                  '${buildUpdate.installedVersion} → ${buildUpdate.latestVersion}',
             ),
           ],
         ],
@@ -375,7 +369,7 @@ class _AvailableBuildTile extends StatelessWidget {
         child: Text(l10n.versionsCancel),
       );
     } else if (installed) {
-      trailing = Chip(label: Text(l10n.versionsTabInstalled));
+      trailing = CompactBadge(label: l10n.versionsTabInstalled);
     } else {
       trailing = FilledButton(
         onPressed: () => _install(context, controller, candidate),
@@ -384,7 +378,7 @@ class _AvailableBuildTile extends StatelessWidget {
     }
 
     return ListTile(
-      leading: const Icon(Icons.system_update_alt),
+      leading: const Icon(FreeCADIcons.freecad),
       title: Text(candidate.versionLabel),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

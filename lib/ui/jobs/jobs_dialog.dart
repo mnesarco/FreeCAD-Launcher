@@ -4,6 +4,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 
 Future<void> showJobsDialog(BuildContext context) {
   return showDialog<void>(
@@ -69,10 +70,7 @@ class _JobTile extends StatelessWidget {
               Expanded(
                 child: Text(job.label, style: theme.textTheme.titleSmall),
               ),
-              Chip(
-                label: Text(_stateLabel(l10n, job.state)),
-                visualDensity: VisualDensity.compact,
-              ),
+              CompactBadge(label: _stateLabel(l10n, job.state)),
             ],
           ),
           if (job.isActive) ...[

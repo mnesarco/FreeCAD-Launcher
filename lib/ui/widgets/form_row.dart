@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-const double formLabelWidth = 130;
+const double formLabelWidth = 195;
 
 class FormRow extends StatelessWidget {
   const FormRow({

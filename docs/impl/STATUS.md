@@ -226,6 +226,17 @@
     real dev DB: v3 → v4 migration applied, badge rendered with an aged unpinned addon and
     disappeared when only a pinned addon was outdated (temporary dev-data changes were restored
     exactly afterwards).
+  - Fix — UI polish pass (inspector-verified live): shared `CompactDropdown` (addons filter
+    extracted; version filter moved into the search row with matching field heights), profile
+    Macros tab top padding, shared `CompactBadge` replacing every list/grid/dialog `Chip`,
+    `FormRow` label column 130 → 195 px (D-059), prototype `freecad-launcher-icons` font ported
+    to `lib/ui/icons.dart` (Versions tiles + nav rail show the FreeCAD glyph), and branch
+    selection in the addon detail now watches `selectedBranches` (previously the radio only
+    refreshed after an unrelated `setState`, i.e. the install-target dropdown).
+  - Fix — installed addons in the profile Addons tab now show their catalog icon via an offline
+    cache-only load (`AddonCatalog.cachedAddons`, `AddonsController.ensureCachedCatalog`);
+    visiting Addons still refreshes the catalog normally.
+  - 441 tests green (8 manual probes skipped), analyze clean.
 
 ## Session log
 
@@ -294,6 +305,7 @@
 | 2026-09-20 | M6 | D-058 build update checks + badges (stable, same kind, notify-only; per-kind timestamps) | M6-02 | `docs/impl/DECISIONS.md`, `docs/spec/03-ux.md`, `lib/domain/builds/build_update.dart`, `lib/state/updates_controller.dart`, `lib/state/app_services.dart`, `lib/ui/builds/builds_view.dart`, `lib/ui/updates/updates_summary_sheet.dart`, `lib/ui/updates/updates_status_chip.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-20 | M6 | D-059 desktop form style: label-left `FormRow`, 4 px outlined inputs, migrated dialogs/inline forms | M6-11 | `docs/impl/DECISIONS.md`, `docs/spec/03-ux.md`, `lib/app.dart`, `lib/ui/widgets/form_row.dart`, `lib/ui/profiles/**`, `lib/ui/builds/builds_view.dart`, `lib/ui/addons/**`, `lib/l10n/**`, `test/**` |
 | 2026-09-20 | M6 | D-060 batch addon updates: pre-checked per-item toggles, sequential job-queue run, progress + retry failed | M6-03 | `docs/impl/DECISIONS.md`, `lib/domain/addons/addon_update.dart`, `lib/state/updates_controller.dart`, `lib/ui/updates/updates_summary_sheet.dart`, `lib/l10n/**`, `test/**` |
+| 2026-09-20 | M6 | UI polish: shared CompactBadge/CompactDropdown, catalog icons on installed addons, branch-selection and layout fixes, label column 195 px (D-059), FreeCAD icon font | Fix | `docs/impl/DECISIONS.md`, `docs/impl/STATUS.md`, `lib/ui/**`, `lib/state/addons_controller.dart`, `lib/data/catalog/addon_catalog.dart`, `lib/ui/icons.dart`, `test/**` |
 
 ## Standing notes for the next agent
 

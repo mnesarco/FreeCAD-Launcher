@@ -7,6 +7,8 @@ import 'package:freecad_launcher/domain/macros/macro_catalog_entry.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/macros/installed_macros.dart';
+import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
+import 'package:freecad_launcher/ui/widgets/compact_dropdown.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 
 class MacrosView extends StatefulWidget {
@@ -326,21 +328,14 @@ class _ProfilePicker extends StatelessWidget {
             Expanded(child: Text(l10n.addonsNoProfiles))
           else
             Expanded(
-              child: InputDecorator(
-                decoration: InputDecoration(
-                  isDense: true,
-                  labelText: l10n.addonsInstallTarget,
-                ),
-                child: DropdownButton<String>(
-                  value: profileId,
-                  isDense: true,
-                  isExpanded: true,
-                  items: [
-                    for (final profile in profiles)
-                      DropdownMenuItem(value: profile.id, child: Text(profile.name)),
-                  ],
-                  onChanged: (value) => controller.selectedProfileId.value = value,
-                ),
+              child: CompactDropdown<String>(
+                value: profileId,
+                hint: Text(l10n.addonsInstallTarget),
+                items: [
+                  for (final profile in profiles)
+                    DropdownMenuItem(value: profile.id, child: Text(profile.name)),
+                ],
+                onChanged: (value) => controller.selectedProfileId.value = value,
               ),
             ),
         ],
@@ -391,10 +386,7 @@ class _CatalogMacroTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (installedCount > 0) ...[
-              Chip(
-                label: Text(l10n.addonsInstalledIn(installedCount)),
-                visualDensity: VisualDensity.compact,
-              ),
+              CompactBadge(label: l10n.addonsInstalledIn(installedCount)),
               const SizedBox(width: 8),
             ],
             FilledButton.tonal(

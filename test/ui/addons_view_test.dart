@@ -24,29 +24,36 @@ Addon _addon(
   required String description,
   List<String> tags = const [],
   Set<AddonContentType> content = const {AddonContentType.workbench},
+  List<(String, String)> extraBranches = const [],
 }) {
+  AddonBranch branch(String gitRef, String displayName) {
+    return AddonBranch(
+      gitRef: gitRef,
+      displayName: displayName,
+      repositoryUrl: 'https://example.invalid/$id',
+      zipUrl: 'https://example.invalid/$id.zip',
+      curated: true,
+      sparseCache: false,
+      metadata: AddonMetadata(
+        name: id,
+        description: description,
+        version: '1.0.0',
+        license: 'MIT',
+        minPython: '3.10',
+        tags: tags,
+        people: const [],
+        content: content,
+        requirements: '',
+      ),
+    );
+  }
+
   return Addon(
     id: id,
     branches: [
-      AddonBranch(
-        gitRef: 'master',
-        displayName: 'master',
-        repositoryUrl: 'https://example.invalid/$id',
-        zipUrl: 'https://example.invalid/$id.zip',
-        curated: true,
-        sparseCache: false,
-        metadata: AddonMetadata(
-          name: id,
-          description: description,
-          version: '1.0.0',
-          license: 'MIT',
-          minPython: '3.10',
-          tags: tags,
-          people: const [],
-          content: content,
-          requirements: '',
-        ),
-      ),
+      branch('master', 'master'),
+      for (final (gitRef, displayName) in extraBranches)
+        branch(gitRef, displayName),
     ],
   );
 }
@@ -150,6 +157,37 @@ void main() {
     expect(find.text('master'), findsWidgets);
     expect(find.text('MIT'), findsOneWidget);
     expect(find.text('Create a profile first to install addons.'), findsOneWidget);
+  });
+
+  testWidgets('selecting a branch updates the radio group immediately', (tester) async {
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    catalog.result = AddonCatalogResult(
+      addons: [
+        _addon(
+          'A2plus',
+          description: 'Assembly workbench',
+          extraBranches: [('dev', 'development')],
+        ),
+      ],
+      freshness: CatalogFreshness.fresh,
+    );
+    await pumpAddons(tester);
+
+    await tester.tap(find.text('A2plus'));
+    await settle(tester);
+
+    RadioGroup<String> group() =>
+        tester.widget<RadioGroup<String>>(find.byType(RadioGroup<String>));
+    expect(group().groupValue, 'master');
+
+    await tester.ensureVisible(find.text('development'));
+    await settle(tester);
+    await tester.tap(find.text('development'));
+    await settle(tester);
+
+    expect(group().groupValue, 'dev');
+    expect(services.addons.selectedBranches.value['A2plus'], 'dev');
   });
 
   testWidgets('keeps the search query after opening a detail and going back', (tester) async {

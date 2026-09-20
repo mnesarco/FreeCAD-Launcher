@@ -134,6 +134,17 @@ class AddonCatalog {
     }
   }
 
+  Future<List<Addon>?> cachedAddons() async {
+    if (!hasCachedPayload) {
+      return null;
+    }
+    try {
+      return await _parseCachedPayload();
+    } on Object {
+      return null;
+    }
+  }
+
   Future<List<Addon>> _parseCachedPayload() async {
     final file = File(payloadPath);
     if (!file.existsSync()) {

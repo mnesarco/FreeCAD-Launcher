@@ -10,6 +10,7 @@ import 'package:freecad_launcher/ui/profiles/profile_actions.dart';
 import 'package:freecad_launcher/ui/profiles/profile_detail_view.dart';
 import 'package:freecad_launcher/ui/profiles/profile_dialogs.dart';
 import 'package:freecad_launcher/ui/profiles/profile_manifest_dialogs.dart';
+import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 
 class ProfilesView extends StatefulWidget {
@@ -173,30 +174,22 @@ class _ProfileCard extends StatelessWidget {
             Flexible(child: Text(profile.name, overflow: TextOverflow.ellipsis)),
             if (running) ...[
               const SizedBox(width: 8),
-              Chip(
-                avatar: const Icon(Icons.play_arrow, size: 16),
-                label: Text(l10n.profilesRunning),
-                visualDensity: VisualDensity.compact,
-              ),
+              CompactBadge(icon: Icons.play_arrow, label: l10n.profilesRunning),
             ],
             if (build != null && build.status != BuildStatus.installed) ...[
               const SizedBox(width: 8),
-              Chip(
-                avatar: const Icon(Icons.warning_amber_outlined, size: 16),
-                label: Text(
-                  build.status == BuildStatus.missing
-                      ? l10n.profilesStatusMissing
-                      : l10n.profilesStatusBroken,
-                ),
-                visualDensity: VisualDensity.compact,
+              CompactBadge(
+                icon: Icons.warning_amber_outlined,
+                label: build.status == BuildStatus.missing
+                    ? l10n.profilesStatusMissing
+                    : l10n.profilesStatusBroken,
               ),
             ],
             if (updatesOutdated > 0) ...[
               const SizedBox(width: 8),
-              Chip(
-                avatar: const Icon(Icons.system_update_alt, size: 16),
-                label: Text(l10n.updatesBadge(updatesOutdated)),
-                visualDensity: VisualDensity.compact,
+              CompactBadge(
+                icon: Icons.system_update_alt,
+                label: l10n.updatesBadge(updatesOutdated),
               ),
             ],
           ],

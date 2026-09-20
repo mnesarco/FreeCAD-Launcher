@@ -6,6 +6,7 @@ import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/profiles/profile_actions.dart'
     show formatProfileDateTime;
+import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 
 Future<void> showUpdatesSummarySheet(BuildContext context) {
   return showModalBottomSheet<void>(
@@ -169,9 +170,8 @@ class _UpdatesSummarySheetState extends State<UpdatesSummarySheet> {
                             subtitle: Text(
                               '${update.installedVersion}  →  ${update.latestVersion}',
                             ),
-                            trailing: Chip(
-                              label: Text(l10n.addonsUpdateBadge),
-                              visualDensity: VisualDensity.compact,
+                            trailing: CompactBadge(
+                              label: l10n.addonsUpdateBadge,
                             ),
                           ),
                       ],
@@ -243,23 +243,17 @@ class _UpdatesSummarySheetState extends State<UpdatesSummarySheet> {
                   runSpacing: 4,
                   children: [
                     if (summary.count(AddonUpdateApplyStatus.updated) > 0)
-                      Chip(
-                        label: Text(
-                          l10n.updatesSummaryUpdated(
-                            summary.count(AddonUpdateApplyStatus.updated),
-                          ),
+                      CompactBadge(
+                        label: l10n.updatesSummaryUpdated(
+                          summary.count(AddonUpdateApplyStatus.updated),
                         ),
-                        visualDensity: VisualDensity.compact,
                       ),
                     if (summary.count(AddonUpdateApplyStatus.failed) > 0)
-                      Chip(
-                        label: Text(
-                          l10n.updatesSummaryFailed(
-                            summary.count(AddonUpdateApplyStatus.failed),
-                          ),
+                      CompactBadge(
+                        label: l10n.updatesSummaryFailed(
+                          summary.count(AddonUpdateApplyStatus.failed),
                         ),
                         backgroundColor: theme.colorScheme.errorContainer,
-                        visualDensity: VisualDensity.compact,
                       ),
                   ],
                 ),

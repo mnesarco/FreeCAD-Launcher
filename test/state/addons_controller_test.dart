@@ -133,6 +133,34 @@ void main() {
     subject.dispose();
   });
 
+  test('ensureCachedCatalog populates addons from cache without loading', () async {
+    catalog.cached = [addon('A2plus', name: 'A2plus')];
+    final subject = controller();
+
+    await subject.ensureCachedCatalog();
+
+    expect(subject.loaded.value, isFalse);
+    expect(subject.addons.value.single.id, 'A2plus');
+    expect(catalog.loads, 0);
+    subject.dispose();
+  });
+
+  test('ensureCachedCatalog skips when the catalog is already loaded', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [addon('Loaded')],
+      freshness: CatalogFreshness.fresh,
+    );
+    catalog.cached = [addon('A2plus')];
+    final subject = controller();
+    await subject.load();
+
+    await subject.ensureCachedCatalog();
+
+    expect(subject.addons.value.single.id, 'Loaded');
+    expect(catalog.cachedLoads, 0);
+    subject.dispose();
+  });
+
   test('filters by text, tag, content and installed state', () async {
     catalog.result = AddonCatalogResult(
       addons: [

@@ -126,6 +126,22 @@ void main() {
     expect((await db.catalogCacheDao.get(AddonCatalog.cacheKey))!.status.name, 'stale');
   });
 
+  test('serves the cached payload without a download', () async {
+    source.streamFactory = () => Stream.fromIterable([catalogZip(catalogJson)]);
+    final subject = catalog();
+    await subject.load();
+    source.requests.clear();
+
+    final cached = await subject.cachedAddons();
+
+    expect(cached!.single.id, 'A2plus');
+    expect(source.requests, isEmpty);
+  });
+
+  test('returns null from cachedAddons without a cached payload', () async {
+    expect(await catalog().cachedAddons(), isNull);
+  });
+
   test('throws when there is no cache and the download fails', () async {
     source.error = const DownloadException('offline');
 

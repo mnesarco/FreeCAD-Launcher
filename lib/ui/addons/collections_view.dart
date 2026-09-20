@@ -15,6 +15,7 @@ import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/bundle_apply_controller.dart';
 import 'package:freecad_launcher/state/bundles_controller.dart';
 import 'package:freecad_launcher/ui/addons/addon_icon.dart';
+import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
 
@@ -679,10 +680,7 @@ class _AddAddonDialogState extends State<AddAddonDialog> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           trailing: alreadyAdded
-                              ? Chip(
-                                  label: Text(l10n.addonsInstalledBadge),
-                                  visualDensity: VisualDensity.compact,
-                                )
+                              ? CompactBadge(label: l10n.addonsInstalledBadge)
                               : FilledButton.tonal(
                                   onPressed: () =>
                                       Navigator.of(context).pop(addon),
@@ -878,10 +876,7 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
       contentPadding: EdgeInsets.zero,
       title: Text(item.addonName ?? item.addonId),
       subtitle: Text(_subtitle(l10n, item), style: theme.textTheme.bodySmall),
-      trailing: Chip(
-        label: Text(_actionLabel(l10n, item.action)),
-        visualDensity: VisualDensity.compact,
-      ),
+      trailing: CompactBadge(label: _actionLabel(l10n, item.action)),
     );
   }
 
@@ -894,32 +889,24 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            Chip(
-              label: Text(
-                l10n.bundlesApplyInstalledCount(
-                  summary.count(BundleApplyItemStatus.installed),
-                ),
+            CompactBadge(
+              label: l10n.bundlesApplyInstalledCount(
+                summary.count(BundleApplyItemStatus.installed),
               ),
             ),
-            Chip(
-              label: Text(
-                l10n.bundlesApplyUpdatedCount(
-                  summary.count(BundleApplyItemStatus.updated),
-                ),
+            CompactBadge(
+              label: l10n.bundlesApplyUpdatedCount(
+                summary.count(BundleApplyItemStatus.updated),
               ),
             ),
-            Chip(
-              label: Text(
-                l10n.bundlesApplySkippedCount(
-                  summary.count(BundleApplyItemStatus.skipped),
-                ),
+            CompactBadge(
+              label: l10n.bundlesApplySkippedCount(
+                summary.count(BundleApplyItemStatus.skipped),
               ),
             ),
-            Chip(
-              label: Text(
-                l10n.bundlesApplyFailedCount(
-                  summary.count(BundleApplyItemStatus.failed),
-                ),
+            CompactBadge(
+              label: l10n.bundlesApplyFailedCount(
+                summary.count(BundleApplyItemStatus.failed),
               ),
             ),
           ],
