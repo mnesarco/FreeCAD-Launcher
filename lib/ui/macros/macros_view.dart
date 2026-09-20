@@ -267,24 +267,29 @@ class _InstallMacroDialogState extends State<_InstallMacroDialog> {
         width: 380,
         child: profiles.isEmpty
             ? Text(l10n.addonsNoProfiles)
-            : RadioGroup<String>(
-                groupValue: selected,
-                onChanged: (value) => setState(() => _profileId = value),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (final profile in profiles)
-                      RadioListTile<String>(
-                        value: profile.id,
-                        enabled: !isInstalled(profile.id),
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(profile.name),
-                        subtitle: isInstalled(profile.id)
-                            ? Text(l10n.addonsInstalledBadge)
-                            : null,
-                      ),
-                  ],
+            : ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 320),
+                child: RadioGroup<String>(
+                  groupValue: selected,
+                  onChanged: (value) => setState(() => _profileId = value),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (final profile in profiles)
+                          RadioListTile<String>(
+                            value: profile.id,
+                            enabled: !isInstalled(profile.id),
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(profile.name),
+                            subtitle: isInstalled(profile.id)
+                                ? Text(l10n.addonsInstalledBadge)
+                                : null,
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
       ),

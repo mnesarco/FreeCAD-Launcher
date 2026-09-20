@@ -1042,5 +1042,7 @@ Template:
 - **Consequences**: Installing the same macro into several profiles is a two-click flow; the
   catalog report stays clean; l10n adds `macrosSelectProfile` (reusing `addonsInstalledIn` for
   the count chip).
+- **Update (same day)**: the profile list in the dialog is scrollable (max height 320 px) so it
+  stays usable with many profiles; a widget test seeds 30 profiles and scrolls to the last.
 - **Refs**: spec 03 §2.5, `lib/ui/macros/macros_view.dart`, `test/ui/macros_view_test.dart`,
   TASKS.md M5-04, D-048

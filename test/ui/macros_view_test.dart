@@ -111,6 +111,31 @@ void main() {
     expect(find.text('TreeHelper'), findsNothing);
   });
 
+  testWidgets('scrolls the profile list when there are many profiles', (tester) async {
+    await db.buildsDao.save(sampleBuild());
+    for (var index = 0; index < 30; index++) {
+      await db.profilesDao.save(
+        sampleProfile(id: 'profile-$index', name: 'Profile $index'),
+      );
+    }
+    await pumpMacros(tester, catalog: true);
+
+    await tester.tap(find.text('Install').first);
+    await settle(tester);
+
+    expect(find.text('Profile 0').hitTestable(), findsOneWidget);
+    expect(find.text('Profile 29').hitTestable(), findsNothing);
+
+    await tester.scrollUntilVisible(
+      find.text('Profile 29'),
+      80,
+      scrollable: find
+          .descendant(of: find.byType(AlertDialog), matching: find.byType(Scrollable))
+          .first,
+    );
+    expect(find.text('Profile 29').hitTestable(), findsOneWidget);
+  });
+
   testWidgets('shows the installed badge for an installed macro', (tester) async {
     await db.buildsDao.save(sampleBuild());
     await db.profilesDao.save(sampleProfile());

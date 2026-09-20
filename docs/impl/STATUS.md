@@ -180,7 +180,8 @@
     created when missing, corrupt files untouched); verified on real 1.0.2
     (`getUserMacroDir(True)` = `<profile>/Macros/`).
   - Fix — **D-054**: Macros Catalog drops the top profile dropdown; Install opens a target
-    profile dialog (installed profiles disabled), rows show an `Installed in N profile(s)` chip.
+    profile dialog (installed profiles disabled, list scrollable for many profiles), rows show
+    an `Installed in N profile(s)` chip.
   - 400 tests green (8 manual probes skipped), analyze clean, app builds and launches.
 
 ## Session log
