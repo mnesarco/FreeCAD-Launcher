@@ -9,6 +9,7 @@ import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/profiles/profile_actions.dart';
 import 'package:freecad_launcher/ui/profiles/profile_detail_view.dart';
 import 'package:freecad_launcher/ui/profiles/profile_dialogs.dart';
+import 'package:freecad_launcher/ui/profiles/profile_manifest_dialogs.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 
 class ProfilesView extends StatefulWidget {
@@ -88,8 +89,19 @@ class _ProfilesViewState extends State<ProfilesView> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
           child: Row(
             children: [
-              Text(l10n.navProfiles, style: Theme.of(context).textTheme.titleLarge),
-              const Spacer(),
+              Expanded(
+                child: Text(
+                  l10n.navProfiles,
+                  style: Theme.of(context).textTheme.titleLarge,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => _importProfile(context),
+                icon: const Icon(Icons.file_open_outlined),
+                label: Text(l10n.profilesImport),
+              ),
+              const SizedBox(width: 8),
               FilledButton.icon(
                 onPressed: () => _createProfile(context),
                 icon: const Icon(Icons.add),
@@ -105,6 +117,14 @@ class _ProfilesViewState extends State<ProfilesView> {
 
   Future<void> _createProfile(BuildContext context) async {
     await showProfileFormDialog(context, controller: AppScope.of(context).profiles);
+  }
+
+  Future<void> _importProfile(BuildContext context) async {
+    final outcome = await importProfileManifest(context);
+    if (outcome == null || !mounted) {
+      return;
+    }
+    setState(() => _selectedProfileId = outcome.profile.id);
   }
 }
 
@@ -194,6 +214,10 @@ class _ProfileCard extends StatelessWidget {
                   child: Text(l10n.profilesDuplicate),
                 ),
                 PopupMenuItem(
+                  value: _ProfileAction.export,
+                  child: Text(l10n.profilesExportManifest),
+                ),
+                PopupMenuItem(
                   value: _ProfileAction.delete,
                   child: Text(l10n.profilesDelete),
                 ),
@@ -231,6 +255,12 @@ class _ProfileCard extends StatelessWidget {
             SnackBar(content: Text('${l10n.profilesDuplicateFailed}: $error')),
           ),
         );
+      case _ProfileAction.export:
+        await exportProfileManifest(
+          context,
+          profileId: profile.id,
+          profileName: profile.name,
+        );
       case _ProfileAction.delete:
         final confirmed = await confirmDeleteProfile(context, profile);
         if (!confirmed || !context.mounted) {
@@ -250,4 +280,4 @@ class _ProfileCard extends StatelessWidget {
   }
 }
 
-enum _ProfileAction { duplicate, delete }
+enum _ProfileAction { duplicate, export, delete }

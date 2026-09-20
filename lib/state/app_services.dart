@@ -9,6 +9,8 @@ import 'package:freecad_launcher/data/catalog/github_releases_client.dart';
 import 'package:freecad_launcher/data/catalog/macro_catalog.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
+import 'package:freecad_launcher/core/errors.dart';
+import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/platform/addon_installer.dart';
@@ -33,6 +35,7 @@ import 'package:freecad_launcher/state/bundle_apply_controller.dart';
 import 'package:freecad_launcher/state/bundles_controller.dart';
 import 'package:freecad_launcher/state/jobs_controller.dart';
 import 'package:freecad_launcher/state/macros_controller.dart';
+import 'package:freecad_launcher/state/profile_manifest_controller.dart';
 import 'package:freecad_launcher/state/profiles_controller.dart';
 import 'package:freecad_launcher/state/python_controller.dart';
 import 'package:freecad_launcher/state/settings_controller.dart';
@@ -46,11 +49,13 @@ class AppServices {
     BuildsController? buildsController,
     AddonsController? addonsController,
     MacrosController? macrosController,
+    ProfileManifestController? manifestsController,
   }) : processRunner = processRunner ?? ProcessRunner(),
        _httpClient = httpClient,
        _buildsControllerOverride = buildsController,
        _addonsControllerOverride = addonsController,
-       _macrosControllerOverride = macrosController;
+       _macrosControllerOverride = macrosController,
+       _manifestsControllerOverride = manifestsController;
 
   final AppPaths paths;
   final AppDatabase database;
@@ -60,6 +65,7 @@ class AppServices {
   final BuildsController? _buildsControllerOverride;
   final AddonsController? _addonsControllerOverride;
   final MacrosController? _macrosControllerOverride;
+  final ProfileManifestController? _manifestsControllerOverride;
 
   late final http.Client _client = _httpClient ?? http.Client();
 
@@ -220,6 +226,39 @@ class AppServices {
     pythonResolver: pythonEnvResolver,
     jobs: jobs,
   );
+
+  late final ProfileManifestController manifests =
+      _manifestsControllerOverride ??
+      ProfileManifestController(
+        database: database,
+        repository: profilesRepository,
+        paths: paths,
+        platform: hostPlatform,
+        installAddon: ({
+          required String addonId,
+          required String? branchRef,
+          required String profileId,
+          required bool installRequirements,
+        }) async {
+          if (addons.addons.value.isEmpty) {
+            await addons.load();
+          }
+          if (addons.byId(addonId) == null) {
+            return Err(AppError(message: 'Addon "$addonId" is not in the catalog'));
+          }
+          return addons.install(
+            addonId: addonId,
+            branchRef: branchRef ?? '',
+            profileId: profileId,
+            installRequirements: installRequirements,
+          );
+        },
+        installPackages: ({
+          required String profileId,
+          required String specText,
+          required String source,
+        }) => python.install(profileId: profileId, specText: specText, source: source),
+      );
 
   static Future<AppServices> bootstrap() async {
     final paths = await AppPaths.resolve();

@@ -62,10 +62,11 @@ class PythonController {
   Future<Result<void>> install({
     required String profileId,
     required String specText,
+    String source = 'manual',
   }) async {
     final jobs = _jobs;
     if (jobs == null) {
-      return _installInternal(profileId: profileId, specText: specText);
+      return _installInternal(profileId: profileId, specText: specText, source: source);
     }
     final profile = await _database.profilesDao.getById(profileId);
     final result = await jobs.run<Result<void>>(
@@ -73,11 +74,12 @@ class PythonController {
       label: 'Install packages (${profile?.name ?? profileId})',
       profileId: profileId,
       onRetry: () async {
-        await install(profileId: profileId, specText: specText);
+        await install(profileId: profileId, specText: specText, source: source);
       },
       task: (context) => _installInternal(
         profileId: profileId,
         specText: specText,
+        source: source,
         context: context,
       ),
     );
@@ -87,6 +89,7 @@ class PythonController {
   Future<Result<void>> _installInternal({
     required String profileId,
     required String specText,
+    String source = 'manual',
     JobContext? context,
   }) async {
     final requirements = parseRequirements(specText)
@@ -138,7 +141,7 @@ class PythonController {
             profileId: profile.id,
             name: requirement.name,
             targetDir: targetDirectory,
-            source: 'manual',
+            source: source,
             installedAt: _clock(),
           ),
         );

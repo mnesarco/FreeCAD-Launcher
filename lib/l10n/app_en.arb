@@ -97,6 +97,105 @@
   "profilesCommandFailed": "Could not build the launch command",
   "profilesClose": "Close",
   "profilesCopy": "Copy",
+  "profilesExport": "Export",
+  "profilesExportManifest": "Export manifest",
+  "profilesExportDone": "Manifest exported",
+  "profilesExportFailed": "Could not export the manifest",
+  "profilesImport": "Import manifest",
+  "manifestImportTitle": "Import profile manifest",
+  "manifestImportFile": "Profile manifest (JSON)",
+  "manifestReading": "Reading manifest…",
+  "manifestReadFailed": "Could not read the manifest file",
+  "manifestSource": "Exported from {os} ({arch})",
+  "@manifestSource": {
+    "placeholders": {
+      "os": {"type": "String"},
+      "arch": {"type": "String"}
+    }
+  },
+  "manifestSourceUnknown": "Exported from another machine",
+  "manifestName": "Profile name",
+  "manifestNameRequired": "Enter a profile name",
+  "manifestNameTooLong": "Profile names are limited to {max} characters",
+  "@manifestNameTooLong": {
+    "placeholders": {
+      "max": {"type": "int"}
+    }
+  },
+  "manifestNameControl": "Profile names cannot contain control characters",
+  "manifestBuildLabel": "Build",
+  "manifestBuildMissing": "FreeCAD {version} ({channel}) is not installed. Choose another build or install it first.",
+  "@manifestBuildMissing": {
+    "placeholders": {
+      "version": {"type": "String"},
+      "channel": {"type": "String"}
+    }
+  },
+  "manifestBuildMissingVersion": "The manifest does not name a build. Choose an installed build.",
+  "manifestNoBuild": "No installed build with a detected Python is available. Install one first.",
+  "manifestContents": "Contents",
+  "manifestAddonsCount": "{count} addons",
+  "@manifestAddonsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "manifestPackagesCount": "{count} Python packages",
+  "@manifestPackagesCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "manifestBundlesCount": "{count} collections",
+  "@manifestBundlesCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "manifestMacrosCount": "{count} macros",
+  "@manifestMacrosCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "manifestConfigFiles": "Config files: {names}",
+  "@manifestConfigFiles": {
+    "placeholders": {
+      "names": {"type": "String"}
+    }
+  },
+  "manifestBundlesMissing": "Collections not present on this machine: {names}",
+  "@manifestBundlesMissing": {
+    "placeholders": {
+      "names": {"type": "String"}
+    }
+  },
+  "manifestAbsolutePaths": "These absolute paths in the exported config will not be valid here:",
+  "manifestReinstall": "Reinstall addons and Python packages",
+  "manifestInstallRequirements": "Also install declared Python requirements",
+  "manifestImport": "Import",
+  "manifestImporting": "Importing…",
+  "manifestImportingStep": "Installing {name}…",
+  "@manifestImportingStep": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "manifestImported": "Profile imported",
+  "manifestImportSummary": "{addons} addons and {packages} Python packages installed",
+  "@manifestImportSummary": {
+    "placeholders": {
+      "addons": {"type": "int"},
+      "packages": {"type": "int"}
+    }
+  },
+  "manifestImportFailed": "Could not import the profile",
+  "manifestImportWarnings": "Warnings: {warnings}",
+  "@manifestImportWarnings": {
+    "placeholders": {
+      "warnings": {"type": "String"}
+    }
+  },
   "versionsEmptyTitle": "No FreeCAD versions installed",
   "versionsEmptyMessage": "Install a stable, weekly or custom FreeCAD build to get started.",
   "versionsTabInstalled": "Installed",

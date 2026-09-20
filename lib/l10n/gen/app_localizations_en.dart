@@ -311,6 +311,143 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profilesCopy => 'Copy';
 
   @override
+  String get profilesExport => 'Export';
+
+  @override
+  String get profilesExportManifest => 'Export manifest';
+
+  @override
+  String get profilesExportDone => 'Manifest exported';
+
+  @override
+  String get profilesExportFailed => 'Could not export the manifest';
+
+  @override
+  String get profilesImport => 'Import manifest';
+
+  @override
+  String get manifestImportTitle => 'Import profile manifest';
+
+  @override
+  String get manifestImportFile => 'Profile manifest (JSON)';
+
+  @override
+  String get manifestReading => 'Reading manifest…';
+
+  @override
+  String get manifestReadFailed => 'Could not read the manifest file';
+
+  @override
+  String manifestSource(String os, String arch) {
+    return 'Exported from $os ($arch)';
+  }
+
+  @override
+  String get manifestSourceUnknown => 'Exported from another machine';
+
+  @override
+  String get manifestName => 'Profile name';
+
+  @override
+  String get manifestNameRequired => 'Enter a profile name';
+
+  @override
+  String manifestNameTooLong(int max) {
+    return 'Profile names are limited to $max characters';
+  }
+
+  @override
+  String get manifestNameControl =>
+      'Profile names cannot contain control characters';
+
+  @override
+  String get manifestBuildLabel => 'Build';
+
+  @override
+  String manifestBuildMissing(String version, String channel) {
+    return 'FreeCAD $version ($channel) is not installed. Choose another build or install it first.';
+  }
+
+  @override
+  String get manifestBuildMissingVersion =>
+      'The manifest does not name a build. Choose an installed build.';
+
+  @override
+  String get manifestNoBuild =>
+      'No installed build with a detected Python is available. Install one first.';
+
+  @override
+  String get manifestContents => 'Contents';
+
+  @override
+  String manifestAddonsCount(int count) {
+    return '$count addons';
+  }
+
+  @override
+  String manifestPackagesCount(int count) {
+    return '$count Python packages';
+  }
+
+  @override
+  String manifestBundlesCount(int count) {
+    return '$count collections';
+  }
+
+  @override
+  String manifestMacrosCount(int count) {
+    return '$count macros';
+  }
+
+  @override
+  String manifestConfigFiles(String names) {
+    return 'Config files: $names';
+  }
+
+  @override
+  String manifestBundlesMissing(String names) {
+    return 'Collections not present on this machine: $names';
+  }
+
+  @override
+  String get manifestAbsolutePaths =>
+      'These absolute paths in the exported config will not be valid here:';
+
+  @override
+  String get manifestReinstall => 'Reinstall addons and Python packages';
+
+  @override
+  String get manifestInstallRequirements =>
+      'Also install declared Python requirements';
+
+  @override
+  String get manifestImport => 'Import';
+
+  @override
+  String get manifestImporting => 'Importing…';
+
+  @override
+  String manifestImportingStep(String name) {
+    return 'Installing $name…';
+  }
+
+  @override
+  String get manifestImported => 'Profile imported';
+
+  @override
+  String manifestImportSummary(int addons, int packages) {
+    return '$addons addons and $packages Python packages installed';
+  }
+
+  @override
+  String get manifestImportFailed => 'Could not import the profile';
+
+  @override
+  String manifestImportWarnings(String warnings) {
+    return 'Warnings: $warnings';
+  }
+
+  @override
   String get versionsEmptyTitle => 'No FreeCAD versions installed';
 
   @override

@@ -3,14 +3,13 @@
 > Live file. Every session updates this at start and end. Keep it short — details belong in
 > `TASKS.md` and `DECISIONS.md`.
 
-- **Updated**: 2026-09-19
-- **Current milestone**: M4 — Addons and Python complete (S3, M4-01..M4-11 done); next: M5 —
-  Collections, macros, config, export (S4 spike, then M5-01)
+- **Updated**: 2026-09-20
+- **Current milestone**: M5 — Collections, macros, config, export complete (S4, M5-01..M5-08
+  done); next: M6 — Updates and polish (M6-01)
 - **Active branch**: `v2`
-- **Last session**: 2026-09-19
-- **Next action**: start `M5-07` (profile manifest export/import, spec 05 §4.2) — the last M5
-  task; the Backups tab gains its export/import actions there. Manual M4/M5 UI click-throughs and
-  the Windows/macOS manual checks remain open.
+- **Last session**: 2026-09-20
+- **Next action**: start `M6-01` (addon update checks + badges in the profile and addon list);
+  manual M4/M5 UI click-throughs and the Windows/macOS manual checks remain open.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -182,7 +181,18 @@
   - Fix — **D-054**: Macros Catalog drops the top profile dropdown; Install opens a target
     profile dialog (installed profiles disabled, list scrollable for many profiles), rows show
     an `Installed in N profile(s)` chip.
-  - 400 tests green (8 manual probes skipped), analyze clean, app builds and launches.
+  - M5-07 — **D-055**: manifest JSON export/import — pure codec + absolute-path scanner
+    (`domain/profiles/profile_manifest.dart`), `ProfileManifestController` (export/preview/
+    import), embedded `user.cfg`/`system.cfg` text (≤ 4 MiB), contained-bundle names, build
+    version/channel match with picker fallback, `<name> (imported)` clash handling, optional
+    reinstall of addons and source-grouped pip packages, `MacroPath` rewrite via D-053, and the
+    Profiles header/card/Backups-tab actions. `PythonController.install` gained a `source` param.
+    Cross-OS (Linux export → Windows-configured launcher import) and UI tests included.
+  - Fix — Versions → Available install progress was a `ListTile` trailing `Column` (progress bar,
+    bytes/speed, stage + Cancel) and overflowed the tile bottom; the progress bar/stage/detail now
+    live in the subtitle (which grows the tile) with only Cancel in the trailing. Regression widget
+    test `test/ui/builds_view_test.dart` overflows on the old layout.
+  - 420 tests green (8 manual probes skipped), analyze clean, app builds and launches.
 
 ## Session log
 
@@ -244,6 +254,8 @@
 | 2026-09-19 | M5 | D-045 bundles controller + Collections tab (create/edit/items, profile seed) | M5-01 | `docs/impl/DECISIONS.md`, `lib/domain/bundles/bundle_rules.dart`, `lib/state/bundles_controller.dart`, `lib/state/app_services.dart`, `lib/data/daos/bundles_dao.dart`, `lib/ui/addons/collections_view.dart`, `lib/ui/addons/addons_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | S4 | D-044 macro catalog source: addons.freecad.org cache, format, placement and license handling | S4 | `docs/impl/DECISIONS.md`, `docs/spec/06-integrations.md` |
 | 2026-09-19 | M4 | D-043 job queue (controller, cancel/retry, status bar + jobs dialog) and wiring for builds/addons/pip | M4-08 | `docs/impl/DECISIONS.md`, `docs/impl/TASKS.md`, `lib/domain/jobs/job_types.dart`, `lib/state/jobs_controller.dart`, `lib/state/*_controller.dart`, `lib/state/app_services.dart`, `lib/core/cancellation.dart`, `lib/platform/addon_installer.dart`, `lib/ui/jobs/jobs_dialog.dart`, `lib/ui/shell/app_shell.dart`, `lib/l10n/**`, `test/**` |
+| 2026-09-20 | M5 | D-055 profile manifest export/import (codec, controller, UI, cross-OS test); M5 complete | M5-07 | `docs/impl/DECISIONS.md`, `docs/spec/05-data-model.md`, `lib/domain/profiles/profile_manifest.dart`, `lib/state/profile_manifest_controller.dart`, `lib/state/python_controller.dart`, `lib/state/app_services.dart`, `lib/ui/profiles/profile_manifest_dialogs.dart`, `lib/ui/profiles/profiles_view.dart`, `lib/ui/profiles/config_snapshots_view.dart`, `lib/l10n/**`, `test/**` |
+| 2026-09-20 | Fix | Versions/Available install progress moved into the tile subtitle, fixing bottom overflow | Fix | `lib/ui/builds/builds_view.dart`, `test/ui/builds_view_test.dart` |
 
 ## Standing notes for the next agent
 

@@ -7,6 +7,7 @@ import 'package:freecad_launcher/core/format.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/platform/config_snapshots.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/ui/profiles/profile_manifest_dialogs.dart';
 
 class ProfileConfigTab extends StatefulWidget {
   const ProfileConfigTab({super.key, required this.profileId});
@@ -132,6 +133,7 @@ class _ProfileBackupsTabState extends State<ProfileBackupsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final services = AppScope.of(context);
     final snapshots =
         services.profiles.configSnapshots.watch(context)[widget.profileId] ?? const [];
@@ -139,8 +141,37 @@ class _ProfileBackupsTabState extends State<ProfileBackupsTab> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        Row(
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => _export(context),
+              icon: const Icon(Icons.file_upload_outlined),
+              label: Text(l10n.profilesExportManifest),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              onPressed: () => importProfileManifest(context),
+              icon: const Icon(Icons.file_open_outlined),
+              label: Text(l10n.profilesImport),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
         _SnapshotsCard(profileId: widget.profileId, snapshots: snapshots),
       ],
+    );
+  }
+
+  Future<void> _export(BuildContext context) async {
+    final services = AppScope.of(context);
+    final profile = await services.profiles.getById(widget.profileId);
+    if (profile == null || !context.mounted) {
+      return;
+    }
+    await exportProfileManifest(
+      context,
+      profileId: profile.id,
+      profileName: profile.name,
     );
   }
 }

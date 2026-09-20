@@ -676,6 +676,222 @@ abstract class AppLocalizations {
   /// **'Copy'**
   String get profilesCopy;
 
+  /// No description provided for @profilesExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get profilesExport;
+
+  /// No description provided for @profilesExportManifest.
+  ///
+  /// In en, this message translates to:
+  /// **'Export manifest'**
+  String get profilesExportManifest;
+
+  /// No description provided for @profilesExportDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Manifest exported'**
+  String get profilesExportDone;
+
+  /// No description provided for @profilesExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not export the manifest'**
+  String get profilesExportFailed;
+
+  /// No description provided for @profilesImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import manifest'**
+  String get profilesImport;
+
+  /// No description provided for @manifestImportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import profile manifest'**
+  String get manifestImportTitle;
+
+  /// No description provided for @manifestImportFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile manifest (JSON)'**
+  String get manifestImportFile;
+
+  /// No description provided for @manifestReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading manifest…'**
+  String get manifestReading;
+
+  /// No description provided for @manifestReadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the manifest file'**
+  String get manifestReadFailed;
+
+  /// No description provided for @manifestSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Exported from {os} ({arch})'**
+  String manifestSource(String os, String arch);
+
+  /// No description provided for @manifestSourceUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Exported from another machine'**
+  String get manifestSourceUnknown;
+
+  /// No description provided for @manifestName.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile name'**
+  String get manifestName;
+
+  /// No description provided for @manifestNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a profile name'**
+  String get manifestNameRequired;
+
+  /// No description provided for @manifestNameTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile names are limited to {max} characters'**
+  String manifestNameTooLong(int max);
+
+  /// No description provided for @manifestNameControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile names cannot contain control characters'**
+  String get manifestNameControl;
+
+  /// No description provided for @manifestBuildLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Build'**
+  String get manifestBuildLabel;
+
+  /// No description provided for @manifestBuildMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'FreeCAD {version} ({channel}) is not installed. Choose another build or install it first.'**
+  String manifestBuildMissing(String version, String channel);
+
+  /// No description provided for @manifestBuildMissingVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'The manifest does not name a build. Choose an installed build.'**
+  String get manifestBuildMissingVersion;
+
+  /// No description provided for @manifestNoBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'No installed build with a detected Python is available. Install one first.'**
+  String get manifestNoBuild;
+
+  /// No description provided for @manifestContents.
+  ///
+  /// In en, this message translates to:
+  /// **'Contents'**
+  String get manifestContents;
+
+  /// No description provided for @manifestAddonsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} addons'**
+  String manifestAddonsCount(int count);
+
+  /// No description provided for @manifestPackagesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Python packages'**
+  String manifestPackagesCount(int count);
+
+  /// No description provided for @manifestBundlesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} collections'**
+  String manifestBundlesCount(int count);
+
+  /// No description provided for @manifestMacrosCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} macros'**
+  String manifestMacrosCount(int count);
+
+  /// No description provided for @manifestConfigFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Config files: {names}'**
+  String manifestConfigFiles(String names);
+
+  /// No description provided for @manifestBundlesMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Collections not present on this machine: {names}'**
+  String manifestBundlesMissing(String names);
+
+  /// No description provided for @manifestAbsolutePaths.
+  ///
+  /// In en, this message translates to:
+  /// **'These absolute paths in the exported config will not be valid here:'**
+  String get manifestAbsolutePaths;
+
+  /// No description provided for @manifestReinstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Reinstall addons and Python packages'**
+  String get manifestReinstall;
+
+  /// No description provided for @manifestInstallRequirements.
+  ///
+  /// In en, this message translates to:
+  /// **'Also install declared Python requirements'**
+  String get manifestInstallRequirements;
+
+  /// No description provided for @manifestImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get manifestImport;
+
+  /// No description provided for @manifestImporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing…'**
+  String get manifestImporting;
+
+  /// No description provided for @manifestImportingStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing {name}…'**
+  String manifestImportingStep(String name);
+
+  /// No description provided for @manifestImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile imported'**
+  String get manifestImported;
+
+  /// No description provided for @manifestImportSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{addons} addons and {packages} Python packages installed'**
+  String manifestImportSummary(int addons, int packages);
+
+  /// No description provided for @manifestImportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not import the profile'**
+  String get manifestImportFailed;
+
+  /// No description provided for @manifestImportWarnings.
+  ///
+  /// In en, this message translates to:
+  /// **'Warnings: {warnings}'**
+  String manifestImportWarnings(String warnings);
+
   /// No description provided for @versionsEmptyTitle.
   ///
   /// In en, this message translates to:

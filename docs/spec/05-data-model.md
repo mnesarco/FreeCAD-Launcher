@@ -210,15 +210,26 @@ Validation on import: `schema == 1`, non-empty name, each `id` exists in the cat
   "python_packages": [{ "name": "numpy", "version": "1.26.4", "source": "requirements" }],
   "bundles": ["Mechanical"],
   "config_files": ["user.cfg", "system.cfg"],
+  "config": { "user.cfg": "<?xml …?>", "system.cfg": "<?xml …?>" },
   "macros": ["MyMacro.FCMacro"]
 }
 ```
 
 Notes:
 
-- `build` is a version, not an id; import matches or asks the user to install a matching build.
-- `python_packages` are reinstalled from the manifest (source recorded), not copied.
-- Full export (`*.zip`) adds `files/` with the listed config/macro/addon payloads by toggle.
+- `build` is a version, not an id; import matches version and channel among installed builds with
+  a detected Python, and otherwise lists every usable build in the preview with a warning.
+- `python_packages` are reinstalled from the manifest (source recorded; `addon:<id>` rows are
+  covered by the addon install), not copied.
+- `config` is the optional embedded text of `user.cfg`/`system.cfg` (only these keys, ≤ 4 MiB),
+  which makes "config intent" portable without addon payloads. Import writes it, rewrites
+  `MacroPath` to the new profile's `Macros/` (D-053), and reports absolute paths found in the
+  embedded config (FR-9.4).
+- `bundles` lists collections fully contained in the profile's installed addons; import matches
+  them by name and reports the missing ones (no bundle creation).
+- Import never overwrites: a name clash becomes `<name> (imported)`, then numeric suffixes.
+- Full export (`*.zip`) adds `files/` with the listed config/macro/addon payloads by toggle
+  (v0.2, B-03).
 
 ## 5. Consistency and lifecycle rules
 

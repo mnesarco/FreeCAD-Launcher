@@ -1046,3 +1046,55 @@ Template:
   stays usable with many profiles; a widget test seeds 30 profiles and scrolls to the last.
 - **Refs**: spec 03 §2.5, `lib/ui/macros/macros_view.dart`, `test/ui/macros_view_test.dart`,
   TASKS.md M5-04, D-048
+
+### D-055 — Profile manifest export/import (M5-07)
+- **Date**: 2026-09-20
+- **Status**: Accepted
+- **Context**: M5-07 implements FR-9.1 (manifest JSON with metadata, addons, Python packages,
+  bundles and config file list; no payloads), FR-9.3 (import never overwrites) and FR-9.4
+  (cross-OS portability, absolute-path reporting). Spec 05 §4.2 documents a metadata-only shape,
+  but its §3 and the FR-9 acceptance require "config intent (paths rewritten, absolute paths
+  reported)", which needs the config text at import time. Four scope choices were confirmed with
+  the product owner before implementing.
+- **Decision**:
+  - The manifest stays JSON-only (no addon/macro payloads; the full `.zip` with payload toggles
+    remains v0.2/B-03). Shape: `schema 1`, `exported_at`, `source {os, arch}`,
+    `profile {name, build, channel, python}`, `addons [{id, git_ref, version}]`,
+    `python_packages [{name, version, source}]`, `bundles`, `config_files` and an additive
+    `config` map carrying the `user.cfg`/`system.cfg` text (only those keys, ≤ 4 MiB total).
+  - Pure codec and absolute-path scanner live in `domain/profiles/profile_manifest.dart`;
+    `ProfileManifestController` (state) owns export, preview and import. `AppServices` wires the
+    reinstall callbacks to `AddonsController` (catalog loaded lazily) and `PythonController`
+    (`install` gained an optional `source`, so imported packages keep their recorded provenance:
+    `manual`/`requirements`; `addon:<id>` rows are covered by the addon install).
+  - `bundles` exports the names of collections whose items are all installed in the profile;
+    import matches them by name and reports the missing ones without creating them.
+  - `build` is a version; the preview selects the installed build with the same version and
+    channel (then version-only) among builds that are `installed` with a detected Python. When
+    nothing matches, the dialog lists every usable build and warns, mirroring the create-profile
+    picker.
+  - Name clash (FR-9.3): the preview pre-fills `<name> (imported)`, then `(imported 2)`…; the
+    dialog validates structurally and `ProfilesRepository` enforces case-insensitive uniqueness,
+    so an existing profile is never overwritten.
+  - On confirm: atomic profile creation, config write, `FreeCadPreferences.ensureMacroPath`
+    rewrites `MacroPath` to the new profile's `Macros/` (D-053-compatible; a minimal `user.cfg`
+    is created when the manifest has none), then — optional, default on — addons are reinstalled
+    sequentially and non-addon-sourced packages are pip-installed grouped by recorded source.
+    Failures are collected in a summary (the profile stays), a config-write failure rolls the
+    profile back, and missing bundle names are surfaced as warnings.
+  - Absolute paths (POSIX `/…`, Windows `C:\`, UNC `\\…`) are scanned from the embedded config
+    with the pure scanner and listed in the preview before importing.
+  - UI: **Import manifest** in the Profiles header (opens file picker → preview dialog with
+    editable name, build picker, contents, path/bundle warnings, reinstall and requirements
+    checkboxes, inline progress/errors), **Export manifest** in the profile card menu and the
+    profile **Backups** tab, which also offers Import; file dialogs follow the bundle flows
+    (`getSaveLocation`/`openFile`, `file_selector`).
+- **Consequences**: FR-9.1's "no addon payloads" is respected while config intent travels;
+  config files bigger than 4 MiB or non-`user.cfg`/`system.cfg` keys are rejected/ignored;
+  imports run through the existing job queue (one pip job per source group); the manifest does
+  not carry macros/addon payloads (v0.2 full export, OQ-5); `ProfileManifestController` is
+  injectable in `AppServices` for tests.
+- **Refs**: spec 02 FR-9.1/9.3/9.4, spec 03 §2.3/§3.7, spec 05 §3/§4.2,
+  `lib/domain/profiles/profile_manifest.dart`, `lib/state/profile_manifest_controller.dart`,
+  `lib/ui/profiles/profile_manifest_dialogs.dart`, `TASKS.md` M5-07, D-028, D-041, D-046, D-047,
+  D-053
