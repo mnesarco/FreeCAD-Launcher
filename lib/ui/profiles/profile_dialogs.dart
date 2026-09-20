@@ -5,6 +5,7 @@ import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/profiles_controller.dart';
+import 'package:freecad_launcher/ui/widgets/form_row.dart';
 
 class ProfileFormResult {
   const ProfileFormResult({required this.name, required this.buildId});
@@ -27,7 +28,8 @@ Future<ProfileFormResult?> showProfileFormDialog(
 }) {
   return showDialog<ProfileFormResult>(
     context: context,
-    builder: (context) => _ProfileFormDialog(controller: controller, profile: profile),
+    builder: (context) =>
+        _ProfileFormDialog(controller: controller, profile: profile),
   );
 }
 
@@ -63,7 +65,10 @@ Future<bool> confirmDeleteProfile(BuildContext context, Profile profile) async {
   return confirmed ?? false;
 }
 
-Future<bool> confirmQuarantineRemoval(BuildContext context, String appPath) async {
+Future<bool> confirmQuarantineRemoval(
+  BuildContext context,
+  String appPath,
+) async {
   final l10n = AppLocalizations.of(context);
   final confirmed = await showDialog<bool>(
     context: context,
@@ -149,7 +154,9 @@ class _ProfileFormDialogState extends State<_ProfileFormDialog> {
     setState(() => _saving = false);
 
     result.fold(
-      (_) => Navigator.of(context).pop(ProfileFormResult(name: name, buildId: buildId)),
+      (_) => Navigator.of(
+        context,
+      ).pop(ProfileFormResult(name: name, buildId: buildId)),
       (error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -164,7 +171,10 @@ class _ProfileFormDialogState extends State<_ProfileFormDialog> {
 
   Future<Result<Profile>> _edit(String name, String buildId) async {
     final profile = widget.profile!;
-    final renamed = await widget.controller.rename(profileId: profile.id, name: name);
+    final renamed = await widget.controller.rename(
+      profileId: profile.id,
+      name: name,
+    );
     if (renamed.isErr) {
       return renamed;
     }
@@ -185,7 +195,8 @@ class _ProfileFormDialogState extends State<_ProfileFormDialog> {
     final l10n = AppLocalizations.of(context);
     final profile = widget.profile;
     final builds = _selectableBuilds(profile);
-    final selected = _buildId == null || !builds.any((build) => build.id == _buildId)
+    final selected =
+        _buildId == null || !builds.any((build) => build.id == _buildId)
         ? null
         : builds.firstWhere((build) => build.id == _buildId);
     final pythonChanged = selected != null && _pythonChanges(profile, selected);
@@ -193,43 +204,49 @@ class _ProfileFormDialogState extends State<_ProfileFormDialog> {
     return AlertDialog(
       title: Text(_isEdit ? l10n.profilesEditTitle : l10n.profilesCreateTitle),
       content: SizedBox(
-        width: 420,
+        width: 480,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: _nameController,
-              autofocus: true,
-              decoration: InputDecoration(labelText: l10n.profilesName),
+            FormRow(
+              label: l10n.profilesName,
+              field: FormTextField(
+                controller: _nameController,
+                autofocus: true,
+              ),
             ),
-            const SizedBox(height: 12),
             if (builds.isEmpty)
               Text(l10n.profilesNoBuildsMessage)
             else
-              DropdownButtonFormField<String>(
-                initialValue: selected?.id,
-                decoration: InputDecoration(labelText: l10n.profilesBuild),
-                items: [
-                  for (final build in builds)
-                    DropdownMenuItem(
-                      value: build.id,
-                      child: Text(
-                        '${build.version} · ${build.channel.name}'
-                        '${build.pythonVersion == null ? '' : ' · py${build.pythonVersion}'}',
-                        overflow: TextOverflow.ellipsis,
+              FormRow(
+                label: l10n.profilesBuild,
+                field: FormDropdown<String>(
+                  value: selected?.id,
+                  items: [
+                    for (final build in builds)
+                      DropdownMenuItem(
+                        value: build.id,
+                        child: Text(
+                          '${build.version} · ${build.channel.name}'
+                          '${build.pythonVersion == null ? '' : ' · py${build.pythonVersion}'}',
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                ],
-                onChanged: _saving ? null : (value) => setState(() => _buildId = value),
+                  ],
+                  onChanged: _saving
+                      ? null
+                      : (value) => setState(() => _buildId = value),
+                ),
               ),
-            if (pythonChanged) ...[
-              const SizedBox(height: 12),
-              Text(
-                l10n.profilesBuildChangedWarning,
-                style: Theme.of(context).textTheme.bodySmall,
+            if (pythonChanged)
+              Padding(
+                padding: const EdgeInsets.only(left: formLabelWidth + 12),
+                child: Text(
+                  l10n.profilesBuildChangedWarning,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ),
-            ],
           ],
         ),
       ),
@@ -253,7 +270,8 @@ class _DuplicateProfileDialog extends StatefulWidget {
   final String initialName;
 
   @override
-  State<_DuplicateProfileDialog> createState() => _DuplicateProfileDialogState();
+  State<_DuplicateProfileDialog> createState() =>
+      _DuplicateProfileDialogState();
 }
 
 class _DuplicateProfileDialogState extends State<_DuplicateProfileDialog> {
@@ -263,7 +281,9 @@ class _DuplicateProfileDialogState extends State<_DuplicateProfileDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: '${widget.initialName} (copy)');
+    _nameController = TextEditingController(
+      text: '${widget.initialName} (copy)',
+    );
   }
 
   @override
@@ -278,23 +298,26 @@ class _DuplicateProfileDialogState extends State<_DuplicateProfileDialog> {
     return AlertDialog(
       title: Text(l10n.profilesDuplicateTitle),
       content: SizedBox(
-        width: 420,
+        width: 480,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: _nameController,
-              autofocus: true,
-              decoration: InputDecoration(labelText: l10n.profilesName),
+            FormRow(
+              label: l10n.profilesName,
+              field: FormTextField(
+                controller: _nameController,
+                autofocus: true,
+              ),
             ),
-            const SizedBox(height: 8),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               value: _copyPayload,
               onChanged: (value) => setState(() => _copyPayload = value),
               title: Text(
-                _copyPayload ? l10n.profilesDuplicatePayload : l10n.profilesDuplicateConfig,
+                _copyPayload
+                    ? l10n.profilesDuplicatePayload
+                    : l10n.profilesDuplicateConfig,
               ),
               subtitle: Text(l10n.profilesDuplicatePayloadHint),
             ),

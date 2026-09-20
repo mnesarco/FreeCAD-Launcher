@@ -12,7 +12,7 @@ class UpdatesStatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final count = AppScope.of(context).updates.outdated.watch(context).length;
+    final count = AppScope.of(context).updates.outdatedCount.watch(context);
     if (count == 0) {
       return const SizedBox.shrink();
     }

@@ -4,12 +4,12 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-20
-- **Current milestone**: M6 — Updates and polish (M6-10 pinning and M6-01 addon update
-  badges done); next: M6-02 — build update checks + badges
+- **Current milestone**: M6 — Updates and polish (M6-10 pinning, M6-01 addon badges, M6-02
+  build badges and M6-11 desktop form style done); next: M6-03 — batch update flow
 - **Active branch**: `v2`
 - **Last session**: 2026-09-20
-- **Next action**: start `M6-02` (build update checks + badges, stable channel); manual M4/M5 UI
-  click-throughs and the Windows/macOS manual checks remain open.
+- **Next action**: start `M6-03` ("Update all" with per-item toggles through the job queue);
+  manual M4/M5 UI click-throughs and the Windows/macOS manual checks remain open.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -202,10 +202,24 @@
     surfaces: status-bar chip + summary sheet (grouped by profile, Check action), profile cards,
     profile Addons tab rows and catalog cards, plus a Check action in the addons header.
     Notify-only, no auto-install; pinned addons are excluded per profile.
-  - 428 tests green (8 manual probes skipped), analyze clean, app builds and launches. Runtime
-    visual pass via the Dart/Flutter MCP/VM service on the real dev DB: v3 → v4 migration applied,
-    badge rendered with an aged unpinned addon and disappeared when only a pinned addon was
-    outdated (temporary dev-data changes were restored exactly afterwards).
+  - M6-02 — **D-058**: build update checks + badges: `UpdatesController` gained `BuildsController`,
+    `outdatedBuilds` (stable, non-custom, same asset kind, installed, parseable version) and
+    `outdatedCount`; `check()` loads both catalogs cache-first and stamps
+    `updates.addons.lastCheckedAt` + `updates.builds.lastCheckedAt` (`lastCheckedAt` is now the
+    max of the two). Notify-only: a "1.1.3 → 2.0.0" chip on Versions → Installed tiles and a
+    FreeCAD-builds section in the status summary sheet; no update button (B-02 is v0.2).
+  - M6-11 — **D-059**: desktop form style back to the prototype: 4 px outlined inputs (dense
+    default padding) and a shared `FormRow`/`FormTextField`/`FormDropdown`
+    (`lib/ui/widgets/form_row.dart`) with a fixed 130 px label column; migrated profile
+    create/edit + duplicate, custom build import (640 px form), manifest import, bundle
+    create/edit/apply/import, Python specs and the addon install target. Search and filter rows
+    stay compact; dialog widths 420 → 480.
+  - 432 tests green (8 manual probes skipped), analyze clean, app builds and launches. Visual
+    check: a temporary golden render of the real profile dialog confirmed label-left geometry and
+    4 px outlined fields (the preview test/golden were removed afterwards); runtime pass via the
+    Dart/Flutter MCP/VM service on the real dev DB: v3 → v4 migration applied, badge rendered with
+    an aged unpinned addon and disappeared when only a pinned addon was outdated (temporary
+    dev-data changes were restored exactly afterwards).
 
 ## Session log
 
@@ -271,6 +285,8 @@
 | 2026-09-20 | Fix | Versions/Available install progress moved into the tile subtitle, fixing bottom overflow | Fix | `lib/ui/builds/builds_view.dart`, `test/ui/builds_view_test.dart` |
 | 2026-09-20 | M6 | D-056 addon pinning per profile (schema v4, pin/unpin UI, update block, bundle skip, manifest) | M6-10 | `docs/impl/DECISIONS.md`, `docs/spec/02-requirements.md`, `docs/spec/03-ux.md`, `docs/spec/05-data-model.md`, `lib/data/**`, `lib/domain/addons/addon_update.dart`, `lib/domain/bundles/bundle_planner.dart`, `lib/domain/profiles/profile_manifest.dart`, `lib/state/**`, `lib/ui/**`, `lib/l10n/**`, `test/**` |
 | 2026-09-20 | M6 | D-057 addon update checks + badges on all surfaces (UpdatesController, status-bar sheet, profile/addon badges, check action) | M6-01 | `docs/impl/DECISIONS.md`, `docs/impl/VERIFICATION.md`, `docs/spec/03-ux.md`, `lib/domain/addons/addon_update.dart`, `lib/state/updates_controller.dart`, `lib/state/app_services.dart`, `lib/ui/updates/**`, `lib/ui/shell/app_shell.dart`, `lib/ui/profiles/**`, `lib/ui/addons/addons_view.dart`, `lib/l10n/**`, `test/**` |
+| 2026-09-20 | M6 | D-058 build update checks + badges (stable, same kind, notify-only; per-kind timestamps) | M6-02 | `docs/impl/DECISIONS.md`, `docs/spec/03-ux.md`, `lib/domain/builds/build_update.dart`, `lib/state/updates_controller.dart`, `lib/state/app_services.dart`, `lib/ui/builds/builds_view.dart`, `lib/ui/updates/updates_summary_sheet.dart`, `lib/ui/updates/updates_status_chip.dart`, `lib/l10n/**`, `test/**` |
+| 2026-09-20 | M6 | D-059 desktop form style: label-left `FormRow`, 4 px outlined inputs, migrated dialogs/inline forms | M6-11 | `docs/impl/DECISIONS.md`, `docs/spec/03-ux.md`, `lib/app.dart`, `lib/ui/widgets/form_row.dart`, `lib/ui/profiles/**`, `lib/ui/builds/builds_view.dart`, `lib/ui/addons/**`, `lib/l10n/**`, `test/**` |
 
 ## Standing notes for the next agent
 

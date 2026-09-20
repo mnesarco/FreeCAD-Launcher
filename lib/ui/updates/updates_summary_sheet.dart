@@ -56,6 +56,7 @@ class _UpdatesSummarySheetState extends State<UpdatesSummarySheet> {
     final l10n = AppLocalizations.of(context);
     final services = AppScope.of(context);
     final grouped = services.updates.outdatedByProfile.watch(context);
+    final buildUpdates = services.updates.outdatedBuilds.watch(context);
     final checking = services.updates.checking.watch(context);
     final lastChecked = services.updates.lastCheckedAt.watch(context);
     final profiles = services.profiles.profiles.watch(context);
@@ -96,7 +97,7 @@ class _UpdatesSummarySheetState extends State<UpdatesSummarySheet> {
                   style: theme.textTheme.labelSmall,
                 ),
               const SizedBox(height: 8),
-              if (grouped.isEmpty)
+              if (grouped.isEmpty && buildUpdates.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Center(child: Text(l10n.updatesNone)),
@@ -106,6 +107,29 @@ class _UpdatesSummarySheetState extends State<UpdatesSummarySheet> {
                   child: ListView(
                     shrinkWrap: true,
                     children: [
+                      if (buildUpdates.isNotEmpty) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8, bottom: 4),
+                          child: Text(
+                            l10n.updatesBuildsSection,
+                            style: theme.textTheme.titleSmall,
+                          ),
+                        ),
+                        for (final update in buildUpdates)
+                          ListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.inventory_2_outlined),
+                            title: Text(update.installedVersion),
+                            subtitle: Text(
+                              '${update.installedVersion}  →  ${update.latestVersion}',
+                            ),
+                            trailing: Chip(
+                              label: Text(l10n.addonsUpdateBadge),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ),
+                      ],
                       for (final entry in grouped.entries) ...[
                         Padding(
                           padding: const EdgeInsets.only(top: 8, bottom: 4),

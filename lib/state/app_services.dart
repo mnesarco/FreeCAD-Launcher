@@ -233,7 +233,11 @@ class AppServices {
 
   late final UpdatesController updates =
       _updatesControllerOverride ??
-      UpdatesController(addons: addons, settingsDao: database.settingsDao);
+      UpdatesController(
+        addons: addons,
+        builds: builds,
+        settingsDao: database.settingsDao,
+      );
 
   late final ProfileManifestController manifests =
       _manifestsControllerOverride ??

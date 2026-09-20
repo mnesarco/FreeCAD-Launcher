@@ -5,25 +5,46 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:freecad_launcher/data/daos/settings_dao.dart';
 import 'package:freecad_launcher/domain/addons/addon_update.dart';
 import 'package:freecad_launcher/domain/addons/addon_update_rules.dart';
+import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/builds/build_update.dart';
+import 'package:freecad_launcher/domain/builds/freecad_version.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
+import 'package:freecad_launcher/state/builds_controller.dart';
 
 const addonUpdateLastCheckedKey = 'updates.addons.lastCheckedAt';
+const buildUpdateLastCheckedKey = 'updates.builds.lastCheckedAt';
 
 class UpdatesController {
   UpdatesController({
     required AddonsController addons,
+    required BuildsController builds,
     required SettingsDao settingsDao,
     DateTime Function()? clock,
   }) : _addons = addons,
+       _builds = builds,
        _settingsDao = settingsDao,
        _clock = clock ?? DateTime.now;
 
   final AddonsController _addons;
+  final BuildsController _builds;
   final SettingsDao _settingsDao;
   final DateTime Function() _clock;
 
   final checking = signal(false);
-  final lastCheckedAt = signal<DateTime?>(null);
+  final addonLastCheckedAt = signal<DateTime?>(null);
+  final buildLastCheckedAt = signal<DateTime?>(null);
+
+  late final lastCheckedAt = computed<DateTime?>(() {
+    final addon = addonLastCheckedAt.value;
+    final build = buildLastCheckedAt.value;
+    if (addon == null) {
+      return build;
+    }
+    if (build == null) {
+      return addon;
+    }
+    return build.isAfter(addon) ? build : addon;
+  });
 
   bool _started = false;
 
@@ -76,6 +97,49 @@ class UpdatesController {
     return grouped;
   });
 
+  late final outdatedBuilds = computed<List<BuildUpdate>>(() {
+    final candidates = _builds.availableBuilds.value;
+    if (candidates.isEmpty) {
+      return const [];
+    }
+    final result = <BuildUpdate>[];
+    for (final build in _builds.installedBuilds.value) {
+      if (build.channel != BuildChannel.stable ||
+          build.kind == BuildKind.custom ||
+          build.status != BuildStatus.installed) {
+        continue;
+      }
+      final installed = FreeCadVersion.tryParse(build.version);
+      if (installed == null) {
+        continue;
+      }
+      for (final candidate in candidates) {
+        final latest = candidate.version;
+        if (candidate.kind != build.kind || latest == null) {
+          continue;
+        }
+        if (latest.compareTo(installed) <= 0) {
+          break;
+        }
+        result.add(
+          BuildUpdate(
+            buildId: build.id,
+            installedVersion: build.version,
+            latestVersion: candidate.versionLabel,
+            candidateId: candidate.id,
+          ),
+        );
+        break;
+      }
+    }
+    result.sort((a, b) => b.latestVersion.compareTo(a.latestVersion));
+    return result;
+  });
+
+  late final outdatedCount = computed(
+    () => outdated.value.length + outdatedBuilds.value.length,
+  );
+
   bool isOutdated(String profileId, String addonId) {
     return outdated.value.any(
       (update) => update.profileId == profileId && update.addonId == addonId,
@@ -94,10 +158,15 @@ class UpdatesController {
   }
 
   Future<void> _restoreLastChecked() async {
-    final raw = await _settingsDao.getValue(addonUpdateLastCheckedKey);
-    final parsed = raw == null ? null : DateTime.tryParse(raw);
-    if (parsed != null) {
-      lastCheckedAt.value = parsed;
+    final addonRaw = await _settingsDao.getValue(addonUpdateLastCheckedKey);
+    final addonParsed = addonRaw == null ? null : DateTime.tryParse(addonRaw);
+    if (addonParsed != null) {
+      addonLastCheckedAt.value = addonParsed;
+    }
+    final buildRaw = await _settingsDao.getValue(buildUpdateLastCheckedKey);
+    final buildParsed = buildRaw == null ? null : DateTime.tryParse(buildRaw);
+    if (buildParsed != null) {
+      buildLastCheckedAt.value = buildParsed;
     }
   }
 
@@ -107,13 +176,22 @@ class UpdatesController {
       if (!_addons.loaded.value && !_addons.loading.value) {
         await _addons.load();
       }
-      if (_addons.error.value != null && _addons.addons.value.isEmpty) {
+      if (_builds.availableBuilds.value.isEmpty && !_builds.loadingCatalog.value) {
+        await _builds.loadCatalog();
+      }
+      final addonsReachable =
+          _addons.addons.value.isNotEmpty || _addons.error.value == null;
+      final buildsReachable =
+          _builds.availableBuilds.value.isNotEmpty || _builds.catalogError.value == null;
+      if (!addonsReachable && !buildsReachable) {
         return null;
       }
       final now = _clock();
-      lastCheckedAt.value = now;
+      addonLastCheckedAt.value = now;
+      buildLastCheckedAt.value = now;
       await _settingsDao.setValue(addonUpdateLastCheckedKey, now.toIso8601String());
-      return outdated.value.length;
+      await _settingsDao.setValue(buildUpdateLastCheckedKey, now.toIso8601String());
+      return outdatedCount.value;
     } finally {
       checking.value = false;
     }

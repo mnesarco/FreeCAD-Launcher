@@ -436,6 +436,12 @@ abstract class AppLocalizations {
   /// **'Install Python packages'**
   String get pythonInstallTitle;
 
+  /// No description provided for @pythonPackagesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Packages'**
+  String get pythonPackagesLabel;
+
   /// No description provided for @pythonSpecs.
   ///
   /// In en, this message translates to:
@@ -2409,6 +2415,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Updates available'**
   String get updatesTitle;
+
+  /// No description provided for @updatesBuildsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'FreeCAD builds'**
+  String get updatesBuildsSection;
 
   /// No description provided for @updatesNone.
   ///

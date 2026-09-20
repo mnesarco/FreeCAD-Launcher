@@ -9,9 +9,11 @@ import 'package:freecad_launcher/data/catalog/releases_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/asset_classifier.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/builds/build_update.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/builds_controller.dart';
+import 'package:freecad_launcher/ui/widgets/form_row.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 
 String _stageLabel(AppLocalizations l10n, InstallStage stage) {
@@ -104,7 +106,8 @@ class _InstalledTab extends StatelessWidget {
       padding: const EdgeInsets.all(8),
       itemCount: builds.length,
       separatorBuilder: (context, index) => const Divider(height: 1),
-      itemBuilder: (context, index) => _InstalledBuildTile(buildInfo: builds[index]),
+      itemBuilder: (context, index) =>
+          _InstalledBuildTile(buildInfo: builds[index]),
     );
   }
 }
@@ -119,10 +122,21 @@ class _InstalledBuildTile extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).builds;
     final theme = Theme.of(context);
+    BuildUpdate? buildUpdate;
+    for (final update in AppScope.of(
+      context,
+    ).updates.outdatedBuilds.watch(context)) {
+      if (update.buildId == buildInfo.id) {
+        buildUpdate = update;
+        break;
+      }
+    }
 
     final subtitle = [
-      if (buildInfo.sizeBytes != null) '${l10n.versionsSize}: ${formatBytes(buildInfo.sizeBytes!)}',
-      if (buildInfo.pythonVersion != null) '${l10n.versionsPython}: ${buildInfo.pythonVersion}',
+      if (buildInfo.sizeBytes != null)
+        '${l10n.versionsSize}: ${formatBytes(buildInfo.sizeBytes!)}',
+      if (buildInfo.pythonVersion != null)
+        '${l10n.versionsPython}: ${buildInfo.pythonVersion}',
       buildInfo.arch,
     ].join('  ·  ');
 
@@ -144,6 +158,16 @@ class _InstalledBuildTile extends StatelessWidget {
                 buildInfo.status == BuildStatus.missing
                     ? l10n.versionsStatusMissing
                     : l10n.versionsStatusBroken,
+              ),
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
+          if (buildUpdate != null) ...[
+            const SizedBox(width: 8),
+            Chip(
+              avatar: const Icon(Icons.system_update_alt, size: 16),
+              label: Text(
+                '${buildUpdate.installedVersion} → ${buildUpdate.latestVersion}',
               ),
               visualDensity: VisualDensity.compact,
             ),
@@ -198,7 +222,9 @@ class _InstalledBuildTile extends StatelessWidget {
       },
       (error) => error.toString(),
     );
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _confirmRemove(
@@ -250,7 +276,8 @@ class _AvailableTab extends StatelessWidget {
     final candidates = controller.availableBuilds.watch(context);
     final loading = controller.loadingCatalog.watch(context);
     final error = controller.catalogError.watch(context);
-    final stale = controller.catalogFreshness.watch(context) == CatalogFreshness.stale;
+    final stale =
+        controller.catalogFreshness.watch(context) == CatalogFreshness.stale;
 
     Widget body;
     if (error != null && candidates.isEmpty) {
@@ -280,7 +307,8 @@ class _AvailableTab extends StatelessWidget {
         padding: const EdgeInsets.all(8),
         itemCount: candidates.length,
         separatorBuilder: (context, index) => const Divider(height: 1),
-        itemBuilder: (context, index) => _AvailableBuildTile(candidate: candidates[index]),
+        itemBuilder: (context, index) =>
+            _AvailableBuildTile(candidate: candidates[index]),
       );
     }
 
@@ -303,7 +331,9 @@ class _AvailableTab extends StatelessWidget {
               else
                 const Spacer(),
               TextButton.icon(
-                onPressed: loading ? null : () => controller.loadCatalog(forceRefresh: true),
+                onPressed: loading
+                    ? null
+                    : () => controller.loadCatalog(forceRefresh: true),
                 icon: const Icon(Icons.refresh),
                 label: Text(l10n.versionsRefresh),
               ),
@@ -332,7 +362,8 @@ class _AvailableBuildTile extends StatelessWidget {
 
     final subtitle = [
       '${l10n.versionsSize}: ${formatBytes(candidate.sizeBytes)}',
-      if (candidate.pythonVersion != null) '${l10n.versionsPython}: ${candidate.pythonVersion}',
+      if (candidate.pythonVersion != null)
+        '${l10n.versionsPython}: ${candidate.pythonVersion}',
       candidate.assetName,
     ].join('  ·  ');
     final detail = progress == null ? '' : _progressDetail(progress);
@@ -376,7 +407,9 @@ class _AvailableBuildTile extends StatelessWidget {
           if (error != null)
             Text(
               '${l10n.versionsInstallFailed}: $error',
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+              ),
             ),
         ],
       ),
@@ -531,7 +564,9 @@ class _CustomTabState extends State<_CustomTab> {
         _labelController.clear();
         _checksumController.clear();
         messenger.showSnackBar(
-          SnackBar(content: Text('${l10n.versionsCustomImported}: ${build.version}')),
+          SnackBar(
+            content: Text('${l10n.versionsCustomImported}: ${build.version}'),
+          ),
         );
         tabController.animateTo(0);
         if (build.pythonVersion == null) {
@@ -557,63 +592,67 @@ class _CustomTabState extends State<_CustomTab> {
       }
     }
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        TextField(
-          controller: _sourceController,
-          decoration: InputDecoration(
-            labelText: l10n.versionsCustomSource,
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.folder_open),
-              tooltip: l10n.versionsCustomChooseFile,
-              onPressed: _importing ? null : _pickFile,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _labelController,
-          decoration: InputDecoration(labelText: l10n.versionsCustomLabel),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _checksumController,
-          decoration: InputDecoration(labelText: l10n.versionsCustomChecksum),
-        ),
-        const SizedBox(height: 20),
-        Row(
+    return Align(
+      alignment: Alignment.topLeft,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 640),
+        child: ListView(
+          padding: const EdgeInsets.all(16),
           children: [
-            FilledButton.icon(
-              onPressed: _importing ? null : _import,
-              icon: _importing
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.add),
-              label: Text(l10n.versionsCustomImport),
+            FormRow(
+              label: l10n.versionsCustomSource,
+              field: FormTextField(
+                controller: _sourceController,
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.folder_open),
+                  tooltip: l10n.versionsCustomChooseFile,
+                  onPressed: _importing ? null : _pickFile,
+                ),
+              ),
             ),
+            FormRow(
+              label: l10n.versionsCustomLabel,
+              field: FormTextField(controller: _labelController),
+            ),
+            FormRow(
+              label: l10n.versionsCustomChecksum,
+              field: FormTextField(controller: _checksumController),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                FilledButton.icon(
+                  onPressed: _importing ? null : _import,
+                  icon: _importing
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.add),
+                  label: Text(l10n.versionsCustomImport),
+                ),
+              ],
+            ),
+            if (progress != null) ...[
+              const SizedBox(height: 16),
+              LinearProgressIndicator(value: progress.fraction),
+              const SizedBox(height: 4),
+              Text(
+                _stageLabel(l10n, progress.stage),
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+              if (_progressDetail(progress).isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  _progressDetail(progress),
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+              ],
+            ],
           ],
         ),
-        if (progress != null) ...[
-          const SizedBox(height: 16),
-          LinearProgressIndicator(value: progress.fraction),
-          const SizedBox(height: 4),
-          Text(
-            _stageLabel(l10n, progress.stage),
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
-          if (_progressDetail(progress).isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(
-              _progressDetail(progress),
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
-          ],
-        ],
-      ],
+      ),
     );
   }
 }

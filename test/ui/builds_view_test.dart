@@ -6,6 +6,7 @@ import 'package:freecad_launcher/data/catalog/releases_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/asset_classifier.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/builds/freecad_version.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/platform/build_installer.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
@@ -13,7 +14,9 @@ import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/builds_controller.dart';
 import 'package:freecad_launcher/ui/builds/builds_view.dart';
+import 'package:path/path.dart' as p;
 
+import '../data/test_fixtures.dart';
 import '../helpers/fake_download.dart';
 
 class FakeReleasesCatalog implements ReleasesCatalog {
@@ -43,7 +46,7 @@ class FakeInstaller implements BuildInstaller {
 }
 
 BuildCandidate sampleCandidate() {
-  return const BuildCandidate(
+  return BuildCandidate(
     versionLabel: '1.1.3',
     channel: BuildChannel.stable,
     platform: BuildPlatform.linux,
@@ -53,6 +56,7 @@ BuildCandidate sampleCandidate() {
     downloadUrl: 'https://example.invalid/1.1.3.AppImage',
     sizeBytes: 820 * 1024 * 1024,
     pythonVersion: '3.11',
+    version: FreeCadVersion.tryParse('1.1.3'),
   );
 }
 
@@ -149,5 +153,44 @@ void main() {
     final detail = tester.widget<Text>(find.textContaining('12.00 GiB'));
     expect(detail.maxLines, 1);
     expect(detail.overflow, TextOverflow.ellipsis);
+  });
+
+  testWidgets('flags a newer stable release on installed builds', (tester) async {
+    await tester.runAsync(() async {
+      final buildDirectory = Directory(paths.buildDir('build-1'));
+      buildDirectory.createSync(recursive: true);
+      final executable = File(p.join(buildDirectory.path, 'FreeCAD'))..writeAsStringSync('');
+      await database.buildsDao.save(
+        sampleBuild(version: '1.1.3').copyWith(localPath: executable.path),
+      );
+    });
+    controller.availableBuilds.value = [
+      BuildCandidate(
+        versionLabel: '2.0.0',
+        channel: BuildChannel.stable,
+        platform: BuildPlatform.linux,
+        arch: BuildArch.x86_64,
+        kind: BuildKind.appimage,
+        assetName: 'FreeCAD_2.0.0-Linux-x86_64-py311.AppImage',
+        downloadUrl: 'https://example.invalid/2.0.0.AppImage',
+        sizeBytes: 820 * 1024 * 1024,
+        pythonVersion: '3.11',
+        version: FreeCadVersion.tryParse('2.0.0'),
+      ),
+    ];
+
+    await tester.pumpWidget(
+      AppScope(
+        services: services,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: BuildsView()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('1.1.3 → 2.0.0'), findsOneWidget);
   });
 }

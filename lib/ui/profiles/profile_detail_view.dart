@@ -14,9 +14,14 @@ import 'package:freecad_launcher/ui/profiles/launch_command_dialog.dart';
 import 'package:freecad_launcher/ui/profiles/profile_actions.dart';
 import 'package:freecad_launcher/ui/profiles/profile_dialogs.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
+import 'package:freecad_launcher/ui/widgets/form_row.dart';
 
 class ProfileDetailView extends StatelessWidget {
-  const ProfileDetailView({super.key, required this.profileId, required this.onBack});
+  const ProfileDetailView({
+    super.key,
+    required this.profileId,
+    required this.onBack,
+  });
 
   final String profileId;
   final VoidCallback onBack;
@@ -58,7 +63,9 @@ class ProfileDetailView extends StatelessWidget {
     }
 
     final current = profile;
-    final running = controller.runningProfiles.watch(context).contains(current.id);
+    final running = controller.runningProfiles
+        .watch(context)
+        .contains(current.id);
     final build = controller.buildsById.watch(context)[current.buildId];
 
     return DefaultTabController(
@@ -70,10 +77,8 @@ class ProfileDetailView extends StatelessWidget {
             onBack: onBack,
             running: running,
             onLaunch: () => launchProfile(context, current),
-            onShowCommand: () => showLaunchCommandDialog(
-              context,
-              profileId: current.id,
-            ),
+            onShowCommand: () =>
+                showLaunchCommandDialog(context, profileId: current.id),
             onEdit: () => showProfileFormDialog(
               context,
               controller: controller,
@@ -192,10 +197,19 @@ class _OverviewTab extends StatelessWidget {
         _InfoCard(
           title: l10n.profilesBuild,
           children: [
-            _InfoRow(label: l10n.profilesBuild, value: buildInfo?.version ?? '—'),
+            _InfoRow(
+              label: l10n.profilesBuild,
+              value: buildInfo?.version ?? '—',
+            ),
             if (buildInfo != null)
-              _InfoRow(label: l10n.profilesChannel, value: buildInfo!.channel.name),
-            _InfoRow(label: l10n.profilesPythonVersion, value: profile.pythonVersion),
+              _InfoRow(
+                label: l10n.profilesChannel,
+                value: buildInfo!.channel.name,
+              ),
+            _InfoRow(
+              label: l10n.profilesPythonVersion,
+              value: profile.pythonVersion,
+            ),
             if (buildInfo != null)
               _InfoRow(
                 label: l10n.profilesHealth,
@@ -211,7 +225,11 @@ class _OverviewTab extends StatelessWidget {
         _InfoCard(
           title: l10n.profilesPaths,
           children: [
-            _InfoRow(label: l10n.profilesProfileHome, value: paths.root, selectable: true),
+            _InfoRow(
+              label: l10n.profilesProfileHome,
+              value: paths.root,
+              selectable: true,
+            ),
             _InfoRow(label: 'Mod', value: paths.mod, selectable: true),
             _InfoRow(
               label: l10n.profilesTabPython,
@@ -224,8 +242,14 @@ class _OverviewTab extends StatelessWidget {
         _InfoCard(
           title: l10n.profilesConfigFiles,
           children: [
-            _InfoRow(label: 'user.cfg', value: _fileStatus(paths.userCfg, l10n)),
-            _InfoRow(label: 'system.cfg', value: _fileStatus(paths.systemCfg, l10n)),
+            _InfoRow(
+              label: 'user.cfg',
+              value: _fileStatus(paths.userCfg, l10n),
+            ),
+            _InfoRow(
+              label: 'system.cfg',
+              value: _fileStatus(paths.systemCfg, l10n),
+            ),
           ],
         ),
         if (launchLog != null) ...[
@@ -271,12 +295,16 @@ class _ProfileAddonsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).profiles;
-    final installed = controller.installedAddons.watch(context).where(
-      (addon) => addon.profileId == profileId,
-    ).toList()
-      ..sort(
-        (a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()),
-      );
+    final installed =
+        controller.installedAddons
+            .watch(context)
+            .where((addon) => addon.profileId == profileId)
+            .toList()
+          ..sort(
+            (a, b) => a.displayName.toLowerCase().compareTo(
+              b.displayName.toLowerCase(),
+            ),
+          );
     final outdatedIds = {
       for (final update in AppScope.of(context).updates.outdated.watch(context))
         if (update.profileId == profileId) update.addonId,
@@ -336,8 +364,14 @@ class _ProfileAddonsTab extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).addons;
     final result = addon.pinnedAt == null
-        ? await controller.pin(addonId: addon.addonId, profileId: addon.profileId)
-        : await controller.unpin(addonId: addon.addonId, profileId: addon.profileId);
+        ? await controller.pin(
+            addonId: addon.addonId,
+            profileId: addon.profileId,
+          )
+        : await controller.unpin(
+            addonId: addon.addonId,
+            profileId: addon.profileId,
+          );
     if (!context.mounted || result.isOk) {
       return;
     }
@@ -372,11 +406,17 @@ class _ProfilePythonTabState extends State<_ProfilePythonTab> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).python;
-    final installed = controller.packages.watch(context).where(
-      (package) => package.profileId == widget.profileId,
-    ).toList()
-      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-    final installing = controller.installing.watch(context).contains(widget.profileId);
+    final installed =
+        controller.packages
+            .watch(context)
+            .where((package) => package.profileId == widget.profileId)
+            .toList()
+          ..sort(
+            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          );
+    final installing = controller.installing
+        .watch(context)
+        .contains(widget.profileId);
     final error = controller.errors.watch(context)[widget.profileId];
 
     return Column(
@@ -421,11 +461,13 @@ class _ProfilePythonTabState extends State<_ProfilePythonTab> {
               : ListView.separated(
                   padding: const EdgeInsets.all(8),
                   itemCount: installed.length,
-                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final package = installed[index];
                     final subtitle = [
-                      if ((package.version ?? '').isNotEmpty) 'v${package.version}',
+                      if ((package.version ?? '').isNotEmpty)
+                        'v${package.version}',
                       '${l10n.pythonSource}: ${package.source}',
                     ].join('  ·  ');
                     return ListTile(
@@ -454,13 +496,17 @@ class _ProfilePythonTabState extends State<_ProfilePythonTab> {
       builder: (context) => AlertDialog(
         title: Text(l10n.pythonInstallTitle),
         content: SizedBox(
-          width: 420,
-          child: TextField(
-            controller: textController,
-            autofocus: true,
-            maxLines: 5,
-            minLines: 3,
-            decoration: InputDecoration(hintText: l10n.pythonSpecs),
+          width: 480,
+          child: FormRow(
+            label: l10n.pythonPackagesLabel,
+            padding: EdgeInsets.zero,
+            field: FormTextField(
+              controller: textController,
+              autofocus: true,
+              maxLines: 5,
+              minLines: 3,
+              hintText: l10n.pythonSpecs,
+            ),
           ),
         ),
         actions: [
@@ -565,7 +611,11 @@ class _InfoCard extends StatelessWidget {
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value, this.selectable = false});
+  const _InfoRow({
+    required this.label,
+    required this.value,
+    this.selectable = false,
+  });
 
   final String label;
   final String value;

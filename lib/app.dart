@@ -32,7 +32,7 @@ ThemeData buildAppTheme(Brightness brightness) {
     seedColor: Colors.blueGrey,
     brightness: brightness,
   );
-  const radius = BorderRadius.all(Radius.circular(8));
+  const radius = BorderRadius.all(Radius.circular(4));
   const border = OutlineInputBorder(borderRadius: radius);
 
   return ThemeData(
@@ -41,7 +41,6 @@ ThemeData buildAppTheme(Brightness brightness) {
     colorScheme: scheme,
     inputDecorationTheme: InputDecorationThemeData(
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       border: border,
       enabledBorder: border.copyWith(
         borderSide: BorderSide(color: scheme.outline),

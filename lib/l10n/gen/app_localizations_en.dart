@@ -188,6 +188,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pythonInstallTitle => 'Install Python packages';
 
   @override
+  String get pythonPackagesLabel => 'Packages';
+
+  @override
   String get pythonSpecs => 'One package per line, e.g. numpy==1.26.4';
 
   @override
@@ -1249,6 +1252,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updatesTitle => 'Updates available';
+
+  @override
+  String get updatesBuildsSection => 'FreeCAD builds';
 
   @override
   String get updatesNone => 'No updates found';

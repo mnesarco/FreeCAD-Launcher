@@ -7,6 +7,7 @@ import 'package:freecad_launcher/domain/profiles/profile_rules.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/profile_manifest_controller.dart';
+import 'package:freecad_launcher/ui/widgets/form_row.dart';
 
 Future<void> exportProfileManifest(
   BuildContext context, {
@@ -22,7 +23,9 @@ Future<void> exportProfileManifest(
   final json = encoded.valueOrNull;
   if (json == null) {
     messenger.showSnackBar(
-      SnackBar(content: Text('${l10n.profilesExportFailed}: ${encoded.errorOrNull}')),
+      SnackBar(
+        content: Text('${l10n.profilesExportFailed}: ${encoded.errorOrNull}'),
+      ),
     );
     return;
   }
@@ -38,11 +41,15 @@ Future<void> exportProfileManifest(
     }
     messenger.showSnackBar(SnackBar(content: Text(l10n.profilesExportDone)));
   } on Object catch (error) {
-    messenger.showSnackBar(SnackBar(content: Text('${l10n.profilesExportFailed}: $error')));
+    messenger.showSnackBar(
+      SnackBar(content: Text('${l10n.profilesExportFailed}: $error')),
+    );
   }
 }
 
-Future<ManifestImportOutcome?> importProfileManifest(BuildContext context) async {
+Future<ManifestImportOutcome?> importProfileManifest(
+  BuildContext context,
+) async {
   final l10n = AppLocalizations.of(context);
   final messenger = ScaffoldMessenger.of(context);
   final file = await openFile(
@@ -57,7 +64,9 @@ Future<ManifestImportOutcome?> importProfileManifest(BuildContext context) async
   try {
     text = await File(file.path).readAsString();
   } on Object catch (error) {
-    messenger.showSnackBar(SnackBar(content: Text('${l10n.manifestReadFailed}: $error')));
+    messenger.showSnackBar(
+      SnackBar(content: Text('${l10n.manifestReadFailed}: $error')),
+    );
     return null;
   }
   if (!context.mounted) {
@@ -71,9 +80,14 @@ Future<ManifestImportOutcome?> importProfileManifest(BuildContext context) async
     return null;
   }
   final details = [
-    l10n.manifestImportSummary(outcome.addonsInstalled, outcome.packagesInstalled),
+    l10n.manifestImportSummary(
+      outcome.addonsInstalled,
+      outcome.packagesInstalled,
+    ),
     if (outcome.addonsFailed.isNotEmpty || outcome.packagesFailed.isNotEmpty)
-      l10n.manifestImportWarnings([...outcome.addonsFailed, ...outcome.packagesFailed].join('; '))
+      l10n.manifestImportWarnings(
+        [...outcome.addonsFailed, ...outcome.packagesFailed].join('; '),
+      )
     else if (outcome.warnings.isNotEmpty)
       l10n.manifestImportWarnings(outcome.warnings.join('; ')),
   ];
@@ -121,7 +135,9 @@ class _ManifestImportDialogState extends State<ManifestImportDialog> {
   }
 
   Future<void> _load() async {
-    final result = await AppScope.of(context).manifests.previewImport(widget.jsonText);
+    final result = await AppScope.of(
+      context,
+    ).manifests.previewImport(widget.jsonText);
     if (!mounted) {
       return;
     }
@@ -155,7 +171,11 @@ class _ManifestImportDialogState extends State<ManifestImportDialog> {
               child: Center(child: CircularProgressIndicator()),
             ),
             (_, final String error, _) => Text(error),
-            (_, _, final ManifestImportPreview value) => _form(context, l10n, value),
+            (_, _, final ManifestImportPreview value) => _form(
+              context,
+              l10n,
+              value,
+            ),
             _ => const SizedBox.shrink(),
           },
         ),
@@ -174,10 +194,16 @@ class _ManifestImportDialogState extends State<ManifestImportDialog> {
     );
   }
 
-  Widget _form(BuildContext context, AppLocalizations l10n, ManifestImportPreview preview) {
+  Widget _form(
+    BuildContext context,
+    AppLocalizations l10n,
+    ManifestImportPreview preview,
+  ) {
     final theme = Theme.of(context);
     final manifest = preview.manifest;
-    final errorStyle = theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error);
+    final errorStyle = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.error,
+    );
     final nameError = _nameError(l10n);
     final buildVersion = manifest.profile.build;
     final channel = manifest.profile.channel;
@@ -189,42 +215,57 @@ class _ManifestImportDialogState extends State<ManifestImportDialog> {
         Text(
           manifest.source.os == null
               ? l10n.manifestSourceUnknown
-              : l10n.manifestSource(manifest.source.os!, manifest.source.arch ?? '?'),
+              : l10n.manifestSource(
+                  manifest.source.os!,
+                  manifest.source.arch ?? '?',
+                ),
           style: theme.textTheme.bodySmall,
         ),
         const SizedBox(height: 12),
-        TextField(
-          controller: _name,
-          enabled: !_importing,
-          onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(labelText: l10n.manifestName, errorText: nameError),
+        FormRow(
+          label: l10n.manifestName,
+          field: FormTextField(
+            controller: _name,
+            enabled: !_importing,
+            onChanged: (_) => setState(() {}),
+            errorText: nameError,
+          ),
         ),
-        const SizedBox(height: 12),
         if (preview.usableBuilds.isEmpty)
           Text(l10n.manifestNoBuild, style: errorStyle)
         else ...[
-          DropdownButtonFormField<String>(
-            initialValue: _buildId,
-            decoration: InputDecoration(labelText: l10n.manifestBuildLabel),
-            items: [
-              for (final build in preview.usableBuilds)
-                DropdownMenuItem(
-                  value: build.id,
-                  child: Text(
-                    '${build.version} · ${build.channel.name} · '
-                    '${l10n.profilesPythonVersion} ${build.pythonVersion}',
-                    overflow: TextOverflow.ellipsis,
+          FormRow(
+            label: l10n.manifestBuildLabel,
+            field: FormDropdown<String>(
+              value: _buildId,
+              items: [
+                for (final build in preview.usableBuilds)
+                  DropdownMenuItem(
+                    value: build.id,
+                    child: Text(
+                      '${build.version} · ${build.channel.name} · '
+                      '${l10n.profilesPythonVersion} ${build.pythonVersion}',
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-            ],
-            onChanged: _importing ? null : (value) => setState(() => _buildId = value),
+              ],
+              onChanged: _importing
+                  ? null
+                  : (value) => setState(() => _buildId = value),
+            ),
           ),
           if (buildVersion == null) ...[
             const SizedBox(height: 4),
-            Text(l10n.manifestBuildMissingVersion, style: theme.textTheme.bodySmall),
+            Text(
+              l10n.manifestBuildMissingVersion,
+              style: theme.textTheme.bodySmall,
+            ),
           ] else if (preview.matchingBuild == null) ...[
             const SizedBox(height: 4),
-            Text(l10n.manifestBuildMissing(buildVersion, channel ?? '?'), style: errorStyle),
+            Text(
+              l10n.manifestBuildMissing(buildVersion, channel ?? '?'),
+              style: errorStyle,
+            ),
           ],
         ],
         const SizedBox(height: 16),
@@ -247,16 +288,24 @@ class _ManifestImportDialogState extends State<ManifestImportDialog> {
           const SizedBox(height: 8),
           Text(l10n.manifestAbsolutePaths, style: errorStyle),
           for (final entry in preview.absolutePaths.take(8))
-            Text('• ${entry.file}: ${entry.path}', style: theme.textTheme.bodySmall),
+            Text(
+              '• ${entry.file}: ${entry.path}',
+              style: theme.textTheme.bodySmall,
+            ),
           if (preview.absolutePaths.length > 8)
-            Text('• +${preview.absolutePaths.length - 8}', style: theme.textTheme.bodySmall),
+            Text(
+              '• +${preview.absolutePaths.length - 8}',
+              style: theme.textTheme.bodySmall,
+            ),
         ],
         const SizedBox(height: 8),
         CheckboxListTile(
           contentPadding: EdgeInsets.zero,
           dense: true,
           value: _reinstall,
-          onChanged: _importing ? null : (value) => setState(() => _reinstall = value ?? false),
+          onChanged: _importing
+              ? null
+              : (value) => setState(() => _reinstall = value ?? false),
           title: Text(l10n.manifestReinstall),
         ),
         CheckboxListTile(
@@ -273,7 +322,9 @@ class _ManifestImportDialogState extends State<ManifestImportDialog> {
           const LinearProgressIndicator(),
           const SizedBox(height: 4),
           Text(
-            _step == null ? l10n.manifestImporting : l10n.manifestImportingStep(_step!),
+            _step == null
+                ? l10n.manifestImporting
+                : l10n.manifestImportingStep(_step!),
             style: theme.textTheme.bodySmall,
           ),
         ],
@@ -300,7 +351,9 @@ class _ManifestImportDialogState extends State<ManifestImportDialog> {
     final issue = validateProfileName(normalizeProfileName(_name.text));
     return switch (issue) {
       ProfileNameIssue.empty => l10n.manifestNameRequired,
-      ProfileNameIssue.tooLong => l10n.manifestNameTooLong(maxProfileNameLength),
+      ProfileNameIssue.tooLong => l10n.manifestNameTooLong(
+        maxProfileNameLength,
+      ),
       ProfileNameIssue.controlCharacters => l10n.manifestNameControl,
       null => null,
     };

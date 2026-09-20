@@ -1150,3 +1150,58 @@ Template:
 - **Refs**: spec 02 FR-10.1/10.3/10.4, spec 03 §1/§2.2/§2.3/§2.4/§3.6,
   `lib/state/updates_controller.dart`, `lib/ui/updates/updates_summary_sheet.dart`,
   `TASKS.md` M6-01, D-008, D-040, D-056
+
+### D-058 — Build update checks and badges (M6-02)
+- **Date**: 2026-09-20
+- **Status**: Accepted
+- **Context**: FR-10.2 requires checking for new stable FreeCAD releases on demand; FR-1.8's
+  in-place build update is v0.2 (B-02). The releases catalog and stable candidates already exist
+  (`BuildsController.availableBuilds`, M2-02/M2-03), and D-057 anticipated adding builds to
+  `UpdatesController`. Two scope questions were confirmed with the product owner.
+- **Decision**:
+  - Checked builds: `channel == stable`, `kind != custom`, status `installed`, with a parseable
+    `FreeCadVersion`; compared against the newest stable candidate of the **same asset kind**
+    (appimage/archive/dmg) for the current platform/arch. Custom and weekly builds never badge;
+    a build with no newer same-kind release is quiet.
+  - Notify-only: badge/chip on the Versions → Installed tile plus a summary-sheet entry
+    (installed → latest version); no install/update button (B-02 v0.2). The "Check updates" action
+    loads the addon and releases catalogs cache-first (no forced network) and stamps
+    `updates.addons.lastCheckedAt` and `updates.builds.lastCheckedAt`.
+  - `UpdatesController` gains a `BuildsController` dependency, `outdatedBuilds` and
+    `outdatedCount` (addons + builds); `lastCheckedAt` becomes a computed max of the two
+    per-kind timestamps. The status-bar chip and summary sheet report the combined count and the
+    sheet lists a FreeCAD-builds section before the per-profile addon groups.
+- **Consequences**: schema unchanged; existing addon badges keep working; M6-03 can consume
+  `outdatedCount`/`outdatedBuilds` for a batch flow once in-place updates land; no update action
+  is offered on builds yet.
+- **Refs**: spec 02 FR-1.8/FR-10.2/FR-10.3, spec 03 §2.2/§3.6, `lib/state/updates_controller.dart`,
+  `lib/domain/builds/build_update.dart`, `lib/ui/builds/builds_view.dart`,
+  `lib/ui/updates/updates_summary_sheet.dart`, `TASKS.md` M6-02, D-008, D-057, B-02
+
+### D-059 — Desktop form style: label-left form rows (M6-11)
+- **Date**: 2026-09-20
+- **Status**: Accepted
+- **Context**: M4-09 introduced a compact input theme with floating labels (`labelText` inside
+  the border) and 8 px corners. The frozen prototype (`prototype-final`) used traditional
+  desktop forms: a fixed label column left of each input (`"Label:"` with an optional icon,
+  130 px, 12 px gap), default outlined borders (4 px) with `isDense`, and 12 px between rows.
+  The product owner asked to return to that style; four scope questions were confirmed.
+- **Decision**:
+  - `InputDecorationThemeData` is revised: 4 px corner radius (supersedes the M4-09 8 px value),
+    Flutter's dense default content padding, scheme-colored enabled/focused/error borders,
+    `isDense: true`.
+  - Shared widgets in `lib/ui/widgets/form_row.dart`: `FormRow` (fixed 130 px label column with
+    optional icon and colon, 12 px gap, `Expanded` field, top alignment, 12 px bottom spacing)
+    plus thin `FormTextField`/`FormDropdown` wrappers. Converted forms drop `labelText` and use
+    hints inside the field.
+  - Applied to dialogs and inline labeled forms: profile create/edit + duplicate, custom build
+    import (form constrained to 640 px), manifest import, bundle create/edit/apply/import, Python
+    specs (multiline, label top-aligned), and the addon detail install-target picker. Labeled
+    dialogs widen from 420 to 480 px.
+  - Search fields and the Addons filter row keep the compact unlabeled style
+    (`_CompactDropdown` remains for filters); pickers that only select a context (e.g. the
+    installed-macros profile picker) stay compact.
+- **Consequences**: all form labels move out of the input border; the M4-09 theme regression
+  test is revised; the prototype look is restored without reviving prototype code.
+- **Refs**: spec 03 §1, `lib/app.dart`, `lib/ui/widgets/form_row.dart`,
+  `test/ui/app_theme_test.dart`, `TASKS.md` M6-11, prototype-final `lib/view/widgets.dart`
