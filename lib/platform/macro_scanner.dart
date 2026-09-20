@@ -21,33 +21,31 @@ class ScannedMacro {
 class MacroScanner {
   const MacroScanner();
 
-  Future<List<ScannedMacro>> scan(String profileRoot) async {
+  Future<List<ScannedMacro>> scan(String macroDirectory) async {
     final byName = <String, ScannedMacro>{};
-    for (final directory in [profileRoot, p.join(profileRoot, 'Macro')]) {
-      final dir = Directory(directory);
-      if (!dir.existsSync()) {
+    final dir = Directory(macroDirectory);
+    if (!dir.existsSync()) {
+      return const [];
+    }
+    for (final entity in dir.listSync(followLinks: false)) {
+      if (entity is! File) {
         continue;
       }
-      for (final entity in dir.listSync(followLinks: false)) {
-        if (entity is! File) {
-          continue;
-        }
-        final fileName = p.basename(entity.path);
-        if (!fileName.toLowerCase().endsWith('.fcmacro')) {
-          continue;
-        }
-        final stat = await entity.stat();
-        byName.putIfAbsent(
-          fileName.toLowerCase(),
-          () => ScannedMacro(
-            name: p.basenameWithoutExtension(fileName),
-            fileName: fileName,
-            path: entity.path,
-            sizeBytes: stat.size,
-            modifiedAt: stat.modified,
-          ),
-        );
+      final fileName = p.basename(entity.path);
+      if (!fileName.toLowerCase().endsWith('.fcmacro')) {
+        continue;
       }
+      final stat = await entity.stat();
+      byName.putIfAbsent(
+        fileName.toLowerCase(),
+        () => ScannedMacro(
+          name: p.basenameWithoutExtension(fileName),
+          fileName: fileName,
+          path: entity.path,
+          sizeBytes: stat.size,
+          modifiedAt: stat.modified,
+        ),
+      );
     }
     final macros = byName.values.toList()
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));

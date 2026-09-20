@@ -69,7 +69,7 @@ class InstalledMacroTile extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final services = AppScope.of(context);
-    final path = p.join(services.paths.profilePaths(profileId).root, macro.fileName);
+    final path = p.join(services.paths.profilePaths(profileId).macros, macro.fileName);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),

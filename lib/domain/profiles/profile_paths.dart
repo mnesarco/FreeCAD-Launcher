@@ -24,6 +24,8 @@ class ProfilePaths {
 
   String get mod => _p.join(root, 'Mod');
 
+  String get macros => _p.join(root, 'Macros');
+
   String get additionalPythonPackages => _p.join(root, 'AdditionalPythonPackages');
 
   String get backups => _p.join(root, 'backups');
@@ -33,7 +35,7 @@ class ProfilePaths {
   String get systemCfg => _p.join(root, 'system.cfg');
 
   List<String> directoriesFor(BuildPlatform platform) {
-    final common = [root, temp, mod, additionalPythonPackages, backups];
+    final common = [root, temp, mod, macros, additionalPythonPackages, backups];
     return switch (platform) {
       BuildPlatform.linux => [...common, home, xdgConfig, xdgData, xdgCache],
       BuildPlatform.windows => [...common, appDataRoaming, appDataLocal],

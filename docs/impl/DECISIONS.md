@@ -978,3 +978,24 @@ Template:
   tab; the Macros screen and profile tab share one implementation.
 - **Refs**: spec 03 §2.2, `lib/ui/macros/installed_macros.dart`,
   `lib/ui/profiles/profile_detail_view.dart`, `TASKS.md` M5-08, D-049, D-050
+
+### D-052 — Macro directory is `<profile>/Macros` (correction)
+- **Date**: 2026-09-19
+- **Status**: Accepted (supersedes the placement part of D-044 and D-049)
+- **Context**: D-044/D-049 placed catalog macros directly in the profile root based on a 1.0.2
+  `getUserMacroDir(True)` probe; the product owner corrected the convention to
+  `<profile>/Macros`.
+- **Decision**:
+  - `ProfilePaths.macros` = `<profile>/Macros`, created with the profile layout
+    (`directoriesFor`).
+  - `MacroInstaller` targets that directory; `MacroScanner` scans only it (no root or legacy
+    `Macro/` scanning); `delete` and the installed-list path resolution use it as well.
+  - Spec 04 ("user home") and spec 06 §3 were updated; startup reconciliation will drop index
+    rows whose files are not in `Macros/`. FreeCAD's own macro path is left to the build/profile
+    configuration (the launcher neither writes `MacroPath` nor depends on the collapsed root).
+- **Consequences**: Profiles created before this fix keep their root-level macros until moved
+  manually (no released builds); the launcher no longer relies on FreeCAD's collapsed user-home
+  macro dir.
+- **Refs**: spec 04 §"user home", spec 06 §3, `lib/domain/profiles/profile_paths.dart`,
+  `lib/platform/macro_scanner.dart`, `lib/state/macros_controller.dart`,
+  `lib/ui/macros/installed_macros.dart`, D-044, D-049

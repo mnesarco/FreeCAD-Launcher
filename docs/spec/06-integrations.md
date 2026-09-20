@@ -115,8 +115,8 @@ cache format. Integration rules for v2:
 - v0.1 capabilities: list/search macros in the repo, download a single `.FCMacro` into the
   profile, delete, reveal, open externally.
 - Update checks are file-hash based, deferred to v0.2 (needs a cached index).
-- Macro placement: FreeCAD's macro dir collapses to the profile root when
-  `FREECAD_USER_HOME` is custom; scan `<profile>/*.FCMacro` and `<profile>/Macro/` if present.
+- Macro placement: `<profile>/Macros/` (created with the profile layout); the scanner lists
+  `.FCMacro` files only from that directory.
 
 ## 4. Bundled Python and pip
 

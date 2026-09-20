@@ -117,7 +117,7 @@ void main() {
       ),
     );
     File(
-      p.join(tempDirectory.path, 'profiles', 'profile-1', 'Foto.FCMacro'),
+      p.join(tempDirectory.path, 'profiles', 'profile-1', 'Macros', 'Foto.FCMacro'),
     ).createSync(recursive: true);
     await pumpMacros(tester);
 

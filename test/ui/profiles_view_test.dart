@@ -95,7 +95,7 @@ void main() {
     testWidgets('lists installed macros in the profile detail', (tester) async {
       final profile = await services.profilesRepository.getByName('Dev');
       File(
-        p.join(services.paths.profilePaths(profile!.id).root, 'MyMacro.FCMacro'),
+        p.join(services.paths.profilePaths(profile!.id).macros, 'MyMacro.FCMacro'),
       ).createSync(recursive: true);
       await services.database.macrosDao.save(
         sampleMacro(

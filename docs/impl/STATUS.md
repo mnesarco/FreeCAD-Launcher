@@ -173,6 +173,8 @@
   - M5-08 — **D-051**: installed-macro list extracted to `InstalledMacrosList` and wired into
     the profile detail **Macros** tab (self-start + reconcile on mount); all six detail tabs are
     functional and `_ComingSoonTab` is gone. 1 new test.
+  - Fix — **D-052**: macros now live in `<profile>/Macros/` (installer, scanner, delete, list
+    paths, profile layout); spec 04/06 updated. Startup reconciliation ignores root-level files.
   - 396 tests green (8 manual probes skipped), analyze clean, app builds and launches.
 
 ## Session log
@@ -223,6 +225,7 @@
 | 2026-09-19 | M4 | D-040 addon update detection, backups and removal | M4-04 | `docs/impl/DECISIONS.md`, `lib/state/addons_controller.dart`, `lib/ui/addons/addons_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M4 | D-041 requirements parser, consent and pip installation | M4-05, M4-06 | `docs/impl/DECISIONS.md`, `lib/domain/python/**`, `lib/platform/python_*.dart`, `lib/platform/pip_runner.dart`, `lib/state/addons_controller.dart`, `lib/ui/addons/**`, `test/**` |
 | 2026-09-19 | M4 | D-042 Python packages tab and RECORD-based uninstall | M4-07 | `docs/impl/DECISIONS.md`, `lib/platform/python_uninstaller.dart`, `lib/state/python_controller.dart`, `lib/state/app_services.dart`, `lib/ui/profiles/profile_detail_view.dart`, `lib/l10n/**`, `test/**` |
+| 2026-09-19 | M5 | D-052 macro directory corrected to `<profile>/Macros` | Fix | `docs/spec/04-architecture.md`, `docs/spec/06-integrations.md`, `docs/impl/DECISIONS.md`, `lib/domain/profiles/profile_paths.dart`, `lib/platform/macro_scanner.dart`, `lib/state/macros_controller.dart`, `lib/ui/macros/installed_macros.dart`, `test/**` |
 | 2026-09-19 | M5 | D-051 profile detail Macros tab wiring (shared installed list, reconcile on mount) | M5-08 | `docs/impl/DECISIONS.md`, `lib/ui/macros/installed_macros.dart`, `lib/ui/macros/macros_view.dart`, `lib/ui/profiles/profile_detail_view.dart`, `test/ui/profiles_view_test.dart` |
 | 2026-09-19 | M5 | D-050 config paths, snapshots and backup cap | M5-06 | `docs/impl/DECISIONS.md`, `lib/platform/config_snapshots.dart`, `lib/platform/file_actions.dart`, `lib/state/profiles_controller.dart`, `lib/state/app_services.dart`, `lib/ui/profiles/config_snapshots_view.dart`, `lib/ui/profiles/profile_detail_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M5 | D-049 macro scanner, schema v3 and installed-macro actions | M5-05 | `docs/impl/DECISIONS.md`, `lib/data/tables/macros.dart`, `lib/data/database.dart`, `lib/data/database.g.dart`, `lib/platform/macro_scanner.dart`, `lib/platform/macro_file_actions.dart`, `lib/state/macros_controller.dart`, `lib/state/app_services.dart`, `lib/ui/macros/**`, `lib/l10n/**`, `test/**` |

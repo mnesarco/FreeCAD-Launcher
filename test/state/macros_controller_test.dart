@@ -73,7 +73,7 @@ void main() {
     await pumpEventQueue();
 
     expect(result.isOk, isTrue);
-    final macroFile = File(p.join(paths.profilePaths('profile-1').root, 'Foto.FCMacro'));
+    final macroFile = File(p.join(paths.profilePaths('profile-1').macros, 'Foto.FCMacro'));
     expect(macroFile.existsSync(), isTrue);
     expect(macroFile.readAsStringSync(), "print('hi')");
     final row = await db.macrosDao.getByFileName('profile-1', 'Foto.FCMacro');
@@ -107,7 +107,7 @@ void main() {
     expect(second!.id, first!.id);
     expect(second.installedAt, first.installedAt);
     expect(
-      File(p.join(paths.profilePaths('profile-1').root, 'Foto.FCMacro')).readAsStringSync(),
+      File(p.join(paths.profilePaths('profile-1').macros, 'Foto.FCMacro')).readAsStringSync(),
       'print(2)',
     );
     expect((await db.macrosDao.getByProfile('profile-1')), hasLength(1));
@@ -127,9 +127,9 @@ void main() {
   test('reconciles scanned files into the index and drops stale rows', () async {
     await db.buildsDao.save(sampleBuild());
     await db.profilesDao.save(sampleProfile());
-    final root = paths.profilePaths('profile-1').root;
-    File(p.join(root, 'Foto.FCMacro')).createSync(recursive: true);
-    File(p.join(root, 'Macro', 'Legacy.FCMacro')).createSync(recursive: true);
+    final macros = paths.profilePaths('profile-1').macros;
+    File(p.join(macros, 'Foto.FCMacro')).createSync(recursive: true);
+    File(p.join(macros, 'Legacy.FCMacro')).createSync(recursive: true);
     await db.macrosDao.save(
       sampleMacro(
         profileId: 'profile-1',
@@ -152,7 +152,7 @@ void main() {
     await db.buildsDao.save(sampleBuild());
     await db.profilesDao.save(sampleProfile());
     final file = File(
-      p.join(paths.profilePaths('profile-1').root, 'Foto.FCMacro'),
+      p.join(paths.profilePaths('profile-1').macros, 'Foto.FCMacro'),
     )..createSync(recursive: true);
     await db.macrosDao.save(
       sampleMacro(profileId: 'profile-1', name: 'Foto', fileName: 'Foto.FCMacro'),

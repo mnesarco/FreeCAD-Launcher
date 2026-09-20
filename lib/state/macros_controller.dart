@@ -91,7 +91,7 @@ class MacrosController {
   }
 
   Future<void> reconcile(String profileId) async {
-    final scanned = await _scanner.scan(_paths.profilePaths(profileId).root);
+    final scanned = await _scanner.scan(_paths.profilePaths(profileId).macros);
     final rows = await _database.macrosDao.getByProfile(profileId);
     for (final row in rows) {
       if (!scanned.any((macro) => macro.fileName == row.fileName)) {
@@ -140,7 +140,7 @@ class MacrosController {
       return const Err(AppError(message: 'Macro is not installed in this profile'));
     }
     try {
-      final file = File(p.join(_paths.profilePaths(profileId).root, fileName));
+      final file = File(p.join(_paths.profilePaths(profileId).macros, fileName));
       if (file.existsSync()) {
         file.deleteSync();
       }
@@ -220,7 +220,7 @@ class MacrosController {
       context?.report(detail: 'Installing macro');
       final installed = await _installer.install(
         macro: entry,
-        macroDirectory: _paths.profilePaths(profileId).root,
+        macroDirectory: _paths.profilePaths(profileId).macros,
       );
       final existing = await _database.macrosDao.getByFileName(profileId, installed.fileName);
       final now = _clock();
