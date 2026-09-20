@@ -104,8 +104,9 @@ This function lives in `domain/profiles/env.dart` and is **unit-tested per OS**.
 Notes:
 
 - FreeCAD ignores a custom dir that does not exist, so the launcher creates all dirs first.
-- The launcher keeps macros in `<profile>/Macros/` (created with the profile layout) and the
-  macro manager scans only that directory.
+- The launcher keeps macros in `<profile>/Macros/` (created with the profile layout), scans
+  only that directory, and forces FreeCAD's `BaseApp/Preferences/Macro/MacroPath` preference to
+  it in `<profile>/user.cfg` on every launch.
 - FreeCAD 1.1's versioned user dirs (`v1-1/`) do not apply to custom env dirs; profiles are
   stable across FreeCAD minor upgrades.
 - Windows Qt registry state may remain shared (known limitation; document it).

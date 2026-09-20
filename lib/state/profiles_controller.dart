@@ -12,6 +12,7 @@ import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/profiles/launch_plan.dart';
 import 'package:freecad_launcher/platform/config_snapshots.dart';
+import 'package:freecad_launcher/platform/freecad_preferences.dart';
 import 'package:freecad_launcher/platform/launch.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/process.dart';
@@ -64,6 +65,7 @@ class ProfilesController {
     required BuildPlatform platform,
     required FreeCadRuntime runtime,
     ConfigSnapshotService configSnapshots = const ConfigSnapshotService(),
+    FreeCadPreferences freecadPreferences = const FreeCadPreferences(),
     DateTime Function()? clock,
   }) : _database = database,
        _repository = repository,
@@ -71,6 +73,7 @@ class ProfilesController {
        _platform = platform,
        _runtime = runtime,
        _configSnapshots = configSnapshots,
+       _freecadPreferences = freecadPreferences,
        _clock = clock ?? DateTime.now;
 
   final AppDatabase _database;
@@ -79,6 +82,7 @@ class ProfilesController {
   final BuildPlatform _platform;
   final FreeCadRuntime _runtime;
   final ConfigSnapshotService _configSnapshots;
+  final FreeCadPreferences _freecadPreferences;
   final DateTime Function() _clock;
 
   final configSnapshots = signal<Map<String, List<ConfigSnapshot>>>({});
@@ -247,6 +251,11 @@ class ProfilesController {
     final context = resolved.valueOrNull!;
     final profile = context.profile;
     final plan = context.plan;
+
+    _freecadPreferences.ensureMacroPath(
+      userCfgPath: _paths.profilePaths(profile.id).userCfg,
+      macroPath: _paths.profilePaths(profile.id).macros,
+    );
 
     final appPath = await _runtime.quarantineAppPath(plan.executable);
     if (appPath != null) {

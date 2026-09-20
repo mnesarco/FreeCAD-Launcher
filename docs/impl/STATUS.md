@@ -175,7 +175,11 @@
     functional and `_ComingSoonTab` is gone. 1 new test.
   - Fix — **D-052**: macros now live in `<profile>/Macros/` (installer, scanner, delete, list
     paths, profile layout); spec 04/06 updated. Startup reconciliation ignores root-level files.
-  - 396 tests green (8 manual probes skipped), analyze clean, app builds and launches.
+  - Fix — **D-053**: `ProfilesController.launch` now forces FreeCAD's
+    `BaseApp/Preferences/Macro/MacroPath` to `<profile>/Macros/` in `user.cfg` (minimal config
+    created when missing, corrupt files untouched); verified on real 1.0.2
+    (`getUserMacroDir(True)` = `<profile>/Macros/`).
+  - 400 tests green (8 manual probes skipped), analyze clean, app builds and launches.
 
 ## Session log
 
@@ -225,6 +229,7 @@
 | 2026-09-19 | M4 | D-040 addon update detection, backups and removal | M4-04 | `docs/impl/DECISIONS.md`, `lib/state/addons_controller.dart`, `lib/ui/addons/addons_view.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-19 | M4 | D-041 requirements parser, consent and pip installation | M4-05, M4-06 | `docs/impl/DECISIONS.md`, `lib/domain/python/**`, `lib/platform/python_*.dart`, `lib/platform/pip_runner.dart`, `lib/state/addons_controller.dart`, `lib/ui/addons/**`, `test/**` |
 | 2026-09-19 | M4 | D-042 Python packages tab and RECORD-based uninstall | M4-07 | `docs/impl/DECISIONS.md`, `lib/platform/python_uninstaller.dart`, `lib/state/python_controller.dart`, `lib/state/app_services.dart`, `lib/ui/profiles/profile_detail_view.dart`, `lib/l10n/**`, `test/**` |
+| 2026-09-19 | M5 | D-053 force FreeCAD `MacroPath` to `<profile>/Macros` at launch | Fix | `docs/impl/DECISIONS.md`, `docs/spec/04-architecture.md`, `docs/spec/06-integrations.md`, `lib/platform/freecad_preferences.dart`, `lib/state/profiles_controller.dart`, `test/platform/freecad_preferences_test.dart` |
 | 2026-09-19 | M5 | D-052 macro directory corrected to `<profile>/Macros` | Fix | `docs/spec/04-architecture.md`, `docs/spec/06-integrations.md`, `docs/impl/DECISIONS.md`, `lib/domain/profiles/profile_paths.dart`, `lib/platform/macro_scanner.dart`, `lib/state/macros_controller.dart`, `lib/ui/macros/installed_macros.dart`, `test/**` |
 | 2026-09-19 | M5 | D-051 profile detail Macros tab wiring (shared installed list, reconcile on mount) | M5-08 | `docs/impl/DECISIONS.md`, `lib/ui/macros/installed_macros.dart`, `lib/ui/macros/macros_view.dart`, `lib/ui/profiles/profile_detail_view.dart`, `test/ui/profiles_view_test.dart` |
 | 2026-09-19 | M5 | D-050 config paths, snapshots and backup cap | M5-06 | `docs/impl/DECISIONS.md`, `lib/platform/config_snapshots.dart`, `lib/platform/file_actions.dart`, `lib/state/profiles_controller.dart`, `lib/state/app_services.dart`, `lib/ui/profiles/config_snapshots_view.dart`, `lib/ui/profiles/profile_detail_view.dart`, `lib/l10n/**`, `test/**` |

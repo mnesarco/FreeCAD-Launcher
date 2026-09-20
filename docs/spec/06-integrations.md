@@ -116,7 +116,8 @@ cache format. Integration rules for v2:
   profile, delete, reveal, open externally.
 - Update checks are file-hash based, deferred to v0.2 (needs a cached index).
 - Macro placement: `<profile>/Macros/` (created with the profile layout); the scanner lists
-  `.FCMacro` files only from that directory.
+  `.FCMacro` files only from that directory and the launcher forces
+  `BaseApp/Preferences/Macro/MacroPath` to it in `<profile>/user.cfg` on every launch.
 
 ## 4. Bundled Python and pip
 

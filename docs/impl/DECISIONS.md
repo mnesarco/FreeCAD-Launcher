@@ -999,3 +999,26 @@ Template:
 - **Refs**: spec 04 §"user home", spec 06 §3, `lib/domain/profiles/profile_paths.dart`,
   `lib/platform/macro_scanner.dart`, `lib/state/macros_controller.dart`,
   `lib/ui/macros/installed_macros.dart`, D-044, D-049
+
+### D-053 — Force `MacroPath` to `<profile>/Macros` on every launch
+- **Date**: 2026-09-19
+- **Status**: Accepted (completes D-052)
+- **Context**: D-052 corrected the launcher's macro directory, but FreeCAD resolves its macro
+  path from `User parameter:BaseApp/Preferences/Macro` → `MacroPath` (used by
+  `getUserMacroDir(True)`), which otherwise falls back to the collapsed user home.
+- **Decision**:
+  - `FreeCadPreferences.ensureMacroPath(userCfgPath, macroPath)` edits `<profile>/user.cfg`
+    before every launch (called from `ProfilesController.launch`), inserting/replacing
+    `Root/BaseApp/Preferences/Macro/FCText@MacroPath = <profile>/Macros/` and preserving the
+    rest of the document. A missing/empty file is replaced by a minimal `FCParameters`
+    document; an unparsable file is left untouched (returns false) so a corrupt config is never
+    clobbered.
+  - Editing uses the existing `xml` dependency; the stored value uses the native trailing
+    separator (FreeCAD normalizes `/` to `PATHSEP` on read).
+  - Verified against real FreeCAD 1.0.2: with that `user.cfg`, `getUserMacroDir(True)` returns
+    `<profile>/Macros/`; without it, the collapsed profile root.
+- **Consequences**: Macros written by FreeCAD/AddonManager and the launcher agree on
+  `<profile>/Macros/`; config snapshot restores may revert the preference, but the next launch
+  re-forces it; `getUserMacroDir()` (no argument) still reports FreeCAD's internal default.
+- **Refs**: spec 04 §"user home", spec 06 §3, `lib/platform/freecad_preferences.dart`,
+  `lib/state/profiles_controller.dart`, `TASKS.md` M5-05, D-052
