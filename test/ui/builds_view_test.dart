@@ -1,0 +1,153 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:freecad_launcher/data/catalog/releases_catalog.dart';
+import 'package:freecad_launcher/data/database.dart';
+import 'package:freecad_launcher/domain/builds/asset_classifier.dart';
+import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
+import 'package:freecad_launcher/platform/build_installer.dart';
+import 'package:freecad_launcher/platform/downloader.dart';
+import 'package:freecad_launcher/platform/paths.dart';
+import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/state/builds_controller.dart';
+import 'package:freecad_launcher/ui/builds/builds_view.dart';
+
+import '../helpers/fake_download.dart';
+
+class FakeReleasesCatalog implements ReleasesCatalog {
+  @override
+  Duration get ttl => const Duration(hours: 6);
+
+  @override
+  int get maxPages => 5;
+
+  @override
+  Future<ReleasesCatalogResult> load({bool forceRefresh = false}) async {
+    return const ReleasesCatalogResult(releases: [], freshness: CatalogFreshness.fresh);
+  }
+}
+
+class FakeInstaller implements BuildInstaller {
+  @override
+  Future<InstalledBuild> install(InstallRequest request) async {
+    return const InstalledBuild(
+      directory: '/data/builds/x',
+      executablePath: '/data/builds/x/FreeCAD',
+      sizeBytes: 100,
+      pythonVersion: '3.11',
+      pythonPath: '/data/builds/x/bin/python3.11',
+    );
+  }
+}
+
+BuildCandidate sampleCandidate() {
+  return const BuildCandidate(
+    versionLabel: '1.1.3',
+    channel: BuildChannel.stable,
+    platform: BuildPlatform.linux,
+    arch: BuildArch.x86_64,
+    kind: BuildKind.appimage,
+    assetName: 'FreeCAD_1.1.3-Linux-x86_64-py311.AppImage',
+    downloadUrl: 'https://example.invalid/1.1.3.AppImage',
+    sizeBytes: 820 * 1024 * 1024,
+    pythonVersion: '3.11',
+  );
+}
+
+void main() {
+  late Directory tempDirectory;
+  late AppPaths paths;
+  late AppDatabase database;
+  late BuildsController controller;
+  late AppServices services;
+
+  setUp(() async {
+    tempDirectory = Directory.systemTemp.createTempSync('fcl_builds_ui');
+    paths = AppPaths(dataRoot: tempDirectory.path);
+    await paths.ensureBaseDirectories();
+    database = AppDatabase.inMemory();
+    controller = BuildsController(
+      database: database,
+      catalog: FakeReleasesCatalog(),
+      downloader: Downloader(
+        source: FakeDownloadSource(),
+        cacheDirectory: paths.downloadsCacheDir,
+      ),
+      installer: FakeInstaller(),
+      paths: paths,
+      platform: BuildPlatform.linux,
+      arch: BuildArch.x86_64,
+    );
+    services = AppServices(
+      paths: paths,
+      database: database,
+      buildsController: controller,
+    );
+  });
+
+  tearDown(() async {
+    await services.close();
+    if (tempDirectory.existsSync()) {
+      tempDirectory.deleteSync(recursive: true);
+    }
+  });
+
+  Future<void> pumpBuilds(WidgetTester tester) async {
+    await tester.pumpWidget(
+      AppScope(
+        services: services,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: BuildsView()),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.text('Available'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('renders an active install without overflowing the tile', (tester) async {
+    final candidate = sampleCandidate();
+    controller.availableBuilds.value = [candidate];
+    controller.installProgress.value = {
+      candidate.id: const InstallProgress(
+        stage: InstallStage.downloading,
+        fraction: 0.42,
+        receivedBytes: 345 * 1024 * 1024,
+        totalBytes: 820 * 1024 * 1024,
+        bytesPerSecond: 512 * 1024,
+      ),
+    };
+
+    await pumpBuilds(tester);
+
+    expect(find.textContaining('Downloading…'), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
+    expect(find.textContaining('/ 820.0 MiB'), findsOneWidget);
+    expect(find.textContaining('512 KiB/s'), findsOneWidget);
+  });
+
+  testWidgets('keeps the progress detail on one line for long byte counts', (tester) async {
+    final candidate = sampleCandidate();
+    controller.availableBuilds.value = [candidate];
+    controller.installProgress.value = {
+      candidate.id: const InstallProgress(
+        stage: InstallStage.hashing,
+        fraction: 0.1,
+        receivedBytes: 12 * 1024 * 1024 * 1024,
+        totalBytes: 120 * 1024 * 1024 * 1024,
+        bytesPerSecond: 1024 * 1024,
+      ),
+    };
+
+    await pumpBuilds(tester);
+
+    final detail = tester.widget<Text>(find.textContaining('12.00 GiB'));
+    expect(detail.maxLines, 1);
+    expect(detail.overflow, TextOverflow.ellipsis);
+  });
+}

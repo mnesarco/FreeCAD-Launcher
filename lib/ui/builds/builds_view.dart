@@ -335,42 +335,13 @@ class _AvailableBuildTile extends StatelessWidget {
       if (candidate.pythonVersion != null) '${l10n.versionsPython}: ${candidate.pythonVersion}',
       candidate.assetName,
     ].join('  ·  ');
+    final detail = progress == null ? '' : _progressDetail(progress);
 
-    Widget trailing;
+    final Widget trailing;
     if (progress != null) {
-      final detail = _progressDetail(progress);
-      trailing = SizedBox(
-        width: 220,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            LinearProgressIndicator(value: progress.fraction),
-            const SizedBox(height: 4),
-            if (detail.isNotEmpty) ...[
-              Text(
-                detail,
-                style: theme.textTheme.labelSmall,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2),
-            ],
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  _stageLabel(l10n, progress.stage),
-                  style: theme.textTheme.labelSmall,
-                ),
-                TextButton(
-                  onPressed: () => controller.cancelInstall(candidate),
-                  child: Text(l10n.versionsCancel),
-                ),
-              ],
-            ),
-          ],
-        ),
+      trailing = TextButton(
+        onPressed: () => controller.cancelInstall(candidate),
+        child: Text(l10n.versionsCancel),
       );
     } else if (installed) {
       trailing = Chip(label: Text(l10n.versionsTabInstalled));
@@ -388,6 +359,20 @@ class _AvailableBuildTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
+          if (progress != null) ...[
+            const SizedBox(height: 6),
+            LinearProgressIndicator(value: progress.fraction),
+            const SizedBox(height: 4),
+            Text(
+              [
+                _stageLabel(l10n, progress.stage),
+                if (detail.isNotEmpty) detail,
+              ].join('  ·  '),
+              style: theme.textTheme.labelSmall,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
           if (error != null)
             Text(
               '${l10n.versionsInstallFailed}: $error',
