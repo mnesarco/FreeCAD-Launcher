@@ -1478,6 +1478,8 @@ Template:
   VMs available) and use extract-and-run (no `/dev/fuse`); gdk-pixbuf loaders/GTK immodules are
   not bundled yet, so M7-01 must verify icons/GUI assets on a truly clean target; the update
   information stays a placeholder until the repo identity is known.
+- **Update (2026-09-21)**: the temporary icon is superseded by the original design workflow in
+  D-070 (master SVG + render script); M7-01 still owns the clean-target icon/asset check.
 - **Refs**: spec 07 §2/§3, `packaging/appimage/**`,
   `.github/workflows/release-appimage.yml`, `TASKS.md` S5, M7-01, D-011, D-016, OQ-2, OQ-7
 
@@ -1509,4 +1511,31 @@ Template:
 - **Refs**: spec 03 §2.2, spec 05 §2, `lib/data/tables/builds.dart`, `lib/data/database.dart`,
   `lib/data/daos/builds_dao.dart`, `lib/state/builds_controller.dart`,
   `lib/ui/builds/builds_view.dart`, `TASKS.md` R-01, D-021
+
+### D-070 — Launcher icon: original design, font glyphs stay
+- **Date**: 2026-09-21
+- **Status**: Accepted
+- **Context**: D-068 shipped a temporary icon (FreeCAD glyph recolored onto a blueGrey rounded
+  square). The FPA brand guidelines (fpa.freecad.org/handbook/process/logo.html) state that the
+  FreeCAD logo is an FPA trademark, must not be modified (no color/shape/style changes, no
+  effects), and third parties may use it only to credit FreeCAD or link to freecad.org. The
+  in-app icon font `assets/fonts/freecad-launcher-icons.ttf` was created by the project owner,
+  so it is in-house artwork and can stay.
+- **Decision**:
+  - The application icon is an **original design** that does not modify, recolor or compose the
+    FreeCAD logo. It is authored by the project owner.
+  - The in-app font/glyph set (`lib/ui/icons.dart`, `assets/fonts/freecad-launcher-icons.ttf`)
+    stays as-is: owner-created artwork, licensed with the project (GPL-3.0-or-later).
+  - Asset pipeline: `packaging/appimage/freecad-launcher.svg` is the master; a committed render
+    script converts it to the committed PNGs (`freecad-launcher.png` 512, `-256.png` 256) so the
+    AppImage build keeps consuming fixed files and stays reproducible. The official FreeCAD logo
+    is not bundled; attribution ("FreeCAD and the FreeCAD logo are trademarks of the FreeCAD
+    Project Association AISBL", link to freecad.org) belongs in README/release docs.
+  - The FreeCAD brand palette (Tufts Blue `#418FDE`, Light Red `#FF585D`, Off Black `#212529`,
+    white) is available to the design but not required.
+- **Consequences**: the D-068 placeholder PNGs are replaced by renders of the master SVG; the
+  final design is blocked on the owner editing the SVG (R-02); Windows/macOS icon exports
+  (`.ico`/`.icns`) remain part of B-11.
+- **Refs**: spec 07 §3/§7, `packaging/appimage/freecad-launcher.svg`,
+  `packaging/appimage/render_icons.sh`, `TASKS.md` R-02, D-011, D-016, D-068, OQ-2
 

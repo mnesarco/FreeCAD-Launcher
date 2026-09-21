@@ -31,8 +31,11 @@ Proposed pipeline (spike S5 to validate tooling):
    (`gh-releases-zsync|<owner>|<repo>|<channel>|<asset-pattern>.zsync`).
 4. Emit `-SHA256.txt` sidecar.
 
-App identity fields to decide (OQ-2): application id / `.desktop` name / icon name. The
-AppImage name is `FreeCADLauncher-<ver>-x86_64.AppImage`.
+Application identity is `org.freecad.ext.launcher` (D-016); the `.desktop` file and icon name are
+`freecad-launcher`. The icon is an **original design** (D-070): the editable master lives in
+`packaging/appimage/freecad-launcher.svg` and `render_icons.sh` renders the committed PNGs the
+build consumes; the official FreeCAD logo is not bundled. The AppImage name is
+`FreeCADLauncher-<ver>-x86_64.AppImage`.
 
 ## 4. CI/CD
 
@@ -94,6 +97,9 @@ Windows/macOS self-update is out of scope until those artifacts exist (OQ-1).
 ## 7. Licensing and notices
 
 - Project license: **GPL-3.0-or-later** (`LICENSE`, SPDX headers in source files).
+- FreeCAD and the FreeCAD logo are trademarks of the FreeCAD Project Association AISBL. The
+  launcher ships no FreeCAD logo and credits the project (with a link to freecad.org) in the
+  README/release docs per D-070.
 - `THIRD_PARTY_NOTICES.md` generated from `pub deps` licenses for shipped dependencies
   (AppImage contains Flutter engine + GTK libs).
 - FreeCAD addons/macros installed by the user keep their own licenses; the addon detail view

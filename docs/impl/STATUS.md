@@ -309,6 +309,13 @@
     chars, control-character rejection) + `BuildsController.relabel` with `BuildsDao.updateLabel`
     (a whole-row upsert cannot clear a nullable column, drift keeps absent columns unchanged).
     492 tests green (8 manual probes skipped), analyze clean.
+  - R-02 — **D-070**: original launcher icon. The owner authored the design (red rocket with a
+    white outline on a Tufts Blue rounded square); `packaging/appimage/freecad-launcher.svg` is
+    the editable master and `render_icons.sh` regenerates the committed 512/256 PNGs the
+    AppImage/desktop build consumes (D-068's FreeCAD-glyph placeholder is gone; no FPA logo
+    involved). Visual checks at 512/256/64/32 px; the owner-created in-app font glyphs
+    (`assets/fonts/freecad-launcher-icons.ttf`, `lib/ui/icons.dart`) are untouched. Trademark
+    attribution still lands with M7-03/M7-04.
 
 ## Session log
 
@@ -388,6 +395,7 @@
 | 2026-09-21 | M7 | D-068 reproducible AppImage build spike: packaging script, pinned tools, deterministic hashes, clean-distro checks, release workflow | S5 | `docs/impl/DECISIONS.md`, `docs/impl/TASKS.md`, `docs/impl/STATUS.md`, `packaging/appimage/**`, `.github/workflows/release-appimage.yml` |
 | 2026-09-21 | Fix | Open-folder/reveal buttons: `FileActions` parent-env inheritance + `FileActionException`, failure snackbars in Settings/Config, unit tests | Fix | `lib/platform/file_actions.dart`, `lib/ui/settings/settings_view.dart`, `lib/ui/profiles/config_snapshots_view.dart`, `lib/l10n/**`, `test/platform/file_actions_test.dart`, `docs/impl/{STATUS,VERIFICATION}.md` |
 | 2026-09-21 | R1 | D-069 relabel installed builds: schema v5 `builds.label`, display extension on all surfaces, rename dialog + rules/controller/DAO, tests; migration verified on the real dev DB | R-01 | `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md`, `docs/spec/{03-ux,05-data-model}.md`, `AGENTS.md`, `lib/data/{database,tables/builds,daos/builds_dao}.dart`, `lib/domain/builds/build_label_rules.dart`, `lib/state/{builds_controller,debug_bundle_controller}.dart`, `lib/ui/builds/builds_view.dart`, `lib/ui/profiles/**`, `lib/ui/home/home_view.dart`, `lib/cli/cli.dart`, `lib/l10n/**`, `test/**` |
+| 2026-09-21 | R2 | D-070 original launcher icon: editable master SVG + render script, owner's rocket design rendered to the 512/256 AppImage/desktop PNGs | R-02 | `docs/impl/{DECISIONS,TASKS,STATUS}.md`, `docs/spec/{07-distribution,README}.md`, `packaging/appimage/{freecad-launcher.svg,render_icons.sh,freecad-launcher.png,freecad-launcher-256.png}` |
 
 ## Standing notes for the next agent
 

@@ -31,7 +31,7 @@ No implementation work should start until the open questions in
 | Launcher outputs | CLI command + in-app launch (no desktop/shortcut generation) |
 | Updates | Check + notify; user confirms download/install |
 | Navigation | Sidebar (NavigationRail) |
-| Branding | Keep "FreeCAD Launcher"; application id `org.freecad.ext.launcher` (D-016) |
+| Branding | Keep "FreeCAD Launcher"; application id `org.freecad.ext.launcher` (D-016); original icon, no FreeCAD logo bundled (D-070) |
 | License | GPL-3.0-or-later |
 
 ## Document index

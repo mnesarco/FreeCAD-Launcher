@@ -142,7 +142,7 @@ Exit: `01-vision.md` success-criteria checklist passes manually.
 | S5 | Spike: reproducible Flutter AppImage build in CI | AppImage runs on clean Ubuntu/Fedora (with and without FUSE); zsync update info present; decision recorded | M1-09 | M | DONE |
 | M7-01 | Productionize AppImage pipeline (`spec 07 §3`) | Tag build produces `FreeCADLauncher-<ver>-x86_64.AppImage` + sha256 | S5, M6-09 | M | TODO |
 | M7-02 | Release workflow: matrix tests, changelog, release creation, checksums | Dry-run release from a RC tag succeeds | M7-01 | M | TODO |
-| M7-03 | `LICENSE` (GPL-3.0-or-later) + `THIRD_PARTY_NOTICES.md` | Files present, SPDX headers added to sources | M1-02 | S | TODO |
+| M7-03 | `LICENSE` (GPL-3.0-or-later) + `THIRD_PARTY_NOTICES.md` + FreeCAD trademark attribution (D-070) | Files present, SPDX headers added to sources | M1-02 | S | TODO |
 | M7-04 | README + user guide (install, first run, profiles, addons, pip, export, troubleshooting) | Docs reviewed; screenshots current | M6-07 | M | TODO |
 | M7-05 | Clean-machine validation on Linux VM | Success criteria checklist completed; issues filed as tasks | M7-02 | S | TODO |
 
@@ -153,6 +153,7 @@ Exit: published AppImage on GitHub releases; clean machine completes first-run f
 | ID | Task | Done when | Deps | Effort | Status |
 |---|---|---|---|---|---|
 | R-01 | Relabel installed builds (D-069): schema v5 `builds.label`, rename action on the Installed tile, label shown on every build surface | Controller tests (set/trim/reset/length); widget test renames and resets a build; analyze/tests green | M2-07 | S | DONE |
+| R-02 | Original launcher icon (D-070): editable master SVG + render script; owner authors the final design, no FreeCAD logo modification | Owner's rocket master SVG saved; 512/256 AppImage/desktop PNGs regenerated and visually checked (512/256/64/32 px); D-068 placeholder gone | S5 | S | DONE |
 
 ## Backlog (post-MVP, scheduled when v0.1 is released)
 
