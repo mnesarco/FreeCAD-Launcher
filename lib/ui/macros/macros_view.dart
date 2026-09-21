@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
@@ -7,6 +9,7 @@ import 'package:freecad_launcher/domain/macros/macro_catalog_entry.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/macros/installed_macros.dart';
+import 'package:freecad_launcher/ui/shell/section_shortcuts.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 import 'package:freecad_launcher/ui/widgets/compact_dropdown.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
@@ -15,11 +18,22 @@ class MacrosView extends StatefulWidget {
   const MacrosView({super.key});
 
   @override
-  State<MacrosView> createState() => _MacrosViewState();
+  State<MacrosView> createState() => MacrosViewState();
 }
 
-class _MacrosViewState extends State<MacrosView> {
+class MacrosViewState extends State<MacrosView>
+    with SingleTickerProviderStateMixin
+    implements SectionShortcuts {
   bool _started = false;
+  final FocusNode _searchFocusNode = FocusNode();
+  late final TabController _tabs = TabController(length: 2, vsync: this);
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
 
   @override
   void didChangeDependencies() {
@@ -33,23 +47,38 @@ class _MacrosViewState extends State<MacrosView> {
   }
 
   @override
+  void refresh() {
+    unawaited(AppScope.of(context).macros.load(forceRefresh: true));
+  }
+
+  @override
+  void focusSearch() {
+    _tabs.animateTo(1);
+    _searchFocusNode.requestFocus();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return DefaultTabController(
-      length: 2,
-      child: Column(
-        children: [
-          TabBar(
-            tabs: [
-              Tab(text: l10n.macrosTabInstalled),
-              Tab(text: l10n.macrosTabCatalog),
+    return Column(
+      children: [
+        TabBar(
+          controller: _tabs,
+          tabs: [
+            Tab(text: l10n.macrosTabInstalled),
+            Tab(text: l10n.macrosTabCatalog),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabs,
+            children: [
+              const _InstalledTab(),
+              _CatalogTab(searchFocusNode: _searchFocusNode),
             ],
           ),
-          const Expanded(
-            child: TabBarView(children: [_InstalledTab(), _CatalogTab()]),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -88,7 +117,9 @@ class _InstalledTab extends StatelessWidget {
 }
 
 class _CatalogTab extends StatelessWidget {
-  const _CatalogTab();
+  const _CatalogTab({required this.searchFocusNode});
+
+  final FocusNode searchFocusNode;
 
   @override
   Widget build(BuildContext context) {
@@ -170,6 +201,7 @@ class _CatalogTab extends StatelessWidget {
             children: [
               Expanded(
                 child: TextField(
+                  focusNode: searchFocusNode,
                   onChanged: (value) => controller.query.value = value,
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.search),

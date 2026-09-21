@@ -6,6 +6,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:freecad_launcher/core/errors.dart';
+import 'package:freecad_launcher/core/log.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/catalog/macro_catalog.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
@@ -152,6 +153,7 @@ class MacrosController {
   }
 
   Future<void> load({bool forceRefresh = false}) async {
+    final stopwatch = Stopwatch()..start();
     loading.value = true;
     error.value = null;
     try {
@@ -162,6 +164,11 @@ class MacrosController {
       if (result.isStale) {
         error.value = result.error;
       }
+      appLogger.info(
+        'macro catalog: ${result.macros.length} macros in '
+        '${stopwatch.elapsedMilliseconds} ms (${result.freshness.name})',
+        tag: 'perf',
+      );
     } on Object catch (failure) {
       error.value = failure;
     } finally {

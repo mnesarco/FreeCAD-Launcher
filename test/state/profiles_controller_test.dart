@@ -164,7 +164,7 @@ void main() {
 
     expect(result.isStarted, isTrue);
     expect(Directory(home).existsSync(), isTrue);
-    expect(launcher.specs.single.arguments.first, '--version');
+    expect(launcher.specs.single.arguments.take(2), ['--console', '--version']);
     expect(launcher.specs.single.executable, '/data/builds/build-1');
     expect(
       (await repository.getById(profile.id))!.lastUsedAt,

@@ -60,7 +60,7 @@ void main() {
       final result = await runner.run(
         ProcessSpec(
           executable: installed.executablePath,
-          arguments: ['--version'],
+          arguments: ['--console', '--version'],
           environment: {...Platform.environment, 'APPIMAGE_EXTRACT_AND_RUN': '1'},
         ),
         timeout: const Duration(seconds: 180),

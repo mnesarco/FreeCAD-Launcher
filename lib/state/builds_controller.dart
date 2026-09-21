@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 
 import 'package:freecad_launcher/core/cancellation.dart';
 import 'package:freecad_launcher/core/errors.dart';
+import 'package:freecad_launcher/core/log.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
@@ -154,6 +155,7 @@ class BuildsController {
   }
 
   Future<void> loadCatalog({bool forceRefresh = false}) async {
+    final stopwatch = Stopwatch()..start();
     loadingCatalog.value = true;
     catalogError.value = null;
     try {
@@ -182,6 +184,11 @@ class BuildsController {
       });
       availableBuilds.value = candidates;
       catalogFreshness.value = result.freshness;
+      appLogger.info(
+        'releases catalog: ${result.releases.length} releases, '
+        '${candidates.length} candidates in ${stopwatch.elapsedMilliseconds} ms',
+        tag: 'perf',
+      );
     } on Object catch (error) {
       catalogError.value = AppError.from(error, retryable: true);
       catalogFreshness.value = null;

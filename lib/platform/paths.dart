@@ -32,6 +32,8 @@ class AppPaths {
 
   String get macrosCacheDir => _p.join(cacheDir, 'macros');
 
+  String get newsCacheDir => _p.join(cacheDir, 'news');
+
   String buildDir(String buildId) => _p.join(buildsDir, buildId);
 
   ProfilePaths profilePaths(String profileId) =>
@@ -48,6 +50,7 @@ class AppPaths {
     githubCacheDir,
     addonsCacheDir,
     macrosCacheDir,
+    newsCacheDir,
   ];
 
   Future<void> ensureBaseDirectories() async {

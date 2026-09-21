@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:archive/archive.dart';
 import 'package:path/path.dart' as p;
@@ -169,7 +170,8 @@ class MacroCatalog {
     if (!file.existsSync()) {
       throw const MacroCatalogException('Cached macro catalog payload is missing');
     }
-    return parseMacroCatalog(extractMacroCatalogJson(await file.readAsBytes()));
+    final bytes = await file.readAsBytes();
+    return Isolate.run(() => parseMacroCatalog(extractMacroCatalogJson(bytes)));
   }
 
   static String extractMacroCatalogJson(List<int> zipBytes) {

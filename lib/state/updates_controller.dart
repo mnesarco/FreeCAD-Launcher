@@ -8,6 +8,7 @@ import 'package:freecad_launcher/domain/addons/addon_update_rules.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/builds/build_update.dart';
 import 'package:freecad_launcher/domain/builds/freecad_version.dart';
+import 'package:freecad_launcher/domain/settings/app_settings.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:freecad_launcher/state/builds_controller.dart';
 
@@ -51,6 +52,7 @@ class UpdatesController {
   });
 
   bool _started = false;
+  Future<void>? _restoreFuture;
 
   late final outdated = computed<List<AddonUpdate>>(() {
     final result = <AddonUpdate>[];
@@ -197,7 +199,18 @@ class UpdatesController {
       return;
     }
     _started = true;
-    unawaited(_restoreLastChecked());
+    final restore = _restoreLastChecked();
+    _restoreFuture = restore;
+    unawaited(restore);
+  }
+
+  Future<int?> checkIfDue(UpdateCadence cadence) async {
+    start();
+    await _restoreFuture;
+    if (!isUpdateCheckDue(lastCheckedAt.value, cadence, _clock())) {
+      return null;
+    }
+    return check();
   }
 
   Future<void> _restoreLastChecked() async {

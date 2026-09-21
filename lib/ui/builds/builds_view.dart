@@ -14,6 +14,7 @@ import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/builds_controller.dart';
 import 'package:freecad_launcher/ui/icons.dart';
+import 'package:freecad_launcher/ui/shell/section_shortcuts.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
@@ -43,10 +44,10 @@ class BuildsView extends StatefulWidget {
   const BuildsView({super.key});
 
   @override
-  State<BuildsView> createState() => _BuildsViewState();
+  State<BuildsView> createState() => BuildsViewState();
 }
 
-class _BuildsViewState extends State<BuildsView> {
+class BuildsViewState extends State<BuildsView> implements SectionShortcuts {
   bool _started = false;
 
   @override
@@ -57,6 +58,14 @@ class _BuildsViewState extends State<BuildsView> {
       AppScope.of(context).builds.start();
     }
   }
+
+  @override
+  void refresh() {
+    unawaited(AppScope.of(context).builds.loadCatalog(forceRefresh: true));
+  }
+
+  @override
+  void focusSearch() {}
 
   @override
   Widget build(BuildContext context) {

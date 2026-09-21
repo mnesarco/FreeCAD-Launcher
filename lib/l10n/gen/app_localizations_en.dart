@@ -37,6 +37,74 @@ class AppLocalizationsEn extends AppLocalizations {
       'Install a FreeCAD version and create a profile to get started.';
 
   @override
+  String get homeStepVersion => 'Add a FreeCAD version';
+
+  @override
+  String get homeStepProfile => 'Create a profile';
+
+  @override
+  String get homeStepAddons => 'Install addons';
+
+  @override
+  String get homeStatus => 'Status';
+
+  @override
+  String get homeStatBuilds => 'Versions';
+
+  @override
+  String get homeStatProfiles => 'Profiles';
+
+  @override
+  String get homeStatAddons => 'Addons';
+
+  @override
+  String get homeStatMacros => 'Macros';
+
+  @override
+  String get homeStatPackages => 'Python packages';
+
+  @override
+  String get homeLastUsed => 'Last used profile';
+
+  @override
+  String get homeLaunch => 'Launch';
+
+  @override
+  String get homeNoProfiles => 'No profiles yet';
+
+  @override
+  String get homeLastUsedNever => 'Never used';
+
+  @override
+  String get homeUpdates => 'Updates';
+
+  @override
+  String homeUpdatesAvailable(int count) {
+    return '$count updates available';
+  }
+
+  @override
+  String get homeUpdatesNone => 'Everything is up to date';
+
+  @override
+  String get homeUpdatesCheck => 'Check for updates';
+
+  @override
+  String get homeUpdatesChecking => 'Checking…';
+
+  @override
+  String get homeNews => 'News';
+
+  @override
+  String get homeNewsEmpty => 'No news items.';
+
+  @override
+  String get homeNewsError => 'Could not load the news feed.';
+
+  @override
+  String get homeNewsStale => 'Showing cached news.';
+
+  @override
   String get profilesEmptyTitle => 'No profiles yet';
 
   @override
@@ -1160,6 +1228,130 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsDataDirectory => 'Data directory';
+
+  @override
+  String get settingsGeneral => 'General';
+
+  @override
+  String get settingsTheme => 'Theme';
+
+  @override
+  String get settingsThemeSystem => 'System';
+
+  @override
+  String get settingsThemeLight => 'Light';
+
+  @override
+  String get settingsThemeDark => 'Dark';
+
+  @override
+  String get settingsNewsFeed => 'News feed URL';
+
+  @override
+  String get settingsUpdateChecks => 'Update checks';
+
+  @override
+  String get settingsCadenceManual => 'Manual';
+
+  @override
+  String get settingsCadenceDaily => 'Daily';
+
+  @override
+  String get settingsCadenceWeekly => 'Weekly';
+
+  @override
+  String get settingsLogs => 'Logs';
+
+  @override
+  String get settingsLogLevel => 'Log level';
+
+  @override
+  String get settingsLogLevelDebug => 'Debug';
+
+  @override
+  String get settingsLogLevelInfo => 'Info';
+
+  @override
+  String get settingsLogLevelWarn => 'Warning';
+
+  @override
+  String get settingsLogLevelError => 'Error';
+
+  @override
+  String get settingsLogsFolder => 'Logs folder';
+
+  @override
+  String get settingsDebugBundle => 'Debug bundle';
+
+  @override
+  String get settingsDebugBundleDescription =>
+      'Logs, versions and diagnostics (redacted)';
+
+  @override
+  String get settingsDebugBundleExport => 'Export';
+
+  @override
+  String settingsDebugBundleExported(String file) {
+    return 'Debug bundle saved: $file';
+  }
+
+  @override
+  String get settingsDebugBundleFailed => 'Could not export the debug bundle';
+
+  @override
+  String get settingsDebugBundleReveal => 'Reveal';
+
+  @override
+  String get settingsAbout => 'About';
+
+  @override
+  String get settingsOpenFolder => 'Open folder';
+
+  @override
+  String get settingsCache => 'Cache';
+
+  @override
+  String get settingsCacheDownloads => 'Build downloads';
+
+  @override
+  String get settingsCacheGithub => 'GitHub releases';
+
+  @override
+  String get settingsCacheAddons => 'Addon catalog';
+
+  @override
+  String get settingsCacheMacros => 'Macro catalog';
+
+  @override
+  String get settingsCacheNews => 'News feed';
+
+  @override
+  String get settingsCacheClear => 'Clear';
+
+  @override
+  String get settingsCacheRefresh => 'Refresh sizes';
+
+  @override
+  String get settingsCacheCleanUp => 'Clean up now';
+
+  @override
+  String get settingsCacheRetention => 'Keep downloads for';
+
+  @override
+  String get settingsCacheRetentionForever => 'Forever';
+
+  @override
+  String settingsCacheRetentionDays(int days) {
+    return '$days days';
+  }
+
+  @override
+  String settingsCacheCleared(String size) {
+    return 'Freed $size';
+  }
+
+  @override
+  String get settingsCacheClearFailed => 'Could not clear the cache';
 
   @override
   String get settingsCliWrapper => 'Command-line launcher';

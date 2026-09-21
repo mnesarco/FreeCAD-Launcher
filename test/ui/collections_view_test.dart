@@ -52,12 +52,13 @@ void main() {
   late Directory tempDirectory;
   late AppDatabase db;
   late AppServices services;
+  late FakeAddonCatalog catalog;
 
   setUp(() {
     tempDirectory = Directory.systemTemp.createTempSync('fcl_collections_ui');
     final paths = AppPaths(dataRoot: tempDirectory.path);
     db = AppDatabase.inMemory();
-    final catalog = FakeAddonCatalog(
+    catalog = FakeAddonCatalog(
       downloader: Downloader(
         source: FakeDownloadSource(),
         cacheDirectory: p.join(tempDirectory.path, 'addons'),
@@ -320,5 +321,22 @@ void main() {
 
     expect(find.text('No collections yet'), findsOneWidget);
     expect(find.text('Collection deleted'), findsOneWidget);
+  });
+
+  testWidgets('picker reports an unavailable catalog instead of no matches', (tester) async {
+    catalog.result = const AddonCatalogResult(
+      addons: [],
+      freshness: CatalogFreshness.fresh,
+    );
+    await services.bundles.create(name: 'Base');
+    await pumpCollections(tester);
+
+    await tester.tap(find.text('Base'));
+    await settle(tester);
+    await tester.tap(find.text('Add addon'));
+    await settle(tester);
+
+    expect(find.text('Could not load the addon catalog.'), findsOneWidget);
+    expect(find.text('No matching addons.'), findsNothing);
   });
 }

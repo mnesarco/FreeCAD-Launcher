@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
@@ -10,6 +12,7 @@ import 'package:freecad_launcher/ui/profiles/profile_actions.dart';
 import 'package:freecad_launcher/ui/profiles/profile_detail_view.dart';
 import 'package:freecad_launcher/ui/profiles/profile_dialogs.dart';
 import 'package:freecad_launcher/ui/profiles/profile_manifest_dialogs.dart';
+import 'package:freecad_launcher/ui/shell/section_shortcuts.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 
@@ -17,10 +20,10 @@ class ProfilesView extends StatefulWidget {
   const ProfilesView({super.key});
 
   @override
-  State<ProfilesView> createState() => _ProfilesViewState();
+  State<ProfilesView> createState() => ProfilesViewState();
 }
 
-class _ProfilesViewState extends State<ProfilesView> {
+class ProfilesViewState extends State<ProfilesView> implements SectionShortcuts {
   bool _started = false;
   String? _selectedProfileId;
 
@@ -119,6 +122,18 @@ class _ProfilesViewState extends State<ProfilesView> {
   Future<void> _createProfile(BuildContext context) async {
     await showProfileFormDialog(context, controller: AppScope.of(context).profiles);
   }
+
+  @override
+  void refresh() {
+    final controller = AppScope.of(context).profiles;
+    controller.start();
+    unawaited(controller.refreshSizes());
+  }
+
+  @override
+  void focusSearch() {}
+
+  void createProfile() => unawaited(_createProfile(context));
 
   Future<void> _importProfile(BuildContext context) async {
     final outcome = await importProfileManifest(context);

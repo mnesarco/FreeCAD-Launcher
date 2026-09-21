@@ -121,6 +121,7 @@ void main() {
     final userCfg = paths.profilePaths(profile.id).userCfg;
     final systemCfg = paths.profilePaths(profile.id).systemCfg;
     expect(launcher.specs.single.arguments, [
+      '--console',
       '--version',
       'file.FCStd',
       '-u',

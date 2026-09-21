@@ -31,6 +31,44 @@ void main() {
     expect(plan.arguments, isNot(contains('--single-instance')));
   });
 
+  test('adds --console when --version is requested', () {
+    final plan = LaunchPlanBuilder.build(
+      platform: BuildPlatform.linux,
+      paths: posixPaths,
+      executablePath: '/data/builds/b1/FreeCAD',
+      inheritedEnvironment: const {},
+      userArguments: const ['--version'],
+    );
+
+    expect(plan.arguments, [
+      '--console',
+      '--version',
+      '-u',
+      '/data/profiles/p1/user.cfg',
+      '-s',
+      '/data/profiles/p1/system.cfg',
+    ]);
+  });
+
+  test('keeps an explicit --console when --version is requested', () {
+    final plan = LaunchPlanBuilder.build(
+      platform: BuildPlatform.linux,
+      paths: posixPaths,
+      executablePath: '/data/builds/b1/FreeCAD',
+      inheritedEnvironment: const {},
+      userArguments: const ['--console', '--version'],
+    );
+
+    expect(plan.arguments, [
+      '--console',
+      '--version',
+      '-u',
+      '/data/profiles/p1/user.cfg',
+      '-s',
+      '/data/profiles/p1/system.cfg',
+    ]);
+  });
+
   test('uses the platform path style for config flags', () {
     final plan = LaunchPlanBuilder.build(
       platform: BuildPlatform.windows,

@@ -6,6 +6,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:freecad_launcher/core/errors.dart';
+import 'package:freecad_launcher/core/log.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
@@ -138,6 +139,7 @@ class AddonsController {
   }
 
   Future<void> load({bool forceRefresh = false}) async {
+    final stopwatch = Stopwatch()..start();
     loading.value = true;
     error.value = null;
     try {
@@ -145,6 +147,11 @@ class AddonsController {
       addons.value = result.addons;
       freshness.value = result.freshness;
       loaded.value = true;
+      appLogger.info(
+        'addon catalog: ${result.addons.length} addons in '
+        '${stopwatch.elapsedMilliseconds} ms (${result.freshness.name})',
+        tag: 'perf',
+      );
     } on Object catch (failure) {
       error.value = AppError.from(failure, retryable: true);
     } finally {

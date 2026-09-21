@@ -1,10 +1,19 @@
+import 'dart:async';
+
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:freecad_launcher/core/constants.dart';
+import 'package:freecad_launcher/core/format.dart';
+import 'package:freecad_launcher/core/log.dart';
+import 'package:freecad_launcher/domain/cache/cache_types.dart';
+import 'package:freecad_launcher/domain/settings/app_settings.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/platform/diagnostics.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/ui/widgets/form_row.dart';
 
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
@@ -17,14 +26,24 @@ class _SettingsViewState extends State<SettingsView> {
   DiagnosticsReport? _report;
   bool _running = false;
   bool _started = false;
+  final TextEditingController _newsFeedController = TextEditingController();
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_started) {
       _started = true;
-      AppScope.of(context).settings.refreshWrapper();
+      final services = AppScope.of(context);
+      services.settings.refreshWrapper();
+      _newsFeedController.text = services.settings.newsFeedUrl.value;
+      unawaited(services.cache.refresh());
     }
+  }
+
+  @override
+  void dispose() {
+    _newsFeedController.dispose();
+    super.dispose();
   }
 
   Future<void> _runDiagnostics() async {
@@ -57,6 +76,73 @@ class _SettingsViewState extends State<SettingsView> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _clearCache(BuildContext context, CacheCategory category) async {
+    final l10n = AppLocalizations.of(context);
+    final services = AppScope.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final freed = await services.cache.clear(category);
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.settingsCacheCleared(formatBytes(freed)))),
+      );
+    } on Object catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.settingsCacheClearFailed}: $error')),
+      );
+    }
+  }
+
+  Future<void> _cleanUpNow(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final services = AppScope.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final freed = await services.cache.prune(
+        services.settings.cacheRetention.value,
+      );
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.settingsCacheCleared(formatBytes(freed)))),
+      );
+    } on Object catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.settingsCacheClearFailed}: $error')),
+      );
+    }
+  }
+
+  Future<void> _exportDebugBundle(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final services = AppScope.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final location = await getSaveLocation(
+      suggestedName: services.debugBundle.suggestedFileName(),
+      acceptedTypeGroups: const [
+        XTypeGroup(label: 'Zip', extensions: ['zip']),
+      ],
+    );
+    if (location == null || !context.mounted) {
+      return;
+    }
+    final result = await services.debugBundle.export(location.path);
+    if (!context.mounted) {
+      return;
+    }
+    result.fold(
+      (path) => messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.settingsDebugBundleExported(p.basename(path))),
+          action: SnackBarAction(
+            label: l10n.settingsDebugBundleReveal,
+            onPressed: () => services.fileActions.reveal(path),
+          ),
+        ),
+      ),
+      (error) => messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.settingsDebugBundleFailed}: $error')),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -64,6 +150,16 @@ class _SettingsViewState extends State<SettingsView> {
     final results = _report?.results ?? const <DiagnosticResult>[];
 
     final settings = services.settings;
+    final themeMode = settings.themeMode.watch(context);
+    final updateCadence = settings.updateCadence.watch(context);
+    final logLevel = settings.logLevel.watch(context);
+    final cacheRetention = settings.cacheRetention.watch(context);
+    final cacheSizes = services.cache.sizes.watch(context);
+    final cacheBusy = services.cache.busy.watch(context);
+    final bundleBusy = services.debugBundle.exporting.watch(context);
+    final jobsActive = services.jobs.jobs
+        .watch(context)
+        .any((job) => job.isActive);
     final wrapperInstalled = settings.wrapperInstalled.watch(context);
     final wrapperOnPath = settings.wrapperOnPath.watch(context);
     final wrapperPath = settings.wrapperPath.watch(context);
@@ -79,77 +175,362 @@ class _SettingsViewState extends State<SettingsView> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        ListTile(
-          leading: const Icon(Icons.folder_outlined),
-          title: Text(l10n.settingsDataDirectory),
-          subtitle: Text(services.paths.dataRoot),
-        ),
-        ListTile(
-          leading: const Icon(Icons.info_outline),
-          title: Text(l10n.settingsVersion),
-          subtitle: Text('$appName $appVersion'),
-        ),
-        ListTile(
-          leading: const Icon(Icons.description_outlined),
-          title: Text(l10n.settingsLicense),
-          subtitle: const Text('GPL-3.0-or-later'),
-        ),
-        const Divider(height: 32),
-        ListTile(
-          leading: const Icon(Icons.terminal_outlined),
-          title: Text(l10n.settingsCliWrapper),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(wrapperPath),
-              Text(wrapperStatus, style: Theme.of(context).textTheme.bodySmall),
-            ],
-          ),
-          trailing: FilledButton.tonal(
-            onPressed: wrapperBusy ? null : () => _toggleWrapper(context, wrapperInstalled),
-            child: Text(
-              wrapperInstalled
-                  ? l10n.settingsCliWrapperRemove
-                  : l10n.settingsCliWrapperInstall,
+        _SettingsCard(
+          title: l10n.settingsGeneral,
+          children: [
+            FormRow(
+              label: l10n.settingsTheme,
+              field: FormDropdown<AppThemeMode>(
+                value: themeMode,
+                items: [
+                  DropdownMenuItem(
+                    value: AppThemeMode.system,
+                    child: Text(l10n.settingsThemeSystem),
+                  ),
+                  DropdownMenuItem(
+                    value: AppThemeMode.light,
+                    child: Text(l10n.settingsThemeLight),
+                  ),
+                  DropdownMenuItem(
+                    value: AppThemeMode.dark,
+                    child: Text(l10n.settingsThemeDark),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    settings.setThemeMode(value);
+                  }
+                },
+              ),
             ),
-          ),
+            FormRow(
+              label: l10n.settingsUpdateChecks,
+              field: FormDropdown<UpdateCadence>(
+                value: updateCadence,
+                items: [
+                  DropdownMenuItem(
+                    value: UpdateCadence.manual,
+                    child: Text(l10n.settingsCadenceManual),
+                  ),
+                  DropdownMenuItem(
+                    value: UpdateCadence.daily,
+                    child: Text(l10n.settingsCadenceDaily),
+                  ),
+                  DropdownMenuItem(
+                    value: UpdateCadence.weekly,
+                    child: Text(l10n.settingsCadenceWeekly),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    settings.setUpdateCadence(value);
+                  }
+                },
+              ),
+            ),
+            FormRow(
+              label: l10n.settingsDataDirectory,
+              field: _PathRow(
+                path: services.paths.dataRoot,
+                tooltip: l10n.settingsOpenFolder,
+                onOpen: () => services.fileActions.openDirectory(
+                  services.paths.dataRoot,
+                ),
+              ),
+            ),
+            FormRow(
+              label: l10n.settingsNewsFeed,
+              field: FormTextField(
+                controller: _newsFeedController,
+                hintText: defaultNewsFeedUrl,
+                onChanged: (value) => settings.setNewsFeedUrl(value),
+              ),
+            ),
+          ],
         ),
-        const Divider(height: 32),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
+        _SettingsCard(
+          title: l10n.settingsLogs,
+          children: [
+            FormRow(
+              label: l10n.settingsLogLevel,
+              field: FormDropdown<LogLevel>(
+                value: logLevel,
+                items: [
+                  DropdownMenuItem(
+                    value: LogLevel.debug,
+                    child: Text(l10n.settingsLogLevelDebug),
+                  ),
+                  DropdownMenuItem(
+                    value: LogLevel.info,
+                    child: Text(l10n.settingsLogLevelInfo),
+                  ),
+                  DropdownMenuItem(
+                    value: LogLevel.warn,
+                    child: Text(l10n.settingsLogLevelWarn),
+                  ),
+                  DropdownMenuItem(
+                    value: LogLevel.error,
+                    child: Text(l10n.settingsLogLevelError),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    settings.setLogLevel(value);
+                  }
+                },
+              ),
+            ),
+            FormRow(
+              label: l10n.settingsLogsFolder,
+              field: _PathRow(
+                path: services.paths.logsDir,
+                tooltip: l10n.settingsOpenFolder,
+                onOpen: () => services.fileActions.openDirectory(
+                  services.paths.logsDir,
+                ),
+              ),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.bug_report_outlined),
+              title: Text(l10n.settingsDebugBundle),
+              subtitle: Text(
+                l10n.settingsDebugBundleDescription,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              trailing: FilledButton.tonal(
+                onPressed: bundleBusy
+                    ? null
+                    : () => _exportDebugBundle(context),
+                child: Text(l10n.settingsDebugBundleExport),
+              ),
+            ),
+          ],
+        ),
+        _SettingsCard(
+          title: l10n.settingsCache,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(l10n.settingsDiagnostics, style: Theme.of(context).textTheme.titleMedium),
-              const Spacer(),
-              FilledButton.tonalIcon(
-                onPressed: _running ? null : _runDiagnostics,
-                icon: _running
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.play_arrow),
-                label: Text(_running ? l10n.diagnosticsRunning : l10n.diagnosticsRun),
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                tooltip: l10n.settingsCacheRefresh,
+                onPressed: cacheBusy
+                    ? null
+                    : () => unawaited(services.cache.refresh()),
+              ),
+              TextButton.icon(
+                onPressed: cacheBusy || jobsActive
+                    ? null
+                    : () => _cleanUpNow(context),
+                icon: const Icon(Icons.cleaning_services_outlined),
+                label: Text(l10n.settingsCacheCleanUp),
               ),
             ],
           ),
-        ),
-        for (final result in results)
-          ListTile(
-            leading: Icon(_statusIcon(result.status), color: _statusColor(context, result.status)),
-            title: Text(_diagnosticLabel(l10n, result.id)),
-            subtitle: Text(
-              [
-                _statusLabel(l10n, result.status),
-                if (result.detail != null) result.detail!,
-              ].join(' — '),
+          children: [
+            for (final category in CacheCategory.values)
+              FormRow(
+                label: _cacheLabel(l10n, category),
+                field: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        formatBytes(cacheSizes[category] ?? 0),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: cacheBusy || jobsActive
+                          ? null
+                          : () => _clearCache(context, category),
+                      child: Text(l10n.settingsCacheClear),
+                    ),
+                  ],
+                ),
+              ),
+            FormRow(
+              label: l10n.settingsCacheRetention,
+              field: FormDropdown<CacheRetention>(
+                value: cacheRetention,
+                items: [
+                  DropdownMenuItem(
+                    value: CacheRetention.forever,
+                    child: Text(l10n.settingsCacheRetentionForever),
+                  ),
+                  DropdownMenuItem(
+                    value: CacheRetention.days7,
+                    child: Text(l10n.settingsCacheRetentionDays(7)),
+                  ),
+                  DropdownMenuItem(
+                    value: CacheRetention.days30,
+                    child: Text(l10n.settingsCacheRetentionDays(30)),
+                  ),
+                  DropdownMenuItem(
+                    value: CacheRetention.days90,
+                    child: Text(l10n.settingsCacheRetentionDays(90)),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    settings.setCacheRetention(value);
+                  }
+                },
+              ),
             ),
+          ],
+        ),
+        _SettingsCard(
+          title: l10n.settingsCliWrapper,
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.terminal_outlined),
+              title: Text(wrapperPath),
+              subtitle: Text(
+                wrapperStatus,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              trailing: FilledButton.tonal(
+                onPressed: wrapperBusy
+                    ? null
+                    : () => _toggleWrapper(context, wrapperInstalled),
+                child: Text(
+                  wrapperInstalled
+                      ? l10n.settingsCliWrapperRemove
+                      : l10n.settingsCliWrapperInstall,
+                ),
+              ),
+            ),
+          ],
+        ),
+        _SettingsCard(
+          title: l10n.settingsAbout,
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.info_outline),
+              title: Text(l10n.settingsVersion),
+              subtitle: Text('$appName $appVersion'),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.description_outlined),
+              title: Text(l10n.settingsLicense),
+              subtitle: const Text('GPL-3.0-or-later'),
+            ),
+          ],
+        ),
+        _SettingsCard(
+          title: l10n.settingsDiagnostics,
+          trailing: FilledButton.tonalIcon(
+            onPressed: _running ? null : _runDiagnostics,
+            icon: _running
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.play_arrow),
+            label: Text(_running ? l10n.diagnosticsRunning : l10n.diagnosticsRun),
           ),
+          children: [
+            for (final result in results)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  _statusIcon(result.status),
+                  color: _statusColor(context, result.status),
+                ),
+                title: Text(_diagnosticLabel(l10n, result.id)),
+                subtitle: Text(
+                  [
+                    _statusLabel(l10n, result.status),
+                    if (result.detail != null) result.detail!,
+                  ].join(' — '),
+                ),
+              ),
+          ],
+        ),
       ],
     );
   }
 }
+
+class _SettingsCard extends StatelessWidget {
+  const _SettingsCard({
+    required this.title,
+    required this.children,
+    this.trailing,
+  });
+
+  final String title;
+  final List<Widget> children;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(child: Text(title, style: theme.textTheme.titleMedium)),
+                ?trailing,
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PathRow extends StatelessWidget {
+  const _PathRow({
+    required this.path,
+    required this.tooltip,
+    required this.onOpen,
+  });
+
+  final String path;
+  final String tooltip;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            path,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.folder_open_outlined),
+          tooltip: tooltip,
+          onPressed: onOpen,
+        ),
+      ],
+    );
+  }
+}
+
+String _cacheLabel(AppLocalizations l10n, CacheCategory category) => switch (category) {
+  CacheCategory.downloads => l10n.settingsCacheDownloads,
+  CacheCategory.github => l10n.settingsCacheGithub,
+  CacheCategory.addons => l10n.settingsCacheAddons,
+  CacheCategory.macros => l10n.settingsCacheMacros,
+  CacheCategory.news => l10n.settingsCacheNews,
+};
 
 String _diagnosticLabel(AppLocalizations l10n, String id) => switch (id) {
   DiagnosticIds.dataDirectory => l10n.diagnosticDataDirectory,

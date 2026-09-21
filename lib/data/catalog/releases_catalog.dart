@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:path/path.dart' as p;
 
@@ -88,7 +89,7 @@ class ReleasesCatalog {
 
     if (isFresh) {
       return ReleasesCatalogResult(
-        releases: parseReleasesJson(cachedPayload),
+        releases: await _parseReleasesJson(cachedPayload),
         freshness: CatalogFreshness.fresh,
         fetchedAt: entry.fetchedAt,
       );
@@ -112,7 +113,7 @@ class ReleasesCatalog {
           ),
         );
         return ReleasesCatalogResult(
-          releases: parseReleasesJson(payload),
+          releases: await _parseReleasesJson(payload),
           freshness: CatalogFreshness.refreshed,
           fetchedAt: now,
           rateLimit: outcome.rateLimit,
@@ -132,7 +133,7 @@ class ReleasesCatalog {
         ),
       );
       return ReleasesCatalogResult(
-        releases: parseReleasesJson(body),
+        releases: await _parseReleasesJson(body),
         freshness: CatalogFreshness.refreshed,
         fetchedAt: now,
         rateLimit: outcome.rateLimit,
@@ -152,7 +153,7 @@ class ReleasesCatalog {
           ),
         );
         return ReleasesCatalogResult(
-          releases: parseReleasesJson(cachedPayload),
+          releases: await _parseReleasesJson(cachedPayload),
           freshness: CatalogFreshness.stale,
           fetchedAt: entry.fetchedAt,
           error: error,
@@ -160,6 +161,10 @@ class ReleasesCatalog {
       }
       throw CatalogUnavailableException('Could not load the FreeCAD release catalog', cause: error);
     }
+  }
+
+  Future<List<ReleaseInfo>> _parseReleasesJson(String json) {
+    return Isolate.run(() => parseReleasesJson(json));
   }
 
   Future<_FetchOutcome> _fetchAll(CatalogCacheEntry? entry) async {

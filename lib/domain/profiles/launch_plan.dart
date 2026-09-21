@@ -23,15 +23,14 @@ abstract final class LaunchPlanBuilder {
     List<String> userArguments = const [],
     bool appImageExtractAndRun = false,
   }) {
+    final arguments = [...userArguments];
+    if (arguments.contains('--version') &&
+        !arguments.contains('--console')) {
+      arguments.insert(0, '--console');
+    }
     return LaunchPlan(
       executable: executablePath,
-      arguments: [
-        ...userArguments,
-        '-u',
-        paths.userCfg,
-        '-s',
-        paths.systemCfg,
-      ],
+      arguments: [...arguments, '-u', paths.userCfg, '-s', paths.systemCfg],
       environment: LaunchEnvironment.build(
         platform: platform,
         paths: paths,

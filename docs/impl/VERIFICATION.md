@@ -113,9 +113,49 @@ FCL_REAL_ISOLATION=1 flutter test test/manual/isolation_e2e_linux_test.dart
       updates; bundle apply reports them as skipped; the v3 → v4 migration opens an old DB
 - [ ] Manifest export/import round-trips pinned addons
 - [ ] Batch update applies only confirmed items and reports per-item results
-- [ ] All screens pass the state checklist below
-- [ ] Keyboard shortcuts from `../spec/03-ux.md` §4 work
-- [ ] Warm startup < 2 s measured on the dev machine (numbers recorded)
+- [x] All screens pass the state checklist below (see the M6-07 matrix)
+- [x] Keyboard shortcuts from `../spec/03-ux.md` §4 work
+- [x] Warm startup < 2 s measured on the dev machine (numbers recorded)
+
+M6-09 timings (release build, warm data root, 3 runs): wall to first frame 553/559/561 ms;
+in-process bootstrap 14–23 ms, first frame 142–186 ms; addon/macro catalog parses moved off the
+UI isolate (176 addons, 262 macros).
+
+### M6-07 state coverage pass (2026-09-20)
+
+Legend: **live** = seen in the running app, **test** = widget/unit test, **code** = handled but
+not exercised automatically, **n/a** = not applicable. Overflow means long text/rows do not
+overflow (ellipsis/wrap or a regression test). "Offline/stale" means cached catalogs with a
+stale banner; local DB screens are n/a.
+
+| Screen | Loading | Empty | Filtered-empty | Error | Offline/stale | Partial data | Overflow |
+|---|---|---|---|---|---|---|---|
+| Home | n/a | live | n/a | n/a | n/a | n/a | live |
+| Profiles list | code | test | n/a | test | n/a | code (missing/broken chips) | test |
+| Profile → Overview | n/a | code | n/a | code | n/a | code | live |
+| Profile → Addons | n/a | test | n/a | code (pin/remove snackbars) | n/a | test (icons fall back when the catalog is not cached) | test |
+| Profile → Python | n/a | test | n/a | code (inline install errors) | n/a | code | test |
+| Profile → Macros | n/a | code | n/a | code | n/a | live (reconcile drops missing files) | test |
+| Profile → Config | n/a | code ("created on first launch") | n/a | code | n/a | live | live |
+| Profile → Backups | code | code (no snapshots) | n/a | test (manifest import) | n/a | code | test |
+| Versions → Installed | n/a | live | n/a | code (verify/remove snackbars) | n/a | code (missing/broken badges) | test (tile overflow regression) |
+| Versions → Available | code (install progress) | code | n/a | code (catalog error state) | code (stale banner) | live (installed badge) | live |
+| Versions → Custom | code (import stages) | n/a | n/a | code (validation + Python fallback dialog) | n/a | n/a | live |
+| Addons → Catalog | code | live | live | code (catalog load failed state) | code (stale banner) | live (installed/update badges) | live |
+| Addons → Collections | test | test | n/a | test | n/a | test (not-in-catalog items) | live |
+| Addons → addon picker | code | n/a | code | test (catalog unavailable) | n/a | n/a | code |
+| Macros → Installed | n/a | test | n/a | code | n/a | live | test |
+| Macros → Catalog | code | live | code | code | code (stale banner) | live (installed-in-N chip) | live |
+| Settings | n/a | n/a | n/a | live (wrapper/cache/bundle snackbars) | n/a | live (cache sizes 0 B when empty) | live |
+| Jobs dialog | n/a | code (no jobs) | n/a | test (failed + retry) | n/a | n/a | live |
+| Updates sheet | code | code (all up to date) | n/a | test (apply failures) | code (no catalog) | n/a | live |
+
+Known gaps (not v0.1 blockers): spec 03 §2.1's "Guided setup" wizard and recent-jobs list on
+Home are deferred (the dashboard, first-run checklist, stats, last-used launch, update check and
+news feed landed in M6-12/D-067); the diagnostics `gatekeeper` result is `notApplicable` outside
+macOS. The addon picker previously showed "No matching addons" even when the catalog was
+unavailable; fixed in M6-07 with a widget test.
+
 
 ### M7 — Release
 

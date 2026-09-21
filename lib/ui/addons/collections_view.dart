@@ -637,6 +637,8 @@ class _AddAddonDialogState extends State<AddAddonDialog> {
     final l10n = AppLocalizations.of(context);
     final services = AppScope.of(context);
     final addons = services.addons.addons.watch(context);
+    final loading = services.addons.loading.watch(context);
+    final error = services.addons.error.watch(context);
     final items = services.bundles
         .itemsFor(widget.bundleId)
         .map((item) => item.addonId)
@@ -660,7 +662,18 @@ class _AddAddonDialogState extends State<AddAddonDialog> {
             ),
             const SizedBox(height: 8),
             Expanded(
-              child: matches.isEmpty
+              child: addons.isEmpty && loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : addons.isEmpty
+                  ? Center(
+                      child: Text(
+                        error == null
+                            ? l10n.addonsLoadFailed
+                            : '${l10n.addonsLoadFailed}: $error',
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : matches.isEmpty
                   ? Center(child: Text(l10n.bundlesNoMatches))
                   : ListView.builder(
                       itemCount: matches.length,

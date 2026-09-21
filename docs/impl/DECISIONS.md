@@ -1232,3 +1232,209 @@ Template:
 - **Refs**: spec 03 §3.6, spec 02 FR-10.3/10.4, `lib/state/updates_controller.dart`,
   `lib/ui/updates/updates_summary_sheet.dart`, `TASKS.md` M6-03, D-008, D-043, D-046, D-056,
   D-057
+
+### D-061 — Settings screen: persisted theme, update cadence and log level (M6-04)
+- **Date**: 2026-09-20
+- **Status**: Accepted
+- **Context**: FR-12.1 and spec 03 §2.6 ask for a real settings screen; M1-08/M3-09 only had
+  data directory, version/license, CLI wrapper and diagnostics. M6-05 (cache management) and
+  M6-06 (debug bundle) are separate tasks, and the GitHub token is v0.2 (B-07, OQ-3). Three
+  scope questions were confirmed with the product owner.
+- **Decision**:
+  - Pure types/helpers in `lib/domain/settings/app_settings.dart`: `AppThemeMode`
+    (system/light/dark, default dark per D-010), `UpdateCadence` (manual/daily/weekly with
+    intervals), `isUpdateCheckDue`, `LogLevel` parsing, and storage keys matching spec 05
+    (`theme_mode`, `update_check_interval`, `log_level`). Values persist as plain strings via
+    the existing `settings` table (`SettingsDao`).
+  - `SettingsController` gains `themeMode`/`updateCadence`/`logLevel` signals plus persisting
+    setters; `AppServices.bootstrap` loads them before `runApp`; `app.dart` watches
+    `themeMode` for `MaterialApp.themeMode`; `main.dart` applies `logLevel` to `appLogger`
+    through a signals effect, so level changes take effect immediately.
+  - Update cadence: `UpdatesController.checkIfDue(cadence)` waits for the restored saved
+    timestamps and runs the existing cache-first `check()` only when the interval elapsed;
+    `AppShell` triggers it once on mount. Manual cadence never checks; the user-set cadence is
+    the visible reason for the startup check (NFR-6).
+  - Settings UI is section cards (General, Logs, Command-line launcher, About, Diagnostics)
+    using `FormRow`/`FormDropdown` per D-059; the data directory and logs folder show the path
+    with an "open folder" action; the version/license card is informational.
+  - Cache management stays in M6-05, the debug bundle in M6-06, and the GitHub token in B-07;
+    theme persistence lives here (M6-08 keeps a11y/keyboard shortcuts).
+- **Consequences**: no schema change (settings rows only); the diagnostics panel is unchanged;
+  opening Settings is enough to change theme/cadence/level; cache and token sections can be
+  added without reworking the layout.
+- **Refs**: spec 02 FR-12.1, spec 03 §2.6, spec 05 `settings`, `lib/domain/settings/app_settings.dart`,
+  `lib/state/settings_controller.dart`, `lib/state/updates_controller.dart`, `lib/ui/settings/**`,
+  `TASKS.md` M6-04, D-010, D-017, D-035, D-057, D-059
+
+### D-062 — `--version` launches FreeCAD with `--console`
+- **Date**: 2026-09-20
+- **Status**: Accepted
+- **Context**: GUI FreeCAD builds ignore `--version` and open the full GUI (observed with the
+  local Pixi build in M3-08), so scripted version queries (`freecad-launcher run <profile> --
+  --version`) popped a window instead of printing. Console-mode builds (FreeCADCmd) are
+  unaffected by `--console`.
+- **Decision**: `LaunchPlanBuilder` prepends `--console` when the user arguments contain
+  `--version` and `--console` is not already present. No other argument is rewritten;
+  everything else stays verbatim passthrough (D-034). The manual AppImage install smoke test
+  runs `--console --version` directly.
+- **Consequences**: version queries always exit without a GUI; unit, platform, CLI and manual
+  test expectations update; `--console` is harmless on console binaries.
+- **Refs**: spec 02 FR-3, spec 04 §4.1, `lib/domain/profiles/launch_plan.dart`,
+  `test/manual/real_install_linux_test.dart`, `TASKS.md` M3-08, D-029, D-034
+
+### D-063 — Cache management: sizes, per-category clear and retention (M6-05)
+- **Date**: 2026-09-20
+- **Status**: Accepted
+- **Context**: FR-11.4 and spec 03 §2.6 ask for cache sizes and clearing; M6-04 deferred the
+  cache section to this task. Three scope questions were confirmed with the product owner.
+- **Decision**:
+  - `CacheCategory` (downloads/github/addons/macros) and `CacheRetention` (forever/7/30/90,
+    default 30) join `lib/domain/`; the retention value persists under spec key
+    `cache_retention_days` (stored as the number of days, `0` = forever).
+  - `CacheService` (platform) walks each category directory for sizes, clears a category's
+    contents, removes the matching `catalog_cache` row (`github:releases:freecad`,
+    `addons:catalog`, `macros:catalog`) so the next load refetches, and prunes files in the
+    download cache older than the retention window.
+  - `CacheController` (state) exposes `sizes`/`busy` and refreshes after clearing/pruning; the
+    Settings **Cache** card shows a size + Clear per category, a refresh action, the retention
+    dropdown and **Clean up now**. Clear/clean-up are disabled while any job is active (a
+    running download may still be writing into the cache). `AppShell` prunes on startup with
+    the persisted retention.
+  - Clearing a catalog never touches installed builds, profiles or addons (files are already
+    copied out of the cache); the catalogs held in memory refetch on the next explicit refresh
+    or restart, since the controllers keep their in-memory copy.
+- **Consequences**: sizes are computed on demand (no background watcher) and refresh after any
+  clear/prune; clearing the 800 MB download cache is a single click and only costs a
+  re-download if that asset is needed again; retention defaults to 30 days so old artifacts do
+  not accumulate.
+- **Refs**: spec 02 FR-11.4, spec 03 §2.6, spec 05 `settings`, `lib/platform/cache_service.dart`,
+  `lib/state/cache_controller.dart`, `lib/ui/settings/settings_view.dart`, `TASKS.md` M6-05,
+  D-037, D-048, D-061
+
+### D-064 — Debug bundle: full redacted logs, DB-free inventory (M6-06)
+- **Date**: 2026-09-20
+- **Status**: Accepted
+- **Context**: FR-12.4 and spec 07 §6 ask for a support bundle (logs + versions + diagnostics,
+  no secrets, DB-free) users can attach to issues. Three scope questions were confirmed with the
+  product owner.
+- **Decision**:
+  - `DebugBundleService` (platform) writes a zip atomically (`.part` → rename) containing
+    `system.txt`, `diagnostics.txt` and **every** file under `logs/` (basename entries), each
+    log line passed through `redactSensitive`; log bytes are decoded with
+    `allowMalformed: true` so a corrupt file cannot break the export. Suggested name:
+    `freecad-launcher-debug-YYYYMMDD-HHMMSS.zip`.
+  - `DebugBundleController` (state) runs diagnostics and builds the DB-free summary: launcher
+    version, Dart version, OS/build, data directory, builds (version/channel/kind/status/Python)
+    and profiles (name, bound build, Python, addon/package counts). No `config.db`, no tokens,
+    no GitHub token (B-07 not shipped).
+  - Settings → Logs gains a **Debug bundle** row: Export opens `getSaveLocation` (zip), then a
+    snackbar with the file name and a **Reveal** action (`FileActions.reveal`). Exporting state
+    disables the button.
+  - Full logs were chosen over recent tails; the Flutter framework version is not included
+    because it is not exposed at runtime without adding a dependency (Dart version and OS build
+    are).
+- **Consequences**: bundles are small (~12 KB in the dev app) and safe to attach; absolute
+  paths and the user name still appear (not secrets, needed for support); macOS Gatekeeper
+  diagnostics read `notApplicable` on other platforms.
+- **Refs**: spec 02 FR-12.4, spec 03 §2.6, spec 07 §6, `lib/platform/debug_bundle.dart`,
+  `lib/state/debug_bundle_controller.dart`, `lib/ui/settings/settings_view.dart`,
+  `TASKS.md` M6-06, D-063
+
+### D-065 — Keyboard shortcuts and a11y pass (M6-08)
+- **Date**: 2026-09-20
+- **Status**: Accepted
+- **Context**: spec 03 §4 defines the desktop keyboard map (`Ctrl/Cmd+1..6` sections,
+  `Ctrl/Cmd+N` new profile, `F5` refresh, `Ctrl/Cmd+F` search, `Esc` closes dialogs) but no
+  bindings existed; theme persistence moved to M6-04 (D-061). Scope confirmed with the product
+  owner: full map, context-aware F5/Ctrl+F, guideline tests plus fixes.
+- **Decision**:
+  - `AppShell` wraps the shell in `CallbackShortcuts` with an autofocus `Focus` node, so the
+    shortcuts fire regardless of which widget has focus and no-op where a section has no target.
+    Both `control` and `meta` variants are bound (Linux/Windows and macOS).
+  - Sections expose a `SectionShortcuts` interface (`refresh`, `focusSearch`) and their state
+    classes are public; AppShell drives the active section through `GlobalKey`s. `F5` refreshes
+    the active section (profile sizes, Versions/Addons/Macros catalogs with a forced reload);
+    `Ctrl/Cmd+F` focuses the Addons catalog search or switches the Macros view to its Catalog
+    tab and focuses the search. Addons and Macros use explicit `TabController`s for this.
+  - `Ctrl/Cmd+N` switches to Profiles and opens the create dialog; `Esc` dismisses dialogs and
+    sheets through Flutter's default `DismissIntent` (verified by test).
+  - A11y: `test/ui/a11y_test.dart` runs the labeled-tap-target, Android tap-target and
+    text-contrast guidelines across all six sections. Settings path values are plain `Text`
+    (the previous `SelectableText` exposed a 16–32 px text-field tap target that failed the
+    guideline).
+- **Consequences**: shortcuts are not user-configurable (future work); `F5` on Profiles only
+  recomputes sizes (the list itself is DB-stream driven); guideline tests gate the visible
+  sections but do not replace per-OS manual passes.
+- **Refs**: spec 03 §4, `lib/ui/shell/app_shell.dart`, `lib/ui/shell/section_shortcuts.dart`,
+  `lib/ui/addons/addons_view.dart`, `lib/ui/macros/macros_view.dart`,
+  `lib/ui/builds/builds_view.dart`, `lib/ui/profiles/profiles_view.dart`,
+  `lib/ui/settings/settings_view.dart`, `test/ui/a11y_test.dart`, `test/app_shell_test.dart`,
+  `TASKS.md` M6-08, D-061, D-017
+
+### D-066 — Performance pass: startup timing and off-thread catalog parsing (M6-09)
+- **Date**: 2026-09-20
+- **Status**: Accepted
+- **Context**: M6-09 requires warm startup < 2 s and no UI blocking on catalog loads. The three
+  catalogs are loaded at app start (all sections are built by the shell's `IndexedStack`), and
+  parsing the 4 MB addon JSON / 5 MB macro zip ran synchronously on the UI isolate: measured at
+  190 ms and 390 ms respectively right after the first frame.
+- **Decision**:
+  - Startup timing logs (tag `perf`): `startup: bootstrap at X ms` and
+    `startup: first frame at X ms` from `main.dart`, plus one line per catalog load (entries +
+    elapsed). `appLogger` defaults to a no-op `Logger` so tests and CLI never hit a late
+    initialisation.
+  - Heavy catalog parsing runs on a background isolate with `Isolate.run` in `AddonCatalog`,
+    `MacroCatalog` and `ReleasesCatalog`; the UI isolate only performs async file IO and awaits
+    the parsed list. Exception types propagate to the existing error paths.
+- **Measurements** (release build, `flutter build linux`, warm data root with catalogs cached,
+  3 runs on the dev machine): wall clock from process launch to the first-frame log
+  553/559/561 ms; in-process bootstrap 14–23 ms; first frame 142–186 ms. Addon catalog
+  (176 addons) and macro catalog (262 macros) parse off-thread after the first frame.
+- **Consequences**: each parse pays a small isolate spawn overhead (~10–20 ms wall, off the UI
+  thread); parsed objects are copied between isolates (plain data, negligible); the `perf` log
+  lines make future regressions measurable in `logs/app.log`.
+- **Refs**: spec 02 NFR-2, `lib/main.dart`, `lib/core/log.dart`,
+  `lib/data/catalog/addon_catalog.dart`, `lib/data/catalog/macro_catalog.dart`,
+  `lib/data/catalog/releases_catalog.dart`, `TASKS.md` M6-09, D-037, D-048
+
+### D-067 — Home dashboard, news feed and shell navigation state (M6-12)
+- **Date**: 2026-09-21
+- **Status**: Accepted
+- **Context**: Home was a static welcome screen; the product owner asked for a dashboard
+  (general stats, launch the last used profile, check for updates) plus a user-configurable
+  RSS/Atom news section (default `https://freecad.org/news.rss`, which currently 404s). Four
+  scope questions were confirmed. Spec 03 §2.1 also describes a first-run checklist and a
+  guided setup flow.
+- **Decision**:
+  - `ShellController` (`state/shell_controller.dart`) owns the selected `AppSection`; the shell
+    and keyboard shortcuts drive it, so Home tiles and the first-run steps can navigate between
+    sections. AppShell no longer keeps `_selectedIndex`.
+  - Home (normal): five stat tiles (installed builds, profiles, installed addons, macros,
+    Python packages) that navigate to their section, a "last used profile" card
+    (`max(lastUsedAt)`, falling back to the first profile) with Launch (reusing
+    `launchProfile`), an updates card (`outdatedCount`) whose button runs
+    `UpdatesController.check()` and opens the existing summary sheet, and a news card.
+  - Home (first run, no builds or profiles): the welcome text becomes a 3-step checklist
+    (version → profile → addons) with actions, followed by the same dashboard (stats at zero).
+    The "Guided setup" wizard from spec 03 §2.1 stays deferred (noted in VERIFICATION).
+  - News: `NewsFeed` (data) downloads the configured URL through the shared `Downloader`,
+    caches it under `cache/news/news_feed.xml` with a `catalog_cache` row (`news:feed`, journal
+    `etag` = URL) and a 6 h TTL, serves stale items when offline, and parses RSS 2.0/RDF and
+    Atom (`parseNewsFeed`, RSS dates in RFC 822/1123 with numeric offsets). The card shows up
+    to 5 items (title + date, tap opens the browser), a stale hint, or an inline error with
+    Retry; the default URL's 404 is therefore a normal error state.
+  - Settings **General** gains a "News feed URL" field (key `news_feed_url`; empty resets to
+    the default). The news cache is a fifth `CacheCategory` (size/clear support).
+  - `AppServices` wires `NewsFeed`/`NewsController`/`ShellController`; `AppServices` accepts a
+    `NewsController` override for tests.
+- **Consequences**: Home performs one feed request per 6 h window (NFR-6: user-visible feature);
+  the news URL is the only free-form network setting; section navigation is now shared state
+  rather than shell-local; widget tests that pump the whole app must `runAsync` the initial
+  frame because the feed touches the real filesystem.
+- **Update (2026-09-21)**: the default feed URL is `https://blog.freecad.org/feed/atom/`
+  (verified `application/atom+xml`), replacing the not-yet-published
+  `https://freecad.org/news.rss`.
+- **Refs**: spec 03 §2.1/§2.6, `lib/state/shell_controller.dart`,
+  `lib/state/news_controller.dart`, `lib/data/catalog/news_feed.dart`,
+  `lib/ui/home/home_view.dart`, `lib/ui/settings/settings_view.dart`, `TASKS.md` M6-12,
+  D-010, D-061, D-063, D-065

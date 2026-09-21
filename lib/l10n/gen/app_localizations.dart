@@ -148,6 +148,138 @@ abstract class AppLocalizations {
   /// **'Install a FreeCAD version and create a profile to get started.'**
   String get homeEmptyMessage;
 
+  /// No description provided for @homeStepVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a FreeCAD version'**
+  String get homeStepVersion;
+
+  /// No description provided for @homeStepProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a profile'**
+  String get homeStepProfile;
+
+  /// No description provided for @homeStepAddons.
+  ///
+  /// In en, this message translates to:
+  /// **'Install addons'**
+  String get homeStepAddons;
+
+  /// No description provided for @homeStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get homeStatus;
+
+  /// No description provided for @homeStatBuilds.
+  ///
+  /// In en, this message translates to:
+  /// **'Versions'**
+  String get homeStatBuilds;
+
+  /// No description provided for @homeStatProfiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Profiles'**
+  String get homeStatProfiles;
+
+  /// No description provided for @homeStatAddons.
+  ///
+  /// In en, this message translates to:
+  /// **'Addons'**
+  String get homeStatAddons;
+
+  /// No description provided for @homeStatMacros.
+  ///
+  /// In en, this message translates to:
+  /// **'Macros'**
+  String get homeStatMacros;
+
+  /// No description provided for @homeStatPackages.
+  ///
+  /// In en, this message translates to:
+  /// **'Python packages'**
+  String get homeStatPackages;
+
+  /// No description provided for @homeLastUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last used profile'**
+  String get homeLastUsed;
+
+  /// No description provided for @homeLaunch.
+  ///
+  /// In en, this message translates to:
+  /// **'Launch'**
+  String get homeLaunch;
+
+  /// No description provided for @homeNoProfiles.
+  ///
+  /// In en, this message translates to:
+  /// **'No profiles yet'**
+  String get homeNoProfiles;
+
+  /// No description provided for @homeLastUsedNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never used'**
+  String get homeLastUsedNever;
+
+  /// No description provided for @homeUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates'**
+  String get homeUpdates;
+
+  /// No description provided for @homeUpdatesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} updates available'**
+  String homeUpdatesAvailable(int count);
+
+  /// No description provided for @homeUpdatesNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything is up to date'**
+  String get homeUpdatesNone;
+
+  /// No description provided for @homeUpdatesCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get homeUpdatesCheck;
+
+  /// No description provided for @homeUpdatesChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get homeUpdatesChecking;
+
+  /// No description provided for @homeNews.
+  ///
+  /// In en, this message translates to:
+  /// **'News'**
+  String get homeNews;
+
+  /// No description provided for @homeNewsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No news items.'**
+  String get homeNewsEmpty;
+
+  /// No description provided for @homeNewsError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the news feed.'**
+  String get homeNewsError;
+
+  /// No description provided for @homeNewsStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing cached news.'**
+  String get homeNewsStale;
+
   /// No description provided for @profilesEmptyTitle.
   ///
   /// In en, this message translates to:
@@ -2235,6 +2367,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Data directory'**
   String get settingsDataDirectory;
+
+  /// No description provided for @settingsGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get settingsGeneral;
+
+  /// No description provided for @settingsTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingsTheme;
+
+  /// No description provided for @settingsThemeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get settingsThemeSystem;
+
+  /// No description provided for @settingsThemeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get settingsThemeLight;
+
+  /// No description provided for @settingsThemeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get settingsThemeDark;
+
+  /// No description provided for @settingsNewsFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'News feed URL'**
+  String get settingsNewsFeed;
+
+  /// No description provided for @settingsUpdateChecks.
+  ///
+  /// In en, this message translates to:
+  /// **'Update checks'**
+  String get settingsUpdateChecks;
+
+  /// No description provided for @settingsCadenceManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get settingsCadenceManual;
+
+  /// No description provided for @settingsCadenceDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get settingsCadenceDaily;
+
+  /// No description provided for @settingsCadenceWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get settingsCadenceWeekly;
+
+  /// No description provided for @settingsLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs'**
+  String get settingsLogs;
+
+  /// No description provided for @settingsLogLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Log level'**
+  String get settingsLogLevel;
+
+  /// No description provided for @settingsLogLevelDebug.
+  ///
+  /// In en, this message translates to:
+  /// **'Debug'**
+  String get settingsLogLevelDebug;
+
+  /// No description provided for @settingsLogLevelInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get settingsLogLevelInfo;
+
+  /// No description provided for @settingsLogLevelWarn.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning'**
+  String get settingsLogLevelWarn;
+
+  /// No description provided for @settingsLogLevelError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get settingsLogLevelError;
+
+  /// No description provided for @settingsLogsFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs folder'**
+  String get settingsLogsFolder;
+
+  /// No description provided for @settingsDebugBundle.
+  ///
+  /// In en, this message translates to:
+  /// **'Debug bundle'**
+  String get settingsDebugBundle;
+
+  /// No description provided for @settingsDebugBundleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs, versions and diagnostics (redacted)'**
+  String get settingsDebugBundleDescription;
+
+  /// No description provided for @settingsDebugBundleExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get settingsDebugBundleExport;
+
+  /// No description provided for @settingsDebugBundleExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Debug bundle saved: {file}'**
+  String settingsDebugBundleExported(String file);
+
+  /// No description provided for @settingsDebugBundleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not export the debug bundle'**
+  String get settingsDebugBundleFailed;
+
+  /// No description provided for @settingsDebugBundleReveal.
+  ///
+  /// In en, this message translates to:
+  /// **'Reveal'**
+  String get settingsDebugBundleReveal;
+
+  /// No description provided for @settingsAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAbout;
+
+  /// No description provided for @settingsOpenFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Open folder'**
+  String get settingsOpenFolder;
+
+  /// No description provided for @settingsCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache'**
+  String get settingsCache;
+
+  /// No description provided for @settingsCacheDownloads.
+  ///
+  /// In en, this message translates to:
+  /// **'Build downloads'**
+  String get settingsCacheDownloads;
+
+  /// No description provided for @settingsCacheGithub.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub releases'**
+  String get settingsCacheGithub;
+
+  /// No description provided for @settingsCacheAddons.
+  ///
+  /// In en, this message translates to:
+  /// **'Addon catalog'**
+  String get settingsCacheAddons;
+
+  /// No description provided for @settingsCacheMacros.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro catalog'**
+  String get settingsCacheMacros;
+
+  /// No description provided for @settingsCacheNews.
+  ///
+  /// In en, this message translates to:
+  /// **'News feed'**
+  String get settingsCacheNews;
+
+  /// No description provided for @settingsCacheClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get settingsCacheClear;
+
+  /// No description provided for @settingsCacheRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh sizes'**
+  String get settingsCacheRefresh;
+
+  /// No description provided for @settingsCacheCleanUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean up now'**
+  String get settingsCacheCleanUp;
+
+  /// No description provided for @settingsCacheRetention.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep downloads for'**
+  String get settingsCacheRetention;
+
+  /// No description provided for @settingsCacheRetentionForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Forever'**
+  String get settingsCacheRetentionForever;
+
+  /// No description provided for @settingsCacheRetentionDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days'**
+  String settingsCacheRetentionDays(int days);
+
+  /// No description provided for @settingsCacheCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Freed {size}'**
+  String settingsCacheCleared(String size);
+
+  /// No description provided for @settingsCacheClearFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not clear the cache'**
+  String get settingsCacheClearFailed;
 
   /// No description provided for @settingsCliWrapper.
   ///

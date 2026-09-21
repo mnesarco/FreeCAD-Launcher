@@ -11,6 +11,9 @@ class InstalledAddonsDao extends DatabaseAccessor<AppDatabase> with _$InstalledA
   Stream<List<InstalledAddon>> watchAll() =>
       (select(installedAddons)..orderBy([(t) => OrderingTerm.asc(t.displayName)])).watch();
 
+  Future<List<InstalledAddon>> getAll() =>
+      (select(installedAddons)..orderBy([(t) => OrderingTerm.asc(t.displayName)])).get();
+
   Stream<List<InstalledAddon>> watchByProfile(String profileId) =>
       (select(installedAddons)
             ..where((t) => t.profileId.equals(profileId))

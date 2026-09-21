@@ -13,6 +13,7 @@ import 'package:freecad_launcher/domain/builds/asset_classifier.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/builds/build_update.dart';
 import 'package:freecad_launcher/domain/builds/freecad_version.dart';
+import 'package:freecad_launcher/domain/settings/app_settings.dart';
 import 'package:freecad_launcher/platform/addon_installer.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
@@ -188,6 +189,36 @@ void main() {
     expect(
       await db.settingsDao.getValue(addonUpdateLastCheckedKey),
       DateTime.utc(2026, 9, 20, 12).toIso8601String(),
+    );
+  });
+
+  test('checkIfDue skips manual and recent checks, runs when due', () async {
+    catalog.result = AddonCatalogResult(
+      addons: const [],
+      freshness: CatalogFreshness.fresh,
+    );
+    var now = DateTime.utc(2026, 9, 20, 12);
+    final updates = UpdatesController(
+      addons: addonsController(),
+      builds: buildsController(),
+      settingsDao: db.settingsDao,
+      clock: () => now,
+    );
+
+    expect(await updates.checkIfDue(UpdateCadence.manual), isNull);
+    expect(catalog.loads, 0);
+
+    expect(await updates.checkIfDue(UpdateCadence.daily), 0);
+    expect(catalog.loads, 1);
+
+    expect(await updates.checkIfDue(UpdateCadence.daily), isNull);
+    expect(catalog.loads, 1);
+
+    now = now.add(const Duration(days: 1, minutes: 1));
+    expect(await updates.checkIfDue(UpdateCadence.daily), 0);
+    expect(
+      await db.settingsDao.getValue(addonUpdateLastCheckedKey),
+      now.toIso8601String(),
     );
   });
 

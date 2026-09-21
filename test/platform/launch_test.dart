@@ -118,6 +118,7 @@ void main() {
     expect(handle, isNotNull);
     expect(launcher.specs.single.executable, '/data/builds/b1/FreeCAD');
     expect(launcher.specs.single.arguments, [
+      '--console',
       '--version',
       '-u',
       '/data/profiles/p1/user.cfg',

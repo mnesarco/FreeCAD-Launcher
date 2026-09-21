@@ -4,12 +4,12 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-20
-- **Current milestone**: M6 — Updates and polish (M6-10 pinning, M6-01/M6-02 badges, M6-11 form
-  style and M6-03 batch updates done); next: M6-04 — settings screen
+- **Current milestone**: M7 — v0.1 release (M6 complete incl. M6-12 Home dashboard); next: S5
+  reproducible AppImage build spike
 - **Active branch**: `v2`
 - **Last session**: 2026-09-20
-- **Next action**: start `M6-04` (settings screen: theme, data dir, cadence, cache, logs, about,
-  license); manual M4/M5 UI click-throughs and the Windows/macOS manual checks remain open.
+- **Next action**: start `S5` (spike: reproducible Flutter AppImage build in CI) then M7-01;
+  manual M4/M5 UI click-throughs and the Windows/macOS manual checks remain open.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -236,6 +236,55 @@
   - Fix — installed addons in the profile Addons tab now show their catalog icon via an offline
     cache-only load (`AddonCatalog.cachedAddons`, `AddonsController.ensureCachedCatalog`);
     visiting Addons still refreshes the catalog normally.
+  - M6-04 — **D-061**: settings screen with persisted theme (`theme_mode`), update cadence
+    (`update_check_interval`) and log level (`log_level`) in the `settings` table; theme applied
+    app-wide via a signal, log level applied to `appLogger` live, cadence triggers a due-only
+    startup update check (`UpdatesController.checkIfDue`). Section cards (General/Logs/CLI
+    wrapper/About/Diagnostics) use the D-059 form style; data dir and logs folder open in the
+    file manager. Cache deferred to M6-05, debug bundle to M6-06, GitHub token to B-07. Manual
+    pass on the dev app (live light↔dark switch, dropdowns, diagnostics) plus domain/controller/
+    widget tests.
+  - Fix — **D-062**: `LaunchPlanBuilder` now prepends `--console` whenever `--version` is passed
+    to FreeCAD, so GUI builds print the version and exit instead of opening a window (the Pixi
+    build observed in M3-08); all other arguments stay verbatim.
+  - M6-05 — **D-063**: cache management — `CacheService` reports per-category sizes, clears a
+    category (payloads + `catalog_cache` row, so the next load refetches) and prunes downloads
+    older than the persisted `cache_retention_days` (Forever/7/30/90, default 30); startup prune
+    in `AppShell`, manual "Clean up now", and Clear/Clean-up disabled while jobs run. Settings
+    Cache card verified live (downloads 823.8 MiB, GitHub releases cleared 3.1 MiB → 0 B);
+    integration test asserts a cleared catalog refetches on the next load.
+  - M6-06 — **D-064**: debug bundle export — `DebugBundleService` writes a zip with
+    `system.txt` (launcher/Dart/OS, data dir, builds + profiles inventory), `diagnostics.txt`
+    and every `logs/` file line-redacted through `redactSensitive`; Settings → Logs export via
+    save dialog with a Reveal action. Real export reviewed: 14 files / ~12 KB, useful content,
+    no secret patterns; no DB file.
+  - M6-07 — state coverage pass: per-screen matrix added to `VERIFICATION.md` (loading, empty,
+    filtered-empty, error, offline/stale, partial data, overflow) with live checks for Home,
+    Versions Installed/Custom, Addons Catalog/Collections/detail, Macros Catalog/Installed,
+    Profiles + all detail tabs, Settings, and widget/unit-test evidence elsewhere. Fixed the
+    Collections addon picker so it reports an unavailable catalog instead of "no matches"
+    (regression test). Noted gaps: Home dashboard (spec 03 §2.1 normal state) is not in v0.1.
+  - M6-08 — **D-065**: keyboard shortcuts and a11y — spec 03 §4 map implemented in `AppShell`
+    (`Ctrl/Cmd+1..6` sections, `Ctrl/Cmd+N` create profile, `F5` context-aware refresh,
+    `Ctrl/Cmd+F` search focus with Macros tab switch, `Esc` closes dialogs) via a
+    `SectionShortcuts` interface + `GlobalKey`s; a11y guideline tests (labeled tap targets,
+    Android tap targets, text contrast) pass on all six sections; Settings paths switched from
+    `SelectableText` to `Text` to fix the tap-target finding. Shortcuts verified live
+    (Ctrl+2/Ctrl+4/Ctrl+F) and by widget tests.
+  - M6-09 — **D-066**: performance pass — startup timing logs (`perf` tag) and off-thread
+    catalog parsing via `Isolate.run` in the addon/macro/releases catalogs. Measured on the
+    release build with a warm data root (3 runs): wall to first frame **553/559/561 ms**,
+    in-process bootstrap 14–23 ms, first frame 142–186 ms; previously the addon (190 ms) and
+    macro (390 ms) parses blocked the UI isolate right after startup. **M6 complete.**
+  - M6-12 — **D-067**: Home dashboard — five stat tiles (builds/profiles/addons/macros/packages)
+    navigating via the new `ShellController`, a last-used-profile launch card, an updates card
+    that runs a check and opens the summary sheet, a first-run 3-step checklist, and a cached
+    RSS/Atom news feed (default `https://blog.freecad.org/feed/atom/`, verified Atom; the
+    previously planned `https://freecad.org/news.rss` is not published yet) with a
+    `news_feed_url` setting and a fifth cache category.
+    Shell navigation moved from local state to `ShellController`; widget tests for Home
+    (stats/checklist/news error); 482 tests green.
+  - 482 tests green (8 manual probes skipped), analyze clean.
   - 441 tests green (8 manual probes skipped), analyze clean.
 
 ## Session log
@@ -306,6 +355,13 @@
 | 2026-09-20 | M6 | D-059 desktop form style: label-left `FormRow`, 4 px outlined inputs, migrated dialogs/inline forms | M6-11 | `docs/impl/DECISIONS.md`, `docs/spec/03-ux.md`, `lib/app.dart`, `lib/ui/widgets/form_row.dart`, `lib/ui/profiles/**`, `lib/ui/builds/builds_view.dart`, `lib/ui/addons/**`, `lib/l10n/**`, `test/**` |
 | 2026-09-20 | M6 | D-060 batch addon updates: pre-checked per-item toggles, sequential job-queue run, progress + retry failed | M6-03 | `docs/impl/DECISIONS.md`, `lib/domain/addons/addon_update.dart`, `lib/state/updates_controller.dart`, `lib/ui/updates/updates_summary_sheet.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-20 | M6 | UI polish: shared CompactBadge/CompactDropdown, catalog icons on installed addons, branch-selection and layout fixes, label column 195 px (D-059), FreeCAD icon font | Fix | `docs/impl/DECISIONS.md`, `docs/impl/STATUS.md`, `lib/ui/**`, `lib/state/addons_controller.dart`, `lib/data/catalog/addon_catalog.dart`, `lib/ui/icons.dart`, `test/**` |
+| 2026-09-20 | M6 | D-061 settings screen (persisted theme/cadence/log level, startup cadence check) and D-062 `--console` with `--version` | M6-04, Fix | `docs/impl/DECISIONS.md`, `docs/impl/TASKS.md`, `docs/impl/STATUS.md`, `lib/domain/settings/**`, `lib/state/settings_controller.dart`, `lib/state/updates_controller.dart`, `lib/state/app_services.dart`, `lib/app.dart`, `lib/main.dart`, `lib/domain/profiles/launch_plan.dart`, `lib/ui/settings/**`, `lib/ui/shell/app_shell.dart`, `lib/l10n/**`, `test/**` |
+| 2026-09-20 | M6 | D-063 cache management: per-category sizes/clear, retention pruning, Cache card in Settings | M6-05 | `docs/impl/DECISIONS.md`, `docs/impl/TASKS.md`, `docs/impl/STATUS.md`, `lib/domain/cache/cache_types.dart`, `lib/domain/settings/app_settings.dart`, `lib/platform/cache_service.dart`, `lib/state/cache_controller.dart`, `lib/state/app_services.dart`, `lib/state/settings_controller.dart`, `lib/ui/settings/settings_view.dart`, `lib/ui/shell/app_shell.dart`, `lib/l10n/**`, `test/**` |
+| 2026-09-20 | M6 | D-064 debug bundle export: redacted logs + DB-free inventory + diagnostics, Settings export row | M6-06 | `docs/impl/DECISIONS.md`, `docs/impl/TASKS.md`, `docs/impl/STATUS.md`, `lib/platform/debug_bundle.dart`, `lib/state/debug_bundle_controller.dart`, `lib/state/app_services.dart`, `lib/data/daos/installed_addons_dao.dart`, `lib/ui/settings/settings_view.dart`, `lib/l10n/**`, `test/**` |
+| 2026-09-20 | M6 | M6-07 state coverage pass: per-screen matrix in VERIFICATION.md, live checks, addon-picker catalog-unavailable fix | M6-07 | `docs/impl/VERIFICATION.md`, `docs/impl/TASKS.md`, `docs/impl/STATUS.md`, `lib/ui/addons/collections_view.dart`, `test/ui/collections_view_test.dart` |
+| 2026-09-20 | M6 | D-065 keyboard shortcuts (spec 03 §4) + a11y guideline tests/fixes | M6-08 | `docs/impl/DECISIONS.md`, `docs/impl/TASKS.md`, `docs/impl/STATUS.md`, `docs/impl/VERIFICATION.md`, `lib/ui/shell/**`, `lib/ui/addons/addons_view.dart`, `lib/ui/macros/macros_view.dart`, `lib/ui/builds/builds_view.dart`, `lib/ui/profiles/profiles_view.dart`, `lib/ui/settings/settings_view.dart`, `test/**` |
+| 2026-09-20 | M7 | D-066 performance pass: startup `perf` logs, off-thread catalog parsing, measured warm startup 553–561 ms | M6-09 | `docs/impl/DECISIONS.md`, `docs/impl/TASKS.md`, `docs/impl/STATUS.md`, `docs/impl/VERIFICATION.md`, `lib/main.dart`, `lib/core/log.dart`, `lib/data/catalog/*.dart`, `lib/state/*catalog*`, `test/**` |
+| 2026-09-21 | M7 | D-067 Home dashboard: stats tiles, last-used launch, update check, cached RSS/Atom news feed + `news_feed_url` setting, first-run checklist, `ShellController` | M6-12 | `docs/impl/DECISIONS.md`, `docs/impl/TASKS.md`, `docs/impl/STATUS.md`, `docs/impl/VERIFICATION.md`, `lib/domain/news/**`, `lib/data/catalog/news_feed.dart`, `lib/state/{shell,news}_controller.dart`, `lib/state/{app_services,settings_controller}.dart`, `lib/ui/home/home_view.dart`, `lib/ui/settings/settings_view.dart`, `lib/platform/{paths,cache_service}.dart`, `lib/l10n/**`, `test/**` |
 
 ## Standing notes for the next agent
 

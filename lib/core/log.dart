@@ -157,7 +157,7 @@ class Logger {
       log(LogLevel.error, message, tag: tag, error: error, stackTrace: stackTrace);
 }
 
-late Logger appLogger;
+Logger appLogger = Logger(sinks: const []);
 
 final List<RegExp> _secretPatterns = [
   RegExp(r'github_pat_[A-Za-z0-9_]{20,}'),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -12,6 +14,7 @@ import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/addons/addon_icon.dart';
 import 'package:freecad_launcher/ui/addons/collections_view.dart';
 import 'package:freecad_launcher/ui/addons/requirements_dialog.dart';
+import 'package:freecad_launcher/ui/shell/section_shortcuts.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 import 'package:freecad_launcher/ui/widgets/compact_dropdown.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
@@ -21,16 +24,22 @@ class AddonsView extends StatefulWidget {
   const AddonsView({super.key});
 
   @override
-  State<AddonsView> createState() => _AddonsViewState();
+  State<AddonsView> createState() => AddonsViewState();
 }
 
-class _AddonsViewState extends State<AddonsView> {
+class AddonsViewState extends State<AddonsView>
+    with SingleTickerProviderStateMixin
+    implements SectionShortcuts {
   bool _started = false;
   String? _selectedAddonId;
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  late final TabController _tabs = TabController(length: 2, vsync: this);
 
   @override
   void dispose() {
+    _tabs.dispose();
+    _searchFocusNode.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -48,6 +57,17 @@ class _AddonsViewState extends State<AddonsView> {
   }
 
   @override
+  void refresh() {
+    unawaited(AppScope.of(context).addons.load(forceRefresh: true));
+  }
+
+  @override
+  void focusSearch() {
+    _tabs.animateTo(0);
+    _searchFocusNode.requestFocus();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context).addons;
     final selectedId = _selectedAddonId;
@@ -59,38 +79,42 @@ class _AddonsViewState extends State<AddonsView> {
     }
 
     final l10n = AppLocalizations.of(context);
-    return DefaultTabController(
-      length: 2,
-      child: Column(
-        children: [
-          TabBar(
-            tabs: [
-              Tab(text: l10n.addonsTabCatalog),
-              Tab(text: l10n.addonsTabCollections),
+    return Column(
+      children: [
+        TabBar(
+          controller: _tabs,
+          tabs: [
+            Tab(text: l10n.addonsTabCatalog),
+            Tab(text: l10n.addonsTabCollections),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabs,
+            children: [
+              _CatalogTab(
+                searchController: _searchController,
+                searchFocusNode: _searchFocusNode,
+                onOpen: (addon) => setState(() => _selectedAddonId = addon.id),
+              ),
+              const CollectionsTab(),
             ],
           ),
-          Expanded(
-            child: TabBarView(
-              children: [
-                _CatalogTab(
-                  searchController: _searchController,
-                  onOpen: (addon) =>
-                      setState(() => _selectedAddonId = addon.id),
-                ),
-                const CollectionsTab(),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
 class _CatalogTab extends StatelessWidget {
-  const _CatalogTab({required this.searchController, required this.onOpen});
+  const _CatalogTab({
+    required this.searchController,
+    required this.searchFocusNode,
+    required this.onOpen,
+  });
 
   final TextEditingController searchController;
+  final FocusNode searchFocusNode;
   final ValueChanged<Addon> onOpen;
 
   Future<void> _checkUpdates(BuildContext context) async {
@@ -198,6 +222,7 @@ class _CatalogTab extends StatelessWidget {
               Expanded(
                 child: TextField(
                   controller: searchController,
+                  focusNode: searchFocusNode,
                   onChanged: (value) => controller.query.value = value,
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.search),

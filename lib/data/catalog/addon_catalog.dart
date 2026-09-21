@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:archive/archive.dart';
 import 'package:path/path.dart' as p;
@@ -150,7 +151,8 @@ class AddonCatalog {
     if (!file.existsSync()) {
       throw AddonCatalogUnavailableException('Cached catalog payload is missing');
     }
-    return parseAddonCatalog(extractCatalogJson(await file.readAsBytes()));
+    final bytes = await file.readAsBytes();
+    return Isolate.run(() => parseAddonCatalog(extractCatalogJson(bytes)));
   }
 
   static String extractCatalogJson(List<int> zipBytes) {

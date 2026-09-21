@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:freecad_launcher/core/constants.dart';
@@ -13,6 +16,7 @@ import 'package:freecad_launcher/ui/profiles/profiles_view.dart';
 import 'package:freecad_launcher/ui/settings/settings_view.dart';
 import 'package:freecad_launcher/ui/updates/updates_status_chip.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/state/shell_controller.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -22,11 +26,101 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  int _selectedIndex = 0;
+  bool _started = false;
+
+  final _profilesKey = GlobalKey<ProfilesViewState>();
+  final _buildsKey = GlobalKey<BuildsViewState>();
+  final _addonsKey = GlobalKey<AddonsViewState>();
+  final _macrosKey = GlobalKey<MacrosViewState>();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) {
+      return;
+    }
+    _started = true;
+    final services = AppScope.of(context);
+    services.updates.start();
+    unawaited(
+      services.updates.checkIfDue(services.settings.updateCadence.value),
+    );
+    unawaited(services.cache.prune(services.settings.cacheRetention.value));
+  }
+
+  void _newProfile() {
+    final shell = AppScope.of(context).shell;
+    shell.select(AppSection.profiles);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _profilesKey.currentState?.createProfile();
+    });
+  }
+
+  void _refreshActiveSection() {
+    switch (AppScope.of(context).shell.section.value) {
+      case AppSection.home:
+        break;
+      case AppSection.profiles:
+        _profilesKey.currentState?.refresh();
+      case AppSection.versions:
+        _buildsKey.currentState?.refresh();
+      case AppSection.addons:
+        _addonsKey.currentState?.refresh();
+      case AppSection.macros:
+        _macrosKey.currentState?.refresh();
+      case AppSection.settings:
+        break;
+    }
+  }
+
+  void _focusActiveSearch() {
+    switch (AppScope.of(context).shell.section.value) {
+      case AppSection.home:
+      case AppSection.profiles:
+      case AppSection.versions:
+      case AppSection.settings:
+        break;
+      case AppSection.addons:
+        _addonsKey.currentState?.focusSearch();
+      case AppSection.macros:
+        _macrosKey.currentState?.focusSearch();
+    }
+  }
+
+  Map<ShortcutActivator, VoidCallback> _shortcutBindings() {
+    const digits = [
+      LogicalKeyboardKey.digit1,
+      LogicalKeyboardKey.digit2,
+      LogicalKeyboardKey.digit3,
+      LogicalKeyboardKey.digit4,
+      LogicalKeyboardKey.digit5,
+      LogicalKeyboardKey.digit6,
+    ];
+    final bindings = <ShortcutActivator, VoidCallback>{};
+    for (var index = 0; index < digits.length; index++) {
+      bindings[SingleActivator(digits[index], control: true)] =
+          () => AppScope.of(context).shell.selectIndex(index);
+      bindings[SingleActivator(digits[index], meta: true)] =
+          () => AppScope.of(context).shell.selectIndex(index);
+    }
+    bindings[const SingleActivator(LogicalKeyboardKey.keyN, control: true)] =
+        _newProfile;
+    bindings[const SingleActivator(LogicalKeyboardKey.keyN, meta: true)] =
+        _newProfile;
+    bindings[const SingleActivator(LogicalKeyboardKey.f5)] =
+        _refreshActiveSection;
+    bindings[const SingleActivator(LogicalKeyboardKey.keyF, control: true)] =
+        _focusActiveSearch;
+    bindings[const SingleActivator(LogicalKeyboardKey.keyF, meta: true)] =
+        _focusActiveSearch;
+    return bindings;
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final shell = AppScope.of(context).shell;
+    final section = shell.section.watch(context);
     final sections = [
       _Section(
         icon: Icons.home_outlined,
@@ -38,25 +132,25 @@ class _AppShellState extends State<AppShell> {
         icon: Icons.workspaces_outlined,
         selectedIcon: Icons.workspaces,
         label: l10n.navProfiles,
-        view: const ProfilesView(),
+        view: ProfilesView(key: _profilesKey),
       ),
       _Section(
         icon: FreeCADIcons.freecad,
         selectedIcon: FreeCADIcons.freecad,
         label: l10n.navVersions,
-        view: const BuildsView(),
+        view: BuildsView(key: _buildsKey),
       ),
       _Section(
         icon: Icons.extension_outlined,
         selectedIcon: Icons.extension,
         label: l10n.navAddons,
-        view: const AddonsView(),
+        view: AddonsView(key: _addonsKey),
       ),
       _Section(
         icon: Icons.auto_fix_high_outlined,
         selectedIcon: Icons.auto_fix_high,
         label: l10n.navMacros,
-        view: const MacrosView(),
+        view: MacrosView(key: _macrosKey),
       ),
       _Section(
         icon: Icons.settings_outlined,
@@ -66,12 +160,16 @@ class _AppShellState extends State<AppShell> {
       ),
     ];
 
-    return Scaffold(
+    return CallbackShortcuts(
+      bindings: _shortcutBindings(),
+      child: Focus(
+        autofocus: true,
+        child: Scaffold(
       body: Row(
         children: [
           NavigationRail(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: (index) => setState(() => _selectedIndex = index),
+            selectedIndex: AppSection.values.indexOf(section),
+            onDestinationSelected: shell.selectIndex,
             labelType: NavigationRailLabelType.all,
             destinations: [
               for (final section in sections)
@@ -85,13 +183,15 @@ class _AppShellState extends State<AppShell> {
           const VerticalDivider(width: 1),
           Expanded(
             child: IndexedStack(
-              index: _selectedIndex,
+              index: AppSection.values.indexOf(section),
               children: [for (final section in sections) section.view],
             ),
           ),
         ],
       ),
       bottomNavigationBar: const _StatusBar(),
+        ),
+      ),
     );
   }
 }
