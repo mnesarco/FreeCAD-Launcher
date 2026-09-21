@@ -228,7 +228,7 @@ class _ProfileFormDialogState extends State<_ProfileFormDialog> {
                       DropdownMenuItem(
                         value: build.id,
                         child: Text(
-                          '${build.version} · ${build.channel.name}'
+                          '${build.displayLabel} · ${build.channel.name}'
                           '${build.pythonVersion == null ? '' : ' · py${build.pythonVersion}'}',
                           overflow: TextOverflow.ellipsis,
                         ),

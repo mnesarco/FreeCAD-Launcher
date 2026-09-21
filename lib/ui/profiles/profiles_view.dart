@@ -164,7 +164,7 @@ class _ProfileCard extends StatelessWidget {
     final size = controller.profileSizes.watch(context)[profile.id];
 
     final versionLine = [
-      if (build != null) build.version,
+      if (build != null) build.displayLabel,
       if (build != null) build.channel.name,
       '${l10n.profilesPythonVersion} ${profile.pythonVersion}',
     ].join('  ·  ');

@@ -1,4 +1,5 @@
 import 'package:freecad_launcher/core/constants.dart';
+import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 
 const int cliOk = 0;
@@ -54,7 +55,7 @@ Future<int> _list(AppServices services, StringSink out) async {
     out.writeln(
       [
         profile.name,
-        build?.version ?? '—',
+        build?.displayLabel ?? '—',
         build?.channel.name ?? '—',
         'py${profile.pythonVersion}',
       ].join('\t'),

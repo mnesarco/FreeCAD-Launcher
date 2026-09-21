@@ -58,7 +58,7 @@ flutter build linux                                        # production bundle
 - **Layering**: `ui/` → `state/` → `domain/` (pure Dart) → `data/` (drift, repositories,
   catalog clients) and `platform/` (process, extraction, checksums, diagnostics, paths).
   `domain/` must not import `ui/`, `state/`, `data/`, or `platform/`.
-- **Drift**: schema v3 with `builds` (incl. `pythonPath`), `profiles`, `installed_addons`,
+- **Drift**: schema v5 with `builds` (incl. `pythonPath`, `label`), `profiles`, `installed_addons`,
   `python_packages`, `bundles`, `bundle_items`, `macros`, `catalog_cache`, `settings`. DB is an
   index over the filesystem; a reconciler marks missing/broken entries.
 - **Builds**: catalog installs are managed copies; user-supplied executables and local

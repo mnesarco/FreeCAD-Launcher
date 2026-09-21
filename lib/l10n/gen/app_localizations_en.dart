@@ -352,6 +352,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profilesConfigFailed => 'Config action failed';
 
   @override
+  String get profilesConfigOpenFailed => 'Could not open the folder';
+
+  @override
   String get profilesStatusMissing => 'Build missing';
 
   @override
@@ -580,6 +583,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get versionsVerify => 'Verify files';
+
+  @override
+  String get versionsRelabel => 'Rename';
+
+  @override
+  String get versionsRelabelTitle => 'Rename build';
+
+  @override
+  String get versionsRelabelField => 'Display name';
+
+  @override
+  String versionsRelabelHint(String version) {
+    return 'Leave empty to show $version';
+  }
+
+  @override
+  String versionsRelabelTooLong(int max) {
+    return 'Use at most $max characters';
+  }
+
+  @override
+  String get versionsRelabelInvalid => 'The label contains invalid characters';
+
+  @override
+  String get versionsRelabelSave => 'Save';
+
+  @override
+  String get versionsRelabelFailed => 'Could not rename the build';
 
   @override
   String get versionsRemoveFailed => 'Could not remove the build';
@@ -1300,6 +1331,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsDebugBundleReveal => 'Reveal';
+
+  @override
+  String get settingsOpenFolderFailed => 'Could not open the folder';
 
   @override
   String get settingsAbout => 'About';

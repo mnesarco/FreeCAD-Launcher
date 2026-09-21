@@ -781,4 +781,41 @@ void main() {
     expect(result.isErr, isTrue);
     expect(await database.buildsDao.getAll(), isEmpty);
   });
+
+  test('relabel trims the label and can reset it to the version', () async {
+    await database.buildsDao.save(sampleBuild());
+    final controller = buildController();
+
+    final labeled = await controller.relabel('build-1', '  My nightly  ');
+
+    expect(labeled.isOk, isTrue);
+    expect(labeled.valueOrNull!.label, 'My nightly');
+    expect(labeled.valueOrNull!.displayLabel, 'My nightly');
+    expect(labeled.valueOrNull!.updatedAt, DateTime.utc(2026, 9, 18));
+    expect((await database.buildsDao.getById('build-1'))!.label, 'My nightly');
+
+    final reset = await controller.relabel('build-1', '   ');
+
+    expect(reset.isOk, isTrue);
+    expect(reset.valueOrNull!.label, isNull);
+    expect(reset.valueOrNull!.displayLabel, '1.1.3');
+    expect((await database.buildsDao.getById('build-1'))!.label, isNull);
+    controller.dispose();
+  });
+
+  test('relabel rejects labels over 64 characters and unknown builds', () async {
+    await database.buildsDao.save(sampleBuild());
+    final controller = buildController();
+
+    final tooLong = await controller.relabel('build-1', 'x' * 65);
+
+    expect(tooLong.isErr, isTrue);
+    expect('${tooLong.errorOrNull}', contains('64 characters'));
+    expect((await database.buildsDao.getById('build-1'))!.label, isNull);
+
+    final missing = await controller.relabel('missing', 'nope');
+
+    expect(missing.isErr, isTrue);
+    controller.dispose();
+  });
 }

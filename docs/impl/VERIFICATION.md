@@ -54,6 +54,9 @@ Rules:
       the UI shows the hashing stage/progress, then installing and detecting Python (D-024)
 - [ ] Deleting a build used by a profile is blocked; unused build delete removes files
 - [ ] Removing a build directory externally flips status to `missing` on restart
+- [ ] Relabeling an installed build stores a trimmed label shown on every build surface
+      (Installed tile, profile cards/detail, manifest picker, CLI `list`); clearing the field
+      restores the version label (D-069)
 
 Manual real-data test (Linux, network required, skipped by default):
 
@@ -138,7 +141,7 @@ stale banner; local DB screens are n/a.
 | Profile → Macros | n/a | code | n/a | code | n/a | live (reconcile drops missing files) | test |
 | Profile → Config | n/a | code ("created on first launch") | n/a | code | n/a | live | live |
 | Profile → Backups | code | code (no snapshots) | n/a | test (manifest import) | n/a | code | test |
-| Versions → Installed | n/a | live | n/a | code (verify/remove snackbars) | n/a | code (missing/broken badges) | test (tile overflow regression) |
+| Versions → Installed | n/a | live | n/a | code (verify/remove snackbars; rename label validation) | n/a | code (missing/broken badges) | test (tile overflow, rename/reset) |
 | Versions → Available | code (install progress) | code | n/a | code (catalog error state) | code (stale banner) | live (installed badge) | live |
 | Versions → Custom | code (import stages) | n/a | n/a | code (validation + Python fallback dialog) | n/a | n/a | live |
 | Addons → Catalog | code | live | live | code (catalog load failed state) | code (stale banner) | live (installed/update badges) | live |
@@ -146,7 +149,7 @@ stale banner; local DB screens are n/a.
 | Addons → addon picker | code | n/a | code | test (catalog unavailable) | n/a | n/a | code |
 | Macros → Installed | n/a | test | n/a | code | n/a | live | test |
 | Macros → Catalog | code | live | code | code | code (stale banner) | live (installed-in-N chip) | live |
-| Settings | n/a | n/a | n/a | live (wrapper/cache/bundle snackbars) | n/a | live (cache sizes 0 B when empty) | live |
+| Settings | n/a | n/a | n/a | live (wrapper/cache/bundle snackbars) + test (open-folder failure) | n/a | live (cache sizes 0 B when empty) | live |
 | Jobs dialog | n/a | code (no jobs) | n/a | test (failed + retry) | n/a | n/a | live |
 | Updates sheet | code | code (all up to date) | n/a | test (apply failures) | code (no catalog) | n/a | live |
 
@@ -156,6 +159,12 @@ news feed landed in M6-12/D-067); the diagnostics `gatekeeper` result is `notApp
 macOS. The addon picker previously showed "No matching addons" even when the catalog was
 unavailable; fixed in M6-07 with a widget test.
 
+Fix (2026-09-21): open-folder/reveal buttons spawned `xdg-open` without the parent environment
+and swallowed failures, so they did nothing on Linux. `FileActions` now inherits the environment
+and throws `FileActionException` on non-zero exits; Settings and the profile Config tab show a
+failure snackbar. Covered by `test/platform/file_actions_test.dart` (env inheritance, reveal
+target, exception).
+
 
 ### M7 — Release
 
@@ -164,6 +173,11 @@ unavailable; fixed in M6-07 with a widget test.
 - [ ] `LICENSE` and `THIRD_PARTY_NOTICES.md` present; SPDX headers on sources
 - [ ] Clean-machine first-run flow completes (install build → profile → addon → launch)
 - [ ] No secrets or tokens in logs or artifacts
+
+S5 (D-068) pre-checks: two consecutive local builds produced identical AppImage/zsync hashes
+(`a83b1ffb…` / `9da830f1…`); host runs pass with FUSE and extract-and-run; clean ubuntu:24.04
+and fedora:41 containers print the version and exit 0. CI execution (no remote, OQ-7) and clean
+VMs remain open for M7-01/M7-05.
 
 ## 3. UI state checklist (per screen)
 

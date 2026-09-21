@@ -5,13 +5,14 @@
 - **DB is an index, not the source of truth.** Installed builds, profiles, and addons exist on
   disk; the drift DB indexes them. On startup a reconciler marks entries whose files vanished
   as `missing`/`broken` instead of assuming the DB is right.
-- **Fresh start.** No migration from the prototype schema. `schemaVersion = 2` (v1 plus the
-  nullable `builds.pythonPath` column; the only `onUpgrade` is the pre-release v1 → v2
-  `addColumn`, see D-020).
+- **Fresh start.** No migration from the prototype schema. `schemaVersion = 5`: v1 plus the
+  nullable `builds.pythonPath` (D-020), `macros.license`/`macros.sizeBytes` (D-049, v3),
+  `installed_addons.pinnedAt` (D-056, v4) and `builds.label` (D-069, v5) columns, all added
+  through `onUpgrade` `addColumn`s.
 - All timestamps stored as ISO-8601 strings (`store_date_time_values_as_text: true` in
   `build.yaml`, matching `driftRuntimeOptions.defaultSerializer` in `main.dart`).
 
-## 2. Drift schema (v1)
+## 2. Drift schema (v5)
 
 ### `builds`
 
@@ -19,7 +20,8 @@
 |---|---|---|
 | `id` | text (uuid) | PK |
 | `kind` | text | `appimage` \| `archive` \| `dmg` \| `custom` |
-| `version` | text | e.g. `1.1.3`, `weekly-2026.09.16`, or user label |
+| `version` | text | e.g. `1.1.3`, `weekly-2026.09.16`, or the label given at custom import |
+| `label` | text? | user display name overriding `version` (D-069); never used for update/manifest logic |
 | `channel` | text | `stable` \| `weekly` \| `legacy` \| `custom` |
 | `platform` | text | `linux` \| `windows` \| `macos` |
 | `arch` | text | `x86_64` \| `aarch64`/`arm64` |

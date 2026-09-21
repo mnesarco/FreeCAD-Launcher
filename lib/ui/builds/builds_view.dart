@@ -8,6 +8,7 @@ import 'package:freecad_launcher/core/format.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/asset_classifier.dart';
+import 'package:freecad_launcher/domain/builds/build_label_rules.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/builds/build_update.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
@@ -155,7 +156,7 @@ class _InstalledBuildTile extends StatelessWidget {
       leading: const Icon(FreeCADIcons.freecad),
       title: Row(
         children: [
-          Text(buildInfo.version),
+          Text(buildInfo.displayLabel),
           const SizedBox(width: 8),
           CompactBadge(label: buildInfo.channel.name),
           if (buildInfo.status != BuildStatus.installed) ...[
@@ -192,6 +193,11 @@ class _InstalledBuildTile extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            tooltip: l10n.versionsRelabel,
+            onPressed: () => _relabel(context, controller, buildInfo),
+          ),
           IconButton(
             icon: const Icon(Icons.verified_outlined),
             tooltip: l10n.versionsVerify,
@@ -230,6 +236,31 @@ class _InstalledBuildTile extends StatelessWidget {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _relabel(
+    BuildContext context,
+    BuildsController controller,
+    Build build,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final label = await showDialog<String>(
+      context: context,
+      builder: (context) => _RelabelDialog(build: build),
+    );
+    if (label == null || !context.mounted) {
+      return;
+    }
+    final result = await controller.relabel(build.id, label);
+    if (!context.mounted) {
+      return;
+    }
+    final error = result.errorOrNull;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${l10n.versionsRelabelFailed}: $error')),
+      );
+    }
+  }
+
   Future<void> _confirmRemove(
     BuildContext context,
     BuildsController controller,
@@ -240,7 +271,7 @@ class _InstalledBuildTile extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.versionsRemoveTitle),
-        content: Text('${build.version} — ${l10n.versionsRemoveMessage}'),
+        content: Text('${build.displayLabel} — ${l10n.versionsRemoveMessage}'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -266,6 +297,78 @@ class _InstalledBuildTile extends StatelessWidget {
         SnackBar(content: Text('${l10n.versionsRemoveFailed}: $error')),
       );
     }
+  }
+}
+
+class _RelabelDialog extends StatefulWidget {
+  const _RelabelDialog({required this.build});
+
+  final Build build;
+
+  @override
+  State<_RelabelDialog> createState() => _RelabelDialogState();
+}
+
+class _RelabelDialogState extends State<_RelabelDialog> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.build.label ?? '',
+  );
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final l10n = AppLocalizations.of(context);
+    final issue = validateBuildLabel(_controller.text);
+    if (issue != null) {
+      setState(() {
+        _error = switch (issue) {
+          BuildLabelIssue.tooLong => l10n.versionsRelabelTooLong(maxBuildLabelLength),
+          BuildLabelIssue.controlCharacters => l10n.versionsRelabelInvalid,
+        };
+      });
+      return;
+    }
+    Navigator.of(context).pop(_controller.text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l10n.versionsRelabelTitle),
+      content: SizedBox(
+        width: 480,
+        child: FormRow(
+          label: l10n.versionsRelabelField,
+          field: FormTextField(
+            controller: _controller,
+            autofocus: true,
+            hintText: l10n.versionsRelabelHint(widget.build.version),
+            errorText: _error,
+            onChanged: (_) {
+              if (_error != null) {
+                setState(() => _error = null);
+              }
+            },
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.versionsCancel),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: Text(l10n.versionsRelabelSave),
+        ),
+      ],
+    );
   }
 }
 
@@ -568,7 +671,7 @@ class _CustomTabState extends State<_CustomTab> {
         _checksumController.clear();
         messenger.showSnackBar(
           SnackBar(
-            content: Text('${l10n.versionsCustomImported}: ${build.version}'),
+            content: Text('${l10n.versionsCustomImported}: ${build.displayLabel}'),
           ),
         );
         tabController.animateTo(0);

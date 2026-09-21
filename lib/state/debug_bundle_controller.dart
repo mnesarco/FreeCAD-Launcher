@@ -68,8 +68,11 @@ class DebugBundleController {
       ..writeln()
       ..writeln('Builds (${builds.length}):');
     for (final build in builds) {
+      final name = build.displayLabel == build.version
+          ? build.displayLabel
+          : '${build.displayLabel} (${build.version})';
       buffer.writeln(
-        '- ${build.version}  ${build.channel.name}  ${build.kind.name}  '
+        '- $name  ${build.channel.name}  ${build.kind.name}  '
         '${build.status.name}  python=${build.pythonVersion ?? 'unknown'}',
       );
     }
@@ -86,7 +89,7 @@ class DebugBundleController {
           .where((package) => package.profileId == profile.id)
           .length;
       buffer.writeln(
-        '- ${profile.name}  build=${build?.version ?? 'missing'} '
+        '- ${profile.name}  build=${build?.displayLabel ?? 'missing'} '
         '${build?.channel.name ?? ''}  python=${profile.pythonVersion}  '
         'addons=$addonCount  packages=$packageCount',
       );

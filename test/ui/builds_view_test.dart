@@ -193,4 +193,48 @@ void main() {
 
     expect(find.text('1.1.3 → 2.0.0'), findsOneWidget);
   });
+
+  testWidgets('renames an installed build and resets it to its version', (tester) async {
+    await tester.runAsync(() async {
+      final buildDirectory = Directory(paths.buildDir('build-1'));
+      buildDirectory.createSync(recursive: true);
+      final executable = File(p.join(buildDirectory.path, 'FreeCAD'))..writeAsStringSync('');
+      await database.buildsDao.save(
+        sampleBuild(version: '1.1.3', label: 'Stable dev')
+            .copyWith(localPath: executable.path),
+      );
+    });
+
+    await tester.pumpWidget(
+      AppScope(
+        services: services,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: BuildsView()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Stable dev'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Rename'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'My build');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('My build'), findsOneWidget);
+    expect(find.text('Stable dev'), findsNothing);
+
+    await tester.tap(find.byTooltip('Rename'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1.1.3'), findsOneWidget);
+    expect(find.text('My build'), findsNothing);
+  });
 }

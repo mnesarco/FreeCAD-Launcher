@@ -1438,3 +1438,75 @@ Template:
   `lib/state/news_controller.dart`, `lib/data/catalog/news_feed.dart`,
   `lib/ui/home/home_view.dart`, `lib/ui/settings/settings_view.dart`, `TASKS.md` M6-12,
   D-010, D-061, D-063, D-065
+
+### D-068 — Reproducible AppImage build (S5)
+- **Date**: 2026-09-21
+- **Status**: Accepted
+- **Context**: spec 07 §3 proposed a pipeline (`flutter build linux` → AppDir → appimagetool
+  type-2 + zsync update info + SHA-256 sidecar) and asked S5 to validate tooling, reproducibility
+  and clean-distro behavior. There is no git remote yet (OQ-7), so CI could not be executed;
+  the spike ran locally with containers standing in for clean machines. Four scope questions
+  were confirmed with the product owner.
+- **Decision**:
+  - `packaging/appimage/build_appimage.sh` stages the AppDir (Flutter bundle under `usr/bin`,
+    AppRun, `.desktop`, generated icon) and bundles the shared-library closure via `ldd`,
+    excluding the vendored official AppImage **excludelist** plus a forced-bundle font/text set
+    (`libharfbuzz`, `libfreetype`, `libfontconfig`, `libexpat`, `libz`, `libuuid`, `libfribidi`,
+    `libgmp`, `libcom_err`, `libgpg-error`, `libICE`, `libSM`) because minimal systems do not
+    ship them. Pinned tools: appimagetool 1.9.1 and the type-2 runtime, both SHA-256 verified.
+  - Determinism: `SOURCE_DATE_EPOCH` (last commit time) drives appimagetool; the packaged
+    AppImage is touched to that timestamp and the `.zsync` is regenerated with `zsyncmake`
+    (appimagetool's own zsync embeds the file mtime and is not stable). Two consecutive full
+    builds produced identical hashes: AppImage `a83b1ffb…` (29,866,488 bytes, 69 libs) and
+    `.zsync` `9da830f1…`.
+  - Update information is embedded as
+    `gh-releases-zsync|<owner>|<repo>|<channel>|FreeCADLauncher-*-x86_64.AppImage.zsync`;
+    owner/repo are environment parameters with placeholders until the remote exists (OQ-7).
+    The workflow `.github/workflows/release-appimage.yml` runs the script on `v*` tags and
+    uploads the AppImage, `.sha256` and `.zsync`.
+  - Glib family fix: the bundle ships `libgio-2.0.so`/`libglib-2.0.so`/`libgobject-2.0.so`/
+    `libgmodule-2.0.so` symlinks to their `.so.0` files. Without them `path_provider_linux`
+    `dlopen`s a second glib copy, loses the GApplication id and writes to
+    `<appSupport>/freecad_launcher` instead of `<appSupport>/org.freecad.ext.launcher`.
+  - Icon: generated placeholder (FreeCAD glyph from the bundled icon font, white on a blueGrey
+    rounded square, 256/512 px) pending real branding (OQ-2).
+- **Verification**: host runs pass with FUSE and with `APPIMAGE_EXTRACT_AND_RUN=1`; clean
+  `ubuntu:24.04` and `fedora:41` containers (Xvfb + Mesa EGL/GL/GLES libs, since headless
+  containers lack the driver stack every desktop has) print `FreeCAD Launcher 0.1.0` and exit 0
+  via `--version`; the GUI launches from the AppImage on the host.
+- **Consequences**: CI execution is pending a remote; containers substitute clean VMs (no
+  VMs available) and use extract-and-run (no `/dev/fuse`); gdk-pixbuf loaders/GTK immodules are
+  not bundled yet, so M7-01 must verify icons/GUI assets on a truly clean target; the update
+  information stays a placeholder until the repo identity is known.
+- **Refs**: spec 07 §2/§3, `packaging/appimage/**`,
+  `.github/workflows/release-appimage.yml`, `TASKS.md` S5, M7-01, D-011, D-016, OQ-2, OQ-7
+
+### D-069 — Relabel installed builds
+- **Date**: 2026-09-21
+- **Status**: Accepted
+- **Context**: the product owner asked for a pre-M7 refinement: installed builds should be
+  renameable to a user-chosen display label. `builds.version` is load-bearing (unique key
+  `(platform, arch, channel, version, assetName)`, build update detection, addons
+  FreeCAD-version filter, manifest export/import matching), so it cannot be overwritten.
+- **Decision**:
+  - Schema v5 adds a nullable `builds.label` column (`onUpgrade` v4 → v5 `addColumn`); `version`
+    is never modified by relabeling.
+  - A display extension `Build.displayLabel` (in `data/database.dart`, next to the drift model)
+    returns `label ?? version`; every user-facing surface uses it (Versions → Installed tile
+    and remove dialog, profile cards/detail/dialogs, manifest import build picker, Home
+    last-used card, CLI `list`, debug-bundle inventory). All version-based logic keeps using
+    `version`.
+  - Relabel is offered for every installed build (catalog and custom) through a pencil action
+    on the Installed tile opening a small dialog pre-filled with the current label; clearing the
+    field removes the label so the automatic version label returns. Labels are trimmed,
+    limited to 64 characters (same as profile names) and need not be unique — they are
+    display-only. Invalid labels are rejected by the dialog; `BuildsController.relabel` also
+    validates and returns `Result`.
+  - `BuildsController.relabel(buildId, label?)` trims, maps empty/whitespace to `null`, stamps
+    `updatedAt` and returns the updated build.
+- **Consequences**: every surface must remember to display `label ?? version` (one extension
+  call); update badges show raw versions; no filesystem or manifest impact.
+- **Refs**: spec 03 §2.2, spec 05 §2, `lib/data/tables/builds.dart`, `lib/data/database.dart`,
+  `lib/data/daos/builds_dao.dart`, `lib/state/builds_controller.dart`,
+  `lib/ui/builds/builds_view.dart`, `TASKS.md` R-01, D-021
+

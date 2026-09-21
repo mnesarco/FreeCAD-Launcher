@@ -37,6 +37,15 @@ class $BuildsTable extends Builds with TableInfo<$BuildsTable, Build> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  @override
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   late final GeneratedColumnWithTypeConverter<BuildChannel, String> channel =
       GeneratedColumn<String>(
@@ -201,6 +210,7 @@ class $BuildsTable extends Builds with TableInfo<$BuildsTable, Build> {
     id,
     kind,
     version,
+    label,
     channel,
     platform,
     arch,
@@ -241,6 +251,12 @@ class $BuildsTable extends Builds with TableInfo<$BuildsTable, Build> {
       );
     } else if (isInserting) {
       context.missing(_versionMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
     }
     if (data.containsKey('arch')) {
       context.handle(
@@ -358,6 +374,10 @@ class $BuildsTable extends Builds with TableInfo<$BuildsTable, Build> {
         DriftSqlType.string,
         data['${effectivePrefix}version'],
       )!,
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      ),
       channel: $BuildsTable.$converterchannel.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.string,
@@ -446,6 +466,7 @@ class Build extends DataClass implements Insertable<Build> {
   final String id;
   final BuildKind kind;
   final String version;
+  final String? label;
   final BuildChannel channel;
   final BuildPlatform platform;
   final String arch;
@@ -465,6 +486,7 @@ class Build extends DataClass implements Insertable<Build> {
     required this.id,
     required this.kind,
     required this.version,
+    this.label,
     required this.channel,
     required this.platform,
     required this.arch,
@@ -489,6 +511,9 @@ class Build extends DataClass implements Insertable<Build> {
       map['kind'] = Variable<String>($BuildsTable.$converterkind.toSql(kind));
     }
     map['version'] = Variable<String>(version);
+    if (!nullToAbsent || label != null) {
+      map['label'] = Variable<String>(label);
+    }
     {
       map['channel'] = Variable<String>(
         $BuildsTable.$converterchannel.toSql(channel),
@@ -538,6 +563,9 @@ class Build extends DataClass implements Insertable<Build> {
       id: Value(id),
       kind: Value(kind),
       version: Value(version),
+      label: label == null && nullToAbsent
+          ? const Value.absent()
+          : Value(label),
       channel: Value(channel),
       platform: Value(platform),
       arch: Value(arch),
@@ -581,6 +609,7 @@ class Build extends DataClass implements Insertable<Build> {
         serializer.fromJson<String>(json['kind']),
       ),
       version: serializer.fromJson<String>(json['version']),
+      label: serializer.fromJson<String?>(json['label']),
       channel: $BuildsTable.$converterchannel.fromJson(
         serializer.fromJson<String>(json['channel']),
       ),
@@ -613,6 +642,7 @@ class Build extends DataClass implements Insertable<Build> {
         $BuildsTable.$converterkind.toJson(kind),
       ),
       'version': serializer.toJson<String>(version),
+      'label': serializer.toJson<String?>(label),
       'channel': serializer.toJson<String>(
         $BuildsTable.$converterchannel.toJson(channel),
       ),
@@ -641,6 +671,7 @@ class Build extends DataClass implements Insertable<Build> {
     String? id,
     BuildKind? kind,
     String? version,
+    Value<String?> label = const Value.absent(),
     BuildChannel? channel,
     BuildPlatform? platform,
     String? arch,
@@ -660,6 +691,7 @@ class Build extends DataClass implements Insertable<Build> {
     id: id ?? this.id,
     kind: kind ?? this.kind,
     version: version ?? this.version,
+    label: label.present ? label.value : this.label,
     channel: channel ?? this.channel,
     platform: platform ?? this.platform,
     arch: arch ?? this.arch,
@@ -685,6 +717,7 @@ class Build extends DataClass implements Insertable<Build> {
       id: data.id.present ? data.id.value : this.id,
       kind: data.kind.present ? data.kind.value : this.kind,
       version: data.version.present ? data.version.value : this.version,
+      label: data.label.present ? data.label.value : this.label,
       channel: data.channel.present ? data.channel.value : this.channel,
       platform: data.platform.present ? data.platform.value : this.platform,
       arch: data.arch.present ? data.arch.value : this.arch,
@@ -717,6 +750,7 @@ class Build extends DataClass implements Insertable<Build> {
           ..write('id: $id, ')
           ..write('kind: $kind, ')
           ..write('version: $version, ')
+          ..write('label: $label, ')
           ..write('channel: $channel, ')
           ..write('platform: $platform, ')
           ..write('arch: $arch, ')
@@ -741,6 +775,7 @@ class Build extends DataClass implements Insertable<Build> {
     id,
     kind,
     version,
+    label,
     channel,
     platform,
     arch,
@@ -764,6 +799,7 @@ class Build extends DataClass implements Insertable<Build> {
           other.id == this.id &&
           other.kind == this.kind &&
           other.version == this.version &&
+          other.label == this.label &&
           other.channel == this.channel &&
           other.platform == this.platform &&
           other.arch == this.arch &&
@@ -785,6 +821,7 @@ class BuildsCompanion extends UpdateCompanion<Build> {
   final Value<String> id;
   final Value<BuildKind> kind;
   final Value<String> version;
+  final Value<String?> label;
   final Value<BuildChannel> channel;
   final Value<BuildPlatform> platform;
   final Value<String> arch;
@@ -805,6 +842,7 @@ class BuildsCompanion extends UpdateCompanion<Build> {
     this.id = const Value.absent(),
     this.kind = const Value.absent(),
     this.version = const Value.absent(),
+    this.label = const Value.absent(),
     this.channel = const Value.absent(),
     this.platform = const Value.absent(),
     this.arch = const Value.absent(),
@@ -826,6 +864,7 @@ class BuildsCompanion extends UpdateCompanion<Build> {
     required String id,
     required BuildKind kind,
     required String version,
+    this.label = const Value.absent(),
     required BuildChannel channel,
     required BuildPlatform platform,
     required String arch,
@@ -856,6 +895,7 @@ class BuildsCompanion extends UpdateCompanion<Build> {
     Expression<String>? id,
     Expression<String>? kind,
     Expression<String>? version,
+    Expression<String>? label,
     Expression<String>? channel,
     Expression<String>? platform,
     Expression<String>? arch,
@@ -877,6 +917,7 @@ class BuildsCompanion extends UpdateCompanion<Build> {
       if (id != null) 'id': id,
       if (kind != null) 'kind': kind,
       if (version != null) 'version': version,
+      if (label != null) 'label': label,
       if (channel != null) 'channel': channel,
       if (platform != null) 'platform': platform,
       if (arch != null) 'arch': arch,
@@ -900,6 +941,7 @@ class BuildsCompanion extends UpdateCompanion<Build> {
     Value<String>? id,
     Value<BuildKind>? kind,
     Value<String>? version,
+    Value<String?>? label,
     Value<BuildChannel>? channel,
     Value<BuildPlatform>? platform,
     Value<String>? arch,
@@ -921,6 +963,7 @@ class BuildsCompanion extends UpdateCompanion<Build> {
       id: id ?? this.id,
       kind: kind ?? this.kind,
       version: version ?? this.version,
+      label: label ?? this.label,
       channel: channel ?? this.channel,
       platform: platform ?? this.platform,
       arch: arch ?? this.arch,
@@ -953,6 +996,9 @@ class BuildsCompanion extends UpdateCompanion<Build> {
     }
     if (version.present) {
       map['version'] = Variable<String>(version.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
     }
     if (channel.present) {
       map['channel'] = Variable<String>(
@@ -1017,6 +1063,7 @@ class BuildsCompanion extends UpdateCompanion<Build> {
           ..write('id: $id, ')
           ..write('kind: $kind, ')
           ..write('version: $version, ')
+          ..write('label: $label, ')
           ..write('channel: $channel, ')
           ..write('platform: $platform, ')
           ..write('arch: $arch, ')
@@ -4808,6 +4855,7 @@ typedef $$BuildsTableCreateCompanionBuilder =
       required String id,
       required BuildKind kind,
       required String version,
+      Value<String?> label,
       required BuildChannel channel,
       required BuildPlatform platform,
       required String arch,
@@ -4830,6 +4878,7 @@ typedef $$BuildsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<BuildKind> kind,
       Value<String> version,
+      Value<String?> label,
       Value<BuildChannel> channel,
       Value<BuildPlatform> platform,
       Value<String> arch,
@@ -4894,6 +4943,11 @@ class $$BuildsTableFilterComposer
 
   ColumnFilters<String> get version => $composableBuilder(
     column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5025,6 +5079,11 @@ class $$BuildsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get channel => $composableBuilder(
     column: $table.channel,
     builder: (column) => ColumnOrderings(column),
@@ -5118,6 +5177,9 @@ class $$BuildsTableAnnotationComposer
 
   GeneratedColumn<String> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<BuildChannel, String> get channel =>
       $composableBuilder(column: $table.channel, builder: (column) => column);
@@ -5229,6 +5291,7 @@ class $$BuildsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<BuildKind> kind = const Value.absent(),
                 Value<String> version = const Value.absent(),
+                Value<String?> label = const Value.absent(),
                 Value<BuildChannel> channel = const Value.absent(),
                 Value<BuildPlatform> platform = const Value.absent(),
                 Value<String> arch = const Value.absent(),
@@ -5249,6 +5312,7 @@ class $$BuildsTableTableManager
                 id: id,
                 kind: kind,
                 version: version,
+                label: label,
                 channel: channel,
                 platform: platform,
                 arch: arch,
@@ -5271,6 +5335,7 @@ class $$BuildsTableTableManager
                 required String id,
                 required BuildKind kind,
                 required String version,
+                Value<String?> label = const Value.absent(),
                 required BuildChannel channel,
                 required BuildPlatform platform,
                 required String arch,
@@ -5291,6 +5356,7 @@ class $$BuildsTableTableManager
                 id: id,
                 kind: kind,
                 version: version,
+                label: label,
                 channel: channel,
                 platform: platform,
                 arch: arch,

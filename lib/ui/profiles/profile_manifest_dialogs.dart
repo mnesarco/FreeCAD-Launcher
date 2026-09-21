@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
+import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/profiles/profile_rules.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
@@ -243,7 +244,7 @@ class _ManifestImportDialogState extends State<ManifestImportDialog> {
                   DropdownMenuItem(
                     value: build.id,
                     child: Text(
-                      '${build.version} · ${build.channel.name} · '
+                      '${build.displayLabel} · ${build.channel.name} · '
                       '${l10n.profilesPythonVersion} ${build.pythonVersion}',
                       overflow: TextOverflow.ellipsis,
                     ),

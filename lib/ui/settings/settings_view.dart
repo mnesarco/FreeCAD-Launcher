@@ -110,6 +110,30 @@ class _SettingsViewState extends State<SettingsView> {
     }
   }
 
+  Future<void> _openFolder(BuildContext context, String path) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await AppScope.of(context).fileActions.openDirectory(path);
+    } on Object catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.settingsOpenFolderFailed}: $error')),
+      );
+    }
+  }
+
+  Future<void> _revealPath(BuildContext context, String path) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await AppScope.of(context).fileActions.reveal(path);
+    } on Object catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.settingsOpenFolderFailed}: $error')),
+      );
+    }
+  }
+
   Future<void> _exportDebugBundle(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final services = AppScope.of(context);
@@ -133,7 +157,7 @@ class _SettingsViewState extends State<SettingsView> {
           content: Text(l10n.settingsDebugBundleExported(p.basename(path))),
           action: SnackBarAction(
             label: l10n.settingsDebugBundleReveal,
-            onPressed: () => services.fileActions.reveal(path),
+            onPressed: () => unawaited(_revealPath(context, path)),
           ),
         ),
       ),
@@ -233,9 +257,8 @@ class _SettingsViewState extends State<SettingsView> {
               field: _PathRow(
                 path: services.paths.dataRoot,
                 tooltip: l10n.settingsOpenFolder,
-                onOpen: () => services.fileActions.openDirectory(
-                  services.paths.dataRoot,
-                ),
+                onOpen: () =>
+                    unawaited(_openFolder(context, services.paths.dataRoot)),
               ),
             ),
             FormRow(
@@ -285,9 +308,8 @@ class _SettingsViewState extends State<SettingsView> {
               field: _PathRow(
                 path: services.paths.logsDir,
                 tooltip: l10n.settingsOpenFolder,
-                onOpen: () => services.fileActions.openDirectory(
-                  services.paths.logsDir,
-                ),
+                onOpen: () =>
+                    unawaited(_openFolder(context, services.paths.logsDir)),
               ),
             ),
             ListTile(

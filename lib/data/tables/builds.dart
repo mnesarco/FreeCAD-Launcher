@@ -9,6 +9,8 @@ class Builds extends Table {
 
   TextColumn get version => text()();
 
+  TextColumn get label => text().nullable()();
+
   TextColumn get channel => textEnum<BuildChannel>()();
 
   TextColumn get platform => textEnum<BuildPlatform>()();

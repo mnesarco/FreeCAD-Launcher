@@ -13,6 +13,7 @@ import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/asset_classifier.dart';
+import 'package:freecad_launcher/domain/builds/build_label_rules.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/platform/build_installer.dart';
@@ -529,6 +530,31 @@ class BuildsController {
     );
     await _database.buildsDao.save(updated);
     return Ok(updated);
+  }
+
+  Future<Result<Build>> relabel(String buildId, String? label) async {
+    final build = await _database.buildsDao.getById(buildId);
+    if (build == null) {
+      return const Err(AppError(message: 'Build not found'));
+    }
+
+    final issue = validateBuildLabel(label);
+    if (issue != null) {
+      return Err(
+        AppError(
+          message: switch (issue) {
+            BuildLabelIssue.tooLong =>
+              'Label must be $maxBuildLabelLength characters or fewer',
+            BuildLabelIssue.controlCharacters => 'Label contains invalid characters',
+          },
+        ),
+      );
+    }
+
+    final normalized = normalizeBuildLabel(label);
+    final now = _clock();
+    await _database.buildsDao.updateLabel(buildId, normalized, now);
+    return Ok(build.copyWith(label: Value(normalized), updatedAt: now));
   }
 
   File _validatedExecutable(String path) {

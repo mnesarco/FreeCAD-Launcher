@@ -201,7 +201,7 @@ class _OverviewTab extends StatelessWidget {
           children: [
             _InfoRow(
               label: l10n.profilesBuild,
-              value: buildInfo?.version ?? '—',
+              value: buildInfo?.displayLabel ?? '—',
             ),
             if (buildInfo != null)
               _InfoRow(

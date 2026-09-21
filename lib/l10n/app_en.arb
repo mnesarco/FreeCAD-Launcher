@@ -115,6 +115,7 @@
   "profilesConfigDeleteSnapshot": "Delete snapshot",
   "profilesConfigSnapshotDeleted": "Snapshot deleted",
   "profilesConfigFailed": "Config action failed",
+  "profilesConfigOpenFailed": "Could not open the folder",
   "profilesStatusMissing": "Build missing",
   "profilesStatusBroken": "Build broken",
   "profilesShowCommand": "Show launch command",
@@ -244,6 +245,24 @@
   "versionsInstallFailed": "Install failed",
   "versionsRemove": "Remove",
   "versionsVerify": "Verify files",
+  "versionsRelabel": "Rename",
+  "versionsRelabelTitle": "Rename build",
+  "versionsRelabelField": "Display name",
+  "versionsRelabelHint": "Leave empty to show {version}",
+  "@versionsRelabelHint": {
+    "placeholders": {
+      "version": {"type": "String"}
+    }
+  },
+  "versionsRelabelTooLong": "Use at most {max} characters",
+  "@versionsRelabelTooLong": {
+    "placeholders": {
+      "max": {"type": "int"}
+    }
+  },
+  "versionsRelabelInvalid": "The label contains invalid characters",
+  "versionsRelabelSave": "Save",
+  "versionsRelabelFailed": "Could not rename the build",
   "versionsRemoveFailed": "Could not remove the build",
   "versionsStatusMissing": "Missing",
   "versionsStatusBroken": "Broken",
@@ -525,6 +544,7 @@
   },
   "settingsDebugBundleFailed": "Could not export the debug bundle",
   "settingsDebugBundleReveal": "Reveal",
+  "settingsOpenFolderFailed": "Could not open the folder",
   "settingsAbout": "About",
   "settingsOpenFolder": "Open folder",
   "settingsCache": "Cache",

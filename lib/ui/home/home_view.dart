@@ -154,7 +154,7 @@ class HomeViewState extends State<HomeView> {
                   title: Text(lastUsed.name),
                   subtitle: Text(
                     [
-                      if (lastBuild != null) lastBuild.version,
+                      if (lastBuild != null) lastBuild.displayLabel,
                       if (lastBuild != null) lastBuild.channel.name,
                       if (lastUsed.lastUsedAt != null)
                         formatProfileDateTime(l10n, lastUsed.lastUsedAt)

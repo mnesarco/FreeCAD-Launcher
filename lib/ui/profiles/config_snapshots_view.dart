@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -56,7 +57,7 @@ class _ProfileConfigTabState extends State<ProfileConfigTab> {
                 _PathRow(label: 'backups', value: paths.backups),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
-                  onPressed: () => services.fileActions.openDirectory(paths.root),
+                  onPressed: () => unawaited(_openFolder(context, paths.root)),
                   icon: const Icon(Icons.folder_open_outlined),
                   label: Text(l10n.profilesConfigOpenFolder),
                 ),
@@ -99,6 +100,18 @@ class _ProfileConfigTabState extends State<ProfileConfigTab> {
         SnackBar(content: Text('${l10n.profilesConfigFailed}: $error')),
       ),
     );
+  }
+
+  Future<void> _openFolder(BuildContext context, String path) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await AppScope.of(context).fileActions.openDirectory(path);
+    } on Object catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.profilesConfigOpenFailed}: $error')),
+      );
+    }
   }
 
   String _fileStatus(String path, AppLocalizations l10n) {

@@ -26,4 +26,9 @@ class BuildsDao extends DatabaseAccessor<AppDatabase> with _$BuildsDaoMixin {
       (update(builds)..where((t) => t.id.equals(id))).write(
         BuildsCompanion(status: Value(status), updatedAt: Value(DateTime.now())),
       );
+
+  Future<int> updateLabel(String id, String? label, DateTime updatedAt) =>
+      (update(builds)..where((t) => t.id.equals(id))).write(
+        BuildsCompanion(label: Value(label), updatedAt: Value(updatedAt)),
+      );
 }

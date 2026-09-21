@@ -754,6 +754,12 @@ abstract class AppLocalizations {
   /// **'Config action failed'**
   String get profilesConfigFailed;
 
+  /// No description provided for @profilesConfigOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the folder'**
+  String get profilesConfigOpenFailed;
+
   /// No description provided for @profilesStatusMissing.
   ///
   /// In en, this message translates to:
@@ -1149,6 +1155,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Verify files'**
   String get versionsVerify;
+
+  /// No description provided for @versionsRelabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get versionsRelabel;
+
+  /// No description provided for @versionsRelabelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename build'**
+  String get versionsRelabelTitle;
+
+  /// No description provided for @versionsRelabelField.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name'**
+  String get versionsRelabelField;
+
+  /// No description provided for @versionsRelabelHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to show {version}'**
+  String versionsRelabelHint(String version);
+
+  /// No description provided for @versionsRelabelTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at most {max} characters'**
+  String versionsRelabelTooLong(int max);
+
+  /// No description provided for @versionsRelabelInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The label contains invalid characters'**
+  String get versionsRelabelInvalid;
+
+  /// No description provided for @versionsRelabelSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get versionsRelabelSave;
+
+  /// No description provided for @versionsRelabelFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not rename the build'**
+  String get versionsRelabelFailed;
 
   /// No description provided for @versionsRemoveFailed.
   ///
@@ -2505,6 +2559,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reveal'**
   String get settingsDebugBundleReveal;
+
+  /// No description provided for @settingsOpenFolderFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the folder'**
+  String get settingsOpenFolderFailed;
 
   /// No description provided for @settingsAbout.
   ///

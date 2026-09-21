@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=FreeCAD Launcher
+Comment=Manage FreeCAD builds, profiles, addons and macros
+Exec=freecad_launcher
+Icon=freecad-launcher
+Terminal=false
+Categories=Development;Engineering;
+StartupWMClass=org.freecad.ext.launcher

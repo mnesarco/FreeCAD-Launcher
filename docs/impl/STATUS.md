@@ -3,13 +3,14 @@
 > Live file. Every session updates this at start and end. Keep it short — details belong in
 > `TASKS.md` and `DECISIONS.md`.
 
-- **Updated**: 2026-09-20
-- **Current milestone**: M7 — v0.1 release (M6 complete incl. M6-12 Home dashboard); next: S5
-  reproducible AppImage build spike
+- **Updated**: 2026-09-21
+- **Current milestone**: M7 — v0.1 release (S5 AppImage spike done); next: M7-01 productionize the
+  AppImage pipeline
 - **Active branch**: `v2`
-- **Last session**: 2026-09-20
-- **Next action**: start `S5` (spike: reproducible Flutter AppImage build in CI) then M7-01;
-  manual M4/M5 UI click-throughs and the Windows/macOS manual checks remain open.
+- **Last session**: 2026-09-21
+- **Next action**: start `M7-01` (productionize the AppImage pipeline from S5/D-068: workflow
+  runs on tags, artifact naming, changelog/release steps in M7-02); manual M4/M5 UI
+  click-throughs and the Windows/macOS manual checks remain open.
 - **Blockers**:
   - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
     OQ-7). Everything else is verified locally.
@@ -284,8 +285,30 @@
     `news_feed_url` setting and a fifth cache category.
     Shell navigation moved from local state to `ShellController`; widget tests for Home
     (stats/checklist/news error); 482 tests green.
-  - 482 tests green (8 manual probes skipped), analyze clean.
-  - 441 tests green (8 manual probes skipped), analyze clean.
+  - S5 — **D-068**: reproducible AppImage build — `packaging/appimage/` (AppRun, .desktop,
+    generated icon, pinned appimagetool 1.9.1 + type-2 runtime with SHA-256 checks, vendored
+    excludelist + forced font/text libs, glib-family symlink fix for `path_provider`), a release
+    workflow on `v*` tags, and a deterministic zsync. Two consecutive builds produced identical
+    hashes (AppImage `a83b1ffb…`, 29.9 MB, 69 libs). Verified on the host with/without FUSE and
+    in clean ubuntu:24.04 + fedora:41 containers (`--version` exit 0) plus a GUI launch from the
+    AppImage.
+  - Fix — open-folder/reveal buttons did nothing on Linux because `FileActions` spawned
+    `xdg-open` with `includeParentEnvironment: false` (no `DISPLAY`/Wayland/DBus); it now inherits
+    the parent environment, surfaces non-zero exits as `FileActionException`, and Settings and the
+    profile Config tab show a failure snackbar (Macros already did). 3 new tests in
+    `test/platform/file_actions_test.dart`; 485 tests green (8 manual probes skipped), analyze
+    clean.
+  - R-01 — **D-069**: installed builds can be relabeled. Schema v5 adds the nullable
+    `builds.label` column (verified live: the real v4 dev DB migrated to v5 with the column, no
+    data change); `version` stays load-bearing for update checks, manifest matching, the addons
+    FreeCAD-version filter and the unique key. A `Build.displayLabel` extension (`label ??
+    version`) is used on every surface (Installed tile and remove dialog, profile cards/detail/
+    dialogs, manifest import picker, Home last-used card, CLI `list`, debug-bundle inventory).
+    The pencil action on an Installed tile opens a small dialog pre-filled with the current
+    label; clearing it restores the version label. Pure `build_label_rules.dart` (trim, ≤ 64
+    chars, control-character rejection) + `BuildsController.relabel` with `BuildsDao.updateLabel`
+    (a whole-row upsert cannot clear a nullable column, drift keeps absent columns unchanged).
+    492 tests green (8 manual probes skipped), analyze clean.
 
 ## Session log
 
@@ -362,6 +385,9 @@
 | 2026-09-20 | M6 | D-065 keyboard shortcuts (spec 03 §4) + a11y guideline tests/fixes | M6-08 | `docs/impl/DECISIONS.md`, `docs/impl/TASKS.md`, `docs/impl/STATUS.md`, `docs/impl/VERIFICATION.md`, `lib/ui/shell/**`, `lib/ui/addons/addons_view.dart`, `lib/ui/macros/macros_view.dart`, `lib/ui/builds/builds_view.dart`, `lib/ui/profiles/profiles_view.dart`, `lib/ui/settings/settings_view.dart`, `test/**` |
 | 2026-09-20 | M7 | D-066 performance pass: startup `perf` logs, off-thread catalog parsing, measured warm startup 553–561 ms | M6-09 | `docs/impl/DECISIONS.md`, `docs/impl/TASKS.md`, `docs/impl/STATUS.md`, `docs/impl/VERIFICATION.md`, `lib/main.dart`, `lib/core/log.dart`, `lib/data/catalog/*.dart`, `lib/state/*catalog*`, `test/**` |
 | 2026-09-21 | M7 | D-067 Home dashboard: stats tiles, last-used launch, update check, cached RSS/Atom news feed + `news_feed_url` setting, first-run checklist, `ShellController` | M6-12 | `docs/impl/DECISIONS.md`, `docs/impl/TASKS.md`, `docs/impl/STATUS.md`, `docs/impl/VERIFICATION.md`, `lib/domain/news/**`, `lib/data/catalog/news_feed.dart`, `lib/state/{shell,news}_controller.dart`, `lib/state/{app_services,settings_controller}.dart`, `lib/ui/home/home_view.dart`, `lib/ui/settings/settings_view.dart`, `lib/platform/{paths,cache_service}.dart`, `lib/l10n/**`, `test/**` |
+| 2026-09-21 | M7 | D-068 reproducible AppImage build spike: packaging script, pinned tools, deterministic hashes, clean-distro checks, release workflow | S5 | `docs/impl/DECISIONS.md`, `docs/impl/TASKS.md`, `docs/impl/STATUS.md`, `packaging/appimage/**`, `.github/workflows/release-appimage.yml` |
+| 2026-09-21 | Fix | Open-folder/reveal buttons: `FileActions` parent-env inheritance + `FileActionException`, failure snackbars in Settings/Config, unit tests | Fix | `lib/platform/file_actions.dart`, `lib/ui/settings/settings_view.dart`, `lib/ui/profiles/config_snapshots_view.dart`, `lib/l10n/**`, `test/platform/file_actions_test.dart`, `docs/impl/{STATUS,VERIFICATION}.md` |
+| 2026-09-21 | R1 | D-069 relabel installed builds: schema v5 `builds.label`, display extension on all surfaces, rename dialog + rules/controller/DAO, tests; migration verified on the real dev DB | R-01 | `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md`, `docs/spec/{03-ux,05-data-model}.md`, `AGENTS.md`, `lib/data/{database,tables/builds,daos/builds_dao}.dart`, `lib/domain/builds/build_label_rules.dart`, `lib/state/{builds_controller,debug_bundle_controller}.dart`, `lib/ui/builds/builds_view.dart`, `lib/ui/profiles/**`, `lib/ui/home/home_view.dart`, `lib/cli/cli.dart`, `lib/l10n/**`, `test/**` |
 
 ## Standing notes for the next agent
 

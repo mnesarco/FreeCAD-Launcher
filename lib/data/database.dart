@@ -52,7 +52,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.inMemory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -67,9 +67,16 @@ class AppDatabase extends _$AppDatabase {
       if (from < 4) {
         await m.addColumn(installedAddons, installedAddons.pinnedAt);
       }
+      if (from < 5) {
+        await m.addColumn(builds, builds.label);
+      }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+}
+
+extension BuildDisplayLabel on Build {
+  String get displayLabel => label ?? version;
 }

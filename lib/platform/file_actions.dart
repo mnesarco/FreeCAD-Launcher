@@ -3,6 +3,21 @@ import 'package:path/path.dart' as p;
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/platform/process.dart';
 
+class FileActionException implements Exception {
+  const FileActionException(this.executable, this.exitCode, this.stderr);
+
+  final String executable;
+  final int exitCode;
+  final String stderr;
+
+  @override
+  String toString() {
+    final detail = stderr.trim();
+    return 'FileActionException: $executable exited with $exitCode'
+        '${detail.isEmpty ? '' : ' ($detail)'}';
+  }
+}
+
 class FileActions {
   const FileActions({required ProcessRunner processRunner, required BuildPlatform platform})
     : _processRunner = processRunner,
@@ -24,9 +39,20 @@ class FileActions {
   }
 
   Future<void> _run(List<String> command) async {
-    await _processRunner.run(
-      ProcessSpec(executable: command.first, arguments: command.skip(1).toList()),
+    final result = await _processRunner.run(
+      ProcessSpec(
+        executable: command.first,
+        arguments: command.skip(1).toList(),
+        includeParentEnvironment: true,
+      ),
     );
+    if (!result.isSuccess) {
+      throw FileActionException(
+        command.first,
+        result.exitCode,
+        result.stderr,
+      );
+    }
   }
 
   List<String> _revealCommand(String path) {
