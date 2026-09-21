@@ -1539,3 +1539,40 @@ Template:
 - **Refs**: spec 07 §3/§7, `packaging/appimage/freecad-launcher.svg`,
   `packaging/appimage/render_icons.sh`, `TASKS.md` R-02, D-011, D-016, D-068, OQ-2
 
+### D-071 — AppImage productionization (M7-01)
+- **Date**: 2026-09-21
+- **Status**: Accepted
+- **Context**: S5/D-068 proved the pipeline; M7-01 must make a tag build a shippable artifact.
+  Three production choices were confirmed with the product owner (CI Flutter pin, placeholder
+  policy, icon sizes).
+- **Decision**:
+  - **Version/tag consistency**: `packaging/check_version.sh` compares `appVersion` in
+    `lib/core/constants.dart` with the `pubspec.yaml` version (build suffix ignored) and, when
+    `GITHUB_REF_NAME`/`TAG_NAME` is a release tag, with the tag itself. It runs in CI and is
+    called by `build_appimage.sh`, so a mismatched tag cannot produce an artifact.
+  - **Toolchain pin**: the CI matrix is pinned to Flutter 3.41.4, the same version the release
+    workflow already used and that local/verified builds use (no `stable` drift).
+  - **Update-info placeholders**: `build_appimage.sh` aborts when `APPIMAGE_OWNER`/
+    `APPIMAGE_REPO` are still `REPLACE_*`; local experiment builds can set
+    `ALLOW_PLACEHOLDER_UPDATE_INFO=1`. The tag workflow always passes the real repository
+    identity, so released artifacts never carry placeholders.
+  - **Icons**: `render_icons.sh` renders 16/32/48/64/128/256/512 px and the AppDir installs the
+    full `hicolor` tree plus the root 512 px icon; appimagetool keeps generating `.DirIcon`.
+  - **Release workflow**: tag/dispatch builds run the pipeline, verify the `sha256` sidecar and
+    smoke-test the artifact (`APPIMAGE_EXTRACT_AND_RUN=1 … --version`); release creation,
+    changelog and the test matrix stay in M7-02.
+- **Consequences**: local builds without real owner/repo now need the explicit override flag;
+  six small PNGs are committed and must be regenerated with `render_icons.sh` whenever the
+  master SVG changes; CI and release builds share one toolchain version.
+- **Verification (2026-09-21)**: local artifact `721cdb2b…` (29,903,352 bytes); `sha256` sidecar
+  verifies; three consecutive packaging runs produced identical AppImage/zsync hashes
+  (`a5c38072…`); host FUSE and extract-and-run `--version` exit 0; `desktop-file-validate` OK;
+  clean `ubuntu:24.04`/`fedora:41` containers (Xvfb + Mesa) print the version and open a GUI
+  window without gdk-pixbuf/GTK asset errors. Finding: the GTK runner initializes before Dart
+  `main`, so even `--version` needs a `DISPLAY` — the release smoke test runs under `xvfb-run`,
+  and "clean" means a desktop-baseline X11 stack (`libX11` is excludelist baseline). The GitHub
+  tag run is still pending a remote (OQ-7).
+- **Refs**: spec 07 §1/§3/§4.2, `packaging/check_version.sh`,
+  `packaging/appimage/{build_appimage.sh,render_icons.sh}`,
+  `.github/workflows/{ci,release-appimage}.yml`, `TASKS.md` M7-01, D-068, D-070, OQ-7
+

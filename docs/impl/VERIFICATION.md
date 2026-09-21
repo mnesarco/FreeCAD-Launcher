@@ -176,8 +176,26 @@ target, exception).
 
 S5 (D-068) pre-checks: two consecutive local builds produced identical AppImage/zsync hashes
 (`a83b1ffb…` / `9da830f1…`); host runs pass with FUSE and extract-and-run; clean ubuntu:24.04
-and fedora:41 containers print the version and exit 0. CI execution (no remote, OQ-7) and clean
-VMs remain open for M7-01/M7-05.
+and fedora:41 containers print the version and exit 0.
+
+M7-01 (D-071) productionization checks (2026-09-21):
+
+- [x] `packaging/check_version.sh` passes; a mismatched tag (`v0.2.0` vs `0.1.0`) fails; CI pins
+      Flutter 3.41.4 and runs the check.
+- [x] `build_appimage.sh` aborts on placeholder `APPIMAGE_OWNER`/`APPIMAGE_REPO` unless
+      `ALLOW_PLACEHOLDER_UPDATE_INFO=1`.
+- [x] Full hicolor icon tree (16–512 px) staged plus `.DirIcon`; `desktop-file-validate` OK.
+- [x] Local build `721cdb2b…` (29,903,352 bytes): `sha256` sidecar verifies, host FUSE and
+      extract-and-run `--version` exit 0, and three consecutive packaging runs produce identical
+      AppImage/zsync hashes (`a5c38072…`).
+- [x] Clean `ubuntu:24.04` and `fedora:41` (Xvfb + Mesa, the S5 desktop-baseline proxy): CLI
+      `--version` exit 0, GUI window opens (first frame 53–104 ms), no gdk-pixbuf/GTK asset
+      errors.
+- [ ] GitHub tag run (blocked on a remote, OQ-7).
+- Note: the GTK runner initializes before Dart `main`, so even `--version` needs a `DISPLAY`;
+  the release smoke test runs under `xvfb-run`. Truly minimal headless containers cannot run the
+  AppImage because `libX11` is treated as desktop baseline by the AppImage excludelist.
+- Clean VMs remain open for M7-05.
 
 ## 3. UI state checklist (per screen)
 

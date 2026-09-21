@@ -25,4 +25,6 @@ render() {
 }
 
 render 512 "$SCRIPT_DIR/freecad-launcher.png"
-render 256 "$SCRIPT_DIR/freecad-launcher-256.png"
+for size in 16 32 48 64 128 256 512; do
+  render "$size" "$SCRIPT_DIR/freecad-launcher-$size.png"
+done

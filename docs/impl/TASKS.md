@@ -140,7 +140,7 @@ Exit: `01-vision.md` success-criteria checklist passes manually.
 | ID | Task | Done when | Deps | Effort | Status |
 |---|---|---|---|---|---|
 | S5 | Spike: reproducible Flutter AppImage build in CI | AppImage runs on clean Ubuntu/Fedora (with and without FUSE); zsync update info present; decision recorded | M1-09 | M | DONE |
-| M7-01 | Productionize AppImage pipeline (`spec 07 §3`) | Tag build produces `FreeCADLauncher-<ver>-x86_64.AppImage` + sha256 | S5, M6-09 | M | TODO |
+| M7-01 | Productionize AppImage pipeline (`spec 07 §3`) | Tag build produces `FreeCADLauncher-<ver>-x86_64.AppImage` + sha256 | S5, M6-09 | M | DONE |
 | M7-02 | Release workflow: matrix tests, changelog, release creation, checksums | Dry-run release from a RC tag succeeds | M7-01 | M | TODO |
 | M7-03 | `LICENSE` (GPL-3.0-or-later) + `THIRD_PARTY_NOTICES.md` + FreeCAD trademark attribution (D-070) | Files present, SPDX headers added to sources | M1-02 | S | TODO |
 | M7-04 | README + user guide (install, first run, profiles, addons, pip, export, troubleshooting) | Docs reviewed; screenshots current | M6-07 | M | TODO |

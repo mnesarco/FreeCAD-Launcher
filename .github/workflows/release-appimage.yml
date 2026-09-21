@@ -6,6 +6,9 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   appimage:
     runs-on: ubuntu-22.04
@@ -21,13 +24,19 @@ jobs:
       - name: Install packaging tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y zsync
+          sudo apt-get install -y zsync xvfb
 
       - name: Build the AppImage
         env:
           APPIMAGE_OWNER: ${{ github.repository_owner }}
           APPIMAGE_REPO: ${{ github.event.repository.name }}
         run: packaging/appimage/build_appimage.sh
+
+      - name: Verify the checksum sidecar
+        run: (cd build/appimage && sha256sum -c FreeCADLauncher-*.AppImage.sha256)
+
+      - name: Smoke-test the AppImage
+        run: xvfb-run -a env APPIMAGE_EXTRACT_AND_RUN=1 build/appimage/FreeCADLauncher-*-x86_64.AppImage --version
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

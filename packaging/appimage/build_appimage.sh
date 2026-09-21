@@ -24,6 +24,13 @@ if [[ -z "$VERSION" ]]; then
   exit 1
 fi
 
+"$SCRIPT_DIR/../check_version.sh"
+
+if [[ ( "$OWNER" == "REPLACE_OWNER" || "$REPO" == "REPLACE_REPO" ) && "${ALLOW_PLACEHOLDER_UPDATE_INFO:-0}" != "1" ]]; then
+  echo "error: APPIMAGE_OWNER/APPIMAGE_REPO are placeholders; set them or ALLOW_PLACEHOLDER_UPDATE_INFO=1 for local builds" >&2
+  exit 1
+fi
+
 if [[ -z "${SOURCE_DATE_EPOCH:-}" ]]; then
   SOURCE_DATE_EPOCH="$(git -C "$PROJECT_ROOT" log -1 --format=%ct 2>/dev/null || echo 0)"
 fi
@@ -53,16 +60,17 @@ fi
 log "Staging AppDir"
 rm -rf "$APPDIR"
 mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/lib" \
-  "$APPDIR/usr/share/applications" \
-  "$APPDIR/usr/share/icons/hicolor/256x256/apps"
+  "$APPDIR/usr/share/applications"
 cp -a "$BUNDLE/." "$APPDIR/usr/bin/"
 cp "$SCRIPT_DIR/AppRun" "$APPDIR/AppRun"
 chmod +x "$APPDIR/AppRun"
 cp "$SCRIPT_DIR/freecad-launcher.desktop" "$APPDIR/freecad-launcher.desktop"
 cp "$SCRIPT_DIR/freecad-launcher.desktop" "$APPDIR/usr/share/applications/"
 cp "$SCRIPT_DIR/freecad-launcher.png" "$APPDIR/freecad-launcher.png"
-cp "$SCRIPT_DIR/freecad-launcher-256.png" \
-  "$APPDIR/usr/share/icons/hicolor/256x256/apps/freecad-launcher.png"
+for icon_size in 16 32 48 64 128 256 512; do
+  install -Dm644 "$SCRIPT_DIR/freecad-launcher-$icon_size.png" \
+    "$APPDIR/usr/share/icons/hicolor/${icon_size}x${icon_size}/apps/freecad-launcher.png"
+done
 
 log "Bundling non-baseline shared libraries"
 if [[ -f "$EXCLUDELIST_FILE" ]]; then

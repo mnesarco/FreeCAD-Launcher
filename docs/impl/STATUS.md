@@ -4,16 +4,16 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-09-21
-- **Current milestone**: M7 — v0.1 release (S5 AppImage spike done); next: M7-01 productionize the
-  AppImage pipeline
+- **Current milestone**: M7 — v0.1 release; M7-01 (AppImage pipeline) done, next: M7-02 release
+  workflow
 - **Active branch**: `v2`
 - **Last session**: 2026-09-21
-- **Next action**: start `M7-01` (productionize the AppImage pipeline from S5/D-068: workflow
-  runs on tags, artifact naming, changelog/release steps in M7-02); manual M4/M5 UI
-  click-throughs and the Windows/macOS manual checks remain open.
+- **Next action**: start `M7-02` (release workflow: matrix tests, changelog, release creation,
+  checksums per spec 07 §4.2); the GitHub tag run of `release-appimage.yml` still needs a remote
+  (OQ-7). Manual M4/M5 UI click-throughs and the Windows/macOS manual checks remain open.
 - **Blockers**:
-  - No git remote configured, so the M1 CI workflow has not executed on GitHub (tracked under
-    OQ-7). Everything else is verified locally.
+  - No git remote configured, so the M1 CI workflow and the M7 release workflow have not executed
+    on GitHub (tracked under OQ-7). Everything else is verified locally.
   - Real Windows `.7z` extraction and macOS `.dmg` install still need those OSes (Windows CI
     once a remote exists; macOS needs a machine). Linux is verified end-to-end.
   - Manual UI click-throughs (install from Versions, custom import incl. executable + Python
@@ -316,6 +316,15 @@
     involved). Visual checks at 512/256/64/32 px; the owner-created in-app font glyphs
     (`assets/fonts/freecad-launcher-icons.ttf`, `lib/ui/icons.dart`) are untouched. Trademark
     attribution still lands with M7-03/M7-04.
+  - M7-01 — **D-071**: AppImage pipeline productionized. `packaging/check_version.sh` enforces
+    `constants.dart` == `pubspec.yaml` and tag == version (wired into CI and the build script);
+    CI is pinned to Flutter 3.41.4; `build_appimage.sh` refuses placeholder update-info unless
+    `ALLOW_PLACEHOLDER_UPDATE_INFO=1`; `render_icons.sh` produces the full 16–512 px set and the
+    AppDir ships the hicolor tree + `.DirIcon`; the tag workflow installs `zsync`/`xvfb`,
+    verifies the sha256 sidecar and smoke-tests `--version` under `xvfb-run`. Local artifact
+    `721cdb2b…` (29,903,352 bytes), three consecutive packaging runs identical
+    (zsync `a5c38072…`); clean ubuntu:24.04 and fedora:41 (Xvfb + Mesa) pass CLI + GUI with no
+    gdk-pixbuf/GTK asset errors. GitHub tag execution stays blocked on OQ-7.
 
 ## Session log
 
@@ -396,6 +405,7 @@
 | 2026-09-21 | Fix | Open-folder/reveal buttons: `FileActions` parent-env inheritance + `FileActionException`, failure snackbars in Settings/Config, unit tests | Fix | `lib/platform/file_actions.dart`, `lib/ui/settings/settings_view.dart`, `lib/ui/profiles/config_snapshots_view.dart`, `lib/l10n/**`, `test/platform/file_actions_test.dart`, `docs/impl/{STATUS,VERIFICATION}.md` |
 | 2026-09-21 | R1 | D-069 relabel installed builds: schema v5 `builds.label`, display extension on all surfaces, rename dialog + rules/controller/DAO, tests; migration verified on the real dev DB | R-01 | `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md`, `docs/spec/{03-ux,05-data-model}.md`, `AGENTS.md`, `lib/data/{database,tables/builds,daos/builds_dao}.dart`, `lib/domain/builds/build_label_rules.dart`, `lib/state/{builds_controller,debug_bundle_controller}.dart`, `lib/ui/builds/builds_view.dart`, `lib/ui/profiles/**`, `lib/ui/home/home_view.dart`, `lib/cli/cli.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-21 | R2 | D-070 original launcher icon: editable master SVG + render script, owner's rocket design rendered to the 512/256 AppImage/desktop PNGs | R-02 | `docs/impl/{DECISIONS,TASKS,STATUS}.md`, `docs/spec/{07-distribution,README}.md`, `packaging/appimage/{freecad-launcher.svg,render_icons.sh,freecad-launcher.png,freecad-launcher-256.png}` |
+| 2026-09-21 | M7 | D-071 AppImage productionization: version/tag check, CI Flutter pin, placeholder guard, full hicolor icon set, workflow checksum + `--version` smoke test; local build and clean ubuntu/fedora container verification | M7-01 | `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md`, `packaging/check_version.sh`, `packaging/appimage/{build_appimage.sh,render_icons.sh,freecad-launcher-{16,32,48,64,128,256,512}.png}`, `.github/workflows/{ci,release-appimage}.yml` |
 
 ## Standing notes for the next agent
 
