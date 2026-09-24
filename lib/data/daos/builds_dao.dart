@@ -18,6 +18,26 @@ class BuildsDao extends DatabaseAccessor<AppDatabase> with _$BuildsDaoMixin {
   Future<Build?> getById(String id) =>
       (select(builds)..where((t) => t.id.equals(id))).getSingleOrNull();
 
+  Future<Build?> findByKey({
+    required BuildPlatform platform,
+    required String arch,
+    required BuildChannel channel,
+    required String version,
+    required String assetName,
+  }) async {
+    final all = await getAll();
+    for (final build in all) {
+      if (build.platform == platform &&
+          build.arch == arch &&
+          build.channel == channel &&
+          build.version == version &&
+          build.assetName == assetName) {
+        return build;
+      }
+    }
+    return null;
+  }
+
   Future<void> save(Build build) => into(builds).insertOnConflictUpdate(build);
 
   Future<int> deleteById(String id) => (delete(builds)..where((t) => t.id.equals(id))).go();

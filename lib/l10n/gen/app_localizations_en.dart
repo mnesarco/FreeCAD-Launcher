@@ -638,6 +638,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The files will be deleted from disk. Profiles using it will stop working.';
 
   @override
+  String get versionsRemoveMessageInPlace =>
+      'Only the launcher entry is removed. The file you imported stays where it is.';
+
+  @override
   String get versionsRemoveConfirm => 'Remove';
 
   @override

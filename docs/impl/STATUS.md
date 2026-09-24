@@ -3,23 +3,16 @@
 > Live file. Every session updates this at start and end. Keep it short — details belong in
 > `TASKS.md` and `DECISIONS.md`.
 
-- **Updated**: 2026-09-21
-- **Current milestone**: M7 — v0.1 release; M7-01 (AppImage pipeline) done, next: M7-02 release
-  workflow
+- **Updated**: 2026-09-24
+- **Current milestone**: M7 — Linux v0.1 completion (D-072); M7-01 and M7-06 done; the M7-06
+  findings (R-03..R-07) are fixed, tested and re-verified live
 - **Active branch**: `v2`
-- **Last session**: 2026-09-21
-- **Next action**: start `M7-02` (release workflow: matrix tests, changelog, release creation,
-  checksums per spec 07 §4.2); the GitHub tag run of `release-appimage.yml` still needs a remote
-  (OQ-7). Manual M4/M5 UI click-throughs and the Windows/macOS manual checks remain open.
+- **Last session**: 2026-09-24
+- **Next action**: run `M7-03` (LICENSE/notices + trademark attribution), then `M7-04` (README +
+  user guide) and `M7-05` (clean Linux VM from a locally built AppImage).
 - **Blockers**:
-  - No git remote configured, so the M1 CI workflow and the M7 release workflow have not executed
-    on GitHub (tracked under OQ-7). Everything else is verified locally.
-  - Real Windows `.7z` extraction and macOS `.dmg` install still need those OSes (Windows CI
-    once a remote exists; macOS needs a machine). Linux is verified end-to-end.
-  - Manual UI click-throughs (install from Versions, custom import incl. executable + Python
-    fallback dialog, profiles create/launch) are pending; headless profile launch, CLI wrapper
-    and profile isolation are verified on Linux; GUI launch and Windows/macOS launches are
-    pending a manual pass on those OSes.
+  - None for M7 (Linux). CI execution, release publishing and Windows/macOS deployment moved to
+    M8 (D-072): no git remote yet (OQ-7); Windows/macOS need those machines (OQ-1).
 - **In progress**: none
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
@@ -325,6 +318,23 @@
     `721cdb2b…` (29,903,352 bytes), three consecutive packaging runs identical
     (zsync `a5c38072…`); clean ubuntu:24.04 and fedora:41 (Xvfb + Mesa) pass CLI + GUI with no
     gdk-pixbuf/GTK asset errors. GitHub tag execution stays blocked on OQ-7.
+  - M7-06 — Linux manual functional pass (2026-09-24): real 1.1.3 catalog install (782.8 MiB,
+    Python 3.11 detected; ~8 min with a 1–2 min stall at 100%), custom executable import + trust
+    dialog + "Python interpreter not detected" dialog, profile create/edit/rename and GUI launch
+    (running badge, per-launch log, exit tracking on process end). `VERIFICATION.md` §4 Linux
+    column filled. Findings filed: R-03 (Available does not auto-load on first visit), R-04
+    (remove-dialog wording for in-place custom builds), R-05 (duplicate custom import raises a raw
+    SqliteException), R-06 ("Choose Python…" picker unreachable after import), R-07 (download can
+    stall at 100% with no timeout). Test build/profile/downloads were removed afterwards — the
+    dev data root is back to its pre-session state.
+  - Fix — R-03..R-07 from the M7-06 pass (2026-09-24, re-verified live): Available loads the
+    catalog on first visit (with a guard so pre-seeded lists are not overwritten); the remove
+    dialog uses in-place wording for referenced builds (custom executables, locally imported
+    AppImages); re-importing a custom file reuses the existing row (no `UNIQUE constraint`
+    crash); the post-import "Choose Python…" picker opens (Custom tab kept alive via
+    `AutomaticKeepAliveClientMixin`, form state preserved); the downloader completes once the
+    declared size is reached and rejects a stream that ends early. 6 new tests; 498 tests green
+    (8 manual probes skipped), analyze clean; live checks confirmed R-03/R-04/R-05/R-06.
 
 ## Session log
 
@@ -406,6 +416,9 @@
 | 2026-09-21 | R1 | D-069 relabel installed builds: schema v5 `builds.label`, display extension on all surfaces, rename dialog + rules/controller/DAO, tests; migration verified on the real dev DB | R-01 | `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md`, `docs/spec/{03-ux,05-data-model}.md`, `AGENTS.md`, `lib/data/{database,tables/builds,daos/builds_dao}.dart`, `lib/domain/builds/build_label_rules.dart`, `lib/state/{builds_controller,debug_bundle_controller}.dart`, `lib/ui/builds/builds_view.dart`, `lib/ui/profiles/**`, `lib/ui/home/home_view.dart`, `lib/cli/cli.dart`, `lib/l10n/**`, `test/**` |
 | 2026-09-21 | R2 | D-070 original launcher icon: editable master SVG + render script, owner's rocket design rendered to the 512/256 AppImage/desktop PNGs | R-02 | `docs/impl/{DECISIONS,TASKS,STATUS}.md`, `docs/spec/{07-distribution,README}.md`, `packaging/appimage/{freecad-launcher.svg,render_icons.sh,freecad-launcher.png,freecad-launcher-256.png}` |
 | 2026-09-21 | M7 | D-071 AppImage productionization: version/tag check, CI Flutter pin, placeholder guard, full hicolor icon set, workflow checksum + `--version` smoke test; local build and clean ubuntu/fedora container verification | M7-01 | `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md`, `packaging/check_version.sh`, `packaging/appimage/{build_appimage.sh,render_icons.sh,freecad-launcher-{16,32,48,64,128,256,512}.png}`, `.github/workflows/{ci,release-appimage}.yml` |
+| 2026-09-24 | planning | D-072: Linux-first completion; CI, release workflow and Windows/macOS deployment moved to deferred phase M8 | — | `docs/impl/{TASKS,STATUS,DECISIONS,VERIFICATION}.md`, `docs/spec/{08-roadmap,09-open-questions}.md` |
+| 2026-09-24 | M7 | M7-06 Linux manual functional pass: real 1.1.3 install, custom executable import + Python fallback dialog, profile create/edit/GUI launch with running badge/log/exit tracking; `VERIFICATION.md` §4 Linux column filled; findings filed R-03..R-07; dev data root restored | M7-06 | `docs/impl/{TASKS,STATUS,VERIFICATION}.md` |
+| 2026-09-24 | M7 | R-03..R-07 fixes (Available auto-load, in-place remove wording, duplicate custom import, Choose Python picker, download completion/truncation); 6 tests, live re-check, dev data restored | R-03..R-07 | `lib/{platform/downloader,data/daos/builds_dao,state/builds_controller,ui/builds/builds_view}.dart`, `lib/l10n/**`, `test/**`, `docs/impl/{TASKS,STATUS}.md` |
 
 ## Standing notes for the next agent
 
@@ -413,8 +426,7 @@
 - Read `docs/impl/DECISIONS.md` before proposing alternatives to anything already decided.
 - Support floor is FreeCAD 1.0+ (D-021); pre-1.0 catalog tags are ignored, `legacy` = 1.0.x,
   custom user binaries are unaffected.
-- M2 exit criteria are locally green; only cross-OS manual checks and the first CI run remain.
-- Start M3 with `M3-01`; profiles are the core of the product, so keep `docs/spec/05-data-model.md`
-  and D-005 (isolation env matrix) in view.
+- M7 is Linux-first (D-072): finish the Linux functional pass (M7-06), LICENSE/notices, README
+  and the clean-VM check; CI, release publishing and Windows/macOS deployment are deferred to M8.
 - `AGENTS.md` is tracked again (no longer git-excluded); keep it in sync with `docs/impl/`
   when conventions or the project state change.

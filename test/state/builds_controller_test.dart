@@ -665,6 +665,25 @@ void main() {
     expect(installer.requests, isEmpty);
   });
 
+  test('re-importing the same custom file updates the existing build', () async {
+    final executable = File(p.join(tempDirectory.path, 'my-freecad'))..writeAsStringSync('bin');
+    if (!Platform.isWindows) {
+      Process.runSync('chmod', ['755', executable.path]);
+    }
+    final controller = buildController(
+      platform: Platform.isWindows ? BuildPlatform.windows : BuildPlatform.linux,
+    );
+
+    final first = await controller.importCustom(source: executable.path);
+    expect(first.isOk, isTrue);
+
+    final second = await controller.importCustom(source: executable.path);
+
+    expect(second.isOk, isTrue);
+    expect(second.valueOrNull!.id, first.valueOrNull!.id);
+    expect(await database.buildsDao.getAll(), hasLength(1));
+  });
+
   test('detects Python for a custom executable and references it in place', () async {
     final executable = File(p.join(tempDirectory.path, 'FreeCAD'))
       ..writeAsStringSync('bin');

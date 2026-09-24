@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -160,5 +161,36 @@ void main() {
     await downloader.download(uri: uri, fileName: 'FreeCAD.7z', onProgress: progress.add);
 
     expect(progress.last.fraction, isNull);
+  });
+
+  test('completes once the declared size is reached even if the stream stays open', () async {
+    final streamController = StreamController<List<int>>();
+    addTearDown(streamController.close);
+    source
+      ..streamFactory = (() => streamController.stream)
+      ..contentLength = data.length;
+
+    streamController.add(data);
+
+    final result = await downloader
+        .download(uri: uri, fileName: 'FreeCAD.7z')
+        .timeout(const Duration(seconds: 5));
+
+    expect(result.bytes, data.length);
+    expect(File(result.path).readAsBytesSync(), data);
+    expect(File('${result.path}.part').existsSync(), isFalse);
+  });
+
+  test('rejects a stream that ends before the declared size', () async {
+    source
+      ..streamFactory = (() => Stream.fromIterable([data.sublist(0, 400)]))
+      ..contentLength = data.length;
+
+    await expectLater(
+      downloader.download(uri: uri, fileName: 'FreeCAD.7z'),
+      throwsA(isA<DownloadException>()),
+    );
+
+    expect(Directory(cacheDirectory.path).listSync(), isEmpty);
   });
 }

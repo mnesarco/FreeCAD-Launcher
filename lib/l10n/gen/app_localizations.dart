@@ -1252,6 +1252,12 @@ abstract class AppLocalizations {
   /// **'The files will be deleted from disk. Profiles using it will stop working.'**
   String get versionsRemoveMessage;
 
+  /// No description provided for @versionsRemoveMessageInPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the launcher entry is removed. The file you imported stays where it is.'**
+  String get versionsRemoveMessageInPlace;
+
   /// No description provided for @versionsRemoveConfirm.
   ///
   /// In en, this message translates to:

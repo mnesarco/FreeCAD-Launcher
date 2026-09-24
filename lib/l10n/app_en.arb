@@ -271,6 +271,7 @@
   "versionsVerifyBroken": "Build files are broken or corrupted",
   "versionsRemoveTitle": "Remove this build?",
   "versionsRemoveMessage": "The files will be deleted from disk. Profiles using it will stop working.",
+  "versionsRemoveMessageInPlace": "Only the launcher entry is removed. The file you imported stays where it is.",
   "versionsRemoveConfirm": "Remove",
   "versionsCustomEmptyTitle": "Custom builds",
   "versionsCustomEmptyMessage": "Add a local archive or URL, or select a FreeCAD executable (self-compiled or installed by other means) to reference in place.",

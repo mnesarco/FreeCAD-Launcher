@@ -135,18 +135,38 @@ import recreates the addon set.
 
 Exit: `01-vision.md` success-criteria checklist passes manually.
 
-## M7 — v0.1 release
+## M7 — Linux v0.1 completion
+
+Linux-first (D-072): functionality is finished and verified end-to-end on Linux before any
+packaging/release automation. CI, release publishing and Windows/macOS deployment are deferred to
+M8. M7-02 (release workflow) moved to M8-01.
 
 | ID | Task | Done when | Deps | Effort | Status |
 |---|---|---|---|---|---|
 | S5 | Spike: reproducible Flutter AppImage build in CI | AppImage runs on clean Ubuntu/Fedora (with and without FUSE); zsync update info present; decision recorded | M1-09 | M | DONE |
 | M7-01 | Productionize AppImage pipeline (`spec 07 §3`) | Tag build produces `FreeCADLauncher-<ver>-x86_64.AppImage` + sha256 | S5, M6-09 | M | DONE |
-| M7-02 | Release workflow: matrix tests, changelog, release creation, checksums | Dry-run release from a RC tag succeeds | M7-01 | M | TODO |
 | M7-03 | `LICENSE` (GPL-3.0-or-later) + `THIRD_PARTY_NOTICES.md` + FreeCAD trademark attribution (D-070) | Files present, SPDX headers added to sources | M1-02 | S | TODO |
 | M7-04 | README + user guide (install, first run, profiles, addons, pip, export, troubleshooting) | Docs reviewed; screenshots current | M6-07 | M | TODO |
-| M7-05 | Clean-machine validation on Linux VM | Success criteria checklist completed; issues filed as tasks | M7-02 | S | TODO |
+| M7-05 | Clean-machine validation on Linux VM with the locally built AppImage | Success criteria checklist completed; issues filed as tasks | M7-01, M7-06 | S | TODO |
+| M7-06 | Linux manual functional pass: Versions install, custom import (incl. executable + Python fallback dialog), profile create/edit/launch in the GUI; fill the `VERIFICATION.md` §4 Linux column | Smoke matrix Linux column recorded in the session log; issues filed as tasks (R-03..R-07) | M7-01 | M | DONE |
 
-Exit: published AppImage on GitHub releases; clean machine completes first-run flow.
+Exit: Linux functionality verified end-to-end (manual smoke matrix) with a locally built AppImage
+on a clean machine; `LICENSE`, notices and user docs complete. Nothing is published in M7 —
+GitHub release/publishing happens in M8.
+
+## M8 — Packaging, CI & cross-platform release (deferred)
+
+Starts after M7; the GitHub CI/release work needs a git remote (OQ-7). Recorded in D-072.
+
+| ID | Task | Done when | Deps | Effort | Status |
+|---|---|---|---|---|---|
+| M8-01 | Release workflow (was M7-02): test matrix, changelog, GitHub release creation, published checksums/zsync | Dry-run release from an RC tag succeeds; notes free of tokens; checksums match | M7-05 | M | TODO |
+| M8-02 | First GitHub CI run of the M1-09 matrix (analyze, tests, codegen freshness, build per OS) | CI green on the remote repo | M8-01 | S | TODO |
+| M8-03 | Windows artifact + deployment (was B-11/OQ-1): portable build, real `.7z` extraction, install/launch/isolation manual pass | Windows artifact installs and launches on a clean machine | M8-01 | L | TODO |
+| M8-04 | macOS artifact + deployment (was B-11/OQ-1): unsigned `.app`/`.dmg`, quarantine consent, install/launch/isolation manual pass | macOS artifact installs and launches on a clean machine | M8-01 | L | TODO |
+
+Exit: published Linux AppImage on GitHub releases; Windows/macOS artifacts published or the
+distribution decision recorded (OQ-1).
 
 ## Refinements (pre-v0.1)
 
@@ -154,6 +174,11 @@ Exit: published AppImage on GitHub releases; clean machine completes first-run f
 |---|---|---|---|---|---|
 | R-01 | Relabel installed builds (D-069): schema v5 `builds.label`, rename action on the Installed tile, label shown on every build surface | Controller tests (set/trim/reset/length); widget test renames and resets a build; analyze/tests green | M2-07 | S | DONE |
 | R-02 | Original launcher icon (D-070): editable master SVG + render script; owner authors the final design, no FreeCAD logo modification | Owner's rocket master SVG saved; 512/256 AppImage/desktop PNGs regenerated and visually checked (512/256/64/32 px); D-068 placeholder gone | S5 | S | DONE |
+| R-03 | Available tab never loads the catalog on first visit (shows the misleading "Check your connection and refresh the catalog" empty state until a manual refresh); load on first visit or show a proper loading/empty state | First visit to Available loads the catalog (spinner then list); offline shows the cached/stale state | M2-07 | S | DONE |
+| R-04 | Build remove dialog always says "The files will be deleted from disk", but in-place custom builds (D-020) keep the file; use per-kind wording | Custom executable/AppImage removal does not claim files are deleted; catalog builds keep the current warning | M2-09 | S | DONE |
+| R-05 | Re-importing an already-imported custom file fails with a raw `SqliteException: UNIQUE constraint failed` snackbar; detect the existing build key and update/reuse it or show a friendly duplicate error | Re-importing the same source updates/returns the existing build with a clear message; no raw SQL surfaced | M2-08, M2-12 | S | DONE |
+| R-06 | Post-import "Python interpreter not detected" → "Choose Python…" never opens the picker: the Custom tab State is disposed by the tab switch (`mounted == false`); move the flow to a surviving State or keep the tab alive | Choosing an interpreter after import opens the picker and stores `pythonPath` (manual fallback reachable) | M2-13 | M | DONE |
+| R-07 | A build download can sit at "782.8 MiB / 782.8 MiB" with the stream not closing for minutes (observed ~1–2 min) and no timeout; finish when received == content-length or add an idle timeout | Download completes once the declared byte count is reached; a stalled stream fails with a retryable error instead of hanging | M2-04 | M | DONE |
 
 ## Backlog (post-MVP, scheduled when v0.1 is released)
 
@@ -169,6 +194,5 @@ Exit: published AppImage on GitHub releases; clean machine completes first-run f
 | B-08 | Profile templates | FR-2.8 | v0.2 |
 | B-09 | CLI addon/bundle subcommands | FR-3.5 | v0.2 |
 | B-10 | Local addon zip install (developer mode) | FR-4.8 | v0.2 |
-| B-11 | Windows/macOS launcher artifacts (OQ-1) | spec 07 §2 | v0.2 |
 | B-12 | i18n translations (if OQ-6 = start later) | NFR-9 | v1.0 |
 | B-13 | Fully isolated private-build profiles (OQ-8) | spec 09 | post-v1.0 |

@@ -166,10 +166,11 @@ failure snackbar. Covered by `test/platform/file_actions_test.dart` (env inherit
 target, exception).
 
 
-### M7 — Release
+### M7 — Linux v0.1 completion
 
-- [ ] AppImage builds reproducibly in CI and launches on a clean VM with and without FUSE
-- [ ] `FreeCADLauncher-<ver>-x86_64.AppImage` + SHA-256 published; checksums verified
+- [ ] Linux manual smoke matrix (`§4` Linux column) completed: install from Versions, custom
+      import (executable + Python fallback dialog), create/launch profiles in the GUI
+- [ ] AppImage builds reproducibly locally and launches on a clean Linux VM with and without FUSE
 - [ ] `LICENSE` and `THIRD_PARTY_NOTICES.md` present; SPDX headers on sources
 - [ ] Clean-machine first-run flow completes (install build → profile → addon → launch)
 - [ ] No secrets or tokens in logs or artifacts
@@ -191,11 +192,19 @@ M7-01 (D-071) productionization checks (2026-09-21):
 - [x] Clean `ubuntu:24.04` and `fedora:41` (Xvfb + Mesa, the S5 desktop-baseline proxy): CLI
       `--version` exit 0, GUI window opens (first frame 53–104 ms), no gdk-pixbuf/GTK asset
       errors.
-- [ ] GitHub tag run (blocked on a remote, OQ-7).
 - Note: the GTK runner initializes before Dart `main`, so even `--version` needs a `DISPLAY`;
   the release smoke test runs under `xvfb-run`. Truly minimal headless containers cannot run the
   AppImage because `libX11` is treated as desktop baseline by the AppImage excludelist.
 - Clean VMs remain open for M7-05.
+
+### M8 — Packaging, CI & cross-platform release (deferred, D-072)
+
+- [ ] GitHub tag run of `release-appimage.yml` (blocked on a remote, OQ-7)
+- [ ] `FreeCADLauncher-<ver>-x86_64.AppImage` + SHA-256 published; checksums verified
+- [ ] Release workflow: matrix tests, changelog, release creation; dry-run from an RC tag succeeds
+      and notes contain no tokens
+- [ ] First CI matrix run green on GitHub
+- [ ] Windows/macOS artifacts built, installed and launched on clean machines (OQ-1)
 
 ## 3. UI state checklist (per screen)
 
@@ -210,17 +219,21 @@ Record results in the `STATUS.md` session log (date, OS, FreeCAD version, result
 
 | Scenario | Linux | Windows | macOS |
 |---|---|---|---|
-| Install latest stable build | | | |
-| Create two profiles, verify isolation | | | |
-| Launch from app | | | |
-| Launch via CLI wrapper | | | |
-| Install addon from catalog | | | |
-| Install addon requirement via pip | | | |
-| Update an outdated addon | | | |
-| Apply a bundle | | | |
-| Install + manage a macro | | | |
-| Export/import profile manifest | | | |
-| Offline start with cached catalog | | | |
+| Install latest stable build | ✅ 2026-09-24 — 1.1.3 AppImage (782.8 MiB), Python 3.11 detected (M7-06) | | |
+| Create two profiles, verify isolation | ✅ 2026-09-19 — distinct markers in `FREECAD_USER_HOME`/`HOME`/`TMPDIR`/`Mod` (M3-10) | | |
+| Launch from app | ✅ 2026-09-24 — GUI launch (1.1.3), running badge, log, exit tracking; headless M3-04/M3-05 | | |
+| Launch via CLI wrapper | ✅ 2026-09-19 — wrapper ran the built CLI (M3-09) | | |
+| Install addon from catalog | ✅ 2026-09-19 — real A2plus install (M4-03); catalog renders live 2026-09-24 | | |
+| Install addon requirement via pip | ✅ 2026-09-19 — real `six` install/uninstall (M4-06/M4-07) | | |
+| Update an outdated addon | ✅ 2026-09-19 — real A2plus install → update (backup) → remove (M4-04) | | |
+| Apply a bundle | ⚠ planner/runner/UI tests only (M5-02); no live apply | | |
+| Install + manage a macro | ✅ 2026-09-19 — real catalog install (M5-04/M5-05); Installed list live 2026-09-24 | | |
+| Export/import profile manifest | ✅ 2026-09-20 — codec/controller/UI + cross-OS test (M5-07) | | |
+| Offline start with cached catalog | ✅ 2026-09-19 — stale/cached states with warning (M4-01/M6-07) | | |
+
+Legend: ✅ verified (date, session) · ⚠ tests only · empty = not done. M7-06 (2026-09-24) findings
+filed as R-03..R-07 and fixed the same day (unit/widget tests plus live re-checks); Windows/macOS
+columns are deferred to M8.
 
 ## 5. When something fails
 

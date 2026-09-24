@@ -49,18 +49,25 @@
   empty/error/offline states, accessibility pass.
 - Exit: full success-criteria checklist in `01-vision.md` passes manually.
 
-### M7 — v0.1 release
+### M7 — Linux v0.1 completion
 
-- Linux AppImage pipeline, release workflow, docs (README + user guide), `THIRD_PARTY_NOTICES`.
-- Exit: a clean Linux machine can install from the published AppImage and complete the
-  first-run flow.
+- Linux AppImage pipeline verified locally, clean-machine validation, Linux manual functional
+  pass, docs (README + user guide), `LICENSE`, `THIRD_PARTY_NOTICES`. Linux functionality is
+  finished and verified first.
+
+### M8 — Packaging, CI & cross-platform release (deferred)
+
+- GitHub CI/release workflow execution and publishing (OQ-7); Windows/macOS launcher artifacts and
+  deployment checks (OQ-1). Execution order recorded in D-072 / `TASKS.md` M8.
+- Exit: a clean Linux machine can install from the published AppImage and complete the first-run
+  flow; Windows/macOS artifacts published or the distribution decision recorded.
 
 ### Post-v0.1 (v0.2 → v1.0)
 
 - v0.2: weekly + legacy channels, in-place build updates, full profile export, preference
   browser, macro run via `FreeCADCmd`, launcher self-update, GitHub token UX, Cmd/KDE polish.
-- v1.0: i18n (if OQ-6 says yes), Windows/macOS launcher artifacts (OQ-1), stability hardening,
-  user documentation, possibly bundle sharing/curated collections.
+- v1.0: i18n (if OQ-6 says yes), stability hardening, user documentation, possibly bundle sharing
+  or curated collections.
 
 ## 2. MVP cut line (v0.1)
 

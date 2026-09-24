@@ -1576,3 +1576,25 @@ Template:
   `packaging/appimage/{build_appimage.sh,render_icons.sh}`,
   `.github/workflows/{ci,release-appimage}.yml`, `TASKS.md` M7-01, D-068, D-070, OQ-7
 
+### D-072 — Linux-first completion; CI, release workflow and cross-platform deployment deferred
+- **Date**: 2026-09-24
+- **Status**: Accepted
+- **Context**: M6 is complete and M7-01 shipped the AppImage pipeline. The remaining v0.1 work
+  mixed Linux functionality verification with GitHub CI/release automation and Windows/macOS
+  deployment. A git remote is still missing (OQ-7), so the CI and release workflow cannot be
+  executed or verified, and Windows/macOS need those machines. The product owner wants Linux
+  functionality finished and verified first.
+- **Decision**:
+  - M7 is now **Linux v0.1 completion**: Linux manual functional pass (M7-06), `LICENSE`/notices
+    (M7-03), README + user guide (M7-04), and clean-machine validation on a Linux VM from the
+    locally built AppImage (M7-05). Nothing is published in M7.
+  - A new deferred phase **M8 — Packaging, CI & cross-platform release** collects: the release
+    workflow (was M7-02 → M8-01), the first GitHub CI matrix run (M8-02), and Windows/macOS
+    launcher artifacts + deployment checks (was B-11 → M8-03/M8-04).
+  - Windows/macOS manual checks and OQ-7 no longer block M7; they block M8.
+- **Consequences**: the v0.1 exit no longer requires a published GitHub release; publishing and
+  cross-platform deployment happen in M8 once a remote exists. `.github/workflows/` and spec 07
+  §3/§4.2 stay as written but are executed later. `VERIFICATION.md` gained an M8 section.
+- **Refs**: spec 08 §1 (M7/M8), spec 07 §4.2, spec 09 OQ-1/OQ-7, `TASKS.md` M7/M8,
+  `VERIFICATION.md` §2, M1-09, M7-01, B-11
+

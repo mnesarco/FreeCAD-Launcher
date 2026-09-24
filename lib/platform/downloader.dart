@@ -180,6 +180,9 @@ class Downloader {
         sink.add(chunk);
         received += chunk.length;
         reportProgress(force: false);
+        if (totalBytes != null && received >= totalBytes) {
+          break;
+        }
       }
       await sink.flush();
       await sink.close();
@@ -197,6 +200,15 @@ class Downloader {
         part.deleteSync();
       }
       rethrow;
+    }
+
+    if (totalBytes != null && received < totalBytes) {
+      if (part.existsSync()) {
+        part.deleteSync();
+      }
+      throw DownloadException(
+        'The download ended early ($received of $totalBytes bytes)',
+      );
     }
 
     String? actual;

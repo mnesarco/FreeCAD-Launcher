@@ -10,7 +10,7 @@ Blocking = must be answered before the affected milestone starts.
 | OQ-4 | Exact macro catalog source and license handling | FR-7.2, spike S4 | Verify `FreeCAD/FreeCAD-macros` repo structure and license; alternatives: wiki macro pages | M5 | Open |
 | OQ-5 | Full export contents and default toggles (addon payloads, Python packages, macros) | FR-9.2 size/portability trade-off | Recommendation: full export includes config + macros by default, addon payloads opt-in | v0.2 | Open |
 | OQ-6 | Localization in scope, and when? | Public OSS audience; ARB scaffolding cost | Resolved: ARB scaffolding from day one, English template only (D-017) | M1 (string handling) | Resolved by D-017 |
-| OQ-7 | Repository hosting and release repo slug for self-update/update checks (`gh-releases-zsync` needs owner/repo) | Distribution and self-update | Owner/repo confirmed once the public repo exists; can be parameterized in constants | M7 | Open |
+| OQ-7 | Repository hosting and release repo slug for self-update/update checks (`gh-releases-zsync` needs owner/repo) | Distribution and self-update | Owner/repo confirmed once the public repo exists; can be parameterized in constants | M8 | Open |
 | OQ-8 | Should profiles support a "fully isolated" private build copy (hybrid model) later? | Disk vs isolation; currently locked to shared builds | Recommendation: defer to post-v1.0; keep the env/launch layer able to support it | post-v1.0 | Deferred |
 
 ## Resolved by this spec (for the record)

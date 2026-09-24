@@ -41,6 +41,15 @@ String _progressDetail(InstallProgress progress) {
   return parts.join('  ·  ');
 }
 
+bool _isInPlace(Build build) {
+  if (build.kind == BuildKind.custom) {
+    return true;
+  }
+  return build.kind == BuildKind.appimage &&
+      build.channel == BuildChannel.custom &&
+      build.sourceUrl == null;
+}
+
 class BuildsView extends StatefulWidget {
   const BuildsView({super.key});
 
@@ -267,11 +276,14 @@ class _InstalledBuildTile extends StatelessWidget {
     Build build,
   ) async {
     final l10n = AppLocalizations.of(context);
+    final message = _isInPlace(build)
+        ? l10n.versionsRemoveMessageInPlace
+        : l10n.versionsRemoveMessage;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.versionsRemoveTitle),
-        content: Text('${build.displayLabel} — ${l10n.versionsRemoveMessage}'),
+        content: Text('${build.displayLabel} — $message'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -372,8 +384,30 @@ class _RelabelDialogState extends State<_RelabelDialog> {
   }
 }
 
-class _AvailableTab extends StatelessWidget {
+class _AvailableTab extends StatefulWidget {
   const _AvailableTab();
+
+  @override
+  State<_AvailableTab> createState() => _AvailableTabState();
+}
+
+class _AvailableTabState extends State<_AvailableTab> {
+  bool _requested = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_requested) {
+      return;
+    }
+    final controller = AppScope.of(context).builds;
+    if (controller.catalogFreshness.value != null ||
+        controller.availableBuilds.value.isNotEmpty) {
+      return;
+    }
+    _requested = true;
+    unawaited(controller.loadCatalog());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -543,11 +577,14 @@ class _CustomTab extends StatefulWidget {
   State<_CustomTab> createState() => _CustomTabState();
 }
 
-class _CustomTabState extends State<_CustomTab> {
+class _CustomTabState extends State<_CustomTab> with AutomaticKeepAliveClientMixin {
   final TextEditingController _sourceController = TextEditingController();
   final TextEditingController _labelController = TextEditingController();
   final TextEditingController _checksumController = TextEditingController();
   bool _importing = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void dispose() {
@@ -687,6 +724,7 @@ class _CustomTabState extends State<_CustomTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).builds;
     final progressByBuild = controller.installProgress.watch(context);

@@ -20,6 +20,8 @@ import '../data/test_fixtures.dart';
 import '../helpers/fake_download.dart';
 
 class FakeReleasesCatalog implements ReleasesCatalog {
+  int loadCount = 0;
+
   @override
   Duration get ttl => const Duration(hours: 6);
 
@@ -28,6 +30,7 @@ class FakeReleasesCatalog implements ReleasesCatalog {
 
   @override
   Future<ReleasesCatalogResult> load({bool forceRefresh = false}) async {
+    loadCount++;
     return const ReleasesCatalogResult(releases: [], freshness: CatalogFreshness.fresh);
   }
 }
@@ -66,15 +69,17 @@ void main() {
   late AppDatabase database;
   late BuildsController controller;
   late AppServices services;
+  late FakeReleasesCatalog catalog;
 
   setUp(() async {
     tempDirectory = Directory.systemTemp.createTempSync('fcl_builds_ui');
     paths = AppPaths(dataRoot: tempDirectory.path);
     await paths.ensureBaseDirectories();
     database = AppDatabase.inMemory();
+    catalog = FakeReleasesCatalog();
     controller = BuildsController(
       database: database,
-      catalog: FakeReleasesCatalog(),
+      catalog: catalog,
       downloader: Downloader(
         source: FakeDownloadSource(),
         cacheDirectory: paths.downloadsCacheDir,
@@ -236,5 +241,103 @@ void main() {
 
     expect(find.text('1.1.3'), findsOneWidget);
     expect(find.text('My build'), findsNothing);
+  });
+
+  testWidgets('loads the catalog on the first Available visit and not again', (tester) async {
+    await tester.pumpWidget(
+      AppScope(
+        services: services,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: BuildsView()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(catalog.loadCount, 0);
+
+    await tester.tap(find.text('Available'));
+    await tester.pumpAndSettle();
+    expect(catalog.loadCount, 1);
+
+    await tester.tap(find.text('Installed'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Available'));
+    await tester.pumpAndSettle();
+    expect(catalog.loadCount, 1);
+  });
+
+  testWidgets('remove dialog uses in-place wording for referenced builds', (tester) async {
+    await tester.runAsync(() async {
+      final buildDirectory = Directory(paths.buildDir('managed-1'));
+      buildDirectory.createSync(recursive: true);
+      final executable = File(p.join(buildDirectory.path, 'FreeCAD'))..writeAsStringSync('');
+      await database.buildsDao.save(
+        sampleBuild(id: 'managed-1').copyWith(localPath: executable.path),
+      );
+      await database.buildsDao.save(
+        sampleBuild(
+          id: 'custom-1',
+          version: 'my-freecad',
+          kind: BuildKind.custom,
+          channel: BuildChannel.custom,
+          assetName: 'my-freecad',
+          pythonVersion: null,
+        ),
+      );
+    });
+
+    await tester.pumpWidget(
+      AppScope(
+        services: services,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: BuildsView()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    Future<void> openRemoveDialog(String label) async {
+      final tile = find.ancestor(of: find.text(label), matching: find.byType(ListTile));
+      await tester.tap(find.descendant(of: tile, matching: find.byTooltip('Remove')));
+      await tester.pumpAndSettle();
+    }
+
+    await openRemoveDialog('my-freecad');
+    expect(find.textContaining('stays where it is'), findsOneWidget);
+    expect(find.textContaining('will be deleted from disk'), findsNothing);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    await openRemoveDialog('1.1.3');
+    expect(find.textContaining('will be deleted from disk'), findsOneWidget);
+  });
+
+  testWidgets('keeps the custom import form across tab switches', (tester) async {
+    await tester.pumpWidget(
+      AppScope(
+        services: services,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: BuildsView()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Custom'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, '/tmp/open/my-build.AppImage');
+
+    await tester.tap(find.text('Installed'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Custom'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('/tmp/open/my-build.AppImage'), findsOneWidget);
   });
 }

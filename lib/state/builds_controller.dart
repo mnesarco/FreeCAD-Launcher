@@ -339,7 +339,19 @@ class BuildsController {
 
     final isUrl = trimmed.startsWith('http://') || trimmed.startsWith('https://');
     final resolvedKind = kind ?? kindFromName(fileName ?? trimmed);
-    final buildId = 'custom:${const Uuid().v4()}';
+    final assetName = fileName ??
+        (isUrl ? Uri.parse(trimmed).path.split('/').last : p.basename(trimmed));
+    final label = (versionLabel != null && versionLabel.trim().isNotEmpty)
+        ? versionLabel.trim()
+        : assetName.split('.').first;
+    final existing = await _database.buildsDao.findByKey(
+      platform: _platform,
+      arch: _arch,
+      channel: BuildChannel.custom,
+      version: label,
+      assetName: assetName,
+    );
+    final buildId = existing?.id ?? 'custom:${const Uuid().v4()}';
     final token = CancellationToken();
     _tokens[buildId] = token;
     if (isUrl) {
@@ -357,8 +369,6 @@ class BuildsController {
       final int sizeBytes;
       String? pythonVersion;
       String? pythonPath;
-      final String assetName = fileName ??
-          (isUrl ? Uri.parse(trimmed).path.split('/').last : p.basename(trimmed));
 
       if (resolvedKind == BuildKind.custom) {
         if (isUrl) {
@@ -436,9 +446,6 @@ class BuildsController {
         pythonPath = installed.pythonPath;
       }
 
-      final label = (versionLabel != null && versionLabel.trim().isNotEmpty)
-          ? versionLabel.trim()
-          : assetName.split('.').first;
       final now = _clock();
       final build = Build(
         id: buildId,
