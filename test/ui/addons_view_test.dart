@@ -268,7 +268,7 @@ void main() {
 
     await pumpAddons(tester);
 
-    await tester.tap(find.byIcon(Icons.menu));
+    await tester.tap(find.byIcon(Icons.filter_list));
     await settle(tester);
     await tapMenuItem('Workbench');
     await tapMenuItem('Macro');
@@ -277,7 +277,7 @@ void main() {
     expect(find.text('A2plus'), findsOneWidget);
     expect(find.text('MacroTool'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.menu));
+    await tester.tap(find.byIcon(Icons.filter_list));
     await settle(tester);
     await tapMenuItem('Workbench');
     await closeMenu();

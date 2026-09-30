@@ -57,10 +57,13 @@ class _ProfileConfigTabState extends State<ProfileConfigTab> {
                 _PathRow(label: 'system.cfg', value: _fileStatus(paths.systemCfg, l10n)),
                 _PathRow(label: 'backups', value: paths.backups),
                 const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: () => unawaited(_openFolder(context, paths.root)),
-                  icon: const Icon(Icons.folder_open_outlined),
-                  label: Text(l10n.profilesConfigOpenFolder),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: OutlinedButton.icon(
+                    onPressed: () => unawaited(_openFolder(context, paths.root)),
+                    icon: const Icon(Icons.folder_open_outlined),
+                    label: Text(l10n.profilesConfigOpenFolder),
+                  ),
                 ),
               ],
             ),

@@ -155,7 +155,7 @@ The **Addons** section shows the official catalog (cached 6 hours; stale cache i
 with a notice).
 
 - Search by text or `#tag`; filter by content type, installed state and, when builds are
-  installed, required FreeCAD version. The hamburger menu applies multiple filters at once.
+  installed, required FreeCAD version. The filter button applies multiple filters at once.
 - The detail page shows description, authors, version, license, tags and branches. Pick a branch
   and **Install**, then choose the target profile in the dialog.
 - If the addon ships a `requirements.txt`, a consent dialog offers to install its Python

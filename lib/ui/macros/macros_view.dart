@@ -27,7 +27,7 @@ class MacrosViewState extends State<MacrosView>
     implements SectionShortcuts {
   bool _started = false;
   final FocusNode _searchFocusNode = FocusNode();
-  late final TabController _tabs = TabController(length: 2, vsync: this);
+  late final TabController _tabs = TabController(length: 2, vsync: this, initialIndex: 1);
 
   @override
   void dispose() {

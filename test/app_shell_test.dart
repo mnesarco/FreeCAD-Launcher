@@ -149,6 +149,9 @@ void main() {
     expect(find.text('Catalog is empty'), findsOneWidget);
 
     await open('Macros');
+    expect(find.text('Catalog is empty'), findsOneWidget);
+    await tester.tap(find.text('Installed'));
+    await tester.pumpAndSettle();
     expect(find.text('No macros'), findsOneWidget);
 
     await open('Settings');

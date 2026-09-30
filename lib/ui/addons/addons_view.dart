@@ -921,7 +921,7 @@ class _FilterMenu extends StatelessWidget {
         icon: Badge(
           isLabelVisible: activeCount > 0,
           label: Text('$activeCount'),
-          child: const Icon(Icons.menu),
+          child: const Icon(Icons.filter_list),
         ),
         onPressed: () => menuController.isOpen
             ? menuController.close()
