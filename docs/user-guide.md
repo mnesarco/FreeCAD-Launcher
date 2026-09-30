@@ -194,7 +194,9 @@ Collections are named lists of addons with optional branch pins, used to reprodu
 
 ## Macros
 
-- **Catalog** lists the official macro catalog with search; install targets a profile.
+- **Catalog** lists the official macro catalog with search; install targets a profile. Macros
+  show their catalog icon when one is available (PNG/SVG; iconless and XPM macros use a generic
+  icon). Icons are served from `cache/macros/icons/`, cleared with the macros cache in Settings.
 - **Installed** lists macros per profile (name, size, date) with open/reveal/delete actions.
   Deleting removes the file from the profile.
 - Macros live in `<profile>/Macros/`; the launcher rewrites FreeCAD's `MacroPath` preference at

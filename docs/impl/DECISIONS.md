@@ -1653,3 +1653,28 @@ Template:
   XDG/temp overrides. D-005's isolation mechanism is otherwise unchanged.
 - **Refs**: D-005, spec 04 §4.1, spec 05 §3, `lib/domain/profiles/launch_environment.dart`,
   `lib/domain/profiles/profile_paths.dart`, `TASKS.md` R-09
+
+### D-076 — Macro icons from the catalog with a two-level cache
+- **Date**: 2026-09-30
+- **Status**: Accepted
+- **Context**: The macro catalog payload carries base64 `icon_data` for 202/262 macros (147 PNG,
+  52 SVG, 3 XPM), but the Macros lists always showed a generic icon. Rendering naively would
+  base64-decode and allocate new byte arrays on every build, defeating Flutter's `ImageCache`
+  and flutter_svg's picture cache; loading from network is not an option (icons ship inside the
+  cached catalog zip).
+- **Decision**:
+  - `MacroIcon` renders the entry icon when renderable: SVG via `flutter_svg`, raster via
+    `Image.memory` decoded at display size (`cacheWidth`). XPM and iconless entries keep the
+    generic `Icons.auto_fix_high_outlined` icon. Both the Catalog list and the Installed list
+    (catalog lookup by `fileName`) use it.
+  - `MacroIconCache` (platform) is a two-level cache: a bounded in-memory LRU (16 MiB) over
+    content-addressed files under `cache/macros/icons/<sha256>.<format>`. Stable byte arrays let
+    the framework image/SVG caches hit; disk reads/writes are synchronous (small files) so the
+    widget needs no `FutureBuilder`.
+  - The icons directory lives inside the `macros` cache category, so Settings ▸ Cache sizes and
+    clearing include it. A catalog refresh prunes icon files not present in the new catalog.
+- **Consequences**: Icons are rendered from local cached data with no extra network requests;
+  the 3 XPM-only macros and macros without icon data stay generic. `MacroIconCache.resolve`
+  negatively caches undecodable payloads.
+- **Refs**: spec 03 §2.5, D-044, D-048, `lib/platform/macro_icon_cache.dart`,
+  `lib/ui/macros/macro_icon.dart`, `TASKS.md` R-10

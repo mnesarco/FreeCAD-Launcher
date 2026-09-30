@@ -10,6 +10,7 @@ import 'package:freecad_launcher/domain/macros/macro_catalog_entry.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/macros/installed_macros.dart';
+import 'package:freecad_launcher/ui/macros/macro_icon.dart';
 import 'package:freecad_launcher/ui/shell/section_shortcuts.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 import 'package:freecad_launcher/ui/widgets/compact_dropdown.dart';
@@ -399,7 +400,7 @@ class _CatalogMacroTile extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: const Icon(Icons.auto_fix_high_outlined),
+        leading: MacroIcon(macro: macro),
         title: Text(macro.name),
         subtitle: Text(
           [

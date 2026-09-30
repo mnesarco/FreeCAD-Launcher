@@ -183,6 +183,7 @@ distribution decision recorded (OQ-1).
 | R-07 | A build download can sit at "782.8 MiB / 782.8 MiB" with the stream not closing for minutes (observed ~1–2 min) and no timeout; finish when received == content-length or add an idle timeout | Download completes once the declared byte count is reached; a stalled stream fails with a retryable error instead of hanging | M2-04 | M | DONE |
 | R-08 | "Open profile folder" action in the profile detail header (same action as the profile card and Config tab) | Folder icon in the detail header opens the profile root via `FileActions.openDirectory`; failure snackbar; widget test asserts the command | M3-06, D-059 | S | DONE |
 | R-09 | Don't override `HOME` in profile launches (D-075): drop the `HOME` export and `<profile>/home` from the layout; keep `FREECAD_USER_HOME`/XDG/temp isolation | Unit tests assert inherited `HOME` passes through unchanged; launch/isolation tests green; analyze clean | M1-05, D-005 | S | DONE |
+| R-10 | Macro catalog/installed icons (D-076): render `icon_data` (PNG/SVG) with a memory+disk cache, generic fallback for XPM/missing | Icon shown in Catalog and Installed when available; cache files under `cache/macros/icons/`; unit/widget tests green; live check with the real catalog | M5-04, D-048 | M | DONE |
 
 ## Backlog (post-MVP, scheduled when v0.1 is released)
 

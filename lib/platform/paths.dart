@@ -33,6 +33,8 @@ class AppPaths {
 
   String get macrosCacheDir => _p.join(cacheDir, 'macros');
 
+  String get macroIconsCacheDir => _p.join(macrosCacheDir, 'icons');
+
   String get newsCacheDir => _p.join(cacheDir, 'news');
 
   String buildDir(String buildId) => _p.join(buildsDir, buildId);
@@ -51,6 +53,7 @@ class AppPaths {
     githubCacheDir,
     addonsCacheDir,
     macrosCacheDir,
+    macroIconsCacheDir,
     newsCacheDir,
   ];
 

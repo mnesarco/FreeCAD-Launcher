@@ -357,6 +357,14 @@
     FreeCAD config/data. 500 tests green (8 manual probes skipped), analyze clean; manual
     isolation E2E re-run on the real 1.0.2 AppImage (distinct `FREECAD_USER_HOME`/`TMPDIR`/`Mod`
     markers, inherited `HOME` observed inside the profile, no `home/` created).
+  - R-10 — **D-076**: macro icons from the catalog (147 PNG / 52 SVG of 262 entries) rendered in
+    both Macros lists via `MacroIcon`, backed by `MacroIconCache` (16 MiB memory LRU +
+    content-addressed `cache/macros/icons/<sha256>.<ext>`, pruned on catalog refresh, cleared
+    with the macros cache). XPM/iconless macros keep the generic icon. 505 tests green (8 manual
+    probes skipped), analyze clean; live dev-app check rendered real icons and persisted 166
+    cache files (3.3 MB).
+  - UI polish (same session): Addons filter button icon (`filter_list`), profile Config
+    "Open profile folder" right-aligned, Macros defaults to the Catalog tab.
 
 ## Session log
 
@@ -445,6 +453,7 @@
 | 2026-09-24 | M7 | M7-04 README + user guide with 5 screenshots; M7 (Linux v0.1) complete | M7-04 | `README.md`, `docs/user-guide.md`, `docs/images/**` |
 | 2026-09-27 | R | R-08 "Open profile folder" in the profile detail header (shared helper, widget test, live hot-reload check) | R-08 | `lib/ui/profiles/profile_actions.dart`, `lib/ui/profiles/profile_detail_view.dart`, `test/ui/profiles_view_test.dart`, `docs/impl/{TASKS,STATUS}.md` |
 | 2026-09-30 | R3 | D-075/R-09: profile launches no longer override `HOME`; `<profile>/home` dropped from the layout; unit suite green (500) + real 1.0.2 isolation E2E re-run | R-09 | `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md`, `docs/spec/{04-architecture,05-data-model}.md`, `docs/user-guide.md`, `lib/domain/profiles/{launch_environment,profile_paths}.dart`, `test/**` |
+| 2026-09-30 | R4 | D-076/R-10 macro catalog icons (two-level cache, catalog+installed, prune) + UI polish (filter icon, folder button alignment, Macros defaults to Catalog); 505 tests green, live dev-app check | R-10 | `docs/impl/{DECISIONS,TASKS,STATUS}.md`, `docs/spec/03-ux.md`, `docs/user-guide.md`, `lib/platform/{paths,macro_icon_cache}.dart`, `lib/state/{app_services,macros_controller}.dart`, `lib/ui/macros/**`, `lib/ui/addons/addons_view.dart`, `lib/ui/profiles/config_snapshots_view.dart`, `test/**` |
 
 ## Standing notes for the next agent
 

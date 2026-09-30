@@ -25,6 +25,7 @@ import 'package:freecad_launcher/platform/dmg_extractor.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/host.dart';
 import 'package:freecad_launcher/platform/launch.dart';
+import 'package:freecad_launcher/platform/macro_icon_cache.dart';
 import 'package:freecad_launcher/platform/config_snapshots.dart';
 import 'package:freecad_launcher/platform/file_actions.dart';
 import 'package:freecad_launcher/platform/paths.dart';
@@ -115,6 +116,10 @@ class AppServices {
     downloader: downloader,
     dao: database.catalogCacheDao,
     cacheDirectory: paths.macrosCacheDir,
+  );
+
+  late final MacroIconCache macroIcons = MacroIconCache(
+    directory: paths.macroIconsCacheDir,
   );
 
   late final PythonProbe pythonProbe = ProcessPythonProbe(processRunner: processRunner);
@@ -242,6 +247,7 @@ class AppServices {
         database: database,
         catalog: macroCatalog,
         paths: paths,
+        iconCache: macroIcons,
         jobs: jobs,
       );
 

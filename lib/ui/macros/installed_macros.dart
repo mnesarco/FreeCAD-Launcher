@@ -7,8 +7,10 @@ import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:freecad_launcher/core/format.dart';
 import 'package:freecad_launcher/data/database.dart';
+import 'package:freecad_launcher/domain/macros/macro_catalog_entry.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/ui/macros/macro_icon.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 
 class InstalledMacrosList extends StatefulWidget {
@@ -39,6 +41,10 @@ class _InstalledMacrosListState extends State<InstalledMacrosList> {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).macros;
     final installed = controller.installedMacros.watch(context);
+    final catalog = controller.macros.watch(context);
+    final catalogByFileName = {
+      for (final entry in catalog) entry.fileName: entry,
+    };
     final rows = installed.where((row) => row.profileId == widget.profileId).toList();
 
     if (rows.isEmpty) {
@@ -54,16 +60,23 @@ class _InstalledMacrosListState extends State<InstalledMacrosList> {
       itemBuilder: (context, index) => InstalledMacroTile(
         macro: rows[index],
         profileId: widget.profileId,
+        catalogEntry: catalogByFileName[rows[index].fileName],
       ),
     );
   }
 }
 
 class InstalledMacroTile extends StatelessWidget {
-  const InstalledMacroTile({super.key, required this.macro, required this.profileId});
+  const InstalledMacroTile({
+    super.key,
+    required this.macro,
+    required this.profileId,
+    this.catalogEntry,
+  });
 
   final Macro macro;
   final String profileId;
+  final MacroCatalogEntry? catalogEntry;
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +88,7 @@ class InstalledMacroTile extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: const Icon(Icons.auto_fix_high_outlined),
+        leading: MacroIcon(macro: catalogEntry),
         title: Text(macro.name),
         subtitle: Text(
           [

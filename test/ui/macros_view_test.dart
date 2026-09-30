@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/data/catalog/macro_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
@@ -17,13 +19,20 @@ import 'package:path/path.dart' as p;
 import '../data/test_fixtures.dart';
 import '../helpers/fake_download.dart';
 
-MacroCatalogEntry _entry(String name, String comment) {
+MacroCatalogEntry _entry(
+  String name,
+  String comment, {
+  String? iconBase64,
+  String iconExtension = '',
+}) {
   return MacroCatalogEntry(
     name: name,
     code: 'print(1)',
     comment: comment,
     onGit: true,
     srcFilename: 'FreeCAD-macros/Utility/$name.FCMacro',
+    iconBase64: iconBase64,
+    iconExtension: iconExtension,
   );
 }
 
@@ -110,6 +119,26 @@ void main() {
 
     expect(find.text('Foto'), findsOneWidget);
     expect(find.text('TreeHelper'), findsNothing);
+  });
+
+  testWidgets('shows the macro icon when available and the generic one otherwise', (
+    tester,
+  ) async {
+    controller.macros.value = [
+      _entry(
+        'Foto',
+        'Camera helper',
+        iconBase64: base64Encode(
+          utf8.encode('<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>'),
+        ),
+        iconExtension: 'svg',
+      ),
+      _entry('TreeHelper', 'BIM tools'),
+    ];
+    await pumpMacros(tester);
+
+    expect(find.byType(SvgPicture), findsOneWidget);
+    expect(find.byIcon(Icons.auto_fix_high_outlined), findsOneWidget);
   });
 
   testWidgets('scrolls the profile list when there are many profiles', (tester) async {

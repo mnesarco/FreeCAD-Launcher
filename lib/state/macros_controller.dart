@@ -15,6 +15,7 @@ import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/domain/macros/macro_catalog_entry.dart';
 import 'package:freecad_launcher/domain/macros/macro_types.dart';
+import 'package:freecad_launcher/platform/macro_icon_cache.dart';
 import 'package:freecad_launcher/platform/macro_installer.dart';
 import 'package:freecad_launcher/platform/macro_scanner.dart';
 import 'package:freecad_launcher/platform/paths.dart';
@@ -28,6 +29,7 @@ class MacrosController {
     required AppPaths paths,
     MacroInstaller installer = const MacroInstaller(),
     MacroScanner scanner = const MacroScanner(),
+    MacroIconCache? iconCache,
     JobsController? jobs,
     DateTime Function()? clock,
   }) : _database = database,
@@ -35,6 +37,7 @@ class MacrosController {
        _paths = paths,
        _installer = installer,
        _scanner = scanner,
+       _iconCache = iconCache,
        _jobs = jobs,
        _clock = clock ?? DateTime.now;
 
@@ -43,6 +46,7 @@ class MacrosController {
   final AppPaths _paths;
   final MacroInstaller _installer;
   final MacroScanner _scanner;
+  final MacroIconCache? _iconCache;
   final JobsController? _jobs;
   final DateTime Function() _clock;
 
@@ -165,6 +169,9 @@ class MacrosController {
       if (result.isStale) {
         error.value = result.error;
       }
+      if (result.freshness == CatalogFreshness.refreshed) {
+        _pruneIconCache(result.macros);
+      }
       appLogger.info(
         'macro catalog: ${result.macros.length} macros in '
         '${stopwatch.elapsedMilliseconds} ms (${result.freshness.name})',
@@ -175,6 +182,21 @@ class MacrosController {
     } finally {
       loading.value = false;
     }
+  }
+
+  void _pruneIconCache(List<MacroCatalogEntry> entries) {
+    final cache = _iconCache;
+    if (cache == null) {
+      return;
+    }
+    final keep = <String>[];
+    for (final entry in entries) {
+      final key = MacroIconCache.keyFor(entry.iconBase64);
+      if (key != null) {
+        keep.add(key);
+      }
+    }
+    cache.prune(keep);
   }
 
   MacroCatalogEntry? byName(String name) {
