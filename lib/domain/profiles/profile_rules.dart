@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 
 const int maxProfileNameLength = 64;

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 
 import 'package:freecad_launcher/data/database.dart';
@@ -26,6 +27,23 @@ Future<void> launchProfile(BuildContext context, Profile profile) async {
   if (result.isFailure) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${l10n.profilesLaunchFailed}: ${result.error}')),
+    );
+  }
+}
+
+Future<void> openProfileFolder(BuildContext context, String profileId) async {
+  final l10n = AppLocalizations.of(context);
+  final services = AppScope.of(context);
+  try {
+    await services.fileActions.openDirectory(
+      services.paths.profilePaths(profileId).root,
+    );
+  } on Object catch (error) {
+    if (!context.mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${l10n.profilesConfigOpenFailed}: $error')),
     );
   }
 }

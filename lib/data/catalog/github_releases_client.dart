@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:http/http.dart' as http;
 
 import 'package:freecad_launcher/core/constants.dart';

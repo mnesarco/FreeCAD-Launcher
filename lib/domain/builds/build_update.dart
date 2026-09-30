@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 class BuildUpdate {
   const BuildUpdate({
     required this.buildId,

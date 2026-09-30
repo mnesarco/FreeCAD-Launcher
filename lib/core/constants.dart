@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 const String appName = 'FreeCAD Launcher';
 
 const String applicationId = 'org.freecad.ext.launcher';

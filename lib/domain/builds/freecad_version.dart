@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 
 final RegExp _stableTag = RegExp(r'^(\d+)\.(\d+)(?:\.(\d+))?$');

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 String formatBytes(int bytes) {
   const int kib = 1024;
   const int mib = kib * 1024;

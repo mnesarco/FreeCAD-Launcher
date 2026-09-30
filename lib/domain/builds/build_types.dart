@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 enum BuildKind { appimage, archive, dmg, custom }
 
 enum BuildChannel { stable, weekly, legacy, custom }

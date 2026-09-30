@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 import 'dart:io';
 
@@ -52,6 +53,7 @@ class ProfileDetailView extends StatelessWidget {
             running: false,
             onLaunch: null,
             onShowCommand: null,
+            onOpenFolder: null,
             onEdit: null,
           ),
           Expanded(
@@ -82,6 +84,8 @@ class ProfileDetailView extends StatelessWidget {
             onLaunch: () => launchProfile(context, current),
             onShowCommand: () =>
                 showLaunchCommandDialog(context, profileId: current.id),
+            onOpenFolder: () =>
+                unawaited(openProfileFolder(context, current.id)),
             onEdit: () => showProfileFormDialog(
               context,
               controller: controller,
@@ -127,6 +131,7 @@ class _DetailHeader extends StatelessWidget {
     required this.running,
     required this.onLaunch,
     required this.onShowCommand,
+    required this.onOpenFolder,
     required this.onEdit,
   });
 
@@ -135,6 +140,7 @@ class _DetailHeader extends StatelessWidget {
   final bool running;
   final VoidCallback? onLaunch;
   final VoidCallback? onShowCommand;
+  final VoidCallback? onOpenFolder;
   final VoidCallback? onEdit;
 
   @override
@@ -161,6 +167,12 @@ class _DetailHeader extends StatelessWidget {
               icon: const Icon(Icons.terminal_outlined),
               tooltip: l10n.profilesShowCommand,
               onPressed: onShowCommand,
+            ),
+          if (onOpenFolder != null)
+            IconButton(
+              icon: const Icon(Icons.folder_open_outlined),
+              tooltip: l10n.profilesConfigOpenFolder,
+              onPressed: onOpenFolder,
             ),
           if (onEdit != null)
             IconButton(

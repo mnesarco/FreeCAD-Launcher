@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 enum JobKind { download, install, pip }
 
 enum JobState { queued, running, completed, failed, cancelled }

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -71,6 +72,9 @@ for icon_size in 16 32 48 64 128 256 512; do
   install -Dm644 "$SCRIPT_DIR/freecad-launcher-$icon_size.png" \
     "$APPDIR/usr/share/icons/hicolor/${icon_size}x${icon_size}/apps/freecad-launcher.png"
 done
+install -Dm644 "$PROJECT_ROOT/LICENSE" "$APPDIR/usr/share/doc/freecad-launcher/LICENSE"
+install -Dm644 "$PROJECT_ROOT/THIRD_PARTY_NOTICES.md" \
+  "$APPDIR/usr/share/doc/freecad-launcher/THIRD_PARTY_NOTICES.md"
 
 log "Bundling non-baseline shared libraries"
 if [[ -f "$EXCLUDELIST_FILE" ]]; then

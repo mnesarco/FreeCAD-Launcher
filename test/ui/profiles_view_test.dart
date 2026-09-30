@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -6,22 +7,30 @@ import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/platform/paths.dart';
+import 'package:freecad_launcher/platform/process.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/addons/addon_icon.dart';
 import 'package:freecad_launcher/ui/profiles/profiles_view.dart';
 import 'package:path/path.dart' as p;
 
 import '../data/test_fixtures.dart';
+import '../helpers/fake_process.dart';
 
 void main() {
   late Directory tempDirectory;
   late AppServices services;
+  late FakeProcessLauncher launcher;
 
   setUp(() async {
     tempDirectory = Directory.systemTemp.createTempSync('fcl_profiles_ui');
     final paths = AppPaths(dataRoot: tempDirectory.path);
     await paths.ensureBaseDirectories();
-    services = AppServices(paths: paths, database: AppDatabase.inMemory());
+    launcher = FakeProcessLauncher();
+    services = AppServices(
+      paths: paths,
+      database: AppDatabase.inMemory(),
+      processRunner: ProcessRunner(launcher: launcher),
+    );
   });
 
   tearDown(() async {
@@ -92,6 +101,25 @@ void main() {
       expect(find.text('Backups'), findsOneWidget);
       expect(find.text('Addons'), findsWidgets);
       expect(find.textContaining('1.1.3'), findsWidgets);
+    });
+
+    testWidgets('opens the profile folder from the detail header', (tester) async {
+      final profile = await services.profilesRepository.getByName('Dev');
+      await pumpProfiles(tester);
+      await tester.tap(find.text('Dev'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      await tester.tap(find.byTooltip('Open profile folder'));
+      await tester.pump();
+      launcher.handles.single.exit(0);
+      await tester.pump();
+
+      expect(launcher.specs.single.executable, 'xdg-open');
+      expect(launcher.specs.single.arguments, [
+        services.paths.profilePaths(profile!.id).root,
+      ]);
     });
 
     testWidgets('lists installed macros in the profile detail', (tester) async {

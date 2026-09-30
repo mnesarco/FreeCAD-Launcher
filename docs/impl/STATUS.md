@@ -3,16 +3,16 @@
 > Live file. Every session updates this at start and end. Keep it short — details belong in
 > `TASKS.md` and `DECISIONS.md`.
 
-- **Updated**: 2026-09-24
-- **Current milestone**: M7 — Linux v0.1 completion (D-072); M7-01 and M7-06 done; the M7-06
-  findings (R-03..R-07) are fixed, tested and re-verified live
+- **Updated**: 2026-09-27
+- **Current milestone**: **M7 — Linux v0.1 completion: complete** (M7-01/M7-03/M7-04/M7-06 done;
+  M7-05 deferred to M8-05 per D-073)
 - **Active branch**: `v2`
-- **Last session**: 2026-09-24
-- **Next action**: run `M7-03` (LICENSE/notices + trademark attribution), then `M7-04` (README +
-  user guide) and `M7-05` (clean Linux VM from a locally built AppImage).
+- **Last session**: 2026-09-27
+- **Next action**: M7 has no open tasks. Next options: owner review of README/`docs/user-guide.md`;
+  then `M8` (packaging/CI/cross-platform — blocked on a git remote, OQ-7) or post-v0.1 backlog
+  (`B-02` in-place build updates, `B-03` full profile export, ...).
 - **Blockers**:
-  - None for M7 (Linux). CI execution, release publishing and Windows/macOS deployment moved to
-    M8 (D-072): no git remote yet (OQ-7); Windows/macOS need those machines (OQ-1).
+  - None for M7 (Linux). M8 needs a git remote (OQ-7) and Windows/macOS machines (OQ-1).
 - **In progress**: none
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
@@ -335,6 +335,21 @@
     `AutomaticKeepAliveClientMixin`, form state preserved); the downloader completes once the
     declared size is reached and rejects a stream that ends early. 6 new tests; 498 tests green
     (8 manual probes skipped), analyze clean; live checks confirmed R-03/R-04/R-05/R-06.
+  - M7-03 — **D-074**: licensing artifacts. `LICENSE` is the verbatim GPL-3.0 text; 231
+    hand-written sources (Dart + packaging scripts) carry
+    `SPDX-License-Identifier: GPL-3.0-or-later`; `tool/generate_third_party_notices.dart`
+    generates `THIRD_PARTY_NOTICES.md` from `dart pub deps --json` for the shipped closure
+    (78 packages / 32 distinct license texts, deterministic) with bundled-system-library and
+    FreeCAD trademark sections; the AppImage ships `LICENSE` + notices under
+    `/usr/share/doc/freecad-launcher/` (local build + `sha256sum -c` + `--version` exit 0).
+  - M7-04 — README + `docs/user-guide.md` (install, first run, builds, profiles, addons,
+    collections, Python, macros, config/backups, manifest, updates, settings, CLI, shortcuts,
+    data locations, troubleshooting, v0.1 limitations) with five current screenshots in
+    `docs/images/`; relative links checked. **M7 complete** (M7-05 → M8-05).
+  - R-08 — "Open profile folder" icon in the profile detail header (shared
+    `openProfileFolder` helper in `profile_actions.dart`, same `xdg-open`/`open`/`explorer`
+    command as the Config tab, failure snackbar); widget test asserts the command; hot-reloaded
+    and header screenshot inspected in the running dev app.
 
 ## Session log
 
@@ -419,6 +434,9 @@
 | 2026-09-24 | planning | D-072: Linux-first completion; CI, release workflow and Windows/macOS deployment moved to deferred phase M8 | — | `docs/impl/{TASKS,STATUS,DECISIONS,VERIFICATION}.md`, `docs/spec/{08-roadmap,09-open-questions}.md` |
 | 2026-09-24 | M7 | M7-06 Linux manual functional pass: real 1.1.3 install, custom executable import + Python fallback dialog, profile create/edit/GUI launch with running badge/log/exit tracking; `VERIFICATION.md` §4 Linux column filled; findings filed R-03..R-07; dev data root restored | M7-06 | `docs/impl/{TASKS,STATUS,VERIFICATION}.md` |
 | 2026-09-24 | M7 | R-03..R-07 fixes (Available auto-load, in-place remove wording, duplicate custom import, Choose Python picker, download completion/truncation); 6 tests, live re-check, dev data restored | R-03..R-07 | `lib/{platform/downloader,data/daos/builds_dao,state/builds_controller,ui/builds/builds_view}.dart`, `lib/l10n/**`, `test/**`, `docs/impl/{TASKS,STATUS}.md` |
+| 2026-09-24 | M7 | M7-03 licensing (LICENSE, SPDX headers, generated notices, AppImage doc files) and M7-05 → M8-05 deferral (D-073, D-074) | M7-03, M7-05 | `LICENSE`, `THIRD_PARTY_NOTICES.md`, `tool/generate_third_party_notices.dart`, `packaging/appimage/build_appimage.sh`, `lib/**`, `test/**`, `docs/impl/**` |
+| 2026-09-24 | M7 | M7-04 README + user guide with 5 screenshots; M7 (Linux v0.1) complete | M7-04 | `README.md`, `docs/user-guide.md`, `docs/images/**` |
+| 2026-09-27 | R | R-08 "Open profile folder" in the profile detail header (shared helper, widget test, live hot-reload check) | R-08 | `lib/ui/profiles/profile_actions.dart`, `lib/ui/profiles/profile_detail_view.dart`, `test/ui/profiles_view_test.dart`, `docs/impl/{TASKS,STATUS}.md` |
 
 ## Standing notes for the next agent
 

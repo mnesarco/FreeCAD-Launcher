@@ -168,12 +168,13 @@ target, exception).
 
 ### M7 — Linux v0.1 completion
 
-- [ ] Linux manual smoke matrix (`§4` Linux column) completed: install from Versions, custom
-      import (executable + Python fallback dialog), create/launch profiles in the GUI
-- [ ] AppImage builds reproducibly locally and launches on a clean Linux VM with and without FUSE
-- [ ] `LICENSE` and `THIRD_PARTY_NOTICES.md` present; SPDX headers on sources
-- [ ] Clean-machine first-run flow completes (install build → profile → addon → launch)
-- [ ] No secrets or tokens in logs or artifacts
+- [x] Linux manual smoke matrix (`§4` Linux column) completed (M7-06, 2026-09-24)
+- [x] AppImage builds reproducibly locally (S5/M7-01) and runs on the host with/without FUSE
+- [x] `LICENSE` and `THIRD_PARTY_NOTICES.md` present; SPDX headers on sources; the AppImage
+      ships both under `/usr/share/doc/freecad-launcher/` (M7-03/D-074, 2026-09-24)
+- [x] README + user guide written, links checked, screenshots current (M7-04, 2026-09-24)
+- [x] No secrets or tokens in logs or artifacts — debug-bundle review (M6-06), notices/scripts
+      scanned, v0.1 has no token support (OQ-3 deferred)
 
 S5 (D-068) pre-checks: two consecutive local builds produced identical AppImage/zsync hashes
 (`a83b1ffb…` / `9da830f1…`); host runs pass with FUSE and extract-and-run; clean ubuntu:24.04
@@ -205,6 +206,7 @@ M7-01 (D-071) productionization checks (2026-09-21):
       and notes contain no tokens
 - [ ] First CI matrix run green on GitHub
 - [ ] Windows/macOS artifacts built, installed and launched on clean machines (OQ-1)
+- [ ] Clean-machine Linux first-run flow completes with the published AppImage (M8-05)
 
 ## 3. UI state checklist (per screen)
 

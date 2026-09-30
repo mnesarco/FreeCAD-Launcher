@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 bool addonContentChanged({
   required DateTime? catalogLastUpdate,
   required String? catalogVersion,

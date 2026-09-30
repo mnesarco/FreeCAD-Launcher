@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/data/catalog/addon_catalog_parser.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';

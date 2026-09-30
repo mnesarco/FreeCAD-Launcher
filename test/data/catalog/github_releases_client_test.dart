@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/data/catalog/github_releases_client.dart';
 import 'package:http/http.dart' as http;

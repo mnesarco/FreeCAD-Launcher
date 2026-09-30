@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:drift/drift.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/data/tables/macros.dart';

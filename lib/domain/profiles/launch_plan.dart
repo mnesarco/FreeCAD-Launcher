@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/profiles/launch_environment.dart';
 import 'package:freecad_launcher/domain/profiles/profile_paths.dart';

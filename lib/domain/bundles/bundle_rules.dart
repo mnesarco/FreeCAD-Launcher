@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 const int maxBundleNameLength = 64;
 
 enum BundleNameIssue { empty, tooLong, controlCharacters, duplicate }
