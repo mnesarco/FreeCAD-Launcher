@@ -13,7 +13,6 @@ void main() {
       final paths = ProfilePaths('/data/profiles/p1', context: posix);
 
       expect(paths.root, '/data/profiles/p1');
-      expect(paths.home, '/data/profiles/p1/home');
       expect(paths.temp, '/data/profiles/p1/temp');
       expect(paths.mod, '/data/profiles/p1/Mod');
       expect(paths.additionalPythonPackages, '/data/profiles/p1/AdditionalPythonPackages');
@@ -25,7 +24,6 @@ void main() {
     test('builds the layout with windows separators', () {
       final paths = ProfilePaths(r'C:\data\profiles\p1', context: windows);
 
-      expect(paths.home, r'C:\data\profiles\p1\home');
       expect(paths.temp, r'C:\data\profiles\p1\temp');
       expect(paths.appDataRoaming, r'C:\data\profiles\p1\AppData\Roaming');
       expect(paths.appDataLocal, r'C:\data\profiles\p1\AppData\Local');
@@ -44,12 +42,12 @@ void main() {
           '/p/Mod',
           '/p/AdditionalPythonPackages',
           '/p/backups',
-          '/p/home',
           '/p/xdg/config',
           '/p/xdg/data',
           '/p/xdg/cache',
         ]),
       );
+      expect(linux, isNot(contains('/p/home')));
       expect(linux, isNot(contains('/p/AppData/Roaming')));
 
       final windowsDirs = paths.directoriesFor(BuildPlatform.windows);
@@ -57,11 +55,11 @@ void main() {
         windowsDirs,
         containsAll(['/p', '/p/temp', '/p/Mod', '/p/AppData/Roaming', '/p/AppData/Local']),
       );
-      expect(windowsDirs, isNot(contains('/p/home')));
       expect(windowsDirs, isNot(contains('/p/xdg/config')));
 
       final macos = paths.directoriesFor(BuildPlatform.macos);
-      expect(macos, containsAll(['/p', '/p/home', '/p/temp', '/p/Mod']));
+      expect(macos, containsAll(['/p', '/p/temp', '/p/Mod']));
+      expect(macos, isNot(contains('/p/home')));
       expect(macos, isNot(contains('/p/AppData/Roaming')));
       expect(macos, isNot(contains('/p/xdg/config')));
     });

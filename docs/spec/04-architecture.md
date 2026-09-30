@@ -95,7 +95,7 @@ This function lives in `domain/profiles/env.dart` and is **unit-tested per OS**.
 |---|---|---|---|
 | `FREECAD_USER_HOME` | `<profile>` | `<profile>` | `<profile>` |
 | `FREECAD_USER_TEMP` | `<profile>/temp` | `<profile>\temp` | `<profile>/temp` |
-| `HOME` | `<profile>/home` | (not set) | `<profile>/home` |
+| `HOME` | inherited (unchanged) | inherited (unchanged) | inherited (unchanged) |
 | `XDG_CONFIG_HOME` / `XDG_DATA_HOME` / `XDG_CACHE_HOME` | `<profile>/xdg/{config,data,cache}` | n/a | n/a |
 | `APPDATA` / `LOCALAPPDATA` | n/a | `<profile>\AppData\{Roaming,Local}` | n/a |
 | `TMPDIR` / `TEMP`+`TMP` | `<profile>/temp` | `<profile>\temp` | `<profile>/temp` |
@@ -103,6 +103,9 @@ This function lives in `domain/profiles/env.dart` and is **unit-tested per OS**.
 
 Notes:
 
+- `HOME` is passed through unchanged (D-075); isolation comes from `FREECAD_USER_HOME` plus the
+  XDG/AppData/temp overrides, so host-level integration (portals, bookmarks, dotfiles) keeps
+  working while FreeCAD config/data stay per-profile.
 - FreeCAD ignores a custom dir that does not exist, so the launcher creates all dirs first.
 - The launcher keeps macros in `<profile>/Macros/` (created with the profile layout), scans
   only that directory, and forces FreeCAD's `BaseApp/Preferences/Macro/MacroPath` preference to

@@ -16,7 +16,6 @@ void main() {
         'PATH': '/usr/bin',
         'FREECAD_USER_HOME': paths.root,
         'FREECAD_USER_TEMP': paths.temp,
-        'HOME': paths.home,
         'TMPDIR': paths.temp,
         'APPIMAGE_EXTRACT_AND_RUN': '1',
       },
@@ -38,7 +37,6 @@ void main() {
       'APPIMAGE_EXTRACT_AND_RUN',
       'FREECAD_USER_HOME',
       'FREECAD_USER_TEMP',
-      'HOME',
       'TMPDIR',
     ]);
     expect(command.environment.containsKey('PATH'), isFalse);

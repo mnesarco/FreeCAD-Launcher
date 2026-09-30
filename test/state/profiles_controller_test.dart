@@ -154,8 +154,8 @@ void main() {
   test('launch recreates the profile directories and records last use', () async {
     final created = await repository.create(name: 'Dev', buildId: 'build-1');
     final profile = created.valueOrNull!;
-    final home = paths.profilePaths(profile.id).home;
-    Directory(home).deleteSync(recursive: true);
+    final mod = paths.profilePaths(profile.id).mod;
+    Directory(mod).deleteSync(recursive: true);
     final controller = buildController();
 
     final result = await controller.launch(
@@ -164,7 +164,7 @@ void main() {
     );
 
     expect(result.isStarted, isTrue);
-    expect(Directory(home).existsSync(), isTrue);
+    expect(Directory(mod).existsSync(), isTrue);
     expect(launcher.specs.single.arguments.take(2), ['--console', '--version']);
     expect(launcher.specs.single.executable, '/data/builds/build-1');
     expect(

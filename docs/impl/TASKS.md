@@ -182,6 +182,7 @@ distribution decision recorded (OQ-1).
 | R-06 | Post-import "Python interpreter not detected" → "Choose Python…" never opens the picker: the Custom tab State is disposed by the tab switch (`mounted == false`); move the flow to a surviving State or keep the tab alive | Choosing an interpreter after import opens the picker and stores `pythonPath` (manual fallback reachable) | M2-13 | M | DONE |
 | R-07 | A build download can sit at "782.8 MiB / 782.8 MiB" with the stream not closing for minutes (observed ~1–2 min) and no timeout; finish when received == content-length or add an idle timeout | Download completes once the declared byte count is reached; a stalled stream fails with a retryable error instead of hanging | M2-04 | M | DONE |
 | R-08 | "Open profile folder" action in the profile detail header (same action as the profile card and Config tab) | Folder icon in the detail header opens the profile root via `FileActions.openDirectory`; failure snackbar; widget test asserts the command | M3-06, D-059 | S | DONE |
+| R-09 | Don't override `HOME` in profile launches (D-075): drop the `HOME` export and `<profile>/home` from the layout; keep `FREECAD_USER_HOME`/XDG/temp isolation | Unit tests assert inherited `HOME` passes through unchanged; launch/isolation tests green; analyze clean | M1-05, D-005 | S | DONE |
 
 ## Backlog (post-MVP, scheduled when v0.1 is released)
 

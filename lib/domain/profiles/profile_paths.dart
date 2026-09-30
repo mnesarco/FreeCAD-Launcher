@@ -9,8 +9,6 @@ class ProfilePaths {
   final String root;
   final p.Context _p;
 
-  String get home => _p.join(root, 'home');
-
   String get temp => _p.join(root, 'temp');
 
   String get xdgConfig => _p.join(root, 'xdg', 'config');
@@ -38,9 +36,9 @@ class ProfilePaths {
   List<String> directoriesFor(BuildPlatform platform) {
     final common = [root, temp, mod, macros, additionalPythonPackages, backups];
     return switch (platform) {
-      BuildPlatform.linux => [...common, home, xdgConfig, xdgData, xdgCache],
+      BuildPlatform.linux => [...common, xdgConfig, xdgData, xdgCache],
       BuildPlatform.windows => [...common, appDataRoaming, appDataLocal],
-      BuildPlatform.macos => [...common, home],
+      BuildPlatform.macos => [...common],
     };
   }
 }

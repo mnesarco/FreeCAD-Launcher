@@ -32,7 +32,8 @@ isolated profiles.
   addons (`Mod/`), macros, Python packages and temporary files. Profiles share the installed
   build, so multiple profiles do not duplicate FreeCAD binaries.
 - **Isolation** — when a profile is launched, FreeCAD gets a private `FREECAD_USER_HOME` (plus
-  private `HOME`, temporary and XDG directories), so nothing touches your global FreeCAD setup.
+  private XDG and temporary directories; your `HOME` is left untouched), so nothing touches your
+  global FreeCAD setup.
 - **Job** — any download/install/uninstall runs through a shared job queue with progress,
   cancel/retry and logs, visible in the status bar.
 
@@ -131,8 +132,9 @@ news feed (URL configurable in Settings).
 
 ### Isolation details
 
-Each launch sets a private `FREECAD_USER_HOME` pointing at the profile directory, plus sanitized
-`HOME`, temporary and XDG variables. FreeCAD therefore reads/writes only inside the profile:
+Each launch sets a private `FREECAD_USER_HOME` pointing at the profile directory, plus private
+XDG and temporary variables (`HOME` is inherited unchanged). FreeCAD therefore reads/writes only
+inside the profile:
 
 ```
 <data>/profiles/<id>/
@@ -141,7 +143,7 @@ Each launch sets a private `FREECAD_USER_HOME` pointing at the profile directory
   Macros/                  # macros (FreeCAD's MacroPath is pointed here)
   AdditionalPythonPackages/# pip --target packages (pyXY subdirectory)
   backups/                 # config snapshots, addon pre-update backups
-  temp/, home/, xdg/       # private temp/home/cache
+  temp/, xdg/              # private temp/cache
 ```
 
 Per-launch logs are written to `<data>/logs/launch-<profile>-<timestamp>.log` with the command

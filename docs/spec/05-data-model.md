@@ -158,7 +158,6 @@ App data root (from `path_provider` `getApplicationSupportDirectory()`):
       Mod/                   # addons
       AdditionalPythonPackages/
         py311/               # 1.0+ target
-      home/                  # HOME override
       xdg/{config,data,cache}/
       temp/
       backups/

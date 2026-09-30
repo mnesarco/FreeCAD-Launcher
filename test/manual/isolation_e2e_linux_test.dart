@@ -26,14 +26,14 @@ import sys
 root = pathlib.Path(os.environ['FREECAD_USER_HOME'])
 (root / 'marker.txt').write_text('$marker')
 (root / 'Mod' / 'marker.txt').write_text('$marker')
-pathlib.Path(os.environ['HOME']).joinpath('home_marker.txt').write_text('$marker')
+(root / 'home_env.txt').write_text(os.environ.get('HOME', ''))
 pathlib.Path(os.environ['TMPDIR']).joinpath('tmp_marker.txt').write_text('$marker')
 sys.exit(0)
 ''';
   }
 
   test(
-    'two profiles on one build keep config, Mod, home and temp isolated',
+    'two profiles on one build keep config, Mod and temp isolated without touching HOME',
     () async {
       final root = Directory('/tmp/opencode/fcl_isolation_e2e');
       if (root.existsSync()) {
@@ -110,12 +110,13 @@ sys.exit(0)
       expect(File(p.join(pathsB.root, 'marker.txt')).readAsStringSync(), 'B');
       expect(File(p.join(pathsA.mod, 'marker.txt')).readAsStringSync(), 'A');
       expect(File(p.join(pathsB.mod, 'marker.txt')).readAsStringSync(), 'B');
-      expect(File(p.join(pathsA.home, 'home_marker.txt')).readAsStringSync(), 'A');
-      expect(File(p.join(pathsB.home, 'home_marker.txt')).readAsStringSync(), 'B');
+      final inheritedHome = Platform.environment['HOME'] ?? '';
+      expect(File(p.join(pathsA.root, 'home_env.txt')).readAsStringSync(), inheritedHome);
+      expect(File(p.join(pathsB.root, 'home_env.txt')).readAsStringSync(), inheritedHome);
       expect(File(p.join(pathsA.temp, 'tmp_marker.txt')).readAsStringSync(), 'A');
       expect(File(p.join(pathsB.temp, 'tmp_marker.txt')).readAsStringSync(), 'B');
       expect(File(p.join(pathsA.mod, 'marker.txt')).existsSync(), isTrue);
-      expect(File(p.join(pathsA.root, 'home_marker.txt')).existsSync(), isFalse);
+      expect(Directory(p.join(pathsA.root, 'home')).existsSync(), isFalse);
 
       // ignore: avoid_print
       print(

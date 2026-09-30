@@ -91,12 +91,16 @@ void main() {
       platform: BuildPlatform.linux,
       paths: posixPaths,
       executablePath: '/data/builds/b1/FreeCAD.AppImage',
-      inheritedEnvironment: const {'PYTHONPATH': '/system', 'PATH': '/usr/bin'},
+      inheritedEnvironment: const {
+        'PYTHONPATH': '/system',
+        'PATH': '/usr/bin',
+        'HOME': '/real/home',
+      },
       appImageExtractAndRun: true,
     );
 
     expect(plan.environment['FREECAD_USER_HOME'], '/data/profiles/p1');
-    expect(plan.environment['HOME'], '/data/profiles/p1/home');
+    expect(plan.environment['HOME'], '/real/home');
     expect(plan.environment['XDG_CONFIG_HOME'], '/data/profiles/p1/xdg/config');
     expect(plan.environment['TMPDIR'], '/data/profiles/p1/temp');
     expect(plan.environment['APPIMAGE_EXTRACT_AND_RUN'], '1');
@@ -126,10 +130,10 @@ void main() {
       platform: BuildPlatform.macos,
       paths: posixPaths,
       executablePath: '/data/builds/b1/FreeCAD.app/Contents/MacOS/FreeCAD',
-      inheritedEnvironment: const {},
+      inheritedEnvironment: const {'HOME': '/real/home'},
     );
 
-    expect(plan.environment['HOME'], '/data/profiles/p1/home');
+    expect(plan.environment['HOME'], '/real/home');
     expect(plan.environment['TMPDIR'], '/data/profiles/p1/temp');
     expect(plan.environment.containsKey('XDG_CONFIG_HOME'), isFalse);
     expect(plan.environment.containsKey('APPDATA'), isFalse);
@@ -153,7 +157,6 @@ void main() {
       final environmentDirectories = [
         plan.environment['FREECAD_USER_HOME'],
         plan.environment['FREECAD_USER_TEMP'],
-        plan.environment['HOME'],
         plan.environment['TMPDIR'],
         plan.environment['XDG_CONFIG_HOME'],
         plan.environment['XDG_DATA_HOME'],

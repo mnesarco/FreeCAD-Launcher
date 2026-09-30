@@ -51,7 +51,7 @@ Template:
 
 ### D-005 — Profile isolation mechanism (verified)
 - **Date**: 2026-09-18
-- **Status**: Accepted
+- **Status**: Superseded by D-075 (HOME override clause only; rest stands)
 - **Context**: FreeCAD only honors custom dirs if they exist; `--user-cfg` does not isolate data; 1.1 adds versioned default dirs but custom dirs bypass them.
 - **Decision**: Set at launch: `FREECAD_USER_HOME=<profile>` plus `FREECAD_USER_TEMP`; `HOME` (Linux/macOS) or `APPDATA`/`LOCALAPPDATA` (Windows); `XDG_*` dirs (Linux); `TMPDIR`/`TEMP`; and remove inherited `PYTHONPATH`, `PYTHONHOME`, `VIRTUAL_ENV`, `PYTHONUSERBASE`. Create all dirs before spawning. Never pass `--single-instance` (global, not profile-scoped).
 - **Consequences**: FreeCAD's macro dir collapses to the profile root under a custom home — macro scanner must check `<profile>/*.FCMacro` and `<profile>/Macro/`. Windows Qt registry state may stay shared (documented limitation).
@@ -1632,3 +1632,24 @@ Template:
   workflow should regenerate them and fail on drift.
 - **Refs**: spec 07 §3/§7, D-070, `TASKS.md` M7-03, `THIRD_PARTY_NOTICES.md`, `LICENSE`,
   `tool/generate_third_party_notices.dart`, `packaging/appimage/build_appimage.sh`
+
+### D-075 — Profile launches no longer override `HOME`
+- **Date**: 2026-09-30
+- **Status**: Accepted
+- **Context**: D-005 isolated every user directory by pointing `HOME` at `<profile>/home`. In
+  practice FreeCAD 1.0+ honors `FREECAD_USER_HOME`, so the extra `HOME` override mostly broke
+  host-level integration (portals/file dialogs, bookmarks, dotfiles, per-user caches) while the
+  `<profile>/home` tree stayed nearly empty. Owner request: don't touch `HOME`.
+- **Decision**:
+  - `LaunchEnvironment.build` no longer sets `HOME` on Linux/macOS; the inherited value passes
+    through unchanged (Windows never set it). `FREECAD_USER_HOME`, `FREECAD_USER_TEMP`, the
+    Linux `XDG_*` dirs and `TMPDIR`, and the Windows `APPDATA`/`LOCALAPPDATA`/`TEMP`/`TMP`
+    overrides stay, so FreeCAD config/data/temp remain per-profile.
+  - `<profile>/home` is dropped from `ProfilePaths` and `directoriesFor`; existing directories
+    are left on disk untouched.
+  - The headless Python/AppImage probe keeps its throwaway `HOME` (it is not a profile launch).
+- **Consequences**: `HOME`-keyed state (dotfiles, bookmarks, user caches, sockets) is shared
+  between profiles and with the host; isolation relies on FreeCAD's own env handling plus the
+  XDG/temp overrides. D-005's isolation mechanism is otherwise unchanged.
+- **Refs**: D-005, spec 04 §4.1, spec 05 §3, `lib/domain/profiles/launch_environment.dart`,
+  `lib/domain/profiles/profile_paths.dart`, `TASKS.md` R-09

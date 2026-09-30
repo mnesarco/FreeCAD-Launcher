@@ -3,11 +3,11 @@
 > Live file. Every session updates this at start and end. Keep it short — details belong in
 > `TASKS.md` and `DECISIONS.md`.
 
-- **Updated**: 2026-09-27
+- **Updated**: 2026-09-30
 - **Current milestone**: **M7 — Linux v0.1 completion: complete** (M7-01/M7-03/M7-04/M7-06 done;
   M7-05 deferred to M8-05 per D-073)
 - **Active branch**: `v2`
-- **Last session**: 2026-09-27
+- **Last session**: 2026-09-30
 - **Next action**: M7 has no open tasks. Next options: owner review of README/`docs/user-guide.md`;
   then `M8` (packaging/CI/cross-platform — blocked on a git remote, OQ-7) or post-v0.1 backlog
   (`B-02` in-place build updates, `B-03` full profile export, ...).
@@ -87,7 +87,8 @@
     Settings card with install/remove; manual Linux wrapper ran the built CLI (`--version`).
   - M3-10 — isolation E2E verified on Linux: two profiles on the same 1.0.2 AppImage wrote
     distinct markers into `FREECAD_USER_HOME`, `HOME`, `TMPDIR` and `Mod/`; deleting one profile
-    left the other intact (paths in the session log).
+    left the other intact (paths in the session log). `HOME` isolation was later removed by
+    D-075/R-09 (`HOME` is now inherited).
   - S3 — **D-036**: pip has no `--target` uninstall; `--upgrade` is mandatory and leaves old
     dist-info. Removal is RECORD-based (delete files inside the target, prune empty dirs);
     updates uninstall first then reinstall. Tested with Python 3.12 / pip 24.0.
@@ -350,6 +351,12 @@
     `openProfileFolder` helper in `profile_actions.dart`, same `xdg-open`/`open`/`explorer`
     command as the Config tab, failure snackbar); widget test asserts the command; hot-reloaded
     and header screenshot inspected in the running dev app.
+  - R-09 — **D-075**: profile launches no longer override `HOME`. The inherited value passes
+    through on Linux/macOS; `<profile>/home` was dropped from `ProfilePaths`/`directoriesFor`
+    (existing dirs untouched). `FREECAD_USER_HOME`, XDG, AppData and temp overrides still isolate
+    FreeCAD config/data. 500 tests green (8 manual probes skipped), analyze clean; manual
+    isolation E2E re-run on the real 1.0.2 AppImage (distinct `FREECAD_USER_HOME`/`TMPDIR`/`Mod`
+    markers, inherited `HOME` observed inside the profile, no `home/` created).
 
 ## Session log
 
@@ -437,6 +444,7 @@
 | 2026-09-24 | M7 | M7-03 licensing (LICENSE, SPDX headers, generated notices, AppImage doc files) and M7-05 → M8-05 deferral (D-073, D-074) | M7-03, M7-05 | `LICENSE`, `THIRD_PARTY_NOTICES.md`, `tool/generate_third_party_notices.dart`, `packaging/appimage/build_appimage.sh`, `lib/**`, `test/**`, `docs/impl/**` |
 | 2026-09-24 | M7 | M7-04 README + user guide with 5 screenshots; M7 (Linux v0.1) complete | M7-04 | `README.md`, `docs/user-guide.md`, `docs/images/**` |
 | 2026-09-27 | R | R-08 "Open profile folder" in the profile detail header (shared helper, widget test, live hot-reload check) | R-08 | `lib/ui/profiles/profile_actions.dart`, `lib/ui/profiles/profile_detail_view.dart`, `test/ui/profiles_view_test.dart`, `docs/impl/{TASKS,STATUS}.md` |
+| 2026-09-30 | R3 | D-075/R-09: profile launches no longer override `HOME`; `<profile>/home` dropped from the layout; unit suite green (500) + real 1.0.2 isolation E2E re-run | R-09 | `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md`, `docs/spec/{04-architecture,05-data-model}.md`, `docs/user-guide.md`, `lib/domain/profiles/{launch_environment,profile_paths}.dart`, `test/**` |
 
 ## Standing notes for the next agent
 

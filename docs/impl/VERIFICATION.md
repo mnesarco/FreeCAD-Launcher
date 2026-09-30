@@ -222,7 +222,7 @@ Record results in the `STATUS.md` session log (date, OS, FreeCAD version, result
 | Scenario | Linux | Windows | macOS |
 |---|---|---|---|
 | Install latest stable build | ✅ 2026-09-24 — 1.1.3 AppImage (782.8 MiB), Python 3.11 detected (M7-06) | | |
-| Create two profiles, verify isolation | ✅ 2026-09-19 — distinct markers in `FREECAD_USER_HOME`/`HOME`/`TMPDIR`/`Mod` (M3-10) | | |
+| Create two profiles, verify isolation | ✅ 2026-09-30 — real 1.0.2: distinct markers in `FREECAD_USER_HOME`/`TMPDIR`/`Mod`, inherited `HOME` passed through, no `home/` dir (R-09; M3-10) | | |
 | Launch from app | ✅ 2026-09-24 — GUI launch (1.1.3), running badge, log, exit tracking; headless M3-04/M3-05 | | |
 | Launch via CLI wrapper | ✅ 2026-09-19 — wrapper ran the built CLI (M3-09) | | |
 | Install addon from catalog | ✅ 2026-09-19 — real A2plus install (M4-03); catalog renders live 2026-09-24 | | |

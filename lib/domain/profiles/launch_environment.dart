@@ -32,7 +32,6 @@ abstract final class LaunchEnvironment {
 
     switch (platform) {
       case BuildPlatform.linux:
-        env['HOME'] = paths.home;
         env['XDG_CONFIG_HOME'] = paths.xdgConfig;
         env['XDG_DATA_HOME'] = paths.xdgData;
         env['XDG_CACHE_HOME'] = paths.xdgCache;
@@ -43,7 +42,6 @@ abstract final class LaunchEnvironment {
         env['TEMP'] = paths.temp;
         env['TMP'] = paths.temp;
       case BuildPlatform.macos:
-        env['HOME'] = paths.home;
         env['TMPDIR'] = paths.temp;
     }
 

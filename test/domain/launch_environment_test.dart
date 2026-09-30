@@ -14,6 +14,7 @@ void main() {
   Map<String, String> inherited() => {
     'PATH': '/usr/bin',
     'LANG': 'en_US.UTF-8',
+    'HOME': '/real/home',
     'PYTHONPATH': '/system/python',
     'PYTHONHOME': '/system/python',
     'VIRTUAL_ENV': '/venv',
@@ -29,7 +30,7 @@ void main() {
 
     expect(env['FREECAD_USER_HOME'], '/data/profiles/p1');
     expect(env['FREECAD_USER_TEMP'], '/data/profiles/p1/temp');
-    expect(env['HOME'], '/data/profiles/p1/home');
+    expect(env['HOME'], '/real/home');
     expect(env['XDG_CONFIG_HOME'], '/data/profiles/p1/xdg/config');
     expect(env['XDG_DATA_HOME'], '/data/profiles/p1/xdg/data');
     expect(env['XDG_CACHE_HOME'], '/data/profiles/p1/xdg/cache');
@@ -56,22 +57,32 @@ void main() {
     expect(env['LOCALAPPDATA'], r'C:\data\profiles\p1\AppData\Local');
     expect(env['TEMP'], r'C:\data\profiles\p1\temp');
     expect(env['TMP'], r'C:\data\profiles\p1\temp');
-    expect(env.containsKey('HOME'), isFalse);
+    expect(env['HOME'], '/real/home');
     expect(env.containsKey('XDG_CONFIG_HOME'), isFalse);
     expect(env.containsKey('TMPDIR'), isFalse);
   });
 
-  test('macos isolates HOME and temp', () {
+  test('macos leaves HOME inherited and isolates temp', () {
     final env = LaunchEnvironment.build(
       platform: BuildPlatform.macos,
       paths: posixPaths,
       inherited: inherited(),
     );
 
-    expect(env['HOME'], '/data/profiles/p1/home');
+    expect(env['HOME'], '/real/home');
     expect(env['TMPDIR'], '/data/profiles/p1/temp');
     expect(env.containsKey('XDG_CONFIG_HOME'), isFalse);
     expect(env.containsKey('APPDATA'), isFalse);
+  });
+
+  test('passes through HOME even when it points at a profile directory', () {
+    final env = LaunchEnvironment.build(
+      platform: BuildPlatform.linux,
+      paths: posixPaths,
+      inherited: const {'HOME': '/data/profiles/p1'},
+    );
+
+    expect(env['HOME'], '/data/profiles/p1');
   });
 
   test('overrides inherited FREECAD values', () {
