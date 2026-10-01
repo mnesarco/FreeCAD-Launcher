@@ -53,6 +53,10 @@ void main() {
     final pem = loadWindowsSystemRootsPem();
 
     expect(pem, contains('-----BEGIN CERTIFICATE-----'));
-    expect(countPemCertificates(pem), greaterThan(20));
+    expect(
+      countPemCertificates(pem),
+      greaterThan(40),
+      reason: 'the machine-wide ROOT/CA stores must be included, not only the user stores',
+    );
   });
 }
