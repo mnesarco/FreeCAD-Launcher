@@ -436,6 +436,9 @@
     (FR-4.8), and dev symlink (live, link-only remove); backlog `B-10` expanded into
     `B-10a..B-10e`. Owner choices captured; decisions D-085..D-088 to be recorded at kickoff.
     No code changes.
+  - Version bump (2026-10-01, R24): project version raised to **0.2.0** (`pubspec.yaml` +
+    `core/constants.dart`, checked by `packaging/check_version.sh`); README status, the status-bar
+    spec mock and the user-guide limitation labels updated. No behavior change.
   - Addon enable/disable (2026-10-01, R23): Profile → Addons rows gained a switch that
     writes/removes FreeCAD's `ADDON_DISABLED` marker (D-089, B-15a); state is derived from disk
     (no schema change), disabled rows show a badge and dimmed title, and the marker is also
@@ -563,7 +566,8 @@
 | 2026-10-01 | R22 | B-10 implementation (uncommitted pending review): schema v6 source/sourcePath, domain helpers, installer prepare/commit + linkDirectory, custom install/update/reinstall + conflicts + pre-placement requirements consent, Addons Custom tab with install-in-another-profile action, manifest source skip, D-085..D-088, tests, live Nxt repo/zip/symlink installs and cross-profile copy verified | B-10a..B-10f | `lib/domain/addons/{addon_source,package_xml,addon_id_rules,repository_archive}.dart`, `lib/platform/{addon_installer,addon_manifest_reader}.dart`, `lib/state/{addons_controller,updates_controller,profile_manifest_controller}.dart`, `lib/ui/addons/{addons_view,custom_addons_view}.dart`, `lib/ui/profiles/profile_manifest_dialogs.dart`, `lib/{data,domain,ui,l10n}/**`, `test/**`, `docs/{spec/02-requirements,spec/03-ux,spec/05-data-model,spec/06-integrations,user-guide}.md`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md` |
 
 | 2026-10-01 | R23 | Addon enable/disable per profile (B-15a, D-089): `ADDON_DISABLED` toggle on Profile → Addons rows, state derived from disk, disabled badge/dim; controller + widget tests and a live managed/dev-link check | B-15a | `lib/state/addons_controller.dart`, `lib/ui/profiles/profile_detail_view.dart`, `lib/l10n/app_en.arb`, `lib/l10n/gen/**`, `test/state/addons_controller_test.dart`, `test/ui/profiles_view_test.dart`, `docs/{spec/02-requirements,spec/03-ux,user-guide}.md`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md` |
-## Standing notes for the next agent
+
+| 2026-10-01 | R24 | Version bump to 0.2.0 (`pubspec.yaml`, `core/constants.dart`) + README/spec/user-guide current-version labels and debug-bundle test | — | `pubspec.yaml`, `lib/core/constants.dart`, `test/state/debug_bundle_controller_test.dart`, `README.md`, `docs/spec/03-ux.md`, `docs/user-guide.md`, `docs/impl/STATUS.md` |## Standing notes for the next agent
 
 - The prototype is frozen at tag `prototype-final`; do not resurrect its code or schema.
 - Read `docs/impl/DECISIONS.md` before proposing alternatives to anything already decided.

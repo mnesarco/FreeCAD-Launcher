@@ -65,7 +65,7 @@ void main() {
     final system = utf8.decode(
       archive.files.firstWhere((file) => file.name == 'system.txt').content,
     );
-    expect(system, contains('FreeCAD Launcher 0.1.0'));
+    expect(system, contains('FreeCAD Launcher 0.2.0'));
     expect(system, contains('Builds (1):'));
     expect(system, contains('1.1.3'));
     expect(system, contains('stable'));

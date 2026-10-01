@@ -22,7 +22,7 @@ isolated profiles.
 - [Keyboard shortcuts](#keyboard-shortcuts)
 - [Data locations](#data-locations)
 - [Troubleshooting](#troubleshooting)
-- [Known limitations (v0.1)](#known-limitations-v01)
+- [Known limitations (v0.2)](#known-limitations-v02)
 
 ## Concepts
 
@@ -370,7 +370,7 @@ marks the entries as missing/broken instead of losing data.
 Settings → Logs → **Export debug bundle** and attach the zip. It contains redacted logs,
 environment details and diagnostics — never your database, profiles or tokens.
 
-## Known limitations (v0.1)
+## Known limitations (v0.2)
 
 - Linux only: Windows/macOS artifacts are planned (packaging/deployment phase).
 - Weekly builds are available (Versions → Available → Weekly); the legacy 1.0.x channel is not
@@ -378,4 +378,4 @@ environment details and diagnostics — never your database, profiles or tokens.
 - Build updates are notify-only: install the new version from Versions → Available and rebind
   profiles manually.
 - No launcher self-update yet; replace the AppImage manually.
-- i18n scaffolding is in place but v0.1 ships English only.
+- i18n scaffolding is in place but v0.2 ships English only.

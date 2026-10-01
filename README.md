@@ -13,9 +13,9 @@ settings, addons, macros and Python packages.
 
 ## Status
 
-- **v0.1 (in progress, Linux-first).** The Linux AppImage pipeline is productionized and the
-  application is verified on Linux; Windows/macOS packaging is planned (see
-  `docs/spec/08-roadmap.md` and `docs/impl/STATUS.md`).
+- **v0.2 (in progress, Linux-first).** `v0.1.0` is available on the Releases page; the Linux
+  AppImage pipeline is productionized and the application is verified on Linux, while
+  Windows/macOS packaging is planned (see `docs/spec/08-roadmap.md` and `docs/impl/STATUS.md`).
 - Managed catalog builds require **FreeCAD 1.0 or newer**; user-supplied binaries (local files,
   URLs, self-compiled executables) are unconstrained.
 
