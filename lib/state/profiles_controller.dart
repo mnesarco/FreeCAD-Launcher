@@ -8,6 +8,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:freecad_launcher/core/errors.dart';
+import 'package:freecad_launcher/core/path_segments.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
@@ -387,7 +388,7 @@ class ProfilesController {
   }
 
   File _newLogFile(Profile profile) {
-    final safeName = profile.name.replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '_');
+    final safeName = safePathSegment(profile.name);
     final stamp = _clock().toIso8601String().replaceAll(RegExp(r'[:.]'), '-');
     return File(p.join(_paths.logsDir, 'launch-$safeName-$stamp.log'));
   }

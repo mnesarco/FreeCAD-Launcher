@@ -2,8 +2,10 @@
 
 > **Status**: In progress (2026-10-01). Owner choices confirmed in the planning session:
 > portable `.zip`, Windows tests (M8-06) fixed **before** the release, unsigned binary,
-> clean-machine pass on the owner's Windows VM plus CI smoke tests. Written so the work can
-> resume after an interruption; update the checkboxes as items land.
+> clean-machine pass plus CI smoke tests. The clean-machine pass was accepted on a second Windows
+> machine (startup/catalogs/downloads, R31); the full smoke matrix and the release publish path
+> remain. Written so the work can resume after an interruption; update the checkboxes as items
+> land.
 
 ## Goal
 
@@ -20,7 +22,7 @@ Windows machine.
 | SmartScreen | Documented warning; release notes/user guide state the binary is unsigned |
 | Test gating | M8-06 first: `flutter test` must be green on Windows before a Windows release |
 | MacroPath separator | Always `/` in `user.cfg` (FreeCAD/Qt accepts it; verify on the VM) |
-| Verification | Owner's Windows VM manual pass + CI artifact smoke tests |
+| Verification | Clean-machine manual pass (accepted on a second Windows machine, R31) + CI artifact smoke tests |
 
 ## Baseline (what exists today)
 
@@ -100,13 +102,21 @@ failures until the CI job runs green.
 
 ### Phase 4 — Verification and docs
 
-- [ ] Windows VM manual pass: extract zip → install real FreeCAD 1.1.3 `.7z` → Python probe →
-      two isolated profiles + launch → addon/pip/macro → CLI `.cmd` wrapper → reveal/open
-- [ ] Record the pass in `VERIFICATION.md` §2 (M8 checklist) and §4 (smoke matrix Windows column)
-- [ ] Close OQ-1 in `docs/spec/09-open-questions.md`; update spec 07 §2 artifact table
-- [ ] README `Status` and `docs/user-guide.md` (Windows install, unsigned/SmartScreen note,
-      symlink/Developer Mode limitation, shared Qt registry limitation)
-- [ ] Update `STATUS.md`/`TASKS.md` and append the session log
+- [x] Clean Windows machine pass (2026-10-01, artifact from run 36907901612, D-094): extracted zip
+      starts, all catalogs load and downloads complete. Owner accepted this as the M8-03
+      clean-machine verification; the TLS-inspection VM is no longer required (AV/TLS caveat
+      stays documented)
+- [ ] Not exercised on Windows yet: real FreeCAD 1.1.3 `.7z` install, Python probe, two isolated
+      profiles + launch, addon/pip/macro, CLI `.cmd` wrapper, reveal/open — run on the working
+      machine or explicitly accept the gap before the `v0.2.0` release
+- [ ] Rebuild the Windows artifact after R-14/D-095 (colon build-id directories were illegal on
+      Windows and broke the first install attempt) and retest from the `.7z` install row
+- [x] Record the pass in `VERIFICATION.md` §2 (M8 checklist) and §4 (note)
+- [ ] Close OQ-1 in `docs/spec/09-open-questions.md` (Windows side already D-091; macOS remains);
+      update spec 07 §2 artifact table when the release lands
+- [ ] README `Status` and `docs/user-guide.md` Windows notes were added in R26; re-check before
+      the `v0.2.0` release
+- [x] Update `STATUS.md`/`TASKS.md` and append the session log (R31)
 
 ## Known risks / open items
 

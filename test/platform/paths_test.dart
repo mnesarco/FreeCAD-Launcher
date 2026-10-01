@@ -29,6 +29,24 @@ void main() {
     expect(paths.addonsCacheDir, p.join(paths.cacheDir, 'addons'));
   });
 
+  test('build directories use portable segments', () {
+    expect(
+      paths.buildDir('stable:1.1.3:windows:x86_64'),
+      p.join(paths.buildsDir, 'stable_1.1.3_windows_x86_64'),
+    );
+  });
+
+  test('build directories are portable with a Windows path context', () {
+    final windows = AppPaths(
+      dataRoot: r'C:\data',
+      context: p.Context(style: p.Style.windows),
+    );
+    expect(
+      windows.buildDir('stable:1.1.3:windows:x86_64'),
+      r'C:\data\builds\stable_1.1.3_windows_x86_64',
+    );
+  });
+
   test('ensureBaseDirectories creates every base directory', () async {
     await paths.ensureBaseDirectories();
 

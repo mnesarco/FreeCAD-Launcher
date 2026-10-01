@@ -221,8 +221,11 @@ M7-01 (D-071) productionization checks (2026-09-21):
       `FreeCADLauncher-0.2.0-windows-x86_64.zip` (15.4 MB), `sha256sum -c` OK, POSIX zip entry
       names, `7zr.exe` present and hash-identical to D-018 (`ad4c82fa…`), license/notices/README
       bundled, `freecad_launcher.exe --version` smoke-tested on CI
-- [ ] Windows artifact extracted, installed and launched on a clean Windows machine (M8-03,
-      D-091) — manual pass pending on the owner's VM
+- [x] Windows artifact extracted and launched on a clean Windows machine (2026-10-01, artifact
+      from run 36907901612, D-094): startup, every catalog load and downloads verified; owner
+      accepted this as the M8-03 clean-machine pass. The TLS-inspection VM was not re-checked
+      (AV/TLS caveat documented in the user guide) and the remaining §4 Windows smoke rows were
+      not exercised
 - [ ] GitHub Release creation path exercised for tagged/manual publishes (both OS artifacts)
 - [ ] macOS artifacts built, installed and launched on clean machines (M8-04, OQ-1)
 - [ ] Clean-machine Linux first-run flow completes with the published AppImage (M8-05)
@@ -261,6 +264,14 @@ Record results in the `STATUS.md` session log (date, OS, FreeCAD version, result
 Legend: ✅ verified (date, session) · ⚠ tests only · empty = not done. M7-06 (2026-09-24) findings
 filed as R-03..R-07 and fixed the same day (unit/widget tests plus live re-checks); Windows/macOS
 columns are deferred to M8.
+
+Note (Windows, 2026-10-01, M8-03/D-094): on a clean Windows machine (different from the
+TLS-inspection VM) the artifact from run 36907901612 started, loaded all catalogs and completed
+downloads. The remaining Windows smoke rows above (build install, profiles + launch,
+addons/pip/macros, CLI wrapper, reveal) have not been exercised on Windows yet. The first real
+`.7z` install attempt failed with `FileSystemException` because catalog build IDs contain `:`
+(illegal in Windows names) and were used as directory names; fixed by R-14/D-095
+(`safePathSegment`), retest with a rebuilt artifact pending.
 
 ## 5. When something fails
 

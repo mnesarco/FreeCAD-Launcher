@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import 'package:freecad_launcher/core/path_segments.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/profiles/profile_paths.dart';
 
@@ -38,7 +39,7 @@ class AppPaths {
 
   String get newsCacheDir => _p.join(cacheDir, 'news');
 
-  String buildDir(String buildId) => _p.join(buildsDir, buildId);
+  String buildDir(String buildId) => _p.join(buildsDir, safePathSegment(buildId));
 
   ProfilePaths profilePaths(String profileId) =>
       ProfilePaths(_p.join(profilesDir, profileId), context: _p);

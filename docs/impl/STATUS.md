@@ -5,25 +5,30 @@
 
 - **Updated**: 2026-10-01
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
-  (M8-01/M8-02/**M8-06 DONE**; M8-03 CI pipeline verified and artifact built — clean-machine
-  manual pass pending; M8-04 needs macOS; M8-05 clean-VM pass ready with the published AppImage)
+  (M8-01/M8-02/**M8-06 DONE**; M8-03 CI pipeline built; the D-094 artifact passed the
+  clean-machine network check, but the first real Windows `.7z` install exposed colon build-id
+  directories — fixed by R-14/D-095, artifact rebuild + retest pending; the GitHub Release
+  publish path is untested; M8-04 needs macOS; M8-05 clean-VM pass ready)
 - **Active branch**: `devel` (public) — `main` is reserved for a future release line
 - **Last session**: 2026-10-01
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
   `TASKS.md` so work can resume after an interruption.
-- **Decisions this session**: **D-091** (Windows = unsigned portable `.zip`, resolves OQ-1
-  option b) and **D-092** (`MacroPath` always written with `/`).
-- **Next action**: extract the CI-built `FreeCADLauncher-0.2.0-windows-x86_64.zip`
-  (run 36898044793 artifact) on the Windows VM and run the M8-03 smoke matrix (real 1.1.3 `.7z`
-  install, Python probe, two isolated profiles + launch, addon/pip/macro, CLI wrapper, reveal),
-  then fill `VERIFICATION.md` §4; after that, exercise the GitHub Release path and decide on the
-  `v0.2.0` prerelease. Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1
-  branches, 2027-01-31), `B-02` in-place build updates.
+- **Decisions this session**: **D-095** (dynamic filesystem segments use portable ASCII via
+  `safePathSegment`); D-093/D-094 were verified in practice earlier today on a second clean
+  Windows machine.
+- **Next action**: commit/push R-14, rebuild the Windows artifact from CI, and rerun the M8-03
+  smoke matrix from the build-install row (real 1.1.3 `.7z` install → Python probe → two
+  isolated profiles + launch → addon/pip/macro → CLI wrapper → reveal); then exercise the
+  untested GitHub Release `create_release` path with the `v0.2.0` prerelease. Backlog: `B-01`
+  legacy channel, `B-14` CalVer readiness (before 27.1 branches, 2027-01-31), `B-02` in-place
+  build updates.
 - **Blockers**:
-  - M8-03 clean-machine pass needs the owner's Windows VM; M8-04 still needs a macOS machine.
-- **In progress**: nothing active in code; M8-03 manual verification pending (artifact ready at
-  run 36898044793). `R-13` (D-090), `B-15a` (D-089) and `B-10a`..`B-10f` (D-085..D-088) are
-  committed (`c0a00b9`, `a9e3f1c`, `5a372ab`).
+  - M8-04 still needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker: the
+    owner accepted the second-machine pass (startup/catalogs/downloads) as the M8-03
+    clean-machine verification; the AV/TLS-inspection caveat stays documented in the user guide.
+- **In progress**: **R-14/D-095** implemented, 604 tests green, analyze clean, uncommitted —
+  artifact rebuild and Windows retest pending. `R-13` (D-090), `B-15a` (D-089) and
+  `B-10a`..`B-10f` (D-085..D-088) are committed (`c0a00b9`, `a9e3f1c`, `5a372ab`).
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
     diagnostics, CI workflow, test harness).
@@ -468,6 +473,14 @@
     localized label/tooltip and a failure snackbar; `_InfoRow` gained an optional `onTap`.
     587 tests green (9 manual probes skipped), analyze clean; committed (`c0a00b9`). Widget
     test asserts the `xdg-open <log>` command.
+  - R-14 (2026-10-01, **D-095**): the first real Windows `.7z` install failed with a raw
+    `FileSystemException` during extraction because catalog build IDs (`stable:1.1.3:windows:x86_64`)
+    were joined directly as directory names (`:` is illegal on Windows). New
+    `lib/core/path_segments.dart` (`safePathSegment`: trim, ASCII-safe runs, edge dot/dash
+    removal, Windows reserved-name guard) now feeds `AppPaths.buildDir`, launch-log names, macro
+    file/icon names and addon backup directories; helper tests plus `buildDir` tests with POSIX
+    and Windows path contexts. 604 tests green, analyze clean; artifact rebuild and Windows
+    retest pending.
 
 ## Session log
 
@@ -585,6 +598,8 @@
 | 2026-10-01 | R28 | Windows VM first run: catalogs failed with an opaque `CatalogUnavailableException` caused by a machine-side network block (firewall/AV; Linux build works). Hardening per **D-093**: catalog exception `toString()` includes the cause, catalog load failures are logged with stack traces, `DiagnosticsService` gained a **Network** check (GitHub API + `addons.freecad.org` + news feed, injectable probe, 5 s timeout, not-applicable without probe), Settings label/l10n, README/user-guide firewall + proxy-limitation docs. 591 tests green, analyze clean | M8-03, D-093 | `lib/platform/diagnostics.dart`, `lib/state/{app_services,builds_controller,addons_controller,macros_controller}.dart`, `lib/data/catalog/{releases_catalog,addon_catalog,macro_catalog,news_feed}.dart`, `lib/ui/settings/settings_view.dart`, `lib/l10n/**`, `test/platform/diagnostics_test.dart`, `docs/user-guide.md`, `README.md`, `docs/impl/{DECISIONS,STATUS}.md` |
 | 2026-10-01 | R29 | Logs revealed the real cause: `CERTIFICATE_VERIFY_FAILED: unable to get local issuer certificate` (Dart uses Mozilla roots on Windows, ignoring the Windows store, so the VM's TLS-inspection/AV root failed). Fix per **D-094**: `lib/platform/tls_trust.dart` loads the Windows `ROOT`/`CA` stores via `crypt32` FFI and optionally `<data dir>/ca-bundle.pem` into `SecurityContext.defaultContext` at startup (non-fatal, logged with counts; no insecure bypass); `DownloadException` now shows its cause; `ffi` dependency added; Windows-only CI test validates store loading; user guide/README updated. 595 tests green on Linux, analyze clean | M8-03, D-094 | `lib/platform/tls_trust.dart`, `lib/main.dart`, `lib/platform/downloader.dart`, `pubspec.{yaml,lock}`, `test/platform/tls_trust_test.dart`, `test/fixtures/test_ca.pem`, `docs/user-guide.md`, `README.md`, `docs/impl/{DECISIONS,STATUS,PLAN-M8-windows-release}.md` |
 | 2026-10-01 | R30 | VM still failed after R29 with only `24 system` certificates: `CertOpenSystemStoreW` reads the current-user stores only, while the TLS-inspection root is machine-wide. Switched to `CertOpenStore` with `CERT_SYSTEM_STORE_LOCAL_MACHINE` + `CERT_SYSTEM_STORE_CURRENT_USER` for `ROOT`/`CA` (deduplicated, machine first); Windows-only test raised to `>40` certificates and green in CI (run 36907956427), proving the machine store is loaded. Rebuilt artifact run 36907901612 (15.4 MB, checksum OK) | M8-03, D-094 | `lib/platform/tls_trust.dart`, `test/platform/tls_trust_test.dart`, `docs/impl/{DECISIONS,STATUS}.md` |
+| 2026-10-01 | R31 | Clean Windows machine (different from the TLS-inspection VM) with the D-094 artifact from run 36907901612: app started, all catalogs loaded and downloads completed. Owner accepted this as the M8-03 clean-machine verification, so the TLS-inspection VM is no longer a blocker (AV/TLS caveat stays documented). Remaining M8-03 gate: exercise the GitHub Release publish path with a `v0.2.0` prerelease; the other smoke rows (`.7z` install, probe, profiles, addons/pip/macros, wrapper, reveal) were not exercised | M8-03, D-094 | `docs/impl/{STATUS,VERIFICATION,TASKS,PLAN-M8-windows-release}.md` |
+| 2026-10-01 | R32 | First real Windows `.7z` install (1.1.3) failed with `FileSystemException` on the staging path: catalog build IDs contain `:` and were used as directory names. **D-095/R-14**: shared `safePathSegment` makes dynamic path segments portable ASCII; applied to build dirs, launch logs, macro file/icon names and addon backups; helper + `buildDir` tests (POSIX + Windows contexts). 604 tests green, analyze clean; artifact rebuild + Windows retest pending | R-14, M8-03 | `lib/core/path_segments.dart`, `lib/platform/paths.dart`, `lib/state/{profiles,addons}_controller.dart`, `lib/domain/macros/macro_catalog_entry.dart`, `test/core/path_segments_test.dart`, `test/platform/paths_test.dart`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION,PLAN-M8-windows-release}.md` |
 
 ## Standing notes for the next agent
 

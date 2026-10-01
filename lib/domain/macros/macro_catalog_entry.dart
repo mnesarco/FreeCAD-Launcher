@@ -4,6 +4,8 @@ import 'dart:convert';
 
 import 'package:path/path.dart' as p;
 
+import 'package:freecad_launcher/core/path_segments.dart';
+
 class MacroCatalogEntry {
   const MacroCatalogEntry({
     required this.name,
@@ -58,7 +60,7 @@ class MacroCatalogEntry {
     if (filenameFromUrl.isNotEmpty) {
       return filenameFromUrl;
     }
-    return '${name.replaceAll(' ', '_')}.FCMacro';
+    return '${safePathSegment(name)}.FCMacro';
   }
 
   String? get category {
@@ -71,7 +73,7 @@ class MacroCatalogEntry {
 
   String? get iconFileName {
     if (xpm.trim().isNotEmpty) {
-      return '${name}_icon.xpm';
+      return '${safePathSegment(name)}_icon.xpm';
     }
     if (iconName.trim().isNotEmpty) {
       return p.basename(iconName.replaceAll('\\', '/'));

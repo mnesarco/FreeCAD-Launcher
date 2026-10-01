@@ -2019,3 +2019,28 @@ Template:
   PEM bundle at the data root; a Windows-only CI test validates store loading and FFI layout.
 - **Refs**: `docs/impl/PLAN-M8-windows-release.md`, M8-03, D-093, `lib/platform/tls_trust.dart`,
   `lib/main.dart`, `lib/platform/downloader.dart`, `test/platform/tls_trust_test.dart`
+
+### D-095 — Dynamic filesystem segments are portable ASCII
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: The Windows smoke pass failed every catalog install with
+  `FileSystemException ... file exists` while extracting `FreeCAD_1.1.3-Windows-x86_64-py311.7z`.
+  Catalog build IDs are `channel:versionLabel:platform:arch` (e.g.
+  `stable:1.1.3:windows:x86_64`, `BuildCandidate.id`) and were joined directly as directory names
+  (`AppPaths.buildDir`); `:` is illegal in Windows file names, so the staging directory
+  `<builds>/stable:1.1.3:windows:x86_64.part` could not be created. The download succeeded
+  because it uses the asset name. Linux accepted the colon names silently. The owner decided
+  against a migration: "current data in the dev machine is not important, it can be removed".
+- **Decision**: any dynamic value used as a filesystem segment goes through
+  `safePathSegment` (`lib/core/path_segments.dart`): trim, replace every run of characters
+  outside `[A-Za-z0-9._-]` with `_`, drop leading/trailing `-._`, fall back to `unnamed` when
+  empty (also neutralizes `..`), and prefix a `_` on Windows reserved device names
+  (`CON`, `NUL`, `COM1`…). Applied to build directories, launch-log names, macro file/icon
+  names and addon backup directories. No migration of existing colon-named directories: Linux
+  dev installs can be removed/reinstalled.
+- **Consequences**: catalog builds install on Windows (`stable_1.1.3_windows_x86_64`); paths stay
+  portable across OSes and filesystems; directory names differ from before D-095 (old Linux
+  installs show as `missing` and are removed with their directories if still present); any future
+  dynamic path segment must use the shared helper.
+- **Refs**: `lib/core/path_segments.dart`, `lib/platform/paths.dart`, M8-03, R-14,
+  `docs/impl/PLAN-M8-windows-release.md`

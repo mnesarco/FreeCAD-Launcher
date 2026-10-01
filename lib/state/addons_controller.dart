@@ -10,6 +10,7 @@ import 'package:uuid/uuid.dart';
 import 'package:freecad_launcher/core/cancellation.dart';
 import 'package:freecad_launcher/core/errors.dart';
 import 'package:freecad_launcher/core/log.dart';
+import 'package:freecad_launcher/core/path_segments.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
@@ -496,7 +497,7 @@ class AddonsController {
     }
     final stamp = _clock().toIso8601String().replaceAll(RegExp(r'[:.]'), '-');
     final target = Directory(
-      p.join(_paths.profilePaths(profileId).backups, 'addon-$addonId-$stamp'),
+      p.join(_paths.profilePaths(profileId).backups, 'addon-${safePathSegment(addonId)}-$stamp'),
     );
     await target.create(recursive: true);
     await for (final entity in source.list(recursive: true, followLinks: false)) {
