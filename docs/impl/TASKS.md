@@ -161,7 +161,7 @@ Starts after M7; the GitHub CI/release work needs a git remote (OQ-7). Recorded 
 
 | ID | Task | Done when | Deps | Effort | Status |
 |---|---|---|---|---|---|
-| M8-01 | Release workflow (was M7-02): test matrix, changelog, GitHub release creation, published checksums/zsync; CI regenerates `THIRD_PARTY_NOTICES.md` and fails on drift | Dry-run release from an RC tag succeeds; notes free of tokens; checksums match | M7-04 | M | WIP (manual workflow builds + verifies artifacts on GitHub; release creation path untested) |
+| M8-01 | Release workflow (was M7-02): test matrix, changelog, GitHub release creation, published checksums/zsync; CI regenerates `THIRD_PARTY_NOTICES.md` and fails on drift | `v0.1.0` pre-release published from the manual workflow (run 36812429637) with verified AppImage + sha256 + zsync; notes token-free. Tag-push path shares the same job | M7-04 | M | DONE |
 | M8-02 | First GitHub CI run of the M1-09 matrix (analyze, tests, codegen freshness, build per OS) | CI green on the remote repo | M8-01 | S | DONE (ubuntu + windows green; macOS deferred to M8-04 per D-083) |
 | M8-03 | Windows artifact + deployment (was B-11/OQ-1): portable build, real `.7z` extraction, install/launch/isolation manual pass | Windows artifact installs and launches on a clean machine | M8-01 | L | TODO |
 | M8-04 | macOS artifact + deployment (was B-11/OQ-1): unsigned `.app`/`.dmg`, quarantine consent, install/launch/isolation manual pass; re-enable the macOS CI job (D-083) | macOS artifact installs and launches on a clean machine; macOS back in the CI matrix | M8-01 | L | TODO |

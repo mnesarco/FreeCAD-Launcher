@@ -419,6 +419,11 @@
     re-verified locally (`sha256sum -c` OK, `--version` = FreeCAD Launcher 0.1.0). M8-02 is
     DONE; the GitHub Release creation path (`create_release`/`tag`/`prerelease`) is still
     untested.
+  - First release (2026-10-01): `v0.1.0` **pre-release** published via the manual workflow
+    (run 36812429637) — [release page](https://github.com/mnesarco/FreeCAD-Launcher/releases/tag/v0.1.0)
+    with `FreeCADLauncher-0.1.0-x86_64.AppImage` (29.9 MB), `.sha256` and `.zsync`; notes are
+    GitHub-generated (no tokens). M8-01 and M8-02 are DONE. Next: M8-05 clean-VM pass with this
+    published AppImage, then M8-03/M8-04 (Windows/macOS, need machines).
 
 ## Session log
 
@@ -521,6 +526,7 @@
 | 2026-10-01 | R15 | CI fully green (ubuntu/macOS/windows); macOS job then removed from the matrix (**D-083**, returns with M8-04); Linux+Windows remain with Linux tests and both release builds | M8-02 | `.github/workflows/ci.yml`, `docs/impl/{DECISIONS,TASKS,STATUS}.md` |
 | 2026-10-01 | R16 | Manual AppImage workflow: renamed to `appimage-release.yml` (GitHub refused the old path), fixed missing GTK/ninja deps and pinned the type-2 runtime to the dated `20251108` release (**D-084**) | M8-01 | `.github/workflows/appimage-release.yml`, `packaging/appimage/build_appimage.sh`, `README.md`, `docs/impl/{DECISIONS,STATUS,VERIFICATION}.md` |
 | 2026-10-01 | R17 | First CI-built AppImage from GitHub verified: run 36810294004 built/uploaded `FreeCADLauncher-0.1.0-x86_64.AppImage` (29.9 MB) + sha256 + zsync; artifact re-verified locally; M8-02 DONE | M8-01, M8-02 | `docs/impl/{TASKS,STATUS,VERIFICATION}.md` |
+| 2026-10-01 | R18 | First release: `v0.1.0` pre-release published from the manual workflow (run 36812429637) with AppImage + sha256 + zsync; M8-01 DONE; tag fetched locally | M8-01 | `docs/impl/{TASKS,STATUS,VERIFICATION}.md` |
 
 ## Standing notes for the next agent
 
