@@ -97,25 +97,23 @@ failures until the CI job runs green.
 - [x] Pipeline exercised with a no-publish manual run (36898044793): appimage ✓, windows ✓
       (15.4 MB zip, `sha256sum -c` OK, `7zr.exe` hash pinned, `--version` smoke test),
       `publish` correctly skipped; artifact downloaded and inspected locally
-- [ ] Exercise the untested `create_release` path with a `v0.2.0` prerelease run (after the
-      Windows VM pass)
+- [ ] Exercise the untested `create_release` path with a `v0.2.0` prerelease run (Windows matrix
+      pass done 2026-10-01; this is the last M8-03 item)
 
 ### Phase 4 — Verification and docs
 
-- [x] Clean Windows machine pass (2026-10-01, artifact from run 36907901612, D-094): extracted zip
-      starts, all catalogs load and downloads complete. Owner accepted this as the M8-03
-      clean-machine verification; the TLS-inspection VM is no longer required (AV/TLS caveat
-      stays documented)
-- [ ] Not exercised on Windows yet: real FreeCAD 1.1.3 `.7z` install, Python probe, two isolated
-      profiles + launch, addon/pip/macro, CLI `.cmd` wrapper, reveal/open — run on the working
-      machine or explicitly accept the gap before the `v0.2.0` release
+- [x] First clean-machine network pass (2026-10-01, artifact from run 36907901612, D-094):
+      extracted zip starts, all catalogs load and downloads complete
+- [x] Full Windows smoke matrix pass (2026-10-01, artifact run 36941684639): real FreeCAD 1.1.3
+      `.7z` install + Python probe, two isolated profiles + launch, catalog/pip/custom addons,
+      enable/disable, macros, manifest, offline catalog, CLI `.cmd` wrapper, reveal — all passed
+      (after R-14/D-095, R-15/D-096 and R-17)
 - [x] Rebuild the Windows artifact after R-14/D-095 (colon build-id directories were illegal on
       Windows and broke the first install attempt): Release run 36937972986 green, zip downloaded
       and checksum-verified locally
-- [ ] Rebuild the artifact after R-15/D-096 + R-17 (the retests failed inside 7zr with
-      `CreateProcessW` ERROR_INVALID_PARAMETER, then in the recursive size walk on a >260-char
-      FreeCAD path) and retest the Windows smoke matrix from the `.7z` install row; install
-      failures now write `logs/install-<id>-<stamp>.log` (R-16)
+- [x] Rebuild the artifact after R-15/D-096 + R-17 and retest the `.7z` install row: Release run
+      36941684639 green, zip downloaded and checksum-verified; the full matrix then passed;
+      install failures now write `logs/install-<id>-<stamp>.log` (R-16)
 - [x] Record the pass in `VERIFICATION.md` §2 (M8 checklist) and §4 (note)
 - [ ] Close OQ-1 in `docs/spec/09-open-questions.md` (Windows side already D-091; macOS remains);
       update spec 07 §2 artifact table when the release lands

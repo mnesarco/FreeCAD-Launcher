@@ -5,11 +5,10 @@
 
 - **Updated**: 2026-10-01
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
-  (M8-01/M8-02/**M8-06 DONE**; M8-03 CI pipeline built; the D-094 artifact passed the
-  clean-machine network check; the Windows `.7z` install then exposed R-14/D-095 (colon build-id
-  directories), R-15/D-096 (empty-environment process launch) and R-17 (size walk over 260-char
-  paths), all fixed — artifact rebuild + retest pending; the GitHub Release publish path is
-  untested; M8-04 needs macOS; M8-05 clean-VM pass ready)
+  (M8-01/M8-02/**M8-06 DONE**; M8-03 CI pipeline built and the **full Windows smoke matrix
+  passed on a clean machine (2026-10-01, artifact run 36941684639)** after fixing R-14/D-095,
+  R-15/D-096 and R-17; only the GitHub Release publish remains; M8-04 needs macOS; M8-05
+  clean-VM pass ready)
 - **Active branch**: `devel` (public) — `main` is reserved for a future release line
 - **Last session**: 2026-10-01
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
@@ -17,20 +16,19 @@
 - **Decisions this session**: **D-095** (portable ASCII path segments) and **D-096** (Windows
   launches never send an empty environment block); D-093/D-094 were verified earlier today on a
   second clean Windows machine.
-- **Next action**: commit/push R-17, rebuild the Windows artifact from CI, and rerun the M8-03
-  smoke matrix from the build-install row (real 1.1.3 `.7z` install → Python probe → two
-  isolated profiles + launch → addon/pip/macro → CLI wrapper → reveal); install failures write
-  `logs/install-<id>-<stamp>.log` and mirror to `app.log`. Then exercise the untested GitHub
-  Release `create_release` path with the `v0.2.0` prerelease. Backlog: `B-01` legacy channel,
-  `B-14` CalVer readiness (before 27.1 branches, 2027-01-31), `B-02` in-place build updates.
+- **Next action**: publish the `v0.2.0` prerelease through the manual Release workflow
+  (`create_release=true`, `tag=v0.2.0`, `prerelease=true`) and verify the release assets (Windows
+  `.zip` + `.sha256`, AppImage + `.sha256` + `.zsync`); that exercises the last untested publish
+  path and closes M8-03. Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1
+  branches, 2027-01-31), `B-02` in-place build updates; M8-05 clean-VM Linux pass remains.
 - **Blockers**:
   - M8-04 still needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker: the
-    owner accepted the second-machine pass (startup/catalogs/downloads) as the M8-03
-    clean-machine verification; the AV/TLS-inspection caveat stays documented in the user guide.
-- **In progress**: **R-15/D-096**, **R-16** and **R-17** implemented (609 tests green, analyze
-  clean), uncommitted — commit + artifact rebuild + Windows retest pending. `R-14`/D-095
-  committed (`031cc0e`); `R-13` (D-090), `B-15a` (D-089) and `B-10a`..`B-10f` (D-085..D-088) are
-  committed (`c0a00b9`, `a9e3f1c`, `5a372ab`).
+    owner accepted the second-machine pass as the M8-03 clean-machine verification; the
+    AV/TLS-inspection caveat stays documented in the user guide.
+- **In progress**: Windows matrix pass recorded in `VERIFICATION.md` §2/§4; R-15/R-16/R-17
+  committed and pushed (`57b99fd`, `734124e`), CI green on Ubuntu + Windows. Only the `v0.2.0`
+  prerelease publish is pending. `R-14`/D-095 committed (`031cc0e`); `R-13` (D-090), `B-15a`
+  (D-089) and `B-10a`..`B-10f` (D-085..D-088) are committed (`c0a00b9`, `a9e3f1c`, `5a372ab`).
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
     diagnostics, CI workflow, test harness).
@@ -499,6 +497,9 @@
     (`pkg_resources` test fixtures). New shared `platform/directory_size.dart` walks level by
     level and skips unreadable subtrees; `BuildInstaller` and `ProfilesController` use it.
     609 tests green, analyze clean; artifact rebuild + Windows retest pending.
+  - M8-03 Windows matrix (2026-10-01): the owner ran the full clean-machine smoke matrix with the
+    artifact from run 36941684639 and **all scenarios passed**; `VERIFICATION.md` §2/§4 Windows
+    column filled. M8-03 remains WIP only for the `v0.2.0` prerelease publish.
 
 ## Session log
 
@@ -620,6 +621,7 @@
 | 2026-10-01 | R32 | First real Windows `.7z` install (1.1.3) failed with `FileSystemException` on the staging path: catalog build IDs contain `:` and were used as directory names. **D-095/R-14**: shared `safePathSegment` makes dynamic path segments portable ASCII; applied to build dirs, launch logs, macro file/icon names and addon backups; helper + `buildDir` tests (POSIX + Windows contexts). 604 tests green, analyze clean; artifact rebuild + Windows retest pending | R-14, M8-03 | `lib/core/path_segments.dart`, `lib/platform/paths.dart`, `lib/state/{profiles,addons}_controller.dart`, `lib/domain/macros/macro_catalog_entry.dart`, `test/core/path_segments_test.dart`, `test/platform/paths_test.dart`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION,PLAN-M8-windows-release}.md` |
 | 2026-10-01 | R33 | R-14 committed and pushed (`031cc0e`); manual Release run 36937972986 green (windows + appimage jobs; publish skipped as requested). `windows-portable` artifact downloaded to `~/Downloads/freecad-launcher-windows-r36937972986/` (15.4 MB, `sha256sum -c` OK); Windows install retest pending | R-14, M8-03 | `docs/impl/{STATUS,PLAN-M8-windows-release,TASKS}.md` |
 | 2026-10-01 | R35 | R-15 retest log: 7zr extraction OK, then `PathNotFoundException` from the recursive size walk on a FreeCAD path over the 260-char Windows limit. **R-17**: shared tolerant `directorySize` (per-directory error handling) used by `BuildInstaller` and `ProfilesController`; 3 new tests. 609 tests green, analyze clean; artifact rebuild + Windows retest pending | R-17, M8-03 | `lib/platform/directory_size.dart`, `lib/platform/build_installer.dart`, `lib/state/profiles_controller.dart`, `test/platform/directory_size_test.dart`, `docs/impl/{TASKS,STATUS,VERIFICATION,PLAN-M8-windows-release}.md` |
+| 2026-10-01 | R36 | **M8-03 clean-machine verification passed**: owner ran the full Windows smoke matrix with the R-17 artifact (run 36941684639) — 1.1.3 `.7z` install + Python probe, two isolated profiles + launch, catalog/pip/custom addons, enable/disable, macros, manifest, offline catalog, CLI wrapper, reveal. `VERIFICATION.md` §2/§4 Windows column filled; M8-03 only needs the `v0.2.0` prerelease publish | M8-03 | `docs/impl/{VERIFICATION,STATUS,TASKS,PLAN-M8-windows-release}.md` |
 
 ## Standing notes for the next agent
 

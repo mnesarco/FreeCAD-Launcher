@@ -221,11 +221,11 @@ M7-01 (D-071) productionization checks (2026-09-21):
       `FreeCADLauncher-0.2.0-windows-x86_64.zip` (15.4 MB), `sha256sum -c` OK, POSIX zip entry
       names, `7zr.exe` present and hash-identical to D-018 (`ad4c82fa…`), license/notices/README
       bundled, `freecad_launcher.exe --version` smoke-tested on CI
-- [x] Windows artifact extracted and launched on a clean Windows machine (2026-10-01, artifact
-      from run 36907901612, D-094): startup, every catalog load and downloads verified; owner
-      accepted this as the M8-03 clean-machine pass. The TLS-inspection VM was not re-checked
-      (AV/TLS caveat documented in the user guide) and the remaining §4 Windows smoke rows were
-      not exercised
+- [x] Windows artifact extracted and launched on a clean Windows machine (2026-10-01, D-094):
+      startup, every catalog load and downloads verified with the run 36907901612 artifact; after
+      R-14/D-095, R-15/D-096 and R-17 the owner ran the full §4 smoke matrix with the run
+      36941684639 artifact and all scenarios passed. The TLS-inspection VM was not re-checked
+      (AV/TLS caveat documented in the user guide)
 - [ ] GitHub Release creation path exercised for tagged/manual publishes (both OS artifacts)
 - [ ] macOS artifacts built, installed and launched on clean machines (M8-04, OQ-1)
 - [ ] Clean-machine Linux first-run flow completes with the published AppImage (M8-05)
@@ -243,23 +243,23 @@ Record results in the `STATUS.md` session log (date, OS, FreeCAD version, result
 
 | Scenario | Linux | Windows | macOS |
 |---|---|---|---|
-| Install latest stable build | ✅ 2026-09-24 — 1.1.3 AppImage (782.8 MiB), Python 3.11 detected (M7-06) | | |
+| Install latest stable build | ✅ 2026-09-24 — 1.1.3 AppImage (782.8 MiB), Python 3.11 detected (M7-06) | ✅ 2026-10-01 — 1.1.3 `.7z` extracted with the bundled `7zr.exe`, Python probed (owner matrix pass, artifact run 36941684639) | |
 | Install a weekly build | ✅ 2026-09-30 — real `weekly-2026.09.30` AppImage (767.3 MiB, checksum verified, Python 3.13 probed, headless `--version` = FreeCAD 26.3.0); two profiles created/launched isolated on it (B-01d) | | |
-| Create two profiles, verify isolation | ✅ 2026-09-30 — real 1.0.2: distinct markers in `FREECAD_USER_HOME`/`TMPDIR`/`Mod`, inherited `HOME` passed through, no `home/` dir (R-09; M3-10) | | |
-| Launch from app | ✅ 2026-09-24 — GUI launch (1.1.3), running badge, log, exit tracking; headless M3-04/M3-05 | | |
-| Launch via CLI wrapper | ✅ 2026-09-19 — wrapper ran the built CLI (M3-09) | | |
-| Install addon from catalog | ✅ 2026-09-19 — real A2plus install (M4-03); catalog renders live 2026-09-24 | | |
-| Install addon requirement via pip | ✅ 2026-09-19 — real `six` install/uninstall (M4-06/M4-07) | | |
+| Create two profiles, verify isolation | ✅ 2026-09-30 — real 1.0.2: distinct markers in `FREECAD_USER_HOME`/`TMPDIR`/`Mod`, inherited `HOME` passed through, no `home/` dir (R-09; M3-10) | ✅ 2026-10-01 (same pass) | |
+| Launch from app | ✅ 2026-09-24 — GUI launch (1.1.3), running badge, log, exit tracking; headless M3-04/M3-05 | ✅ 2026-10-01 (same pass) | |
+| Launch via CLI wrapper | ✅ 2026-09-19 — wrapper ran the built CLI (M3-09) | ✅ 2026-10-01 (same pass) | |
+| Install addon from catalog | ✅ 2026-09-19 — real A2plus install (M4-03); catalog renders live 2026-09-24 | ✅ 2026-10-01 (same pass) | |
+| Install addon requirement via pip | ✅ 2026-09-19 — real `six` install/uninstall (M4-06/M4-07) | ✅ 2026-10-01 (same pass) | |
 | Update an outdated addon | ✅ 2026-09-19 — real A2plus install → update (backup) → remove (M4-04) | | |
-| Install addon from repository URL + ref | ✅ 2026-10-01 — real `https://github.com/obelisk79/FreeCAD-Nxt` @ `main` installed via Addons → Custom (`Mod/FreeCAD-Nxt`, package.xml 0.3.1, DB `source=repo`, stored URL); removed afterwards (B-10b) | | |
-| Install addon from a local archive | ✅ 2026-10-01 — real `nxt.zip` installed (`Mod/nxt`, DB `source=zip` + `sourcePath`); removed afterwards (B-10c) | | |
-| Dev-link a local addon folder | ✅ 2026-10-01 — working copy symlinked as `Mod/FreeCAD-Nxt`, live edit visible through the link, remove deleted only the link (source intact) (B-10d) | | |
+| Install addon from repository URL + ref | ✅ 2026-10-01 — real `https://github.com/obelisk79/FreeCAD-Nxt` @ `main` installed via Addons → Custom (`Mod/FreeCAD-Nxt`, package.xml 0.3.1, DB `source=repo`, stored URL); removed afterwards (B-10b) | ✅ 2026-10-01 (same pass) | |
+| Install addon from a local archive | ✅ 2026-10-01 — real `nxt.zip` installed (`Mod/nxt`, DB `source=zip` + `sourcePath`); removed afterwards (B-10c) | ✅ 2026-10-01 (same pass) | |
+| Dev-link a local addon folder | ✅ 2026-10-01 — working copy symlinked as `Mod/FreeCAD-Nxt`, live edit visible through the link, remove deleted only the link (source intact) (B-10d) | ✅ 2026-10-01 (same pass; Developer Mode) | |
 | Install a custom addon into another profile | ✅ 2026-10-01 — copied the `FreeCAD-Nxt` dev link from Development into Production 1 via the Custom tab action (profile picker hides profiles that already have it); copy removed, original and source intact (B-10f) | | |
-| Enable/disable an installed addon | ✅ 2026-10-01 — real toggles on Development: File Explorer (managed) and Nxt (dev link) wrote/removed `ADDON_DISABLED` (managed marker under the profile `Mod/`, dev-link marker in the working copy); UI shows the Disabled badge and dimmed row (B-15a) | | |
+| Enable/disable an installed addon | ✅ 2026-10-01 — real toggles on Development: File Explorer (managed) and Nxt (dev link) wrote/removed `ADDON_DISABLED` (managed marker under the profile `Mod/`, dev-link marker in the working copy); UI shows the Disabled badge and dimmed row (B-15a) | ✅ 2026-10-01 (same pass) | |
 | Apply a bundle | ⚠ planner/runner/UI tests only (M5-02); no live apply | | |
-| Install + manage a macro | ✅ 2026-09-19 — real catalog install (M5-04/M5-05); Installed list live 2026-09-24 | | |
-| Export/import profile manifest | ✅ 2026-09-20 — codec/controller/UI + cross-OS test (M5-07) | | |
-| Offline start with cached catalog | ✅ 2026-09-19 — stale/cached states with warning (M4-01/M6-07) | | |
+| Install + manage a macro | ✅ 2026-09-19 — real catalog install (M5-04/M5-05); Installed list live 2026-09-24 | ✅ 2026-10-01 (same pass) | |
+| Export/import profile manifest | ✅ 2026-09-20 — codec/controller/UI + cross-OS test (M5-07) | ✅ 2026-10-01 (same pass) | |
+| Offline start with cached catalog | ✅ 2026-09-19 — stale/cached states with warning (M4-01/M6-07) | ✅ 2026-10-01 (same pass) | |
 
 Legend: ✅ verified (date, session) · ⚠ tests only · empty = not done. M7-06 (2026-09-24) findings
 filed as R-03..R-07 and fixed the same day (unit/widget tests plus live re-checks); Windows/macOS
@@ -267,16 +267,15 @@ columns are deferred to M8.
 
 Note (Windows, 2026-10-01, M8-03/D-094): on a clean Windows machine (different from the
 TLS-inspection VM) the artifact from run 36907901612 started, loaded all catalogs and completed
-downloads. The remaining Windows smoke rows above (build install, profiles + launch,
-addons/pip/macros, CLI wrapper, reveal) have not been exercised on Windows yet. The first real
-`.7z` install attempt failed with `FileSystemException` because catalog build IDs contain `:`
-(illegal in Windows names) and were used as directory names; fixed by R-14/D-095
-(`safePathSegment`), retest with a rebuilt artifact pending. The retest then reached 7zr and
-failed with ERROR_INVALID_PARAMETER from `CreateProcessW` (Dart builds a malformed empty
-environment block); fixed by R-15/D-096. Build installs now write `logs/install-<id>-<stamp>.log`
-with the error and stack trace (R-16); retest pending. The next retest got through 7zr and failed
-in the recursive size walk (`PathNotFoundException`, FreeCAD path over the 260-char Windows
-limit); fixed by R-17 (`directorySize` skips unreadable subtrees); retest pending.
+downloads. The first full-matrix attempts exposed three blockers, all fixed and covered by tests:
+R-14/D-095 (`FileSystemException` — colon build IDs used as directory names), R-15/D-096
+(7zr `CreateProcessW` ERROR_INVALID_PARAMETER from an empty environment block) and R-17
+(`PathNotFoundException` in the recursive size walk over a >260-char FreeCAD path). The owner
+then ran the full smoke matrix with the artifact from run 36941684639 and **all scenarios
+passed**. Windows rows not covered by that pass: weekly build install, addon update (needs an
+outdated addon), custom-addon copy into another profile, and bundle apply (tests-only on every
+OS). Known Windows caveats stay documented: unsigned zip/SmartScreen, dev links need Developer
+Mode, Qt registry state is shared across profiles.
 
 ## 5. When something fails
 
