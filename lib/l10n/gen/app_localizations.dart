@@ -2782,6 +2782,12 @@ abstract class AppLocalizations {
   /// **'License'**
   String get settingsLicense;
 
+  /// No description provided for @settingsCopyright.
+  ///
+  /// In en, this message translates to:
+  /// **'Copyright 2026 Frank Martínez <mnesarco at gmail>'**
+  String get settingsCopyright;
+
   /// No description provided for @settingsDiagnostics.
   ///
   /// In en, this message translates to:

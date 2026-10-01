@@ -601,6 +601,7 @@
   "settingsCliWrapperFailed": "Could not update the wrapper",
   "settingsVersion": "Version",
   "settingsLicense": "License",
+  "settingsCopyright": "Copyright 2026 Frank Martínez <mnesarco at gmail>",
   "settingsDiagnostics": "Diagnostics",
   "diagnosticsRun": "Run diagnostics",
   "diagnosticsRunning": "Running…",

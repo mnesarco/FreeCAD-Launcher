@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText: 2026 Frank Martínez <mnesarco at gmail>
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:freecad_launcher/domain/builds/freecad_version.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';

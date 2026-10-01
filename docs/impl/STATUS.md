@@ -381,6 +381,12 @@
     B-01.
   - Weekly list cap (2026-09-30, post-R8): Versions → Available ▸ Weekly now shows at most the
     latest 52 dated builds (one year), newest first (`BuildsController.weeklyBuildLimit`).
+  - R-11 — **D-079**: copyright notices. `SPDX-FileCopyrightText: 2026 Frank Martínez
+    <mnesarco at gmail>` added above the license identifier in all 240 SPDX-tagged files
+    (234 Dart, 4 shell, 2 Markdown; generated files untouched), README and Settings › About
+    show the holder line, and `tool/generate_third_party_notices.dart` emits it in the notices
+    header (regenerated, diff is the single line). 516 tests green (9 manual probes skipped),
+    analyze clean.
 
 ## Session log
 
@@ -476,6 +482,7 @@
 | 2026-09-30 | R8 | B-01 weekly builds (D-077) implemented: `weeklyBuilds` catalog signal, Available channel filter + dev warning, notify-only weekly update badges, humanized weekly labels; real `weekly-2026.09.30` install verified (checksum, Python 3.13 probe, `--version` = 26.3.0); docs updated | B-01a..B-01d | `lib/state/{builds_controller,updates_controller}.dart`, `lib/ui/builds/builds_view.dart`, `lib/ui/updates/updates_summary_sheet.dart`, `lib/ui/widgets/build_version_label.dart`, `lib/l10n/app_en.arb`, `lib/l10n/gen/**`, `test/**`, `docs/{spec/03-ux.md,user-guide.md}`, `docs/impl/{TASKS,STATUS,VERIFICATION}.md` |
 | 2026-09-30 | R9 | Cap the weekly list at the latest 52 (one year), newest first (`BuildsController.weeklyBuildLimit`); controller test + spec/user-guide wording | B-01 | `lib/state/builds_controller.dart`, `test/state/builds_controller_test.dart`, `docs/spec/03-ux.md`, `docs/user-guide.md`, `docs/impl/STATUS.md` |
 | 2026-09-30 | R10 | Home news card extended from 5 to 10 posts (`_NewsCard.maxItems`); widget test asserts the limit | — | `lib/ui/home/home_view.dart`, `test/ui/home_view_test.dart`, `docs/impl/STATUS.md` |
+| 2026-09-30 | R11 | D-079 copyright notices: `SPDX-FileCopyrightText` in 240 SPDX-tagged files, README/About/notices holder line, notices regenerated; 516 tests green | R-11 | `docs/impl/{DECISIONS,TASKS,STATUS}.md`, `README.md`, `THIRD_PARTY_NOTICES.md`, `tool/generate_third_party_notices.dart`, `lib/l10n/app_en.arb`, `lib/ui/settings/settings_view.dart`, `lib/**`, `test/**`, `packaging/**` |
 
 ## Standing notes for the next agent
 

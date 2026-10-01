@@ -1,3 +1,4 @@
+<!-- SPDX-FileCopyrightText: 2026 Frank Martínez <mnesarco at gmail> -->
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # FreeCAD Launcher
 
@@ -111,6 +112,8 @@ See the [user guide](docs/user-guide.md#troubleshooting). Common cases:
 
 FreeCAD Launcher is licensed under **GPL-3.0-or-later** — see [LICENSE](LICENSE). Third-party
 components and their licenses are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+Copyright 2026 Frank Martínez <mnesarco at gmail>.
 
 FreeCAD and the FreeCAD logo are trademarks of the FreeCAD Project Association AISBL. This
 launcher ships no FreeCAD artwork; FreeCAD itself is installed by the user from official sources.

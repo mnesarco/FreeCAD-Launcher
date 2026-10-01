@@ -184,6 +184,7 @@ distribution decision recorded (OQ-1).
 | R-08 | "Open profile folder" action in the profile detail header (same action as the profile card and Config tab) | Folder icon in the detail header opens the profile root via `FileActions.openDirectory`; failure snackbar; widget test asserts the command | M3-06, D-059 | S | DONE |
 | R-09 | Don't override `HOME` in profile launches (D-075): drop the `HOME` export and `<profile>/home` from the layout; keep `FREECAD_USER_HOME`/XDG/temp isolation | Unit tests assert inherited `HOME` passes through unchanged; launch/isolation tests green; analyze clean | M1-05, D-005 | S | DONE |
 | R-10 | Macro catalog/installed icons (D-076): render `icon_data` (PNG/SVG) with a memory+disk cache, generic fallback for XPM/missing | Icon shown in Catalog and Installed when available; cache files under `cache/macros/icons/`; unit/widget tests green; live check with the real catalog | M5-04, D-048 | M | DONE |
+| R-11 | Copyright notices (D-079): `SPDX-FileCopyrightText` line in every SPDX-tagged file, notice in README, Settings › About and the generated notices | Headers present in all SPDX-tagged files; About shows the notice; notices regenerate deterministically; analyze/tests green | M7-03, D-074 | S | DONE |
 
 ## Backlog (post-MVP, scheduled when v0.1 is released)
 

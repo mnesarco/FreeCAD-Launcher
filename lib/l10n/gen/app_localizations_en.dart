@@ -1455,6 +1455,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLicense => 'License';
 
   @override
+  String get settingsCopyright =>
+      'Copyright 2026 Frank Martínez <mnesarco at gmail>';
+
+  @override
   String get settingsDiagnostics => 'Diagnostics';
 
   @override

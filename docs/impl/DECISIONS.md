@@ -1731,3 +1731,22 @@ Template:
   split and RC tags still being ignored. The legacy channel work (B-01) consumes the derived
   line.
 - **Refs**: spec 06 §1.3/§1.5, spec 02 FR-1.1/FR-1.7/FR-1.8, `TASKS.md` B-14, D-021, D-077
+
+### D-079 — Copyright notices in sources, docs and About
+- **Date**: 2026-09-30
+- **Status**: Accepted
+- **Context**: D-074 shipped SPDX license identifiers and generated third-party notices, but no
+  per-file copyright line and no visible holder notice in the app. The owner asked to include
+  copyright notices while keeping the holder identity already recorded in D-074.
+- **Decision**:
+  - Every hand-written file that carries an `SPDX-License-Identifier` also carries
+    `SPDX-FileCopyrightText: 2026 Frank Martínez <mnesarco at gmail>` immediately above it
+    (generated files excluded, same rule as D-074).
+  - README's license section and the Settings → About card show
+    `Copyright 2026 Frank Martínez <mnesarco at gmail>`; the third-party notices generator emits
+    the same line in its header.
+  - The holder string stays as recorded in D-074: `Frank Martínez <mnesarco at gmail>`.
+- **Consequences**: source headers gain one line; regenerating `THIRD_PARTY_NOTICES.md` keeps
+  the line deterministic; the About card needs one l10n string.
+- **Refs**: D-074, `TASKS.md` R-11, `LICENSE`, `README.md`, `THIRD_PARTY_NOTICES.md`,
+  `tool/generate_third_party_notices.dart`

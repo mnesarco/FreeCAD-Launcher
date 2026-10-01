@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText: 2026 Frank Martínez <mnesarco at gmail>
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 
@@ -441,6 +442,11 @@ class _SettingsViewState extends State<SettingsView> {
               leading: const Icon(Icons.description_outlined),
               title: Text(l10n.settingsLicense),
               subtitle: const Text('GPL-3.0-or-later'),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.copyright_outlined),
+              title: Text(l10n.settingsCopyright),
             ),
           ],
         ),
