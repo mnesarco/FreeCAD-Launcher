@@ -3088,6 +3088,12 @@ abstract class AppLocalizations {
   /// **'Disk space'**
   String get diagnosticDiskSpace;
 
+  /// No description provided for @diagnosticNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network (GitHub, addons, news)'**
+  String get diagnosticNetwork;
+
   /// No description provided for @diagnosticsStatusOk.
   ///
   /// In en, this message translates to:

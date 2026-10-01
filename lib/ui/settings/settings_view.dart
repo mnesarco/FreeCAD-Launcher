@@ -574,6 +574,7 @@ String _diagnosticLabel(AppLocalizations l10n, String id) => switch (id) {
   DiagnosticIds.fuse => l10n.diagnosticFuse,
   DiagnosticIds.gatekeeper => l10n.diagnosticGatekeeper,
   DiagnosticIds.diskSpace => l10n.diagnosticDiskSpace,
+  DiagnosticIds.network => l10n.diagnosticNetwork,
   _ => id,
 };
 

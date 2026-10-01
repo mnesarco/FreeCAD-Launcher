@@ -1622,6 +1622,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diagnosticDiskSpace => 'Disk space';
 
   @override
+  String get diagnosticNetwork => 'Network (GitHub, addons, news)';
+
+  @override
   String get diagnosticsStatusOk => 'OK';
 
   @override

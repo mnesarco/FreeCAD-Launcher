@@ -15,7 +15,12 @@ abstract final class DiagnosticIds {
   static const String fuse = 'fuse';
   static const String gatekeeper = 'gatekeeper';
   static const String diskSpace = 'disk_space';
+  static const String network = 'network';
 }
+
+/// Performs one request to [uri] and completes when a response is received;
+/// any HTTP status counts as reachable, transport errors count as failures.
+typedef NetworkProbe = Future<void> Function(Uri uri);
 
 class DiagnosticResult {
   const DiagnosticResult({required this.id, required this.status, this.detail});
@@ -40,18 +45,29 @@ class DiagnosticsService {
     ProcessRunner? processRunner,
     Map<String, String>? environment,
     bool Function()? fuseDeviceExists,
+    NetworkProbe? networkProbe,
+    this.networkProbeTimeout = const Duration(seconds: 5),
     this.minimumFreeBytes = 1 << 30,
   }) : _processRunner = processRunner ?? ProcessRunner(),
        _environment = environment ?? Platform.environment,
-       _fuseDeviceExists = fuseDeviceExists ?? (() => File('/dev/fuse').existsSync());
+       _fuseDeviceExists = fuseDeviceExists ?? (() => File('/dev/fuse').existsSync()),
+       _networkProbe = networkProbe;
+
+  static const List<({String label, String url})> networkTargets = [
+    (label: 'GitHub API', url: 'https://api.github.com/rate_limit'),
+    (label: 'FreeCAD addons and macros', url: 'https://addons.freecad.org/'),
+    (label: 'FreeCAD blog news', url: 'https://blog.freecad.org/feed/atom/'),
+  ];
 
   final AppPaths paths;
   final BuildPlatform platform;
   final int minimumFreeBytes;
+  final Duration networkProbeTimeout;
 
   final ProcessRunner _processRunner;
   final Map<String, String> _environment;
   final bool Function() _fuseDeviceExists;
+  final NetworkProbe? _networkProbe;
 
   Future<DiagnosticsReport> runAll() async {
     final results = [
@@ -59,6 +75,7 @@ class DiagnosticsService {
       await checkFuse(),
       await checkGatekeeper(),
       await checkDiskSpace(),
+      await checkNetwork(),
     ];
     return DiagnosticsReport(results);
   }
@@ -193,6 +210,42 @@ class DiagnosticsService {
       id: DiagnosticIds.diskSpace,
       status: DiagnosticStatus.warning,
       detail: '${_formatBytes(availableBytes)} free, minimum is ${_formatBytes(minimumFreeBytes)}',
+    );
+  }
+
+  Future<DiagnosticResult> checkNetwork() async {
+    final probe = _networkProbe;
+    if (probe == null) {
+      return const DiagnosticResult(
+        id: DiagnosticIds.network,
+        status: DiagnosticStatus.notApplicable,
+      );
+    }
+
+    final reachable = <String>[];
+    final failures = <String>[];
+    await Future.wait(
+      networkTargets.map((target) async {
+        try {
+          await probe(Uri.parse(target.url)).timeout(networkProbeTimeout);
+          reachable.add(target.label);
+        } on Object catch (error) {
+          failures.add('${target.label}: $error');
+        }
+      }),
+    );
+
+    if (failures.isEmpty) {
+      return DiagnosticResult(
+        id: DiagnosticIds.network,
+        status: DiagnosticStatus.ok,
+        detail: reachable.join(', '),
+      );
+    }
+    return DiagnosticResult(
+      id: DiagnosticIds.network,
+      status: DiagnosticStatus.warning,
+      detail: failures.join('; '),
     );
   }
 

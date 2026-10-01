@@ -1973,3 +1973,25 @@ Template:
   (M8-03) must confirm FreeCAD loads macros from the forced path on Windows.
 - **Refs**: `docs/impl/PLAN-M8-windows-release.md`, D-053, `lib/platform/freecad_preferences.dart`,
   `docs/impl/TASKS.md` M8-06
+
+### D-093 — Network diagnostics and catalog failure causes are surfaced
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: The Windows manual pass hit `CatalogUnavailableException` with no visible cause:
+  the wrapping exceptions hid the underlying error and catalog failures were not logged, so a
+  Windows Firewall/AV block could not be distinguished from a code or server issue. The Linux
+  build worked, making it a machine-specific (environmental) failure.
+- **Decision**: `DiagnosticsService` gains a `Network` check that probes `api.github.com`,
+  `addons.freecad.org` and `blog.freecad.org/feed/atom/` (injected `NetworkProbe`, 5 s timeout;
+  not-applicable when no probe is configured, so unit tests stay offline). `AppServices` wires
+  it to the shared `http.Client`. The check appears in Settings → Diagnostics and debug bundles
+  and reports the failing target with the exact error. Catalog-unavailable/exception classes
+  append their `cause` to `toString()`, and catalog load failures are logged with stack traces.
+  The user guide/README document the Windows Firewall/AV/SmartScreen workarounds and the
+  direct-connection proxy limitation.
+- **Consequences**: Windows support can distinguish blocks from bugs; diagnostics need outbound
+  HTTPS on the three hosts; system proxy support remains a documented limitation (no proxy
+  auto-detection in v0.2).
+- **Refs**: `docs/impl/PLAN-M8-windows-release.md`, M8-03, `lib/platform/diagnostics.dart`,
+  `lib/data/catalog/*.dart`, `lib/ui/settings/settings_view.dart`, `docs/user-guide.md`,
+  `README.md`

@@ -92,6 +92,9 @@ class AppServices {
     paths: paths,
     platform: hostPlatform,
     processRunner: processRunner,
+    networkProbe: (uri) async {
+      await _client.head(uri);
+    },
   );
 
   late final GitHubReleasesClient releasesClient = GitHubReleasesClient(client: _client);

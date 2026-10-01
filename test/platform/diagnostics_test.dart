@@ -227,6 +227,59 @@ void main() {
     expect(result.status, DiagnosticStatus.notApplicable);
   });
 
+  test('network check is not applicable without a probe', () async {
+    final result = await buildService(platform: BuildPlatform.linux).checkNetwork();
+
+    expect(result.id, DiagnosticIds.network);
+    expect(result.status, DiagnosticStatus.notApplicable);
+  });
+
+  test('network check reports ok when every target answers', () async {
+    final probed = <Uri>[];
+    final service = DiagnosticsService(
+      paths: paths,
+      platform: BuildPlatform.linux,
+      networkProbe: (uri) async => probed.add(uri),
+    );
+
+    final result = await service.checkNetwork();
+
+    expect(result.status, DiagnosticStatus.ok);
+    expect(probed, hasLength(DiagnosticsService.networkTargets.length));
+  });
+
+  test('network check warns with the failing target and cause', () async {
+    final service = DiagnosticsService(
+      paths: paths,
+      platform: BuildPlatform.linux,
+      networkProbe: (uri) async {
+        if (uri.host == 'api.github.com') {
+          throw Exception('blocked by firewall');
+        }
+      },
+    );
+
+    final result = await service.checkNetwork();
+
+    expect(result.status, DiagnosticStatus.warning);
+    expect(result.detail, contains('GitHub API'));
+    expect(result.detail, contains('blocked by firewall'));
+    expect(result.detail, isNot(contains('addons.freecad.org')));
+  });
+
+  test('network check treats any HTTP response as reachable', () async {
+    final service = DiagnosticsService(
+      paths: paths,
+      platform: BuildPlatform.linux,
+      networkProbe: (uri) async {},
+    );
+
+    expect(
+      (await service.checkNetwork()).status,
+      DiagnosticStatus.ok,
+    );
+  });
+
   test('runAll returns one result per check', () async {
     final launcher = FakeProcessLauncher();
     final future = buildService(
@@ -248,7 +301,7 @@ void main() {
 
     final report = await future;
 
-    expect(report.results, hasLength(4));
+    expect(report.results, hasLength(5));
     expect(
       report.results.map((result) => result.id),
       containsAll([
@@ -256,6 +309,7 @@ void main() {
         DiagnosticIds.fuse,
         DiagnosticIds.gatekeeper,
         DiagnosticIds.diskSpace,
+        DiagnosticIds.network,
       ]),
     );
   });

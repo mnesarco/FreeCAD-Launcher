@@ -667,6 +667,7 @@
   "diagnosticFuse": "AppImage support (FUSE)",
   "diagnosticGatekeeper": "macOS Gatekeeper",
   "diagnosticDiskSpace": "Disk space",
+  "diagnosticNetwork": "Network (GitHub, addons, news)",
   "diagnosticsStatusOk": "OK",
   "diagnosticsStatusWarning": "Warning",
   "diagnosticsStatusError": "Error",

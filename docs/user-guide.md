@@ -360,6 +360,20 @@ marks the entries as missing/broken instead of losing data.
   reused offline (a stale banner appears). GitHub's API may rate-limit unauthenticated requests
   (~60/hour); wait and retry.
 
+### Windows blocks the catalogs or news (firewall/antivirus)
+
+The Versions/Addons/Macros catalogs and the Home news need outbound HTTPS. The failure message
+now includes the underlying cause (for example a `SocketException`), and the error is written to
+the log.
+
+- Open **Settings → Diagnostics** and run the checks: the **Network** row probes the GitHub API,
+  `addons.freecad.org` and the news feed and reports the exact failure.
+- If Windows Firewall or your antivirus/EDR blocks the app, allow `freecad_launcher.exe`
+  (Windows Security → Firewall & network protection → *Allow an app through firewall* → check
+  Private and Public; add the app if it is not listed). Third-party security suites have their
+  own allow lists.
+- The launcher connects directly; system proxy settings are not used yet (known limitation).
+
 ### A build is Missing or Broken
 
 - The Installed tab badge explains the state: the executable or its directory is gone
@@ -391,6 +405,8 @@ environment details and diagnostics — never your database, profiles or tokens.
   planned (M8-04).
 - On Windows, Qt keeps some registry state shared between profiles; FreeCAD-level isolation
   (`FREECAD_USER_HOME`, config, `Mod/`, macros, temporary files) is still per profile.
+- Network access is direct: system proxy settings are not used yet, so a mandatory proxy
+  blocks the catalogs and the news feed (Settings → Diagnostics → Network shows the failure).
 - Weekly builds are available (Versions → Available → Weekly); the legacy 1.0.x channel is not
   exposed yet (the support floor is FreeCAD 1.0+ for catalog builds).
 - Build updates are notify-only: install the new version from Versions → Available and rebind
