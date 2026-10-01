@@ -1794,3 +1794,17 @@ Template:
 - **Consequences**: the first push publishes the full history (prototype included); releases
   require a `vX.Y.Z` tag matching `appVersion` (packaging/check_version.sh); OQ-7 closes.
 - **Refs**: OQ-7, spec 07 §4/§5, `TASKS.md` M8-01/M8-02, D-015, D-068, D-071
+
+### D-082 — CI test scope during the Linux-first phase
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: The first GitHub CI run (M8-02) was green on Linux but exposed 21 test failures
+  on Windows/macOS from POSIX assumptions (path separators, `/var` symlink resolution,
+  `xdg-open` vs `explorer.exe`, shell-script fake interpreters, Linux AppImage probe behavior).
+  The product is Linux-first for v0.1 (D-072) and Windows/macOS work is M8-03/M8-04.
+- **Decision**: the CI matrix keeps version/codegen/analyze and a release build on all three
+  OSes (D-003), but `flutter test` runs on Linux only until the suite is portabilized
+  (M8-06). Windows/macOS artifacts may be built from CI before their tests run there.
+- **Consequences**: Windows/macOS test coverage is paused and tracked as M8-06; Linux coverage
+  is unchanged; the three-OS build/analyze guarantee remains.
+- **Refs**: D-003, D-072, `TASKS.md` M8-02/M8-06, OQ-1

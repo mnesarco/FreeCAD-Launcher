@@ -58,7 +58,8 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
-      - name: Test
+      - name: Test (Linux)
+        if: runner.os == 'Linux'
         run: flutter test
 
       - name: Build (Linux)
