@@ -73,15 +73,16 @@ TlsTrustResult installAdditionalTrust({String? extraBundlePath}) {
 }
 
 /// Concatenates every certificate from the Windows `ROOT` and `CA` stores as
-/// PEM. Returns an empty string outside Windows.
+/// PEM, for both the machine and the current user. Returns an empty string
+/// outside Windows.
 String loadWindowsSystemRootsPem() {
   if (!Platform.isWindows) {
     return '';
   }
   final crypt32 = DynamicLibrary.open('crypt32.dll');
   final openStore = crypt32.lookupFunction<
-      IntPtr Function(IntPtr, Pointer<Utf16>),
-      int Function(int, Pointer<Utf16>)>('CertOpenSystemStoreW');
+      IntPtr Function(Pointer<Utf8>, Uint32, IntPtr, Uint32, Pointer<Utf16>),
+      int Function(Pointer<Utf8>, int, int, int, Pointer<Utf16>)>('CertOpenStore');
   final enumCertificates = crypt32.lookupFunction<
       Pointer<_CertContext> Function(IntPtr, Pointer<_CertContext>),
       Pointer<_CertContext> Function(int, Pointer<_CertContext>)>(
@@ -91,30 +92,42 @@ String loadWindowsSystemRootsPem() {
       Int32 Function(IntPtr, Uint32),
       int Function(int, int)>('CertCloseStore');
 
+  const certStoreProvSystemW = 10;
+  const currentUser = 0x00010000;
+  const localMachine = 0x00020000;
+  final provider = Pointer<Utf8>.fromAddress(certStoreProvSystemW);
+
   final buffer = StringBuffer();
-  for (final storeName in const ['ROOT', 'CA']) {
-    final namePointer = storeName.toNativeUtf16();
-    final store = openStore(0, namePointer);
-    calloc.free(namePointer);
-    if (store == 0) {
-      continue;
-    }
-    try {
-      var context = enumCertificates(store, nullptr);
-      while (context != nullptr) {
-        final certificate = context.ref;
-        final length = certificate.cbCertEncoded;
-        if (certificate.pbCertEncoded != nullptr && length > 0) {
-          final der = certificate.pbCertEncoded.asTypedList(length);
-          buffer
-            ..writeln('-----BEGIN CERTIFICATE-----')
-            ..writeln(_wrapBase64(base64.encode(der)))
-            ..writeln('-----END CERTIFICATE-----');
-        }
-        context = enumCertificates(store, context);
+  final seen = <String>{};
+  for (final location in const [localMachine, currentUser]) {
+    for (final storeName in const ['ROOT', 'CA']) {
+      final namePointer = storeName.toNativeUtf16();
+      final store = openStore(provider, 0, 0, location, namePointer);
+      calloc.free(namePointer);
+      if (store == 0) {
+        continue;
       }
-    } finally {
-      closeStore(store, 0);
+      try {
+        var context = enumCertificates(store, nullptr);
+        while (context != nullptr) {
+          final certificate = context.ref;
+          final length = certificate.cbCertEncoded;
+          if (certificate.pbCertEncoded != nullptr && length > 0) {
+            final encoded = base64.encode(
+              certificate.pbCertEncoded.asTypedList(length),
+            );
+            if (seen.add(encoded)) {
+              buffer
+                ..writeln('-----BEGIN CERTIFICATE-----')
+                ..writeln(_wrapBase64(encoded))
+                ..writeln('-----END CERTIFICATE-----');
+            }
+          }
+          context = enumCertificates(store, context);
+        }
+      } finally {
+        closeStore(store, 0);
+      }
     }
   }
   return buffer.toString();
