@@ -46,3 +46,5 @@ app.*.map.json
 
 # graphify knowledge-graph artifacts
 graphify-out/
+
+/demo/

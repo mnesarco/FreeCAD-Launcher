@@ -342,8 +342,8 @@ environment details and diagnostics — never your database, profiles or tokens.
 ## Known limitations (v0.1)
 
 - Linux only: Windows/macOS artifacts are planned (packaging/deployment phase).
-- Weekly and legacy channels are not exposed in the UI (the support floor is FreeCAD 1.0+ for
-  catalog builds; the older 1.0.x line is treated as legacy).
+- Weekly builds are available (Versions → Available → Weekly); the legacy 1.0.x channel is not
+  exposed yet (the support floor is FreeCAD 1.0+ for catalog builds).
 - Build updates are notify-only: install the new version from Versions → Available and rebind
   profiles manually.
 - No launcher self-update yet; replace the AppImage manually.
