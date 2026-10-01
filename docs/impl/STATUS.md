@@ -3,17 +3,18 @@
 > Live file. Every session updates this at start and end. Keep it short — details belong in
 > `TASKS.md` and `DECISIONS.md`.
 
-- **Updated**: 2026-09-30
-- **Current milestone**: **M7 — Linux v0.1 completion: complete** (M7-01/M7-03/M7-04/M7-06 done;
-  M7-05 deferred to M8-05 per D-073)
+- **Updated**: 2026-10-01
+- **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
+  (M8-01 release workflow and M8-02 first CI run DONE; M8-03/M8-04 need Windows/macOS machines;
+  M8-05 clean-VM pass ready with the published AppImage; M8-06 test portability open)
 - **Active branch**: `devel` (public) — `main` is reserved for a future release line
-- **Last session**: 2026-09-30
-- **Next action**: publish to GitHub (`mnesarco/FreeCAD-Launcher`, D-081): add the remote, push
-  `devel`, watch the first CI matrix run (M8-02), then run the manual **Release AppImage**
-  workflow; after that `M8-03`/`M8-04` (Windows/macOS artifacts) and `M8-05` (clean-VM pass).
-  Backlog: `B-01` legacy channel, `B-14` CalVer readiness, `B-02` in-place build updates.
+- **Last session**: 2026-10-01
+- **Next action**: run `M8-05` (clean-machine Linux validation) with the published
+  `v0.1.0` AppImage; `M8-06` cross-platform test portability can be done without machines;
+  `M8-03`/`M8-04` wait for Windows/macOS machines (OQ-1). Backlog: `B-01` legacy channel,
+  `B-14` CalVer readiness (before 27.1 branches, 2027-01-31), `B-02` in-place build updates.
 - **Blockers**:
-  - None for publishing. M8-03/M8-04 still need Windows/macOS machines (OQ-1).
+  - M8-03/M8-04 need Windows/macOS machines (OQ-1); nothing else is blocked.
 - **In progress**: none
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
@@ -533,9 +534,11 @@
 
 - The prototype is frozen at tag `prototype-final`; do not resurrect its code or schema.
 - Read `docs/impl/DECISIONS.md` before proposing alternatives to anything already decided.
-- Support floor is FreeCAD 1.0+ (D-021); pre-1.0 catalog tags are ignored, `legacy` = 1.0.x,
-  custom user binaries are unaffected.
-- M7 is Linux-first (D-072): finish the Linux functional pass (M7-06), LICENSE/notices, README
-  and the clean-VM check; CI, release publishing and Windows/macOS deployment are deferred to M8.
+- Support floor is FreeCAD 1.0+ (D-021); pre-1.0 catalog tags are ignored. `legacy` is
+  catalog-derived (D-078): supported stable lines older than the newest one present. Weekly
+  builds are exposed in Versions → Available (D-077). CalVer readiness is backlog B-14.
+- Publishing (D-081): public repo `mnesarco/FreeCAD-Launcher`, branch `devel`, releases only
+  from CI (`appimage-release.yml`, manual `workflow_dispatch` with optional `create_release`).
+  CI runs Linux + Windows; macOS is disabled per D-083; tests are Linux-only per D-082/M8-06.
 - `AGENTS.md` is tracked again (no longer git-excluded); keep it in sync with `docs/impl/`
   when conventions or the project state change.
