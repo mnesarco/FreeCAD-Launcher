@@ -16,9 +16,8 @@
   `B-10` custom addon installs (plan ready in `PLAN-B10-custom-addons.md`).
 - **Blockers**:
   - M8-03/M8-04 need Windows/macOS machines (OQ-1); nothing else is blocked.
-- **In progress**: `R-13` (clickable launch-log row in Profile → Overview, D-090) implemented
-  with a widget test — **uncommitted**; `B-15a` and `B-10a`..`B-10f` are committed
-  (`a9e3f1c`, `5a372ab`).
+- **In progress**: nothing active; `R-13` (clickable launch-log row, D-090), `B-15a` and
+  `B-10a`..`B-10f` are committed (`c0a00b9`, `a9e3f1c`, `5a372ab`).
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
     diagnostics, CI workflow, test harness).
@@ -461,8 +460,8 @@
   - R-13 (2026-10-01, D-090): the Profile → Overview `Log` row is now a clickable link that
     opens the launch log with the system default text editor (`FileActions.open`), with a
     localized label/tooltip and a failure snackbar; `_InfoRow` gained an optional `onTap`.
-    587 tests green (9 manual probes skipped), analyze clean; **uncommitted**. Widget test
-    asserts the `xdg-open <log>` command.
+    587 tests green (9 manual probes skipped), analyze clean; committed (`c0a00b9`). Widget
+    test asserts the `xdg-open <log>` command.
 
 ## Session log
 
