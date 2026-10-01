@@ -17,7 +17,9 @@ import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/builds_controller.dart';
 import 'package:freecad_launcher/ui/icons.dart';
 import 'package:freecad_launcher/ui/shell/section_shortcuts.dart';
+import 'package:freecad_launcher/ui/widgets/build_version_label.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
+import 'package:freecad_launcher/ui/widgets/compact_dropdown.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 
@@ -183,7 +185,8 @@ class _InstalledBuildTile extends StatelessWidget {
             CompactBadge(
               icon: Icons.system_update_alt,
               label:
-                  '${buildUpdate.installedVersion} → ${buildUpdate.latestVersion}',
+                  '${buildVersionLabel(buildUpdate.installedVersion, l10n)} → '
+                  '${buildVersionLabel(buildUpdate.latestVersion, l10n)}',
             ),
           ],
         ],
@@ -394,6 +397,7 @@ class _AvailableTab extends StatefulWidget {
 
 class _AvailableTabState extends State<_AvailableTab> {
   bool _requested = false;
+  BuildChannel _channel = BuildChannel.stable;
 
   @override
   void didChangeDependencies() {
@@ -414,7 +418,10 @@ class _AvailableTabState extends State<_AvailableTab> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).builds;
-    final candidates = controller.availableBuilds.watch(context);
+    final stable = controller.availableBuilds.watch(context);
+    final weekly = controller.weeklyBuilds.watch(context);
+    final isWeekly = _channel == BuildChannel.weekly;
+    final candidates = isWeekly ? weekly : stable;
     final loading = controller.loadingCatalog.watch(context);
     final error = controller.catalogError.watch(context);
     final stale =
@@ -436,8 +443,9 @@ class _AvailableTabState extends State<_AvailableTab> {
     } else if (candidates.isEmpty) {
       body = EmptyState(
         icon: Icons.cloud_download_outlined,
-        title: l10n.versionsAvailableEmptyTitle,
-        message: l10n.versionsAvailableEmptyMessage,
+        title: isWeekly ? l10n.versionsWeeklyEmptyTitle : l10n.versionsAvailableEmptyTitle,
+        message:
+            isWeekly ? l10n.versionsWeeklyEmptyMessage : l10n.versionsAvailableEmptyMessage,
         action: FilledButton.tonal(
           onPressed: () => controller.loadCatalog(forceRefresh: true),
           child: Text(l10n.versionsRefresh),
@@ -471,6 +479,28 @@ class _AvailableTabState extends State<_AvailableTab> {
                 )
               else
                 const Spacer(),
+              SizedBox(
+                width: 130,
+                child: CompactDropdown<BuildChannel>(
+                  value: _channel,
+                  items: [
+                    DropdownMenuItem(
+                      value: BuildChannel.stable,
+                      child: Text(l10n.versionsChannelStable),
+                    ),
+                    DropdownMenuItem(
+                      value: BuildChannel.weekly,
+                      child: Text(l10n.versionsChannelWeekly),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _channel = value);
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
               TextButton.icon(
                 onPressed: loading
                     ? null
@@ -508,6 +538,7 @@ class _AvailableBuildTile extends StatelessWidget {
       candidate.assetName,
     ].join('  ·  ');
     final detail = progress == null ? '' : _progressDetail(progress);
+    final label = buildVersionLabel(candidate.versionLabel, l10n);
 
     final Widget trailing;
     if (progress != null) {
@@ -526,7 +557,15 @@ class _AvailableBuildTile extends StatelessWidget {
 
     return ListTile(
       leading: const Icon(FreeCADIcons.freecad),
-      title: Text(candidate.versionLabel),
+      title: Row(
+        children: [
+          Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
+          if (candidate.channel == BuildChannel.weekly) ...[
+            const SizedBox(width: 8),
+            CompactBadge(label: l10n.versionsChannelWeekly),
+          ],
+        ],
+      ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -564,10 +603,37 @@ class _AvailableBuildTile extends StatelessWidget {
     BuildCandidate candidate,
   ) async {
     final tabController = DefaultTabController.of(context);
+    if (candidate.channel == BuildChannel.weekly) {
+      final confirmed = await _confirmWeeklyInstall(context);
+      if (confirmed != true) {
+        return;
+      }
+    }
     final result = await controller.install(candidate);
     if (result.isOk) {
       tabController.animateTo(0);
     }
+  }
+
+  Future<bool?> _confirmWeeklyInstall(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.versionsWeeklyInstallTitle),
+        content: Text(l10n.versionsWeeklyInstallMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.versionsCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.versionsInstall),
+          ),
+        ],
+      ),
+    );
   }
 }
 

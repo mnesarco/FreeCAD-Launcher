@@ -7,6 +7,7 @@ import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/profiles/profile_actions.dart'
     show formatProfileDateTime;
+import 'package:freecad_launcher/ui/widgets/build_version_label.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 
 Future<void> showUpdatesSummarySheet(BuildContext context) {
@@ -167,9 +168,10 @@ class _UpdatesSummarySheetState extends State<UpdatesSummarySheet> {
                             dense: true,
                             contentPadding: EdgeInsets.zero,
                             leading: const Icon(Icons.inventory_2_outlined),
-                            title: Text(update.installedVersion),
+                            title: Text(buildVersionLabel(update.installedVersion, l10n)),
                             subtitle: Text(
-                              '${update.installedVersion}  →  ${update.latestVersion}',
+                              '${buildVersionLabel(update.installedVersion, l10n)}  →  '
+                              '${buildVersionLabel(update.latestVersion, l10n)}',
                             ),
                             trailing: CompactBadge(
                               label: l10n.addonsUpdateBadge,

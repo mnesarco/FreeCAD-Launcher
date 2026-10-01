@@ -1678,3 +1678,56 @@ Template:
   negatively caches undecodable payloads.
 - **Refs**: spec 03 §2.5, D-044, D-048, `lib/platform/macro_icon_cache.dart`,
   `lib/ui/macros/macro_icon.dart`, `TASKS.md` R-10
+
+### D-077 — Weekly builds (v0.2 plan): dated tags, channel filter, notify-only updates
+- **Date**: 2026-09-30
+- **Status**: Accepted
+- **Context**: FR-1.7's weekly channel is the next build-management increment. Analysis (session
+  R6) showed the foundation already exists (`WeeklyVersion`, `ReleaseTag.parse`, weekly asset
+  classification, channel-agnostic install pipeline, checksum sidecars), but
+  `BuildsController.loadCatalog` drops every non-stable candidate, the Available UI has no
+  channel concept and `UpdatesController.outdatedBuilds` assumes a stable-only list. The real
+  catalog holds 83 dated weekly releases plus a rolling `weeklies` release last published
+  2025-11-26 (stale) while dated weeklies continue weekly.
+- **Decision**:
+  - Scope for this increment is weekly only; the legacy (1.0.x) channel stays in B-01.
+  - Weekly builds are exposed through a channel filter on Versions → Available (Stable
+    default, Weekly selectable); weekly rows use a human label ("Weekly 2026-09-30"), a
+    development badge and an install confirmation warning. The Install action stays explicit
+    (D-008) and weekly builds are never auto-installed or auto-updated.
+  - The rolling `weeklies` release is skipped: it duplicates dated Linux assets and is
+    outdated; only `weekly-YYYY.MM.DD` tags are collected.
+  - Weekly update checks are notify-only; FR-1.8's apply is deferred to B-02 (in-place build
+    updates). Stable and weekly suggestions are never mixed.
+  - Catalog collection uses `AssetClassifier.selectFor` so each release yields one candidate
+    per platform/arch (resolves macOS10/11/15 weekly variants).
+- **Consequences**: weekly profiles work end-to-end (checksum verify, Python probe, isolated
+  launch) but weekly builds have no semver, so they do not appear in the Addons
+  FreeCAD-version filter (addon installs still work through the unfiltered branch list); the
+  `stableLine`/legacy rules are untouched.
+- **Refs**: FR-1.7/FR-1.8, spec 06 §1.3/§1.5, spec 03 §2.2, `TASKS.md` B-01 breakdown, D-008,
+  D-021, D-058, `docs/impl/STATUS.md` session R6
+
+### D-078 — CalVer transition readiness (FreeCAD 26.3+)
+- **Date**: 2026-09-30
+- **Status**: Accepted
+- **Context**: Owner states FreeCAD changes from semver to calendar versioning starting with the
+  next stable (26.3). `FreeCadVersion.tryParse` already accepts `26.3` and numeric ordering puts
+  CalVer above every 1.x line, so catalogs, update checks and sorting keep working; but the
+  stable/legacy split uses the hardcoded `stableLine = 1.1`, so once 26.3 is current, 1.1.x would
+  still classify as `stable` instead of `legacy`. RC suffixes (`1.1rc3`, presumably `26.3rc1`)
+  are ignored by the tag regexes, as before.
+- **Decision**:
+  - The current stable line is derived from the catalog at load: the highest supported stable
+    version (`major.minor`) present defines the line; supported stable versions below it are
+    `legacy`. Example: while the newest tag is 1.1.x, 1.0.x is legacy; once 26.3 appears, 1.1.x
+    and 1.0.x become legacy; once 27.3 ships, 26.3 becomes legacy too.
+  - Cross-schema ordering stays numeric (CalVer > semver); weekly dates are only compared inside
+    the weekly channel, never against stable versions.
+  - `FreeCadVersion.stableLine`/`isLegacy` are retired in favor of the catalog-derived line
+    (backlog task B-14); spec 06 §1.3/§1.5 updated with the new tag pattern and ordering rule.
+- **Consequences**: classification now needs catalog context (a second pass over collected
+  candidates), including offline/stale loads; tests must cover `26.3 > 1.1.4`, the transition
+  split and RC tags still being ignored. The legacy channel work (B-01) consumes the derived
+  line.
+- **Refs**: spec 06 §1.3/§1.5, spec 02 FR-1.1/FR-1.7/FR-1.8, `TASKS.md` B-14, D-021, D-077

@@ -189,7 +189,7 @@ distribution decision recorded (OQ-1).
 
 | ID | Task | Spec ref | Target |
 |---|---|---|---|
-| B-01 | Weekly + legacy channels (catalog UI, installation) | FR-1.7 | v0.2 |
+| B-01 | Legacy channel (1.0.x): catalog UI + installation; the weekly part is DONE (B-01a..B-01d, D-077) | FR-1.7 | v0.2 |
 | B-02 | In-place build updates (install alongside → switch → cleanup) | FR-1.8, spec 04 §7 | v0.2 |
 | B-03 | Full profile export (zip with payload toggles) | FR-9.2 | v0.2 |
 | B-04 | Preference browser + config reset + raw XML advanced editor | FR-8.3, FR-8.4 | v0.2 |
@@ -201,3 +201,23 @@ distribution decision recorded (OQ-1).
 | B-10 | Local addon zip install (developer mode) | FR-4.8 | v0.2 |
 | B-12 | i18n translations (if OQ-6 = start later) | NFR-9 | v1.0 |
 | B-13 | Fully isolated private-build profiles (OQ-8) | spec 09 | post-v1.0 |
+| B-14 | CalVer transition readiness (D-078, FEP-0003): stable tags `YY.N` (three releases/year, `26.3` branched 2026-09-30) and monthly patches `YY.N.P`; derive the current stable line from the catalog for the stable/legacy split; ignore RC tags (`26.3rc1`) and dedupe `26.3` vs `26.3.0`; ordering tests + spec 06 §1.3/§1.5. Needed before 27.1 branches (2027-01-31) makes 26.3 legacy | FR-1.1, FR-1.7, FR-1.8 | v0.2 |
+
+### B-01 breakdown — weekly builds (planned, v0.2; D-077)
+
+Weekly only (legacy stays B-01). Dated tags only (`weeklies` skipped). Updates notify-only
+(apply deferred to B-02). Channel filter on the Available tab, Stable default.
+
+| ID | Task | Done when | Deps | Effort | Status |
+|---|---|---|---|---|---|
+| B-01a | Weekly catalog collection: keep the stable list untouched for update checks, add a `weeklyBuilds` signal; use `AssetClassifier.selectFor` so each release yields one candidate per platform/arch (macOS10/11/15 resolved); skip the rolling `weeklies` tag | Fixtures with real weekly asset names; one candidate per platform/arch; rolling tag ignored; stable list and update checks unchanged | M2-02, D-077 | M | DONE |
+| B-01b | Available UI channel filter: Stable \| Weekly selector (Stable default), weekly rows with human label ("Weekly 2026-09-30") + dev badge, install confirmation warning (development quality, not covered by support), weekly empty state | Widget tests for channel switch, label, warning dialog and install flow; no stable UI regressions | B-01a, M2-07 | M | DONE |
+| B-01c | Weekly update detection (notify-only): compare `WeeklyVersion` dates for installed weekly builds against the latest weekly candidate; never mix stable/weekly suggestions; no apply action | Unit tests for newer/equal/older dates and no cross-channel suggestions; badge shows in status chip/summary sheet | B-01a, M6-01 | S | DONE |
+| B-01d | Verification + docs: real weekly AppImage install on Linux (checksum, headless `--version`, profile create/launch); spec 03 §2.2, spec 06 §1.3, user guide, VERIFICATION matrix | Manual Linux pass recorded in STATUS; docs updated; analyze/tests green | B-01b, B-01c | M | DONE |
+
+Known limitation in this increment: weekly builds have no semver, so they don't appear in the
+Addons FreeCAD-version filter (profile addon installs still work via the unfiltered branch
+list). Deriving an API version from the Python probe is possible follow-up work.
+
+CalVer (D-078/B-14) does not change this plan: weekly update checks are date-based and stable
+update ordering stays numeric across schemas.

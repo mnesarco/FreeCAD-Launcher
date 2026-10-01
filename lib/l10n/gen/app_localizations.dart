@@ -1120,6 +1120,48 @@ abstract class AppLocalizations {
   /// **'Check your connection and refresh the catalog.'**
   String get versionsAvailableEmptyMessage;
 
+  /// No description provided for @versionsChannelStable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable'**
+  String get versionsChannelStable;
+
+  /// No description provided for @versionsChannelWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get versionsChannelWeekly;
+
+  /// No description provided for @versionsWeeklyBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly {date}'**
+  String versionsWeeklyBuild(String date);
+
+  /// No description provided for @versionsWeeklyEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No weekly builds available'**
+  String get versionsWeeklyEmptyTitle;
+
+  /// No description provided for @versionsWeeklyEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh the catalog; weekly builds are published most Wednesdays.'**
+  String get versionsWeeklyEmptyMessage;
+
+  /// No description provided for @versionsWeeklyInstallTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Install a development build?'**
+  String get versionsWeeklyInstallTitle;
+
+  /// No description provided for @versionsWeeklyInstallMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly builds are development-quality: features may break and they are not covered by support. Keep a stable build for real work.'**
+  String get versionsWeeklyInstallMessage;
+
   /// No description provided for @versionsStaleCatalog.
   ///
   /// In en, this message translates to:

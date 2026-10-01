@@ -341,4 +341,45 @@ void main() {
 
     expect(find.text('/tmp/open/my-build.AppImage'), findsOneWidget);
   });
+
+  testWidgets('shows weekly builds behind the channel filter with an install warning', (
+    tester,
+  ) async {
+    final weekly = BuildCandidate(
+      versionLabel: 'weekly-2026.09.23',
+      channel: BuildChannel.weekly,
+      platform: BuildPlatform.linux,
+      arch: BuildArch.x86_64,
+      kind: BuildKind.appimage,
+      assetName: 'FreeCAD_weekly-2026.09.23-Linux-x86_64.AppImage',
+      downloadUrl: 'https://example.invalid/FreeCAD_weekly-2026.09.23-Linux-x86_64.AppImage',
+      sizeBytes: 130000000,
+      weekly: WeeklyVersion.tryParse('weekly-2026.09.23'),
+    );
+    controller.availableBuilds.value = [sampleCandidate()];
+    controller.weeklyBuilds.value = [weekly];
+
+    await pumpBuilds(tester);
+
+    expect(find.text('1.1.3'), findsOneWidget);
+    expect(find.text('Weekly 2026-09-23'), findsNothing);
+
+    await tester.tap(find.text('Stable').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Weekly').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Weekly 2026-09-23'), findsOneWidget);
+    expect(find.text('1.1.3'), findsNothing);
+
+    await tester.tap(find.text('Install'));
+    await tester.pumpAndSettle();
+    expect(find.text('Install a development build?'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Install a development build?'), findsNothing);
+    expect(find.text('Weekly 2026-09-23'), findsOneWidget);
+  });
 }

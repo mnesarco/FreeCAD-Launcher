@@ -9,8 +9,9 @@
 - **Active branch**: `v2`
 - **Last session**: 2026-09-30
 - **Next action**: M7 has no open tasks. Next options: owner review of README/`docs/user-guide.md`;
-  then `M8` (packaging/CI/cross-platform — blocked on a git remote, OQ-7) or post-v0.1 backlog
-  (`B-02` in-place build updates, `B-03` full profile export, ...).
+  continue the post-v0.1 backlog: `B-01` legacy channel (1.0.x) or `B-14` CalVer readiness
+  (needed before 27.1 branches, 2027-01-31), then `B-02` in-place build updates, `B-03` full
+  profile export; `M8` (packaging/CI/cross-platform) is blocked on a git remote (OQ-7).
 - **Blockers**:
   - None for M7 (Linux). M8 needs a git remote (OQ-7) and Windows/macOS machines (OQ-1).
 - **In progress**: none
@@ -369,6 +370,17 @@
     word-boundary truncation in `NewsItem.excerpt`) above the date, with the title in the primary
     accent color (semibold) so posts stand out. 508 tests green, analyze clean; live dev-app
     check showed all five latest posts with excerpts.
+  - B-01 weekly part — **D-077**: dated weekly builds work end-to-end. B-01a catalog collection
+    (`weeklyBuilds` signal, one candidate per release via `selectFor`, rolling `weeklies`
+    skipped); B-01b Available channel filter (Stable default) with "Weekly YYYY-MM-DD" labels,
+    dev badges and an install confirmation warning; B-01c notify-only weekly update badges by
+    tag date (stable/weekly never mixed, humanized in chips/summary); B-01d real verification —
+    `weekly-2026.09.30` AppImage installed on Linux (767.3 MiB, SHA-256 verified, Python 3.13
+    probed, headless `--version` = **FreeCAD 26.3.0**) and two profiles created/launched isolated
+    on it. 514 tests green (9 manual probes skipped), analyze clean. Legacy (1.0.x) remains in
+    B-01.
+  - Weekly list cap (2026-09-30, post-R8): Versions → Available ▸ Weekly now shows at most the
+    latest 52 dated builds (one year), newest first (`BuildsController.weeklyBuildLimit`).
 
 ## Session log
 
@@ -459,6 +471,10 @@
 | 2026-09-30 | R3 | D-075/R-09: profile launches no longer override `HOME`; `<profile>/home` dropped from the layout; unit suite green (500) + real 1.0.2 isolation E2E re-run | R-09 | `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md`, `docs/spec/{04-architecture,05-data-model}.md`, `docs/user-guide.md`, `lib/domain/profiles/{launch_environment,profile_paths}.dart`, `test/**` |
 | 2026-09-30 | R4 | D-076/R-10 macro catalog icons (two-level cache, catalog+installed, prune) + UI polish (filter icon, folder button alignment, Macros defaults to Catalog); 505 tests green, live dev-app check | R-10 | `docs/impl/{DECISIONS,TASKS,STATUS}.md`, `docs/spec/03-ux.md`, `docs/user-guide.md`, `lib/platform/{paths,macro_icon_cache}.dart`, `lib/state/{app_services,macros_controller}.dart`, `lib/ui/macros/**`, `lib/ui/addons/addons_view.dart`, `lib/ui/profiles/config_snapshots_view.dart`, `test/**` |
 | 2026-09-30 | R5 | Home news excerpts (2-line, 180-char word-boundary truncation) with widget/domain tests; 508 tests green, live check | — | `lib/domain/news/news_item.dart`, `lib/ui/home/home_view.dart`, `test/domain/news_item_test.dart`, `test/ui/home_view_test.dart`, `docs/user-guide.md`, `docs/impl/STATUS.md` |
+| 2026-09-30 | R6 | Weekly builds analyzed and planned (D-077): dated `weekly-YYYY.MM.DD` only, Available channel filter with dev warning, notify-only update checks, apply deferred to B-02; tasks B-01a..B-01d recorded | — | `docs/impl/{DECISIONS,TASKS,STATUS}.md` |
+| 2026-09-30 | R7 | CalVer transition verified against FEP-0003 (`YY.N` three/year, patches `YY.N.P`, first 26.3 branched 2026-09-30, RCs ignored until final): D-078, spec 06 §1.3/§1.5, FR-1.7 and backlog task B-14 recorded | — | `docs/spec/{02-requirements,06-integrations}.md`, `docs/impl/{DECISIONS,TASKS,STATUS}.md` |
+| 2026-09-30 | R8 | B-01 weekly builds (D-077) implemented: `weeklyBuilds` catalog signal, Available channel filter + dev warning, notify-only weekly update badges, humanized weekly labels; real `weekly-2026.09.30` install verified (checksum, Python 3.13 probe, `--version` = 26.3.0); docs updated | B-01a..B-01d | `lib/state/{builds_controller,updates_controller}.dart`, `lib/ui/builds/builds_view.dart`, `lib/ui/updates/updates_summary_sheet.dart`, `lib/ui/widgets/build_version_label.dart`, `lib/l10n/app_en.arb`, `lib/l10n/gen/**`, `test/**`, `docs/{spec/03-ux.md,user-guide.md}`, `docs/impl/{TASKS,STATUS,VERIFICATION}.md` |
+| 2026-09-30 | R9 | Cap the weekly list at the latest 52 (one year), newest first (`BuildsController.weeklyBuildLimit`); controller test + spec/user-guide wording | B-01 | `lib/state/builds_controller.dart`, `test/state/builds_controller_test.dart`, `docs/spec/03-ux.md`, `docs/user-guide.md`, `docs/impl/STATUS.md` |
 
 ## Standing notes for the next agent
 

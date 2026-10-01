@@ -80,6 +80,20 @@ BuildCandidate candidate(String version, BuildKind kind) {
   );
 }
 
+BuildCandidate weeklyCandidate(String tag, BuildKind kind) {
+  return BuildCandidate(
+    versionLabel: tag,
+    channel: BuildChannel.weekly,
+    platform: BuildPlatform.linux,
+    arch: 'x86_64',
+    kind: kind,
+    assetName: 'FreeCAD_$tag.AppImage',
+    downloadUrl: 'https://example.invalid/$tag',
+    sizeBytes: 1,
+    weekly: WeeklyVersion.tryParse(tag),
+  );
+}
+
 void main() {
   late Directory tempDirectory;
   late AppDatabase db;
@@ -371,6 +385,60 @@ void main() {
       );
     },
   );
+
+  test('flags newer weekly builds by date and never mixes channels', () {
+    final builds = buildsController();
+    builds.installedBuilds.value = [
+      sampleBuild(
+        id: 'weekly-old',
+        version: 'weekly-2026.09.10',
+        channel: BuildChannel.weekly,
+      ),
+      sampleBuild(
+        id: 'weekly-current',
+        version: 'weekly-2026.09.23',
+        channel: BuildChannel.weekly,
+      ),
+      sampleBuild(id: 'stable', version: '1.1.3'),
+    ];
+    builds.availableBuilds.value = [candidate('2.0.0', BuildKind.appimage)];
+    builds.weeklyBuilds.value = [
+      weeklyCandidate('weekly-2026.09.23', BuildKind.appimage),
+      weeklyCandidate('weekly-2026.09.16', BuildKind.appimage),
+    ];
+    final updates = updatesController(addonsController(), builds);
+
+    final flagged = {
+      for (final update in updates.outdatedBuilds.value) update.buildId,
+    };
+    expect(flagged, {'stable', 'weekly-old'});
+    final weekly = updates.outdatedBuilds.value.firstWhere(
+      (update) => update.buildId == 'weekly-old',
+    );
+    expect(weekly.installedVersion, 'weekly-2026.09.10');
+    expect(weekly.latestVersion, 'weekly-2026.09.23');
+    expect(updates.outdatedCount.value, 2);
+  });
+
+  test('weekly suggestions never cross channels or asset kinds', () {
+    final builds = buildsController();
+    builds.installedBuilds.value = [
+      sampleBuild(
+        id: 'weekly-archive',
+        version: 'weekly-2026.09.10',
+        channel: BuildChannel.weekly,
+        kind: BuildKind.archive,
+      ),
+      sampleBuild(id: 'stable', version: '1.1.3'),
+    ];
+    builds.availableBuilds.value = const [];
+    builds.weeklyBuilds.value = [
+      weeklyCandidate('weekly-2026.09.16', BuildKind.appimage),
+    ];
+    final updates = updatesController(addonsController(), builds);
+
+    expect(updates.outdatedBuilds.value, isEmpty);
+  });
 
   test('applyUpdates updates every selected addon sequentially', () async {
     catalog.result = AddonCatalogResult(

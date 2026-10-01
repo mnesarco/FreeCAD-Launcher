@@ -35,10 +35,10 @@ Asset names have evolved. Classification must use regex over exact names, not as
 
 | Channel | Tag pattern | Pre-release flag | Assets |
 |---|---|---|---|
-| `stable` | semver `X.Y.Z` >= 1.0 | false | see below |
+| `stable` | semver `X.Y.Z` >= 1.0 through 1.1.x; CalVer `YY.N` (e.g. `26.3`, three releases/year) and patches `YY.N.P` (e.g. `27.1.1`) from the next stable on (FEP-0003) | false | see below |
 | `weekly` | `weekly-YYYY.MM.DD` | true | `FreeCAD_weekly-...` |
-| `weekly` rolling | `weeklies` | true | Linux only |
-| `legacy` | `1.0.x` | false | 1.0 conda-era names |
+| `weekly` rolling | `weeklies` | true | Linux only (skipped by the launcher, D-077) |
+| `legacy` | supported stable lines older than the newest stable line in the catalog (currently 1.0.x; 1.1.x joins once 26.3 ships) | false | semver-era and 1.0 conda-era names |
 
 Asset patterns (current era, 1.1.x):
 
@@ -79,7 +79,15 @@ Weekly notes:
 
 ### 1.5 Version ordering
 
-- Stable/legacy: semver compare (`1.1.3 > 1.1.2 > 1.0.2`); pre-1.0 tags are ignored (D-021).
+- CalVer (FEP-0003, active 2026-05-15): stable tags are `YY.N` (three releases per year; `N` =
+  1..3; `YY` = year of the cycle's `.1` release) with monthly patches `YY.N.P`. The first
+  CalVer release is `26.3` (branched 2026-09-30, expected ~2026-11-18). RCs (`26.3rc1`) are
+  ignored until the final tag; `26.3` and `26.3.0` denote the same release.
+- Stable/legacy: numeric compare across schemas (`26.3 > 1.1.4 > 1.0.2`); CalVer sorts above any
+  semver line; RC suffixes (`1.1rc3`, `26.3rc1`) are ignored until the final tag.
+- The stable/legacy split is catalog-derived (D-078): the highest supported stable version
+  (`major.minor`) present defines the current line; supported versions below it are `legacy`
+  (1.0.x today; 1.1.x joins once 26.3 ships, 26.3 once 27.1 branches).
 - Weekly: compare tag dates (`weekly-2026.09.16`), all weeklies sort above any stable only
   within the weekly channel; channels are never mixed in one update suggestion.
 - Build identity = `(channel, version, platform, arch)`; two builds of the same version from

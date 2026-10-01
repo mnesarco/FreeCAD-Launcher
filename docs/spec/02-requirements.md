@@ -23,9 +23,9 @@ Priority tags: **[v0.1]** MVP, **[v0.2]** next, **[v1.0]** before public stable 
   the builds directory rather than duplicated. Hashing runs only when a checksum is provided and
   progress is shown; its Python version is detected best-effort with a manual interpreter picker
   as fallback.
-- FR-1.7 **[v0.2]** Weekly/pre-release channel (`weekly-YYYY.MM.DD` and rolling `weeklies`) and
-  older supported stable lines (currently 1.0.x as `legacy`). Releases older than 1.0 are
-  ignored (D-021).
+- FR-1.7 **[v0.2]** Weekly/pre-release channel (dated `weekly-YYYY.MM.DD`; the rolling
+  `weeklies` tag is skipped per D-077) and older supported stable lines as `legacy`
+  (catalog-derived, D-078). Releases older than 1.0 are ignored (D-021).
 - FR-1.8 **[v0.2]** "Check for updates" marks installed stable/weekly builds with a newer
   release; user confirms an in-place update that keeps profiles intact.
 - FR-1.9 **[v0.2]** Each build reports its bundled Python version, detected once on install.

@@ -10,6 +10,7 @@ import 'package:freecad_launcher/data/catalog/releases_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/asset_classifier.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/builds/freecad_version.dart';
 import 'package:freecad_launcher/domain/builds/release_info.dart';
 import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/platform/archive_extract.dart';
@@ -141,6 +142,7 @@ void main() {
     PythonProbe? pythonProbe,
     JobsController? jobs,
     BuildPlatform platform = BuildPlatform.linux,
+    String arch = BuildArch.x86_64,
   }) {
     final downloader = Downloader(
       source: source ??
@@ -159,7 +161,7 @@ void main() {
       installer: installer ?? FakeInstaller(),
       paths: paths,
       platform: platform,
-      arch: BuildArch.x86_64,
+      arch: arch,
       pythonProbe: pythonProbe,
       jobs: jobs,
       clock: () => DateTime.utc(2026, 9, 18),
@@ -171,6 +173,30 @@ void main() {
       for (final fixture in fixtures)
         ...parseReleasesJson(loadFixture(fixture)),
     ];
+  }
+
+  String weeklyTag(DateTime date) {
+    String two(int value) => value.toString().padLeft(2, '0');
+    return 'weekly-${date.year}.${two(date.month)}.${two(date.day)}';
+  }
+
+  ReleaseInfo weeklyRelease(DateTime date) {
+    final tag = weeklyTag(date);
+    return ReleaseInfo(
+      tagName: tag,
+      prerelease: true,
+      htmlUrl: 'https://example.invalid/$tag',
+      assets: [
+        ReleaseAsset(
+          name: 'FreeCAD_$tag-Linux-x86_64.AppImage',
+          downloadUrl: 'https://example.invalid/$tag.AppImage',
+        ),
+        ReleaseAsset(
+          name: 'FreeCAD_$tag-Linux-x86_64.AppImage-SHA256.txt',
+          downloadUrl: 'https://example.invalid/$tag.AppImage-SHA256.txt',
+        ),
+      ],
+    );
   }
 
   test('start mirrors installed builds from the database', () async {
@@ -205,6 +231,113 @@ void main() {
     expect(candidates.single.platform, BuildPlatform.linux);
     expect(candidates.single.arch, BuildArch.x86_64);
     expect(controller.catalogFreshness.value, CatalogFreshness.refreshed);
+  });
+
+  test('loadCatalog separates dated weekly candidates and skips the rolling tag', () async {
+    final catalog = FakeReleasesCatalog()
+      ..nextResult = ReleasesCatalogResult(
+        releases: fixtureReleases([
+          'github_releases_1.1.3.json',
+          'github_releases_weekly.json',
+          'github_releases_weekly_2026.09.23.json',
+          'github_releases_weeklies_rolling.json',
+        ]),
+        freshness: CatalogFreshness.refreshed,
+      );
+    final controller = buildController(catalog: catalog);
+
+    await controller.loadCatalog();
+
+    expect(
+      controller.availableBuilds.value.map((candidate) => candidate.versionLabel),
+      ['1.1.3'],
+    );
+    final weekly = controller.weeklyBuilds.value;
+    expect(
+      weekly.map((candidate) => candidate.versionLabel),
+      ['weekly-2026.09.23', 'weekly-2026.09.16'],
+    );
+    expect(
+      weekly.every(
+        (candidate) =>
+            candidate.channel == BuildChannel.weekly &&
+            candidate.platform == BuildPlatform.linux &&
+            candidate.arch == BuildArch.x86_64 &&
+            candidate.weekly != null,
+      ),
+      isTrue,
+    );
+    controller.dispose();
+  });
+
+  test('loadCatalog picks one macOS weekly candidate per release', () async {
+    final catalog = FakeReleasesCatalog()
+      ..nextResult = ReleasesCatalogResult(
+        releases: fixtureReleases(['github_releases_weekly.json']),
+        freshness: CatalogFreshness.refreshed,
+      );
+    final controller = buildController(
+      catalog: catalog,
+      platform: BuildPlatform.macos,
+      arch: BuildArch.arm64,
+    );
+
+    await controller.loadCatalog();
+
+    final weekly = controller.weeklyBuilds.value;
+    expect(weekly, hasLength(1));
+    expect(weekly.single.assetName, 'FreeCAD_weekly-2026.09.16-macOS15-arm64.dmg');
+    controller.dispose();
+  });
+
+  test('loadCatalog caps the weekly list at the 52 newest builds', () async {
+    final base = DateTime.utc(2026, 9, 30);
+    final catalog = FakeReleasesCatalog()
+      ..nextResult = ReleasesCatalogResult(
+        releases: [
+          for (var index = 0; index < 60; index++)
+            weeklyRelease(base.subtract(Duration(days: 7 * index))),
+        ],
+        freshness: CatalogFreshness.refreshed,
+      );
+    final controller = buildController(catalog: catalog);
+
+    await controller.loadCatalog();
+
+    final weekly = controller.weeklyBuilds.value;
+    expect(weekly, hasLength(BuildsController.weeklyBuildLimit));
+    expect(weekly.first.versionLabel, weeklyTag(base));
+    expect(
+      weekly.last.versionLabel,
+      weeklyTag(base.subtract(const Duration(days: 7 * 51))),
+    );
+    controller.dispose();
+  });
+
+  test('install stores a weekly candidate under its channel and tag label', () async {
+    final installer = FakeInstaller();
+    final controller = buildController(installer: installer);
+    final weekly = BuildCandidate(
+      versionLabel: 'weekly-2026.09.23',
+      channel: BuildChannel.weekly,
+      platform: BuildPlatform.linux,
+      arch: BuildArch.x86_64,
+      kind: BuildKind.appimage,
+      assetName: 'FreeCAD_weekly-2026.09.23-Linux-x86_64.AppImage',
+      downloadUrl: 'https://example.invalid/FreeCAD_weekly-2026.09.23-Linux-x86_64.AppImage',
+      sizeBytes: 1000,
+      weekly: WeeklyVersion.tryParse('weekly-2026.09.23'),
+    );
+
+    final result = await controller.install(weekly);
+
+    expect(result.isOk, isTrue);
+    final stored = await database.buildsDao.getById(weekly.id);
+    expect(stored, isNotNull);
+    expect(stored!.channel, BuildChannel.weekly);
+    expect(stored.version, 'weekly-2026.09.23');
+    expect(installer.requests, hasLength(1));
+    controller.dispose();
   });
 
   test('loadCatalog surfaces stale catalogs', () async {

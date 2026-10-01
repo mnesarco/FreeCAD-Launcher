@@ -566,6 +566,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'Check your connection and refresh the catalog.';
 
   @override
+  String get versionsChannelStable => 'Stable';
+
+  @override
+  String get versionsChannelWeekly => 'Weekly';
+
+  @override
+  String versionsWeeklyBuild(String date) {
+    return 'Weekly $date';
+  }
+
+  @override
+  String get versionsWeeklyEmptyTitle => 'No weekly builds available';
+
+  @override
+  String get versionsWeeklyEmptyMessage =>
+      'Refresh the catalog; weekly builds are published most Wednesdays.';
+
+  @override
+  String get versionsWeeklyInstallTitle => 'Install a development build?';
+
+  @override
+  String get versionsWeeklyInstallMessage =>
+      'Weekly builds are development-quality: features may break and they are not covered by support. Keep a stable build for real work.';
+
+  @override
   String get versionsStaleCatalog =>
       'Using a cached catalog; newer versions may be missing.';
 

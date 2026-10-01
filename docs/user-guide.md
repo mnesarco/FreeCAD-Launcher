@@ -82,6 +82,10 @@ news feed with a short excerpt of each post (URL configurable in Settings).
 ### Install from the catalog (Versions → Available)
 
 - Each entry shows version, size and detected Python version.
+- Use the **Stable | Weekly** channel selector: weekly builds are dated development snapshots
+  (`weekly-YYYY.MM.DD`) shown with a badge; the latest 52 (one year) are listed, newest first.
+  Installing one asks for confirmation because they are development-quality and not covered by
+  support.
 - **Install** downloads the asset (`.part` file, cancellable), verifies the published SHA-256
   when available, installs it as a managed copy and detects the bundled Python interpreter.
 - Successful installs switch to the **Installed** tab automatically.

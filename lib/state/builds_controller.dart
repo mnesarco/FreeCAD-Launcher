@@ -52,6 +52,8 @@ class InstallProgress {
 }
 
 class BuildsController {
+  static const int weeklyBuildLimit = 52;
+
   BuildsController({
     required AppDatabase database,
     required ReleasesCatalog catalog,
@@ -87,6 +89,7 @@ class BuildsController {
 
   final installedBuilds = signal<List<Build>>([]);
   final availableBuilds = signal<List<BuildCandidate>>([]);
+  final weeklyBuilds = signal<List<BuildCandidate>>([]);
   final catalogFreshness = signal<CatalogFreshness?>(null);
   final catalogError = signal<AppError?>(null);
   final loadingCatalog = signal(false);
@@ -162,21 +165,35 @@ class BuildsController {
     catalogError.value = null;
     try {
       final result = await _catalog.load(forceRefresh: forceRefresh);
-      final candidates = <BuildCandidate>[];
+      final stableCandidates = <BuildCandidate>[];
+      final weeklyCandidates = <BuildCandidate>[];
       final seen = <String>{};
       for (final release in result.releases) {
-        for (final candidate in AssetClassifier.classify(release)) {
-          if (candidate.channel != BuildChannel.stable ||
-              candidate.platform != _platform ||
-              candidate.arch != _arch) {
-            continue;
-          }
-          if (seen.add(candidate.id)) {
-            candidates.add(candidate);
-          }
+        final classified = AssetClassifier.classify(release);
+        if (classified.isEmpty) {
+          continue;
+        }
+        final candidate = AssetClassifier.selectFor(
+          classified,
+          platform: _platform,
+          arch: _arch,
+        );
+        if (candidate == null || !seen.add(candidate.id)) {
+          continue;
+        }
+        switch (candidate.channel) {
+          case BuildChannel.stable:
+            stableCandidates.add(candidate);
+          case BuildChannel.weekly:
+            if (candidate.weekly != null) {
+              weeklyCandidates.add(candidate);
+            }
+          case BuildChannel.legacy:
+          case BuildChannel.custom:
+            break;
         }
       }
-      candidates.sort((a, b) {
+      stableCandidates.sort((a, b) {
         final versionA = a.version;
         final versionB = b.version;
         if (versionA != null && versionB != null) {
@@ -184,11 +201,14 @@ class BuildsController {
         }
         return b.versionLabel.compareTo(a.versionLabel);
       });
-      availableBuilds.value = candidates;
+      weeklyCandidates.sort((a, b) => b.weekly!.compareTo(a.weekly!));
+      availableBuilds.value = stableCandidates;
+      weeklyBuilds.value = weeklyCandidates.take(weeklyBuildLimit).toList();
       catalogFreshness.value = result.freshness;
       appLogger.info(
         'releases catalog: ${result.releases.length} releases, '
-        '${candidates.length} candidates in ${stopwatch.elapsedMilliseconds} ms',
+        '${stableCandidates.length} stable + ${weeklyCandidates.length} weekly '
+        'candidates in ${stopwatch.elapsedMilliseconds} ms',
         tag: 'perf',
       );
     } on Object catch (error) {

@@ -111,9 +111,7 @@ class UpdatesController {
 
   late final outdatedBuilds = computed<List<BuildUpdate>>(() {
     final candidates = _builds.availableBuilds.value;
-    if (candidates.isEmpty) {
-      return const [];
-    }
+    final weeklyCandidates = _builds.weeklyBuilds.value;
     final result = <BuildUpdate>[];
     for (final build in _builds.installedBuilds.value) {
       if (build.channel != BuildChannel.stable ||
@@ -131,6 +129,35 @@ class UpdatesController {
           continue;
         }
         if (latest.compareTo(installed) <= 0) {
+          break;
+        }
+        result.add(
+          BuildUpdate(
+            buildId: build.id,
+            installedVersion: build.version,
+            latestVersion: candidate.versionLabel,
+            candidateId: candidate.id,
+          ),
+        );
+        break;
+      }
+    }
+    for (final build in _builds.installedBuilds.value) {
+      if (build.channel != BuildChannel.weekly ||
+          build.kind == BuildKind.custom ||
+          build.status != BuildStatus.installed) {
+        continue;
+      }
+      final installed = WeeklyVersion.tryParse(build.version);
+      if (installed == null) {
+        continue;
+      }
+      for (final candidate in weeklyCandidates) {
+        if (candidate.kind != build.kind) {
+          continue;
+        }
+        final latest = candidate.weekly;
+        if (latest == null || latest.compareTo(installed) <= 0) {
           break;
         }
         result.add(

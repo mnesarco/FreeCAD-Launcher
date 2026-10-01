@@ -1,0 +1,38 @@
+[
+  {
+    "id": 6,
+    "tag_name": "weekly-2026.09.23",
+    "name": "FreeCAD weekly 2026.09.23",
+    "prerelease": true,
+    "published_at": "2026-09-23T12:00:00Z",
+    "html_url": "https://github.com/FreeCAD/FreeCAD/releases/tag/weekly-2026.09.23",
+    "body": "Development build.",
+    "assets": [
+      {
+        "name": "FreeCAD_weekly-2026.09.23-Linux-x86_64.AppImage",
+        "browser_download_url": "https://example.invalid/FreeCAD_weekly-2026.09.23-Linux-x86_64.AppImage",
+        "size": 130000000
+      },
+      {
+        "name": "FreeCAD_weekly-2026.09.23-Linux-aarch64.AppImage",
+        "browser_download_url": "https://example.invalid/FreeCAD_weekly-2026.09.23-Linux-aarch64.AppImage",
+        "size": 130000000
+      },
+      {
+        "name": "FreeCAD_weekly-2026.09.23-Linux-x86_64.AppImage-SHA256.txt",
+        "browser_download_url": "https://example.invalid/FreeCAD_weekly-2026.09.23-Linux-x86_64.AppImage-SHA256.txt",
+        "size": 128
+      },
+      {
+        "name": "FreeCAD_weekly-2026.09.23-Windows-x86_64.7z",
+        "browser_download_url": "https://example.invalid/FreeCAD_weekly-2026.09.23-Windows-x86_64.7z",
+        "size": 240000000
+      },
+      {
+        "name": "FreeCAD_weekly-2026.09.23-macOS15-arm64.dmg",
+        "browser_download_url": "https://example.invalid/FreeCAD_weekly-2026.09.23-macOS15-arm64.dmg",
+        "size": 330000000
+      }
+    ]
+  }
+]
