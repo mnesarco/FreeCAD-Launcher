@@ -75,7 +75,7 @@ Requires Flutter 3.41.4 (stable) and the usual Linux desktop build dependencies.
    `user.cfg`/`system.cfg` in the profile directory.
 
 The Home dashboard shows counts, the last-used profile with a launch button, update checks and a
-news feed (URL configurable in Settings).
+news feed with a short excerpt of each post (URL configurable in Settings).
 
 ## Builds
 

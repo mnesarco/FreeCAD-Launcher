@@ -34,6 +34,7 @@ void main() {
     <title>FreeCAD 1.2 released</title>
     <link>https://blog.freecad.org/1-2</link>
     <pubDate>Tue, 02 Sep 2025 10:00:00 +0000</pubDate>
+    <description>&lt;p&gt;The &lt;b&gt;1.2&lt;/b&gt; release brings a new sketcher.&lt;/p&gt;</description>
   </item>
 </channel></rss>
 ''';
@@ -157,6 +158,7 @@ void main() {
     expect(find.text('Launch'), findsOneWidget);
     expect(find.text('Everything is up to date'), findsOneWidget);
     expect(find.text('FreeCAD 1.2 released'), findsOneWidget);
+    expect(find.text('The 1.2 release brings a new sketcher.'), findsOneWidget);
   });
 
   testWidgets('first run shows the getting-started checklist', (tester) async {

@@ -432,10 +432,30 @@ class _NewsCard extends StatelessWidget {
                   item.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                subtitle: item.publishedAt == null
+                subtitle: item.excerpt == null && item.publishedAt == null
                     ? null
-                    : Text(_date(item.publishedAt!)),
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (item.excerpt != null)
+                            Text(
+                              item.excerpt!,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          if (item.publishedAt != null)
+                            Text(
+                              _date(item.publishedAt!),
+                              style: theme.textTheme.bodySmall,
+                            ),
+                        ],
+                      ),
+                isThreeLine: item.excerpt != null,
                 trailing: const Icon(Icons.open_in_new, size: 16),
                 onTap: () => launchUrl(
                   Uri.parse(item.link),

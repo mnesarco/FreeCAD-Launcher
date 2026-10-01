@@ -365,6 +365,10 @@
     cache files (3.3 MB).
   - UI polish (same session): Addons filter button icon (`filter_list`), profile Config
     "Open profile folder" right-aligned, Macros defaults to the Catalog tab.
+  - Home news excerpts (2026-09-30, post-R4): each news item shows a short excerpt (180-char
+    word-boundary truncation in `NewsItem.excerpt`) above the date, with the title in the primary
+    accent color (semibold) so posts stand out. 508 tests green, analyze clean; live dev-app
+    check showed all five latest posts with excerpts.
 
 ## Session log
 
@@ -454,6 +458,7 @@
 | 2026-09-27 | R | R-08 "Open profile folder" in the profile detail header (shared helper, widget test, live hot-reload check) | R-08 | `lib/ui/profiles/profile_actions.dart`, `lib/ui/profiles/profile_detail_view.dart`, `test/ui/profiles_view_test.dart`, `docs/impl/{TASKS,STATUS}.md` |
 | 2026-09-30 | R3 | D-075/R-09: profile launches no longer override `HOME`; `<profile>/home` dropped from the layout; unit suite green (500) + real 1.0.2 isolation E2E re-run | R-09 | `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md`, `docs/spec/{04-architecture,05-data-model}.md`, `docs/user-guide.md`, `lib/domain/profiles/{launch_environment,profile_paths}.dart`, `test/**` |
 | 2026-09-30 | R4 | D-076/R-10 macro catalog icons (two-level cache, catalog+installed, prune) + UI polish (filter icon, folder button alignment, Macros defaults to Catalog); 505 tests green, live dev-app check | R-10 | `docs/impl/{DECISIONS,TASKS,STATUS}.md`, `docs/spec/03-ux.md`, `docs/user-guide.md`, `lib/platform/{paths,macro_icon_cache}.dart`, `lib/state/{app_services,macros_controller}.dart`, `lib/ui/macros/**`, `lib/ui/addons/addons_view.dart`, `lib/ui/profiles/config_snapshots_view.dart`, `test/**` |
+| 2026-09-30 | R5 | Home news excerpts (2-line, 180-char word-boundary truncation) with widget/domain tests; 508 tests green, live check | — | `lib/domain/news/news_item.dart`, `lib/ui/home/home_view.dart`, `test/domain/news_item_test.dart`, `test/ui/home_view_test.dart`, `docs/user-guide.md`, `docs/impl/STATUS.md` |
 
 ## Standing notes for the next agent
 
