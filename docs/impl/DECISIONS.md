@@ -1808,3 +1808,16 @@ Template:
 - **Consequences**: Windows/macOS test coverage is paused and tracked as M8-06; Linux coverage
   is unchanged; the three-OS build/analyze guarantee remains.
 - **Refs**: D-003, D-072, `TASKS.md` M8-02/M8-06, OQ-1
+
+### D-083 — macOS CI jobs disabled until M8-04
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: macOS arm64 runners queue slowly and the macOS build still needs dedicated
+  attention; the owner asked to disable macOS in CI for now. Linux is the v0.1 target (D-072)
+  and the release workflow is Linux-only, so publishing is unaffected.
+- **Decision**: remove `macos-latest` from the CI matrix (Linux + Windows remain, each with
+  analyze and release build; tests stay Linux-only per D-082). The macOS job and its
+  `flutter build macos` step return with M8-04.
+- **Consequences**: macOS compile regressions are not caught in CI until M8-04; nothing else
+  changes for the AppImage pipeline.
+- **Refs**: D-072, D-082, `TASKS.md` M8-04, `TASKS.md` M8-06

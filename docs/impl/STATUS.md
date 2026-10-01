@@ -405,7 +405,10 @@
     default branch). First Linux job was green; a fresh-checkout issue (untracked empty
     `assets/macros/`) was fixed (`b3b58a2`). Windows/macOS failed 20/8 tests on POSIX
     assumptions, so per **D-082** `flutter test` is Linux-only for now while analyze and release
-    builds stay on all three OSes; portability is tracked as **M8-06**.
+    builds stay on all three OSes; portability is tracked as **M8-06**. The macOS job was then
+    disabled from the matrix per **D-083** (slow runners, dedicated work in M8-04); CI is now
+    Linux + Windows with the Linux test job and both release builds, and the last run before
+    the removal was fully green (ubuntu 3m07s, macOS 8m34s, windows 4m53s).
 
 ## Session log
 
@@ -505,6 +508,7 @@
 | 2026-09-30 | R12 | D-080 About dialog: bundled official FreeCAD logo, FPA trademark notice and independent-project statement, opened from Settings › About; README/notices wording updated; 517 tests green, live check | R-12 | `docs/impl/{DECISIONS,TASKS,STATUS}.md`, `README.md`, `THIRD_PARTY_NOTICES.md`, `tool/generate_third_party_notices.dart`, `assets/images/freecad-logo.svg`, `pubspec.yaml`, `lib/ui/settings/{about_dialog.dart,settings_view.dart}`, `lib/l10n/**`, `test/ui/settings_view_test.dart` |
 | 2026-09-30 | R13 | D-081 GitHub publishing prep: repo `mnesarco/FreeCAD-Launcher`, `v2` renamed `devel` (public default), CI on devel/main + notices drift check, manual Release AppImage workflow with optional GitHub Release, README/user-guide Releases links, removed 4 MB prototype artifact | M8-01 | `.github/workflows/{ci,release-appimage}.yml`, `AGENTS.md`, `README.md`, `docs/spec/07-distribution.md`, `docs/user-guide.md`, `docs/impl/{DECISIONS,TASKS,STATUS}.md`, `addon_catalog_cache.json` |
 | 2026-10-01 | R14 | Published to `mnesarco/FreeCAD-Launcher`: pushed `devel`, first CI run (Linux green; empty `assets/macros/` fixed), Windows/macOS test gating (**D-082**, M8-06) | M8-02 | `docs/impl/{DECISIONS,TASKS,STATUS}.md`, `.github/workflows/ci.yml`, `pubspec.yaml` |
+| 2026-10-01 | R15 | CI fully green (ubuntu/macOS/windows); macOS job then removed from the matrix (**D-083**, returns with M8-04); Linux+Windows remain with Linux tests and both release builds | M8-02 | `.github/workflows/ci.yml`, `docs/impl/{DECISIONS,TASKS,STATUS}.md` |
 
 ## Standing notes for the next agent
 

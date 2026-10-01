@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -69,7 +69,3 @@ jobs:
       - name: Build (Windows)
         if: runner.os == 'Windows'
         run: flutter build windows --release
-
-      - name: Build (macOS)
-        if: runner.os == 'macOS'
-        run: flutter build macos --release
