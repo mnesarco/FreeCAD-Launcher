@@ -72,4 +72,4 @@ jobs:
 
       - name: Build (macOS)
         if: runner.os == 'macOS'
-        run: flutter build macos --release --no-codesign
+        run: flutter build macos --release
