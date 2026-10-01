@@ -6,30 +6,32 @@
 - **Updated**: 2026-10-01
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
   (M8-01/M8-02/**M8-06 DONE**; M8-03 CI pipeline built; the D-094 artifact passed the
-  clean-machine network check, but the first real Windows `.7z` install exposed colon build-id
-  directories — fixed by R-14/D-095 and the artifact rebuilt (run 36937972986), retest pending;
-  the GitHub Release publish path is untested; M8-04 needs macOS; M8-05 clean-VM pass ready)
+  clean-machine network check; the Windows `.7z` install then exposed R-14/D-095 (colon build-id
+  directories, fixed) and R-15/D-096 (empty-environment process launch rejected by
+  `CreateProcessW`, fixed) — artifact rebuild + retest pending; the GitHub Release publish path
+  is untested; M8-04 needs macOS; M8-05 clean-VM pass ready)
 - **Active branch**: `devel` (public) — `main` is reserved for a future release line
 - **Last session**: 2026-10-01
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
   `TASKS.md` so work can resume after an interruption.
-- **Decisions this session**: **D-095** (dynamic filesystem segments use portable ASCII via
-  `safePathSegment`); D-093/D-094 were verified in practice earlier today on a second clean
-  Windows machine.
-- **Next action**: copy `~/Downloads/freecad-launcher-windows-r36937972986/` to the Windows
-  machine and rerun the M8-03 smoke matrix from the build-install row (real 1.1.3 `.7z` install →
-  Python probe → two isolated profiles + launch → addon/pip/macro → CLI wrapper → reveal); then
-  exercise the untested GitHub Release `create_release` path with the `v0.2.0` prerelease.
-  Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1 branches, 2027-01-31),
-  `B-02` in-place build updates.
+- **Decisions this session**: **D-095** (portable ASCII path segments) and **D-096** (Windows
+  launches never send an empty environment block); D-093/D-094 were verified earlier today on a
+  second clean Windows machine.
+- **Next action**: commit/push R-15 + R-16, rebuild the Windows artifact from CI, and rerun the
+  M8-03 smoke matrix from the build-install row (real 1.1.3 `.7z` install → Python probe → two
+  isolated profiles + launch → addon/pip/macro → CLI wrapper → reveal); install failures now
+  write `logs/install-<id>-<stamp>.log` and mirror to `app.log`. Then exercise the untested
+  GitHub Release `create_release` path with the `v0.2.0` prerelease. Backlog: `B-01` legacy
+  channel, `B-14` CalVer readiness (before 27.1 branches, 2027-01-31), `B-02` in-place build
+  updates.
 - **Blockers**:
   - M8-04 still needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker: the
     owner accepted the second-machine pass (startup/catalogs/downloads) as the M8-03
     clean-machine verification; the AV/TLS-inspection caveat stays documented in the user guide.
-- **In progress**: **R-14/D-095** committed (`031cc0e`) and pushed; Release run 36937972986 green
-  (windows + appimage; publish skipped) and `windows-portable` downloaded locally with the
-  checksum verified. Windows install retest pending. `R-13` (D-090), `B-15a` (D-089) and
-  `B-10a`..`B-10f` (D-085..D-088) are committed (`c0a00b9`, `a9e3f1c`, `5a372ab`).
+- **In progress**: **R-15** fixed (`lib/platform/process.dart`, D-096) and **R-16** done (install
+  logs), 606 tests green, uncommitted — commit + artifact rebuild + Windows retest pending.
+  `R-14`/D-095 committed (`031cc0e`); `R-13` (D-090), `B-15a` (D-089) and `B-10a`..`B-10f`
+  (D-085..D-088) are committed (`c0a00b9`, `a9e3f1c`, `5a372ab`).
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
     diagnostics, CI workflow, test harness).
@@ -480,8 +482,19 @@
     `lib/core/path_segments.dart` (`safePathSegment`: trim, ASCII-safe runs, edge dot/dash
     removal, Windows reserved-name guard) now feeds `AppPaths.buildDir`, launch-log names, macro
     file/icon names and addon backup directories; helper tests plus `buildDir` tests with POSIX
-    and Windows path contexts. 604 tests green, analyze clean; artifact rebuild and Windows
-    retest pending.
+    and Windows path contexts. 604 tests green, analyze clean; committed (`031cc0e`), artifact
+    rebuilt (run 36937972986) and the Windows retest confirmed the sanitized
+    `stable_1.1.3_windows_x86_64.part` path (the install then hit R-15).
+  - R-15 (2026-10-01, **D-096**): the retest reached 7zr and failed with
+    `ProcessException: El parámetro no es correcto` (ERROR_INVALID_PARAMETER) at
+    `process_win.cc:577`; `IoProcessLauncher` sent an empty environment with
+    `includeParentEnvironment: false`, which Dart turns into a malformed one-wchar block that
+    `CreateProcessW` rejects. On Windows, empty spec environments now inherit the parent
+    environment; a Windows-only real-process test covers it. 606 tests green on Linux, analyze
+    clean; artifact rebuild + Windows retest pending.
+  - R-16 (2026-10-01): build installs now write `logs/install-<id>-<stamp>.log` (header, stages,
+    error + stack trace), attach it to the job (`logPath`, shown in the Jobs dialog) and mirror
+    failures to `app.log` via `appLogger.error`; 2 new tests.
 
 ## Session log
 
@@ -602,6 +615,7 @@
 | 2026-10-01 | R31 | Clean Windows machine (different from the TLS-inspection VM) with the D-094 artifact from run 36907901612: app started, all catalogs loaded and downloads completed. Owner accepted this as the M8-03 clean-machine verification, so the TLS-inspection VM is no longer a blocker (AV/TLS caveat stays documented). Remaining M8-03 gate: exercise the GitHub Release publish path with a `v0.2.0` prerelease; the other smoke rows (`.7z` install, probe, profiles, addons/pip/macros, wrapper, reveal) were not exercised | M8-03, D-094 | `docs/impl/{STATUS,VERIFICATION,TASKS,PLAN-M8-windows-release}.md` |
 | 2026-10-01 | R32 | First real Windows `.7z` install (1.1.3) failed with `FileSystemException` on the staging path: catalog build IDs contain `:` and were used as directory names. **D-095/R-14**: shared `safePathSegment` makes dynamic path segments portable ASCII; applied to build dirs, launch logs, macro file/icon names and addon backups; helper + `buildDir` tests (POSIX + Windows contexts). 604 tests green, analyze clean; artifact rebuild + Windows retest pending | R-14, M8-03 | `lib/core/path_segments.dart`, `lib/platform/paths.dart`, `lib/state/{profiles,addons}_controller.dart`, `lib/domain/macros/macro_catalog_entry.dart`, `test/core/path_segments_test.dart`, `test/platform/paths_test.dart`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION,PLAN-M8-windows-release}.md` |
 | 2026-10-01 | R33 | R-14 committed and pushed (`031cc0e`); manual Release run 36937972986 green (windows + appimage jobs; publish skipped as requested). `windows-portable` artifact downloaded to `~/Downloads/freecad-launcher-windows-r36937972986/` (15.4 MB, `sha256sum -c` OK); Windows install retest pending | R-14, M8-03 | `docs/impl/{STATUS,PLAN-M8-windows-release,TASKS}.md` |
+| 2026-10-01 | R34 | Windows retest got past R-14 (sanitized `.part` path) and failed inside 7zr: `ProcessException: El parámetro no es correcto` (ERROR_INVALID_PARAMETER) from `CreateProcessW`. **D-096/R-15**: `IoProcessLauncher` inherits the parent environment on Windows when the spec environment is empty (Dart builds a malformed one-wchar block otherwise); Windows-only real-process test. **R-16**: build installs write `logs/install-<id>-<stamp>.log` with the error + stack trace, attach it to the job (`logPath`) and mirror to `app.log`. 606 tests green, analyze clean; artifact rebuild + retest pending | R-15, R-16, M8-03 | `lib/platform/process.dart`, `lib/state/builds_controller.dart`, `test/platform/process_test.dart`, `test/state/builds_controller_test.dart`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION,PLAN-M8-windows-release}.md` |
 
 ## Standing notes for the next agent
 

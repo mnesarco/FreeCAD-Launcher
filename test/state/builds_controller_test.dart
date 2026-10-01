@@ -420,6 +420,8 @@ void main() {
     final job = jobs.jobs.value.single;
     expect(job.state, JobState.failed);
     expect(job.error, contains('disk full'));
+    expect(job.logPath, isNotNull);
+    expect(File(job.logPath!).readAsStringSync(), contains('disk full'));
     jobs.dispose();
     controller.dispose();
   });
@@ -516,6 +518,22 @@ void main() {
     expect(controller.installErrors.value.containsKey(buildCandidate.id), isTrue);
     expect(controller.installProgress.value, isEmpty);
     expect(await database.buildsDao.getById(buildCandidate.id), isNull);
+  });
+
+  test('install writes a log file with the failure cause', () async {
+    final installer = FakeInstaller()..error = const ArchiveExtractionException('boom');
+    final controller = buildController(installer: installer);
+    final buildCandidate = candidate();
+
+    await controller.install(buildCandidate);
+
+    final logs = Directory(paths.logsDir).listSync().whereType<File>().toList();
+    expect(logs, hasLength(1));
+    final content = logs.single.readAsStringSync();
+    expect(content, contains('build: ${buildCandidate.id}'));
+    expect(content, contains('ERROR'));
+    expect(content, contains('boom'));
+    controller.dispose();
   });
 
   test('remove deletes the database row and the build directory', () async {

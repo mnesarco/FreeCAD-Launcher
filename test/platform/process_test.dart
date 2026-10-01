@@ -138,4 +138,15 @@ void main() {
     expect(result.exitCode, 0);
     expect(result.stdout.trim(), tricky);
   });
+
+  test('executes a real process with an empty environment on Windows', () async {
+    if (!Platform.isWindows) {
+      return;
+    }
+    final result = await ProcessRunner().run(
+      const ProcessSpec(executable: 'cmd.exe', arguments: ['/c', 'exit', '0']),
+    );
+
+    expect(result.exitCode, 0);
+  });
 }

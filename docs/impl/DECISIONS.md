@@ -2044,3 +2044,24 @@ Template:
   dynamic path segment must use the shared helper.
 - **Refs**: `lib/core/path_segments.dart`, `lib/platform/paths.dart`, M8-03, R-14,
   `docs/impl/PLAN-M8-windows-release.md`
+
+### D-096 — Windows process launches never send an empty environment block
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: The first Windows `.7z` install with the R-14 artifact got past the directory
+  problem and failed inside 7zr extraction with `ProcessException: El parámetro no es correcto`
+  (ERROR_INVALID_PARAMETER) at `process_win.cc:577` (CreateProcessW). `IoProcessLauncher` passed
+  `environment: null` + `includeParentEnvironment: false` for a spec with an empty environment;
+  Dart's Windows runtime then builds a **one-wchar** environment block (2 bytes), while
+  CreateProcessW requires a four-byte terminator for an empty Unicode block, so the call is
+  rejected. Linux accepts an empty environment, and pip/launch/probe specs always carry an env
+  map, so 7zr was the only caller that hit it.
+- **Decision**: in `IoProcessLauncher.start`, when `spec.environment` is empty **on Windows**,
+  inherit the parent environment (`includeParentEnvironment: true`) instead of sending an empty
+  block. Non-empty environments and all non-Windows behavior stay unchanged.
+- **Consequences**: `.7z` extraction (7zr) works on Windows; an empty-environment spec inherits
+  the parent environment on Windows only (workaround for a Dart runtime limitation — revisit if
+  upstream fixes the block size); a Windows-only test executes a real process with an empty spec
+  environment so a regression fails CI.
+- **Refs**: `lib/platform/process.dart`, `test/platform/process_test.dart`, R-15, M8-03,
+  `docs/impl/PLAN-M8-windows-release.md`

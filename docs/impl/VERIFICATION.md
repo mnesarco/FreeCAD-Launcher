@@ -271,7 +271,10 @@ downloads. The remaining Windows smoke rows above (build install, profiles + lau
 addons/pip/macros, CLI wrapper, reveal) have not been exercised on Windows yet. The first real
 `.7z` install attempt failed with `FileSystemException` because catalog build IDs contain `:`
 (illegal in Windows names) and were used as directory names; fixed by R-14/D-095
-(`safePathSegment`), retest with a rebuilt artifact pending.
+(`safePathSegment`), retest with a rebuilt artifact pending. The retest then reached 7zr and
+failed with ERROR_INVALID_PARAMETER from `CreateProcessW` (Dart builds a malformed empty
+environment block); fixed by R-15/D-096. Build installs now write `logs/install-<id>-<stamp>.log`
+with the error and stack trace (R-16); retest pending.
 
 ## 5. When something fails
 

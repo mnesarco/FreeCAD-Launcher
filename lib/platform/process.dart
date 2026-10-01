@@ -65,12 +65,18 @@ class IoProcessLauncher implements ProcessLauncher {
 
   @override
   Future<ProcessHandle> start(ProcessSpec spec) async {
+    // An empty environment with `includeParentEnvironment: false` makes
+    // Dart build a one-wchar environment block on Windows, which
+    // CreateProcessW rejects with ERROR_INVALID_PARAMETER (7zr extraction).
+    final emptyEnvironment = spec.environment.isEmpty;
     final process = await Process.start(
       spec.executable,
       spec.arguments,
-      environment: spec.environment.isEmpty ? null : spec.environment,
+      environment: emptyEnvironment ? null : spec.environment,
       workingDirectory: spec.workingDirectory,
-      includeParentEnvironment: spec.includeParentEnvironment,
+      includeParentEnvironment: emptyEnvironment && Platform.isWindows
+          ? true
+          : spec.includeParentEnvironment,
       runInShell: false,
     );
     return IoProcessHandle(process);

@@ -11,6 +11,7 @@ import 'package:uuid/uuid.dart';
 import 'package:freecad_launcher/core/cancellation.dart';
 import 'package:freecad_launcher/core/errors.dart';
 import 'package:freecad_launcher/core/log.dart';
+import 'package:freecad_launcher/core/path_segments.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart';
 import 'package:freecad_launcher/data/database.dart';
@@ -255,6 +256,14 @@ class BuildsController {
     JobContext? context,
   ) async {
     final buildId = candidate.id;
+    final logFile = _newInstallLogFile(buildId);
+    final log = StringBuffer()
+      ..writeln('# ${_clock().toIso8601String()} install ${candidate.versionLabel}')
+      ..writeln('build: $buildId')
+      ..writeln('asset: ${candidate.assetName}')
+      ..writeln('url: ${candidate.downloadUrl}')
+      ..writeln('directory: ${_paths.buildDir(buildId)}');
+    context?.setLogPath(logFile.path);
     final token = CancellationToken();
     _tokens[buildId] = token;
     context?.token.addListener(token.cancel);
@@ -262,6 +271,7 @@ class BuildsController {
     _setProgress(buildId, const InstallProgress(stage: InstallStage.downloading, fraction: 0), context: context);
 
     try {
+      log.writeln('${_clock().toIso8601String()} downloading');
       final expected = await _fetchExpectedChecksum(candidate, token);
 
       final download = await _downloader.download(
@@ -272,6 +282,7 @@ class BuildsController {
         onProgress: (progress) => _onDownloadProgress(buildId, progress, context: context),
       );
 
+      log.writeln('${_clock().toIso8601String()} installing ${download.path}');
       _setProgress(buildId, const InstallProgress(stage: InstallStage.installing), context: context);
       final installed = await _installer.install(
         InstallRequest(
@@ -280,13 +291,17 @@ class BuildsController {
           archivePath: download.path,
           assetName: candidate.assetName,
           pythonVersionHint: candidate.pythonVersion,
-          onDetectingPython: () => _setProgress(
-            buildId,
-            const InstallProgress(stage: InstallStage.detectingPython),
-            context: context,
-          ),
+          onDetectingPython: () {
+            log.writeln('${_clock().toIso8601String()} detecting python');
+            _setProgress(
+              buildId,
+              const InstallProgress(stage: InstallStage.detectingPython),
+              context: context,
+            );
+          },
         ),
       );
+      log.writeln('${_clock().toIso8601String()} installed ${installed.executablePath}');
 
       final now = _clock();
       final build = Build(
@@ -311,15 +326,33 @@ class BuildsController {
       );
       await _database.buildsDao.save(build);
       return Ok(build);
-    } on Object catch (error) {
+    } on Object catch (error, stackTrace) {
+      log.writeln('${_clock().toIso8601String()} ERROR ${redactSensitive(error.toString())}');
+      log.writeln(stackTrace.toString());
+      appLogger.error('Build install failed', tag: 'builds', error: error, stackTrace: stackTrace);
       final appError = error is AppError ? error : AppError.from(error, retryable: true);
       installErrors.value = {...installErrors.value, buildId: appError};
       context?.fail(appError.message);
       return Err(appError);
     } finally {
+      _writeInstallLog(logFile, log);
       _tokens.remove(buildId);
       _downloadStartedAt.remove(buildId);
       installProgress.value = {...installProgress.value}..remove(buildId);
+    }
+  }
+
+  File _newInstallLogFile(String buildId) {
+    final stamp = _clock().toIso8601String().replaceAll(RegExp(r'[:.]'), '-');
+    return File(p.join(_paths.logsDir, 'install-${safePathSegment(buildId)}-$stamp.log'));
+  }
+
+  void _writeInstallLog(File file, StringBuffer log) {
+    try {
+      file.parent.createSync(recursive: true);
+      file.writeAsStringSync(log.toString(), flush: true);
+    } on FileSystemException {
+      // Install logging must never fail the install itself.
     }
   }
 
