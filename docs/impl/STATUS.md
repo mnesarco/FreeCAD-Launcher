@@ -527,6 +527,7 @@
 | 2026-10-01 | R16 | Manual AppImage workflow: renamed to `appimage-release.yml` (GitHub refused the old path), fixed missing GTK/ninja deps and pinned the type-2 runtime to the dated `20251108` release (**D-084**) | M8-01 | `.github/workflows/appimage-release.yml`, `packaging/appimage/build_appimage.sh`, `README.md`, `docs/impl/{DECISIONS,STATUS,VERIFICATION}.md` |
 | 2026-10-01 | R17 | First CI-built AppImage from GitHub verified: run 36810294004 built/uploaded `FreeCADLauncher-0.1.0-x86_64.AppImage` (29.9 MB) + sha256 + zsync; artifact re-verified locally; M8-02 DONE | M8-01, M8-02 | `docs/impl/{TASKS,STATUS,VERIFICATION}.md` |
 | 2026-10-01 | R18 | First release: `v0.1.0` pre-release published from the manual workflow (run 36812429637) with AppImage + sha256 + zsync; M8-01 DONE; tag fetched locally | M8-01 | `docs/impl/{TASKS,STATUS,VERIFICATION}.md` |
+| 2026-10-01 | R19 | History cleanup: dropped the temporary `ping`/`bisect` CI commits with `git-filter-repo` (tree unchanged), force-pushed `devel` and moved `v0.1.0` to the rewritten commit; CI and the tag-path release workflow re-ran green (runs 36815947311 / 36815948224) | — | `docs/impl/STATUS.md` |
 
 ## Standing notes for the next agent
 
