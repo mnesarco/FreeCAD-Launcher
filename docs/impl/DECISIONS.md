@@ -1441,7 +1441,7 @@ Template:
 
 ### D-068 — Reproducible AppImage build (S5)
 - **Date**: 2026-09-21
-- **Status**: Accepted
+- **Status**: Accepted (runtime pin superseded by D-084)
 - **Context**: spec 07 §3 proposed a pipeline (`flutter build linux` → AppDir → appimagetool
   type-2 + zsync update info + SHA-256 sidecar) and asked S5 to validate tooling, reproducibility
   and clean-distro behavior. There is no git remote yet (OQ-7), so CI could not be executed;
@@ -1821,3 +1821,19 @@ Template:
 - **Consequences**: macOS compile regressions are not caught in CI until M8-04; nothing else
   changes for the AppImage pipeline.
 - **Refs**: D-072, D-082, `TASKS.md` M8-04, `TASKS.md` M8-06
+
+### D-084 — Pin the AppImage type-2 runtime to a dated release
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: The first manual AppImage workflow run on GitHub failed at runtime
+  verification: the runtime was fetched from the rolling `continuous` release
+  (`1cc49bcf…`, pinned by D-068) whose asset had been rebuilt since. `continuous` is a moving
+  target and cannot be treated as reproducible.
+- **Decision**: pin `runtime-x86_64` to the dated, immutable release `20251108`:
+  `https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-x86_64`,
+  SHA-256 `2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d`.
+  `build_appimage.sh` defaults updated; ``continuous`` is no longer used.
+- **Consequences**: runtime upgrades are explicit (bump URL + hash); the AppImage build stays
+  reproducible on CI and locally.
+- **Refs**: D-068, S5, M7-01, `.github/workflows/appimage-release.yml`,
+  `packaging/appimage/build_appimage.sh`
