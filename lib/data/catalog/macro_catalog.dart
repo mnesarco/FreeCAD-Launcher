@@ -37,7 +37,8 @@ class MacroCatalogException implements Exception {
   final Object? cause;
 
   @override
-  String toString() => 'MacroCatalogException: $message';
+  String toString() =>
+      'MacroCatalogException: $message${cause == null ? '' : ' ($cause)'}';
 }
 
 class MacroCatalog {

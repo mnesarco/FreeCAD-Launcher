@@ -212,7 +212,13 @@ class BuildsController {
         'candidates in ${stopwatch.elapsedMilliseconds} ms',
         tag: 'perf',
       );
-    } on Object catch (error) {
+    } on Object catch (error, stackTrace) {
+      appLogger.error(
+        'releases catalog load failed',
+        error: error,
+        stackTrace: stackTrace,
+        tag: 'catalog',
+      );
       catalogError.value = AppError.from(error, retryable: true);
       catalogFreshness.value = null;
     } finally {

@@ -39,7 +39,8 @@ class CatalogUnavailableException implements Exception {
   final Object? cause;
 
   @override
-  String toString() => 'CatalogUnavailableException: $message';
+  String toString() =>
+      'CatalogUnavailableException: $message${cause == null ? '' : ' ($cause)'}';
 }
 
 class ReleasesHttpException implements Exception {

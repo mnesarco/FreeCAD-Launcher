@@ -38,7 +38,8 @@ class AddonCatalogUnavailableException implements Exception {
   final Object? cause;
 
   @override
-  String toString() => 'AddonCatalogUnavailableException: $message';
+  String toString() =>
+      'AddonCatalogUnavailableException: $message${cause == null ? '' : ' ($cause)'}';
 }
 
 class AddonCatalog {

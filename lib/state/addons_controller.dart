@@ -166,7 +166,13 @@ class AddonsController {
         '${stopwatch.elapsedMilliseconds} ms (${result.freshness.name})',
         tag: 'perf',
       );
-    } on Object catch (failure) {
+    } on Object catch (failure, stackTrace) {
+      appLogger.error(
+        'addon catalog load failed',
+        error: failure,
+        stackTrace: stackTrace,
+        tag: 'catalog',
+      );
       error.value = AppError.from(failure, retryable: true);
     } finally {
       loading.value = false;

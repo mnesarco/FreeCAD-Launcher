@@ -35,7 +35,8 @@ class NewsFeedException implements Exception {
   final Object? cause;
 
   @override
-  String toString() => 'NewsFeedException: $message';
+  String toString() =>
+      'NewsFeedException: $message${cause == null ? '' : ' ($cause)'}';
 }
 
 class NewsFeed {

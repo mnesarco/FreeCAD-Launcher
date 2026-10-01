@@ -178,7 +178,13 @@ class MacrosController {
         '${stopwatch.elapsedMilliseconds} ms (${result.freshness.name})',
         tag: 'perf',
       );
-    } on Object catch (failure) {
+    } on Object catch (failure, stackTrace) {
+      appLogger.error(
+        'macro catalog load failed',
+        error: failure,
+        stackTrace: stackTrace,
+        tag: 'catalog',
+      );
       error.value = failure;
     } finally {
       loading.value = false;
