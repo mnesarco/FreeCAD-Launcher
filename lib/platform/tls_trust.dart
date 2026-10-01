@@ -119,6 +119,9 @@ SystemTrustBundle loadWindowsSystemTrustBundle() {
   const certStoreProvSystemW = 10;
   const currentUser = 0x00010000;
   const localMachine = 0x00020000;
+  const localMachineGroupPolicy = 0x00030000;
+  const localMachineEnterprise = 0x00040000;
+  const currentUserGroupPolicy = 0x00050000;
   final provider = Pointer<Utf8>.fromAddress(certStoreProvSystemW);
 
   final buffer = StringBuffer();
@@ -127,7 +130,10 @@ SystemTrustBundle loadWindowsSystemTrustBundle() {
   var user = 0;
   for (final location in const [
     (flags: localMachine, machine: true),
+    (flags: localMachineGroupPolicy, machine: true),
+    (flags: localMachineEnterprise, machine: true),
     (flags: currentUser, machine: false),
+    (flags: currentUserGroupPolicy, machine: false),
   ]) {
     for (final storeName in const ['ROOT', 'CA']) {
       final namePointer = storeName.toNativeUtf16();

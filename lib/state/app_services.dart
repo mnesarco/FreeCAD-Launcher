@@ -27,6 +27,7 @@ import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/host.dart';
 import 'package:freecad_launcher/platform/launch.dart';
 import 'package:freecad_launcher/platform/macro_icon_cache.dart';
+import 'package:freecad_launcher/platform/network_probe.dart';
 import 'package:freecad_launcher/platform/config_snapshots.dart';
 import 'package:freecad_launcher/platform/file_actions.dart';
 import 'package:freecad_launcher/platform/paths.dart';
@@ -92,9 +93,7 @@ class AppServices {
     paths: paths,
     platform: hostPlatform,
     processRunner: processRunner,
-    networkProbe: (uri) async {
-      await _client.head(uri);
-    },
+    networkProbe: probeUri,
   );
 
   late final GitHubReleasesClient releasesClient = GitHubReleasesClient(client: _client);
