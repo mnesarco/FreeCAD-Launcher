@@ -43,7 +43,8 @@ class DownloadException implements Exception {
   final Object? cause;
 
   @override
-  String toString() => 'DownloadException: $message';
+  String toString() =>
+      'DownloadException: $message${cause == null ? '' : ' ($cause)'}';
 }
 
 class ChecksumMismatchException implements Exception {

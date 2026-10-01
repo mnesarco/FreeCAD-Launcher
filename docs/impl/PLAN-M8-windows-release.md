@@ -68,7 +68,7 @@ failures until the CI job runs green.
 - [x] Push and iterate on Windows CI until green (run 36897077869: Windows 576 passed / 14
       skipped, second iteration fixed the last 6 failures)
 
-### Phase 2 — Windows bundle completeness (done)
+### Phase 2 — Windows bundle completeness (done, plus VM-driven TLS fix)
 
 - [x] `windows/CMakeLists.txt`: install `third_party/7zip/7zr.exe` + `license.txt` beside the exe
 - [x] `tool/generate_third_party_notices.dart`: new "Bundled executables" section lists 7-Zip
@@ -76,6 +76,10 @@ failures until the CI job runs green.
 - [x] Generate `windows/runner/resources/app_icon.ico` from
       `packaging/appimage/freecad-launcher.svg` via `packaging/windows/render_icon.sh`
       (7 sizes, 16–256 px, owner's rocket design; checked visually)
+- [x] Windows TLS trust (found on the VM: `CERTIFICATE_VERIFY_FAILED`): load the Windows
+      `ROOT`/`CA` stores via `crypt32` FFI plus an optional `<data dir>/ca-bundle.pem` into
+      `SecurityContext.defaultContext` at startup (D-094), and surface causes in
+      `DownloadException`
 - [x] `packaging/windows/build_portable.ps1`: verifies the pinned `7zr.exe` SHA-256 (and that
       it is present), assembles the zip (`freecad_launcher.exe` bundle + `LICENSE` +
       `THIRD_PARTY_NOTICES.md` + README) and writes the `.sha256` sidecar (LF, zip is created

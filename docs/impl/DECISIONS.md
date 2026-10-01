@@ -1995,3 +1995,24 @@ Template:
 - **Refs**: `docs/impl/PLAN-M8-windows-release.md`, M8-03, `lib/platform/diagnostics.dart`,
   `lib/data/catalog/*.dart`, `lib/ui/settings/settings_view.dart`, `docs/user-guide.md`,
   `README.md`
+
+### D-094 — Windows TLS trust uses the system stores plus an optional PEM bundle
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: The Windows manual pass failed every catalog with
+  `CERTIFICATE_VERIFY_FAILED: unable to get local issuer certificate` (the Linux build works).
+  On Windows, Dart's `SecurityContext.defaultContext` trusts Mozilla's roots only (confirmed in
+  the `dart:io` docs), so corporate TLS-inspection/AV roots and private CAs installed in the
+  Windows certificate store are ignored. `DownloadException` also hid the handshake error.
+- **Decision**: after binding initialization and before the UI starts, `installAdditionalTrust`
+  (a) loads the Windows `ROOT` and `CA` stores via `crypt32` FFI
+  (`CertOpenSystemStoreW`/`CertEnumCertificatesInStore`) as PEM into
+  `SecurityContext.defaultContext`, and (b) additionally trusts `<data dir>/ca-bundle.pem` when
+  present. Failures are non-fatal and logged (with certificate counts); no insecure bypass is
+  added. `DownloadException.toString()` now includes its `cause`.
+- **Consequences**: Windows machines with TLS inspection or private CAs work without
+  configuration; startup performs a one-time store enumeration before the first HTTP request;
+  macOS already uses the platform store, Linux keeps Mozilla roots; unusual setups can drop a
+  PEM bundle at the data root; a Windows-only CI test validates store loading and FFI layout.
+- **Refs**: `docs/impl/PLAN-M8-windows-release.md`, M8-03, D-093, `lib/platform/tls_trust.dart`,
+  `lib/main.dart`, `lib/platform/downloader.dart`, `test/platform/tls_trust_test.dart`

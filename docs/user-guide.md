@@ -341,6 +341,7 @@ profiles/          # isolated profile directories
 cache/             # downloaded assets and catalog payloads
 exports/           # manifest/bundle exports
 logs/              # app logs and per-launch logs
+ca-bundle.pem      # optional extra CA certificates trusted at startup (e.g. TLS inspection)
 ```
 
 The database is an index — if you move or delete files behind its back, the startup reconciler
@@ -360,11 +361,11 @@ marks the entries as missing/broken instead of losing data.
   reused offline (a stale banner appears). GitHub's API may rate-limit unauthenticated requests
   (~60/hour); wait and retry.
 
-### Windows blocks the catalogs or news (firewall/antivirus)
+### Windows blocks the catalogs or news (firewall, antivirus, TLS inspection)
 
 The Versions/Addons/Macros catalogs and the Home news need outbound HTTPS. The failure message
-now includes the underlying cause (for example a `SocketException`), and the error is written to
-the log.
+includes the underlying cause (for example a `SocketException` or a `HandshakeException`), and
+the error is written to the log.
 
 - Open **Settings → Diagnostics** and run the checks: the **Network** row probes the GitHub API,
   `addons.freecad.org` and the news feed and reports the exact failure.
@@ -372,6 +373,10 @@ the log.
   (Windows Security → Firewall & network protection → *Allow an app through firewall* → check
   Private and Public; add the app if it is not listed). Third-party security suites have their
   own allow lists.
+- On startup the launcher trusts the Windows certificate stores in addition to its built-in
+  roots, so corporate TLS-inspection or antivirus root certificates work without configuration.
+  If `CERTIFICATE_VERIFY_FAILED` persists, export the root CA as PEM and save it as
+  `ca-bundle.pem` in the data directory (see [Data locations](#data-locations)).
 - The launcher connects directly; system proxy settings are not used yet (known limitation).
 
 ### A build is Missing or Broken

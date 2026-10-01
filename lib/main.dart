@@ -3,11 +3,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:freecad_launcher/app.dart';
 import 'package:freecad_launcher/cli/cli.dart';
 import 'package:freecad_launcher/core/constants.dart';
 import 'package:freecad_launcher/core/log.dart';
+import 'package:freecad_launcher/platform/tls_trust.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 
 Future<void> main(List<String> arguments) async {
@@ -25,6 +27,13 @@ Future<void> main(List<String> arguments) async {
     'startup: bootstrap at ${startup.elapsedMilliseconds} ms',
     tag: 'perf',
   );
+
+  final trust = installAdditionalTrust(
+    extraBundlePath: p.join(services.paths.dataRoot, 'ca-bundle.pem'),
+  );
+  if (trust.hasCertificates || trust.error != null) {
+    appLogger.info('TLS trust: $trust', tag: 'main');
+  }
 
   if (arguments.isEmpty) {
     appLogger.info('$appName $appVersion started', tag: 'main');

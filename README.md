@@ -67,9 +67,10 @@ Verify the download with the published checksum, and if your system lacks FUSE, 
 **Windows** — portable zip (`FreeCADLauncher-<version>-windows-x86_64.zip`): extract it anywhere
 and run `freecad_launcher.exe`. The binary is unsigned, so SmartScreen may show a warning
 (More info → Run anyway). The zip also contains `7zr.exe` (required to extract the official
-FreeCAD `.7z` portable builds), `LICENSE` and `THIRD_PARTY_NOTICES.md`. If your firewall,
-antivirus or EDR blocks the app, allow `freecad_launcher.exe` for outbound HTTPS (Settings →
-Diagnostics → Network reports connectivity).
+FreeCAD `.7z` portable builds), `LICENSE` and `THIRD_PARTY_NOTICES.md`. The launcher trusts the
+Windows certificate stores at startup (TLS inspection/corporate CAs work); if your firewall,
+antivirus or EDR still blocks the app, allow `freecad_launcher.exe` for outbound HTTPS
+(Settings → Diagnostics → Network reports connectivity).
 
 Verify the download with the published `.sha256` sidecar (`Get-FileHash -Algorithm SHA256`).
 

@@ -51,6 +51,7 @@ dependencies:
   intl:
   uuid: ^4.0.0
   http: ^1.6.0
+  ffi: ^2.2.0
   flutter_localizations:
     sdk: flutter
 
