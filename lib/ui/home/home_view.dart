@@ -374,6 +374,8 @@ class _NewsCard extends StatelessWidget {
     required this.onRetry,
   });
 
+  static const int maxItems = 10;
+
   final List<NewsItem> items;
   final bool loading;
   final bool loaded;
@@ -425,7 +427,7 @@ class _NewsCard extends StatelessWidget {
               title: Text(l10n.homeNewsEmpty),
             )
           else
-            for (final item in items.take(5))
+            for (final item in items.take(_NewsCard.maxItems))
               ListTile(
                 leading: const Icon(Icons.article_outlined),
                 title: Text(

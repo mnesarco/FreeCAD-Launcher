@@ -161,6 +161,27 @@ void main() {
     expect(find.text('The 1.2 release brings a new sketcher.'), findsOneWidget);
   });
 
+  testWidgets('shows at most ten news posts', (tester) async {
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    final items = [
+      for (var index = 0; index < 12; index++)
+        '<item><title>Post $index</title>'
+            '<link>https://blog.freecad.org/$index</link>'
+            '<pubDate>Tue, ${(index + 1).toString().padLeft(2, '0')} Sep 2025 10:00:00 +0000</pubDate></item>',
+    ].join();
+    newsSource.streamFactory = () => Stream.fromIterable([
+      utf8.encode('<?xml version="1.0"?><rss version="2.0"><channel>$items</channel></rss>'),
+    ]);
+
+    await pumpHome(tester);
+
+    expect(find.text('Post 11'), findsOneWidget);
+    expect(find.text('Post 2'), findsOneWidget);
+    expect(find.text('Post 1'), findsNothing);
+    expect(find.text('Post 0'), findsNothing);
+  });
+
   testWidgets('first run shows the getting-started checklist', (tester) async {
     newsSource.streamFactory = () => Stream.fromIterable([utf8.encode(rss)]);
 

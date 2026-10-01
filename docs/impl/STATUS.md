@@ -368,8 +368,8 @@
     "Open profile folder" right-aligned, Macros defaults to the Catalog tab.
   - Home news excerpts (2026-09-30, post-R4): each news item shows a short excerpt (180-char
     word-boundary truncation in `NewsItem.excerpt`) above the date, with the title in the primary
-    accent color (semibold) so posts stand out. 508 tests green, analyze clean; live dev-app
-    check showed all five latest posts with excerpts.
+    accent color (semibold) so posts stand out; the card lists up to 10 posts. 508 tests green,
+    analyze clean; live dev-app check showed all five latest posts with excerpts.
   - B-01 weekly part — **D-077**: dated weekly builds work end-to-end. B-01a catalog collection
     (`weeklyBuilds` signal, one candidate per release via `selectFor`, rolling `weeklies`
     skipped); B-01b Available channel filter (Stable default) with "Weekly YYYY-MM-DD" labels,
@@ -475,6 +475,7 @@
 | 2026-09-30 | R7 | CalVer transition verified against FEP-0003 (`YY.N` three/year, patches `YY.N.P`, first 26.3 branched 2026-09-30, RCs ignored until final): D-078, spec 06 §1.3/§1.5, FR-1.7 and backlog task B-14 recorded | — | `docs/spec/{02-requirements,06-integrations}.md`, `docs/impl/{DECISIONS,TASKS,STATUS}.md` |
 | 2026-09-30 | R8 | B-01 weekly builds (D-077) implemented: `weeklyBuilds` catalog signal, Available channel filter + dev warning, notify-only weekly update badges, humanized weekly labels; real `weekly-2026.09.30` install verified (checksum, Python 3.13 probe, `--version` = 26.3.0); docs updated | B-01a..B-01d | `lib/state/{builds_controller,updates_controller}.dart`, `lib/ui/builds/builds_view.dart`, `lib/ui/updates/updates_summary_sheet.dart`, `lib/ui/widgets/build_version_label.dart`, `lib/l10n/app_en.arb`, `lib/l10n/gen/**`, `test/**`, `docs/{spec/03-ux.md,user-guide.md}`, `docs/impl/{TASKS,STATUS,VERIFICATION}.md` |
 | 2026-09-30 | R9 | Cap the weekly list at the latest 52 (one year), newest first (`BuildsController.weeklyBuildLimit`); controller test + spec/user-guide wording | B-01 | `lib/state/builds_controller.dart`, `test/state/builds_controller_test.dart`, `docs/spec/03-ux.md`, `docs/user-guide.md`, `docs/impl/STATUS.md` |
+| 2026-09-30 | R10 | Home news card extended from 5 to 10 posts (`_NewsCard.maxItems`); widget test asserts the limit | — | `lib/ui/home/home_view.dart`, `test/ui/home_view_test.dart`, `docs/impl/STATUS.md` |
 
 ## Standing notes for the next agent
 
