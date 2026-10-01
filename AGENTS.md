@@ -8,7 +8,8 @@ addons, macros, and per-profile Python packages.
 - The project is a **greenfield v2 rewrite**. The product spec is in `docs/spec/`; the
   implementation plan, task board, and decision log are in `docs/impl/`.
 - `lib/` contains the **v2 implementation**. The legacy prototype is frozen at tag
-  `prototype-final` and must not be resurrected; v2 work lands on the `v2` branch.
+  `prototype-final` and must not be resurrected; v2 work lands on the `devel` branch
+  (public; `main` is reserved for a future release line).
 - **Current state lives in `docs/impl/STATUS.md`** (milestone, next action, blockers) — read it
   and `docs/impl/TASKS.md` rather than trusting this file for progress details.
 - As of M3 (profiles/launch), the catalog floor is FreeCAD 1.0+ (D-021); custom user binaries

@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, v2]
+    branches: [devel, main]
   pull_request:
 
 concurrency:
@@ -48,6 +48,12 @@ jobs:
       - name: Check generated files are current
         shell: bash
         run: git diff --exit-code -- 'lib/**/*.g.dart' 'lib/l10n/gen'
+
+      - name: Check third-party notices are current
+        if: runner.os == 'Linux'
+        run: |
+          dart run tool/generate_third_party_notices.dart
+          git diff --exit-code THIRD_PARTY_NOTICES.md
 
       - name: Analyze
         run: flutter analyze

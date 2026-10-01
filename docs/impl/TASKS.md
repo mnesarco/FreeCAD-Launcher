@@ -161,7 +161,7 @@ Starts after M7; the GitHub CI/release work needs a git remote (OQ-7). Recorded 
 
 | ID | Task | Done when | Deps | Effort | Status |
 |---|---|---|---|---|---|
-| M8-01 | Release workflow (was M7-02): test matrix, changelog, GitHub release creation, published checksums/zsync; CI regenerates `THIRD_PARTY_NOTICES.md` and fails on drift | Dry-run release from an RC tag succeeds; notes free of tokens; checksums match | M7-04 | M | TODO |
+| M8-01 | Release workflow (was M7-02): test matrix, changelog, GitHub release creation, published checksums/zsync; CI regenerates `THIRD_PARTY_NOTICES.md` and fails on drift | Dry-run release from an RC tag succeeds; notes free of tokens; checksums match | M7-04 | M | TODO (workflow + notices drift check implemented; dry run pending the GitHub remote) |
 | M8-02 | First GitHub CI run of the M1-09 matrix (analyze, tests, codegen freshness, build per OS) | CI green on the remote repo | M8-01 | S | TODO |
 | M8-03 | Windows artifact + deployment (was B-11/OQ-1): portable build, real `.7z` extraction, install/launch/isolation manual pass | Windows artifact installs and launches on a clean machine | M8-01 | L | TODO |
 | M8-04 | macOS artifact + deployment (was B-11/OQ-1): unsigned `.app`/`.dmg`, quarantine consent, install/launch/isolation manual pass | macOS artifact installs and launches on a clean machine | M8-01 | L | TODO |

@@ -131,7 +131,7 @@ Template:
 
 ### D-015 — Repository workflow for the rewrite
 - **Date**: 2026-09-18
-- **Status**: Accepted
+- **Status**: Superseded by D-081 (branch strategy; issue/PR workflow unchanged)
 - **Context**: Multi-session rewrite needs a clean baseline and reversible prototype.
 - **Decision**: Tag `prototype-final` before v2 work; develop v2 on branch `v2`; merge to `main` after M2 exit review; `main` always releasable after that. Prototype data is not migrated.
 - **Consequences**: v2 PRs target `v2` until merge; CI runs on both.
@@ -1770,3 +1770,27 @@ Template:
   documents its attribution-only use; D-070's glyph-font decision is unaffected.
 - **Refs**: D-070, D-011, `TASKS.md` R-12, `assets/images/freecad-logo.svg`, `README.md`,
   `tool/generate_third_party_notices.dart`
+
+### D-081 — GitHub publishing: public repo, `devel` branch, manual CI AppImage
+- **Date**: 2026-09-30
+- **Status**: Accepted
+- **Context**: OQ-7 (git remote) is resolved: the project publishes at
+  `https://github.com/mnesarco/FreeCAD-Launcher`. The local `v2` branch holds all work while
+  `main` is an ancestor 73 commits behind. CI/release workflows existed but the release path
+  needed an explicit manual trigger and the repository URL was unknown.
+- **Decision**:
+  - The public repository is `mnesarco/FreeCAD-Launcher`; the public development branch is
+    `devel` (renamed from `v2`) and becomes the default branch. `main` stays local for a future
+    release line (D-015's "merge to main after M2" is superseded).
+  - The AppImage is produced by CI only, through the manually triggered **Release AppImage**
+    workflow (`workflow_dispatch`): every run uploads AppImage + `.sha256` + `.zsync` artifacts;
+    optional inputs (`create_release`, `tag`, `prerelease`) create or update a GitHub Release.
+    Pushing a `vX.Y.Z` tag triggers the same workflow.
+  - CI keeps the 3-OS test matrix, runs on `devel`/`main`, and now fails on
+    `THIRD_PARTY_NOTICES.md` drift in addition to generated-file drift.
+  - The tracked 4 MB prototype artifact `addon_catalog_cache.json` is removed from the tree
+    (kept in history).
+  - README/user guide point to the Releases page; badges link the CI and release workflows.
+- **Consequences**: the first push publishes the full history (prototype included); releases
+  require a `vX.Y.Z` tag matching `appVersion` (packaging/check_version.sh); OQ-7 closes.
+- **Refs**: OQ-7, spec 07 §4/§5, `TASKS.md` M8-01/M8-02, D-015, D-068, D-071

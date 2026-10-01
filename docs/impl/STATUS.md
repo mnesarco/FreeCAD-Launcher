@@ -6,14 +6,14 @@
 - **Updated**: 2026-09-30
 - **Current milestone**: **M7 — Linux v0.1 completion: complete** (M7-01/M7-03/M7-04/M7-06 done;
   M7-05 deferred to M8-05 per D-073)
-- **Active branch**: `v2`
+- **Active branch**: `devel` (public) — `main` is reserved for a future release line
 - **Last session**: 2026-09-30
-- **Next action**: M7 has no open tasks. Next options: owner review of README/`docs/user-guide.md`;
-  continue the post-v0.1 backlog: `B-01` legacy channel (1.0.x) or `B-14` CalVer readiness
-  (needed before 27.1 branches, 2027-01-31), then `B-02` in-place build updates, `B-03` full
-  profile export; `M8` (packaging/CI/cross-platform) is blocked on a git remote (OQ-7).
+- **Next action**: publish to GitHub (`mnesarco/FreeCAD-Launcher`, D-081): add the remote, push
+  `devel`, watch the first CI matrix run (M8-02), then run the manual **Release AppImage**
+  workflow; after that `M8-03`/`M8-04` (Windows/macOS artifacts) and `M8-05` (clean-VM pass).
+  Backlog: `B-01` legacy channel, `B-14` CalVer readiness, `B-02` in-place build updates.
 - **Blockers**:
-  - None for M7 (Linux). M8 needs a git remote (OQ-7) and Windows/macOS machines (OQ-1).
+  - None for publishing. M8-03/M8-04 still need Windows/macOS machines (OQ-1).
 - **In progress**: none
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
@@ -394,6 +394,13 @@
     (Frank D. Martínez, aka mnesarco). README and the notices generator switched from "ships no
     FreeCAD artwork" to the attribution-only logo wording; notices regenerated. 517 tests green
     (9 manual probes skipped), analyze clean; live dialog verified.
+  - Publishing prep (2026-09-30, **D-081**): repo is `mnesarco/FreeCAD-Launcher`; branch `v2`
+    renamed to `devel` (public default; `main` left behind); CI runs on `devel`/`main` and now
+    fails on `THIRD_PARTY_NOTICES.md` drift; the manual **Release AppImage** workflow gained
+    `create_release`/`tag`/`prerelease` inputs and an optional GitHub Release step (artifacts
+    always); README/user-guide point to the Releases page; the 4 MB prototype
+    `addon_catalog_cache.json` was removed from the tree. Push/CI/release execution pending
+    (M8-01/M8-02).
 
 ## Session log
 
@@ -491,6 +498,7 @@
 | 2026-09-30 | R10 | Home news card extended from 5 to 10 posts (`_NewsCard.maxItems`); widget test asserts the limit | — | `lib/ui/home/home_view.dart`, `test/ui/home_view_test.dart`, `docs/impl/STATUS.md` |
 | 2026-09-30 | R11 | D-079 copyright notices: `SPDX-FileCopyrightText` in 240 SPDX-tagged files, README/About/notices holder line, notices regenerated; 516 tests green | R-11 | `docs/impl/{DECISIONS,TASKS,STATUS}.md`, `README.md`, `THIRD_PARTY_NOTICES.md`, `tool/generate_third_party_notices.dart`, `lib/l10n/app_en.arb`, `lib/ui/settings/settings_view.dart`, `lib/**`, `test/**`, `packaging/**` |
 | 2026-09-30 | R12 | D-080 About dialog: bundled official FreeCAD logo, FPA trademark notice and independent-project statement, opened from Settings › About; README/notices wording updated; 517 tests green, live check | R-12 | `docs/impl/{DECISIONS,TASKS,STATUS}.md`, `README.md`, `THIRD_PARTY_NOTICES.md`, `tool/generate_third_party_notices.dart`, `assets/images/freecad-logo.svg`, `pubspec.yaml`, `lib/ui/settings/{about_dialog.dart,settings_view.dart}`, `lib/l10n/**`, `test/ui/settings_view_test.dart` |
+| 2026-09-30 | R13 | D-081 GitHub publishing prep: repo `mnesarco/FreeCAD-Launcher`, `v2` renamed `devel` (public default), CI on devel/main + notices drift check, manual Release AppImage workflow with optional GitHub Release, README/user-guide Releases links, removed 4 MB prototype artifact | M8-01 | `.github/workflows/{ci,release-appimage}.yml`, `AGENTS.md`, `README.md`, `docs/spec/07-distribution.md`, `docs/user-guide.md`, `docs/impl/{DECISIONS,TASKS,STATUS}.md`, `addon_catalog_cache.json` |
 
 ## Standing notes for the next agent
 

@@ -2,6 +2,9 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # FreeCAD Launcher
 
+[![CI](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/ci.yml/badge.svg)](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/ci.yml)
+[![Release AppImage](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/release-appimage.yml/badge.svg)](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/release-appimage.yml)
+
 A desktop application that manages multiple FreeCAD builds and fully isolated profiles:
 each profile gets its own settings, addons, macros and Python packages, while all profiles share
 one installed FreeCAD copy.
@@ -44,24 +47,34 @@ one installed FreeCAD copy.
 
 ## Install
 
-There is no public release yet. Build the AppImage locally:
+Download the latest AppImage from the
+[Releases page](https://github.com/mnesarco/FreeCAD-Launcher/releases):
+
+```sh
+chmod +x FreeCADLauncher-<version>-x86_64.AppImage
+./FreeCADLauncher-<version>-x86_64.AppImage
+```
+
+Verify the download with the published checksum, and if your system lacks FUSE, run it with
+`APPIMAGE_EXTRACT_AND_RUN=1`.
+
+Releases are built by the manually triggered **Release AppImage** workflow
+(Actions → *Release AppImage* → *Run workflow*), which builds the AppImage on CI, verifies the
+SHA-256 sidecar, smoke-tests the binary and optionally publishes a GitHub Release. Pushing a
+`vX.Y.Z` tag triggers the same workflow.
+
+Local test builds:
 
 ```sh
 flutter pub get
 dart run build_runner build --delete-conflicting-outputs
-packaging/appimage/build_appimage.sh
+ALLOW_PLACEHOLDER_UPDATE_INFO=1 packaging/appimage/build_appimage.sh
 ```
 
 The script pins and verifies `appimagetool` and the AppImage runtime, and writes
 `build/appimage/FreeCADLauncher-<version>-x86_64.AppImage` plus `.sha256` and `.zsync` files.
-Local test builds without a real repository identity need `ALLOW_PLACEHOLDER_UPDATE_INFO=1`:
-
-```sh
-ALLOW_PLACEHOLDER_UPDATE_INFO=1 packaging/appimage/build_appimage.sh
-```
-
-Make the AppImage executable and run it. If your system lacks FUSE, run it with
-`APPIMAGE_EXTRACT_AND_RUN=1 ./FreeCADLauncher-<version>-x86_64.AppImage`.
+`ALLOW_PLACEHOLDER_UPDATE_INFO=1` is only needed for local builds without a real repository
+identity.
 
 For development, run from source with `flutter run -d linux`.
 

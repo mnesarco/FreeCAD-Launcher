@@ -42,8 +42,9 @@ isolated profiles.
 
 ### Linux (AppImage)
 
-There is no public release yet; build the AppImage locally (see the README) or use an artifact
-from `build/appimage/`. Then:
+Download the latest AppImage from the
+[Releases page](https://github.com/mnesarco/FreeCAD-Launcher/releases) (built by CI through the
+manually triggered *Release AppImage* workflow) or build it locally (see the README). Then:
 
 ```sh
 chmod +x FreeCADLauncher-<version>-x86_64.AppImage

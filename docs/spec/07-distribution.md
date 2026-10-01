@@ -65,9 +65,9 @@ flutter build <platform> --release
 
 ### 4.3 Branching
 
-- `main` is always releasable; feature branches PR into it.
+- The public development branch is `devel` (default branch on GitHub); v2 work lands there.
+- `main` is left behind for now and is reserved for a future release line.
 - Prototype code tagged `prototype-final` before the v2 rewrite lands.
-- v2 rewrite may live on `v2` branch and merge to `main` once M2 passes (roadmap).
 
 ## 5. Self-update (v0.2)
 
