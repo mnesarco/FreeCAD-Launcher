@@ -32,7 +32,10 @@ Future<void> main(List<String> arguments) async {
     extraBundlePath: p.join(services.paths.dataRoot, 'ca-bundle.pem'),
   );
   if (trust.hasCertificates || trust.error != null) {
-    appLogger.info('TLS trust: $trust', tag: 'main');
+    appLogger.info(
+      'TLS trust: $trust (exe: ${Platform.resolvedExecutable})',
+      tag: 'main',
+    );
   }
 
   if (arguments.isEmpty) {

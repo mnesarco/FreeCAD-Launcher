@@ -45,18 +45,34 @@ void main() {
     expect(result.error, isNull);
   });
 
-  test('loads the Windows system root store', () {
+  test('loads the Windows system root stores', () {
     if (!Platform.isWindows) {
       return;
     }
 
-    final pem = loadWindowsSystemRootsPem();
+    final bundle = loadWindowsSystemTrustBundle();
 
-    expect(pem, contains('-----BEGIN CERTIFICATE-----'));
+    expect(bundle.pem, contains('-----BEGIN CERTIFICATE-----'));
     expect(
-      countPemCertificates(pem),
+      bundle.totalCertificates,
       greaterThan(40),
       reason: 'the machine-wide ROOT/CA stores must be included, not only the user stores',
     );
+    expect(
+      bundle.machineCertificates,
+      greaterThan(0),
+      reason: 'the machine-wide ROOT/CA stores must be opened',
+    );
+  });
+
+  test('the legacy user-store fallback loads certificates', () {
+    if (!Platform.isWindows) {
+      return;
+    }
+
+    final bundle = loadUserStoresBundle();
+
+    expect(bundle.pem, contains('-----BEGIN CERTIFICATE-----'));
+    expect(bundle.userCertificates, greaterThan(0));
   });
 }

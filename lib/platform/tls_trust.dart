@@ -6,23 +6,44 @@ import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 
+class SystemTrustBundle {
+  const SystemTrustBundle({
+    this.pem = '',
+    this.machineCertificates = 0,
+    this.userCertificates = 0,
+  });
+
+  final String pem;
+  final int machineCertificates;
+  final int userCertificates;
+
+  int get totalCertificates => machineCertificates + userCertificates;
+}
+
 class TlsTrustResult {
   const TlsTrustResult({
-    this.systemCertificates = 0,
+    this.machineCertificates = 0,
+    this.userCertificates = 0,
     this.extraCertificates = 0,
     this.error,
   });
 
-  final int systemCertificates;
+  final int machineCertificates;
+  final int userCertificates;
   final int extraCertificates;
   final Object? error;
+
+  int get systemCertificates => machineCertificates + userCertificates;
 
   bool get hasCertificates => systemCertificates > 0 || extraCertificates > 0;
 
   @override
   String toString() {
     final buffer = StringBuffer()
-      ..write('$systemCertificates system + $extraCertificates extra certificates');
+      ..write(
+        '$systemCertificates system (machine $machineCertificates, '
+        'user $userCertificates) + $extraCertificates extra certificates',
+      );
     if (error != null) {
       buffer.write(' (error: $error)');
     }
@@ -37,15 +58,17 @@ int countPemCertificates(String pem) =>
 /// Windows system stores and, optionally, a user-supplied PEM bundle
 /// (`ca-bundle.pem`), so TLS-inspection and private CAs work.
 TlsTrustResult installAdditionalTrust({String? extraBundlePath}) {
-  var system = 0;
+  var machine = 0;
+  var user = 0;
   var extra = 0;
   Object? error;
   if (Platform.isWindows) {
     try {
-      final pem = loadWindowsSystemRootsPem();
-      system = countPemCertificates(pem);
-      if (pem.isNotEmpty) {
-        SecurityContext.defaultContext.setTrustedCertificatesBytes(utf8.encode(pem));
+      final bundle = loadWindowsSystemTrustBundle();
+      machine = bundle.machineCertificates;
+      user = bundle.userCertificates;
+      if (bundle.pem.isNotEmpty) {
+        SecurityContext.defaultContext.setTrustedCertificatesBytes(utf8.encode(bundle.pem));
       }
     } on Object catch (failure) {
       error = failure;
@@ -66,18 +89,19 @@ TlsTrustResult installAdditionalTrust({String? extraBundlePath}) {
     }
   }
   return TlsTrustResult(
-    systemCertificates: system,
+    machineCertificates: machine,
+    userCertificates: user,
     extraCertificates: extra,
     error: error,
   );
 }
 
 /// Concatenates every certificate from the Windows `ROOT` and `CA` stores as
-/// PEM, for both the machine and the current user. Returns an empty string
+/// PEM, for both the machine and the current user. Returns an empty bundle
 /// outside Windows.
-String loadWindowsSystemRootsPem() {
+SystemTrustBundle loadWindowsSystemTrustBundle() {
   if (!Platform.isWindows) {
-    return '';
+    return const SystemTrustBundle();
   }
   final crypt32 = DynamicLibrary.open('crypt32.dll');
   final openStore = crypt32.lookupFunction<
@@ -99,10 +123,15 @@ String loadWindowsSystemRootsPem() {
 
   final buffer = StringBuffer();
   final seen = <String>{};
-  for (final location in const [localMachine, currentUser]) {
+  var machine = 0;
+  var user = 0;
+  for (final location in const [
+    (flags: localMachine, machine: true),
+    (flags: currentUser, machine: false),
+  ]) {
     for (final storeName in const ['ROOT', 'CA']) {
       final namePointer = storeName.toNativeUtf16();
-      final store = openStore(provider, 0, 0, location, namePointer);
+      final store = openStore(provider, 0, 0, location.flags, namePointer);
       calloc.free(namePointer);
       if (store == 0) {
         continue;
@@ -121,6 +150,11 @@ String loadWindowsSystemRootsPem() {
                 ..writeln('-----BEGIN CERTIFICATE-----')
                 ..writeln(_wrapBase64(encoded))
                 ..writeln('-----END CERTIFICATE-----');
+              if (location.machine) {
+                machine++;
+              } else {
+                user++;
+              }
             }
           }
           context = enumCertificates(store, context);
@@ -130,8 +164,73 @@ String loadWindowsSystemRootsPem() {
       }
     }
   }
-  return buffer.toString();
+  if (machine + user == 0) {
+    final fallback = loadUserStoresBundle();
+    if (fallback.totalCertificates > 0) {
+      return fallback;
+    }
+  }
+  return SystemTrustBundle(
+    pem: buffer.toString(),
+    machineCertificates: machine,
+    userCertificates: user,
+  );
 }
+
+/// Legacy user-store loader used as a fallback for environments where
+/// `CertOpenStore` cannot open the system stores.
+SystemTrustBundle loadUserStoresBundle() {
+  final crypt32 = DynamicLibrary.open('crypt32.dll');
+  final openStore = crypt32.lookupFunction<
+      IntPtr Function(IntPtr, Pointer<Utf16>),
+      int Function(int, Pointer<Utf16>)>('CertOpenSystemStoreW');
+  final enumCertificates = crypt32.lookupFunction<
+      Pointer<_CertContext> Function(IntPtr, Pointer<_CertContext>),
+      Pointer<_CertContext> Function(int, Pointer<_CertContext>)>(
+    'CertEnumCertificatesInStore',
+  );
+  final closeStore = crypt32.lookupFunction<
+      Int32 Function(IntPtr, Uint32),
+      int Function(int, int)>('CertCloseStore');
+
+  final buffer = StringBuffer();
+  final seen = <String>{};
+  var user = 0;
+  for (final storeName in const ['ROOT', 'CA']) {
+    final namePointer = storeName.toNativeUtf16();
+    final store = openStore(0, namePointer);
+    calloc.free(namePointer);
+    if (store == 0) {
+      continue;
+    }
+    try {
+      var context = enumCertificates(store, nullptr);
+      while (context != nullptr) {
+        final certificate = context.ref;
+        final length = certificate.cbCertEncoded;
+        if (certificate.pbCertEncoded != nullptr && length > 0) {
+          final encoded = base64.encode(
+            certificate.pbCertEncoded.asTypedList(length),
+          );
+          if (seen.add(encoded)) {
+            buffer
+              ..writeln('-----BEGIN CERTIFICATE-----')
+              ..writeln(_wrapBase64(encoded))
+              ..writeln('-----END CERTIFICATE-----');
+            user++;
+          }
+        }
+        context = enumCertificates(store, context);
+      }
+    } finally {
+      closeStore(store, 0);
+    }
+  }
+  return SystemTrustBundle(pem: buffer.toString(), userCertificates: user);
+}
+
+/// Convenience wrapper returning only the PEM contents.
+String loadWindowsSystemRootsPem() => loadWindowsSystemTrustBundle().pem;
 
 String _wrapBase64(String value) {
   const width = 64;
