@@ -127,6 +127,8 @@ void main() {
     });
 
     testWidgets('opens the launch log from the profile overview', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 1600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
       final profile = await services.profilesRepository.getByName('Dev');
       final logPath = p.join(tempDirectory.path, 'logs', 'launch-Dev.log');
       File(logPath).createSync(recursive: true);

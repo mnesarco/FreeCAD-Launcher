@@ -33,6 +33,8 @@ void main() {
     return matches.single.innerText;
   }
 
+  String cfgValue(String path) => '${path.replaceAll('\\', '/')}/';
+
   test('creates a minimal config with the forced MacroPath', () {
     final ok = preferences.ensureMacroPath(
       userCfgPath: userCfgPath,
@@ -79,7 +81,7 @@ void main() {
     );
 
     expect(ok, isTrue);
-    expect(macroPath(), '${p.join(tempDirectory.path, 'Macros')}/');
+    expect(macroPath(), cfgValue(p.join(tempDirectory.path, 'Macros')));
     final document = XmlDocument.parse(File(userCfgPath).readAsStringSync());
     expect(
       document.rootElement
@@ -104,7 +106,7 @@ void main() {
     preferences.ensureMacroPath(userCfgPath: userCfgPath, macroPath: macroDirectory);
     preferences.ensureMacroPath(userCfgPath: userCfgPath, macroPath: macroDirectory);
 
-    expect(macroPath(), '$macroDirectory/');
+    expect(macroPath(), cfgValue(macroDirectory));
   });
 
   test('leaves an unreadable config untouched', () {

@@ -5,8 +5,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/platform/cli_wrapper.dart';
+import 'package:freecad_launcher/platform/host.dart';
 import 'package:freecad_launcher/platform/process.dart';
-import 'package:path/path.dart' as p;
 
 import '../helpers/fake_process.dart';
 
@@ -63,13 +63,25 @@ exec "/opt/app/freecad_launcher" "\$@"
   });
 
   test('reports when the wrapper directory is on PATH', () {
-    final directory = p.posix.join(tempDirectory.path, '.local', 'bin');
-    expect(installer(pathEnvironment: directory).status().onPath, isTrue);
+    final wrapper = installer(platform: hostPlatform);
+    final directory = wrapper.status().directory;
+    final separator = Platform.isWindows ? ';' : ':';
+    final other = Platform.isWindows ? r'C:\Windows\System32' : '/usr/bin';
     expect(
-      installer(pathEnvironment: '/usr/bin:$directory').status().onPath,
+      installer(platform: hostPlatform, pathEnvironment: directory).status().onPath,
       isTrue,
     );
-    expect(installer(pathEnvironment: '/usr/bin').status().onPath, isFalse);
+    expect(
+      installer(
+        platform: hostPlatform,
+        pathEnvironment: '$other$separator$directory',
+      ).status().onPath,
+      isTrue,
+    );
+    expect(
+      installer(platform: hostPlatform, pathEnvironment: other).status().onPath,
+      isFalse,
+    );
   });
 
   test('generates a windows cmd wrapper', () {

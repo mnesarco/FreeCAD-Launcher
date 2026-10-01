@@ -316,7 +316,10 @@ void main() {
       final configFile = File(paths.profilePaths(outcome.profile.id).userCfg);
       final config = configFile.readAsStringSync();
       expect(config, contains('/home/ana/tools'));
-      expect(config, contains(paths.profilePaths(outcome.profile.id).macros));
+      expect(
+        config,
+        contains(paths.profilePaths(outcome.profile.id).macros.replaceAll('\\', '/')),
+      );
     });
 
     test('skips custom-source addons instead of reinstalling them', () async {
@@ -390,7 +393,10 @@ void main() {
       expect(profile.name, 'Fresh');
       final config = File(paths.profilePaths(profile.id).userCfg);
       expect(config.existsSync(), isTrue);
-      expect(config.readAsStringSync(), contains(paths.profilePaths(profile.id).macros));
+      expect(
+        config.readAsStringSync(),
+        contains(paths.profilePaths(profile.id).macros.replaceAll('\\', '/')),
+      );
     });
 
     test('collects addon and package failures without aborting', () async {
