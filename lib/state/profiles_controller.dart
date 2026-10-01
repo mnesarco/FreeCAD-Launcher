@@ -165,14 +165,18 @@ class ProfilesController {
       return 0;
     }
     var total = 0;
-    await for (final entity in directory.list(recursive: true, followLinks: false)) {
-      if (entity is File) {
-        try {
-          total += await entity.length();
-        } on FileSystemException {
-          // Files can disappear while walking; skip them.
+    try {
+      await for (final entity in directory.list(recursive: true, followLinks: false)) {
+        if (entity is File) {
+          try {
+            total += await entity.length();
+          } on FileSystemException {
+            // Files can disappear while walking; skip them.
+          }
         }
       }
+    } on FileSystemException {
+      // The profile can be deleted while walking; keep the partial total.
     }
     return total;
   }
