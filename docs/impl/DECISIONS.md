@@ -2005,11 +2005,14 @@ Template:
   the `dart:io` docs), so corporate TLS-inspection/AV roots and private CAs installed in the
   Windows certificate store are ignored. `DownloadException` also hid the handshake error.
 - **Decision**: after binding initialization and before the UI starts, `installAdditionalTrust`
-  (a) loads the Windows `ROOT` and `CA` stores via `crypt32` FFI
-  (`CertOpenSystemStoreW`/`CertEnumCertificatesInStore`) as PEM into
-  `SecurityContext.defaultContext`, and (b) additionally trusts `<data dir>/ca-bundle.pem` when
-  present. Failures are non-fatal and logged (with certificate counts); no insecure bypass is
-  added. `DownloadException.toString()` now includes its `cause`.
+  (a) loads the **machine-wide and current-user** Windows `ROOT` and `CA` stores via `crypt32`
+  FFI (`CertOpenStore` with `CERT_SYSTEM_STORE_LOCAL_MACHINE` + `CERT_SYSTEM_STORE_CURRENT_USER`,
+  `CertEnumCertificatesInStore`, deduplicated) as PEM into `SecurityContext.defaultContext`, and
+  (b) additionally trusts `<data dir>/ca-bundle.pem` when present. Failures are non-fatal and
+  logged (with certificate counts); no insecure bypass is added. `DownloadException.toString()`
+  now includes its `cause`. The first iteration used `CertOpenSystemStoreW`, which only reads
+  the current-user stores (24 certs on the VM) and did not fix the machine-store root; the
+  Windows-only test requires >40 certificates so a user-only regression fails CI.
 - **Consequences**: Windows machines with TLS inspection or private CAs work without
   configuration; startup performs a one-time store enumeration before the first HTTP request;
   macOS already uses the platform store, Linux keeps Mozilla roots; unusual setups can drop a
