@@ -173,6 +173,31 @@ with a notice).
 - Installed addons show `Installed in N profile(s)` in the catalog; the profile Addons tab uses
   cached catalog icons offline.
 
+### Custom sources (repository, archive, dev link)
+
+The **Custom** tab installs addons that are not in the official catalog. All three sources
+require a `package.xml` at the addon root, and an id that is already installed in the profile
+must be removed first:
+
+- **Repository**: paste a GitHub/GitLab/Gitea/Codeberg repository URL and a branch/ref — or a
+  direct `.zip`/`.tar.gz` URL — and pick the target profile. The resolved archive URL is shown
+  before installing. Repository addons get an **Update** action that re-downloads the stored
+  URL/ref (backup under `<profile>/backups/addon-<id>-<timestamp>/`).
+- **Archive file**: choose a local `.zip`/`.tar.gz` addon archive; **Reinstall from file** later
+  replaces it from a new archive.
+- **Local folder (development)**: choose an addon working copy; it is symlinked into
+  `<profile>/Mod/<id>`, so edits are visible in FreeCAD immediately. Removing the addon deletes
+  only the link — the working copy is untouched. This requires symlink support (no copy
+  fallback; Windows needs the appropriate privileges).
+
+Each custom addon in the list has an **Install in another profile…** action: the addon is
+installed into the chosen profile from the same source (repository re-fetch, the same archive —
+or pick the file again if it moved — or a second link to the same working copy). Profiles that
+already have the addon are not offered.
+
+Custom addons are excluded from catalog update checks and collections, and profile manifest
+import skips them (they cannot be reinstalled from JSON).
+
 ## Collections (bundles)
 
 Collections are named lists of addons with optional branch pins, used to reproduce a setup.

@@ -230,12 +230,18 @@ update ordering stays numeric across schemas.
 All three sources require `package.xml` at the addon root; fresh installs are blocked while the
 id exists in the profile; details, API shapes and test matrix in
 [PLAN-B10-custom-addons.md](PLAN-B10-custom-addons.md). Owner choices are recorded there and
-become D-085..D-088 at kickoff.
+became D-085..D-088 at kickoff.
 
 | ID | Task | Done when | Deps | Effort | Status |
 |---|---|---|---|---|---|
-| B-10a | Foundations: schema v6 (`installed_addons.source`/`sourcePath`, migration), `AddonSource` enum, package.xml parser extraction, addon id rules, archive URL builder (GitHub/GitLab/Gitea/Codeberg/direct), `AddonInstaller.installFromArchive` + `linkDirectory`, requirements peek (zip/tar/dir), source-aware update guards | Unit tests for URL builder, id rules and parser refactor; installer tests for local archive atomic replace and symlink creation; catalog tests stay green; `build_runner` clean | B-10 plan, M1-04, D-039 | M | TODO |
-| B-10b | Repository URL install + update: controller flows (conflict block, jobs, consent callback), `updateFromRepository`, Custom tab repo form + custom-install list, l10n, profile source chip | Controller tests (row provenance, conflict, pin-blocked update, custom rows excluded from `outdated`); widget tests for the form; manual install from a real repo recorded | B-10a | M | TODO |
-| B-10c | Local archive install + reinstall: file picker (zip/tar.gz), id from root/filename, `installFromZip`/`reinstallFromZip`, Custom tab archive form + actions | Controller/installer tests incl. flat vs single-root archives; widget tests; manual zip install recorded | B-10a | M | TODO |
-| B-10d | Dev symlink install: `installFromDirectory` (hard-fail without symlink support), link-only remove, live-edit warning, Custom tab folder form + Reveal action | Tests prove remove deletes only the link and target survives; manual live-edit check in FreeCAD | B-10a | M | TODO |
-| B-10e | Verification + docs: real repo/zip/symlink installs in FreeCAD, spec 02/03/05/06, user guide, manifest skip-warning, VERIFICATION rows, decisions D-085..D-088 | Manual pass recorded in STATUS; analyze/tests green; limitations documented | B-10b, B-10c, B-10d | M | TODO |
+| B-10a | Foundations: schema v6 (`installed_addons.source`/`sourcePath`, migration), `AddonSource` enum, package.xml parser extraction, addon id rules, archive URL builder (GitHub/GitLab/Gitea/Codeberg/direct), `AddonInstaller.installFromArchive` + `linkDirectory`, requirements peek (zip/tar/dir), source-aware update guards | Unit tests for URL builder, id rules and parser refactor; installer tests for local archive atomic replace and symlink creation; catalog tests stay green; `build_runner` clean | B-10 plan, M1-04, D-039 | M | DONE |
+| B-10b | Repository URL install + update: controller flows (conflict block, jobs, consent callback), `updateFromRepository`, Custom tab repo form + custom-install list, l10n, profile source chip | Controller tests (row provenance, conflict, pin-blocked update, custom rows excluded from `outdated`); widget tests for the form; manual install from a real repo recorded | B-10a | M | DONE |
+| B-10c | Local archive install + reinstall: file picker (zip/tar.gz), id from root/filename, `installFromArchive`/`reinstallFromArchive`, Custom tab archive form + actions | Controller/installer tests incl. flat vs single-root archives; widget tests; manual zip install recorded | B-10a | M | DONE |
+| B-10d | Dev symlink install: `installFromDirectory` (hard-fail without symlink support), link-only remove, live-edit warning, Custom tab folder form + Reveal action | Tests prove remove deletes only the link and target survives; manual live-edit check in FreeCAD | B-10a | M | DONE |
+| B-10e | Verification + docs: real repo/zip/symlink installs in FreeCAD, spec 02/03/05/06, user guide, manifest skip-warning, VERIFICATION rows, decisions D-085..D-088 | Manual pass recorded in STATUS; analyze/tests green; limitations documented | B-10b, B-10c, B-10d | M | DONE |
+| B-10f | Install an already-installed custom addon into another profile: per-row action on the Custom tab with a target-profile picker (profiles that already have it are not offered), reusing the source (repo re-fetch, stored/repicked archive, second dev link) | Controller tests (repo/zip/symlink copy, duplicate blocked, catalog refused, missing archive) + widget tests; live copy verified | B-10b, B-10c, B-10d | S | DONE |
+
+Implementation note (2026-10-01, R22): B-10a..B-10f complete but **uncommitted pending
+review** — schema v6 migration verified live; 574 tests green, analyze clean; real repo
+(obelisk79/FreeCAD-Nxt @ main), archive and dev-symlink installs verified through the UI,
+including link-only removal (see `VERIFICATION.md`).

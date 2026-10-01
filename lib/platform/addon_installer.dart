@@ -25,6 +25,33 @@ class AddonInstallResult {
   final int sizeBytes;
 }
 
+class PreparedAddonInstall {
+  const PreparedAddonInstall({
+    required this.contentRoot,
+    required this.stagingDirectory,
+    required this.destinationDirectory,
+  });
+
+  final String contentRoot;
+  final String stagingDirectory;
+  final String destinationDirectory;
+}
+
+bool isAddonLink(String path) =>
+    FileSystemEntity.typeSync(path, followLinks: false) == FileSystemEntityType.link;
+
+void deleteAddonEntry(String path) {
+  final type = FileSystemEntity.typeSync(path, followLinks: false);
+  if (type == FileSystemEntityType.notFound) {
+    return;
+  }
+  if (type == FileSystemEntityType.link) {
+    Link(path).deleteSync();
+    return;
+  }
+  Directory(path).deleteSync(recursive: true);
+}
+
 class AddonInstaller {
   AddonInstaller({
     required Downloader downloader,
@@ -37,6 +64,27 @@ class AddonInstaller {
   final Downloader _downloader;
   final ArchiveExtractor _extractor;
 
+  Future<String> downloadArchive({
+    required Uri uri,
+    required String directory,
+    String? assetName,
+    CancellationToken? cancellationToken,
+    void Function(DownloadProgress progress)? onProgress,
+  }) async {
+    final fileName = assetName ?? p.basename(uri.path);
+    final download = await _downloader.download(
+      uri: uri,
+      fileName: fileName,
+      directory: directory,
+      cancellationToken: cancellationToken,
+      onProgress: onProgress,
+    );
+    if (cancellationToken?.isCancelled ?? false) {
+      throw const AddonInstallException('Addon installation cancelled');
+    }
+    return download.path;
+  }
+
   Future<AddonInstallResult> install({
     required Uri zipUri,
     required String destinationDirectory,
@@ -45,58 +93,134 @@ class AddonInstaller {
     CancellationToken? cancellationToken,
     void Function(DownloadProgress progress)? onProgress,
   }) async {
-    final fileName = assetName ?? p.basename(zipUri.path);
-    final download = await _downloader.download(
+    final archivePath = await downloadArchive(
       uri: zipUri,
-      fileName: fileName,
       directory: downloadDirectory,
+      assetName: assetName,
       cancellationToken: cancellationToken,
       onProgress: onProgress,
     );
+    return installFromArchive(
+      archivePath: archivePath,
+      destinationDirectory: destinationDirectory,
+      cancellationToken: cancellationToken,
+    );
+  }
+
+  Future<PreparedAddonInstall> prepareFromArchive({
+    required String archivePath,
+    required String destinationDirectory,
+    CancellationToken? cancellationToken,
+  }) async {
     if (cancellationToken?.isCancelled ?? false) {
       throw const AddonInstallException('Addon installation cancelled');
     }
-
     final staging = '$destinationDirectory.part';
-    final backup = '$destinationDirectory.old';
     Directory(p.dirname(destinationDirectory)).createSync(recursive: true);
-    _deleteDirectory(staging);
-    _deleteDirectory(backup);
-
+    deleteAddonEntry(staging);
     try {
-      await _extractor.extract(download.path, staging);
+      await _extractor.extract(archivePath, staging);
       final root = _contentRoot(staging);
       if (await _countFiles(root) == 0) {
         throw const AddonInstallException('Archive contains no files');
       }
-
-      final hadDestination = Directory(destinationDirectory).existsSync();
-      if (hadDestination) {
-        Directory(destinationDirectory).renameSync(backup);
+      if (cancellationToken?.isCancelled ?? false) {
+        throw const AddonInstallException('Addon installation cancelled');
       }
-      try {
-        await Directory(root).rename(destinationDirectory);
-      } on Object {
-        if (hadDestination && Directory(backup).existsSync()) {
-          _deleteDirectory(destinationDirectory);
-          await Directory(backup).rename(destinationDirectory);
-        }
-        rethrow;
-      }
-      _deleteDirectory(backup);
-
-      return AddonInstallResult(
-        directory: destinationDirectory,
-        sizeBytes: await _directorySize(destinationDirectory),
+      return PreparedAddonInstall(
+        contentRoot: root,
+        stagingDirectory: staging,
+        destinationDirectory: destinationDirectory,
       );
+    } on Object {
+      deleteAddonEntry(staging);
+      rethrow;
+    }
+  }
+
+  Future<AddonInstallResult> commitPrepared(
+    PreparedAddonInstall prepared, {
+    CancellationToken? cancellationToken,
+  }) async {
+    if (cancellationToken?.isCancelled ?? false) {
+      throw const AddonInstallException('Addon installation cancelled');
+    }
+    final destination = prepared.destinationDirectory;
+    final backup = '$destination.old';
+    deleteAddonEntry(backup);
+    final hadDestination =
+        FileSystemEntity.typeSync(destination, followLinks: false) !=
+        FileSystemEntityType.notFound;
+    if (hadDestination) {
+      _renameEntry(destination, backup);
+    }
+    try {
+      await Directory(prepared.contentRoot).rename(destination);
+    } on Object {
+      if (hadDestination &&
+          FileSystemEntity.typeSync(backup, followLinks: false) !=
+              FileSystemEntityType.notFound) {
+        deleteAddonEntry(destination);
+        _renameEntry(backup, destination);
+      }
+      rethrow;
+    }
+    deleteAddonEntry(backup);
+    deleteAddonEntry(prepared.stagingDirectory);
+    return AddonInstallResult(
+      directory: destination,
+      sizeBytes: await _directorySize(destination),
+    );
+  }
+
+  void discardPrepared(PreparedAddonInstall prepared) {
+    deleteAddonEntry(prepared.stagingDirectory);
+  }
+
+  Future<AddonInstallResult> installFromArchive({
+    required String archivePath,
+    required String destinationDirectory,
+    CancellationToken? cancellationToken,
+  }) async {
+    final prepared = await prepareFromArchive(
+      archivePath: archivePath,
+      destinationDirectory: destinationDirectory,
+      cancellationToken: cancellationToken,
+    );
+    try {
+      return await commitPrepared(prepared, cancellationToken: cancellationToken);
     } on Object catch (error) {
+      discardPrepared(prepared);
       if (error is ArchiveExtractionException || error is AddonInstallException) {
         rethrow;
       }
       throw AddonInstallException('Addon installation failed: $error');
-    } finally {
-      _deleteDirectory(staging);
     }
+  }
+
+  Future<AddonInstallResult> linkDirectory({
+    required String sourceDirectory,
+    required String destinationDirectory,
+  }) async {
+    final source = Directory(sourceDirectory);
+    if (!source.existsSync()) {
+      throw const AddonInstallException('Source directory does not exist');
+    }
+    final staging = '$destinationDirectory.part';
+    Directory(p.dirname(destinationDirectory)).createSync(recursive: true);
+    deleteAddonEntry(staging);
+    if (FileSystemEntity.typeSync(destinationDirectory, followLinks: false) !=
+        FileSystemEntityType.notFound) {
+      throw const AddonInstallException('Addon directory already exists');
+    }
+    try {
+      Link(staging).createSync(source.absolute.path);
+      await Link(staging).rename(destinationDirectory);
+    } on Object catch (error) {
+      deleteAddonEntry(staging);
+      throw AddonInstallException('Could not create the development link: $error');
+    }
+    return AddonInstallResult(directory: destinationDirectory, sizeBytes: 0);
   }
 
   String _contentRoot(String staging) {
@@ -139,10 +263,12 @@ class AddonInstaller {
     return total;
   }
 
-  void _deleteDirectory(String path) {
-    final directory = Directory(path);
-    if (directory.existsSync()) {
-      directory.deleteSync(recursive: true);
+  void _renameEntry(String from, String to) {
+    final type = FileSystemEntity.typeSync(from, followLinks: false);
+    if (type == FileSystemEntityType.link) {
+      Link(from).renameSync(to);
+    } else {
+      Directory(from).renameSync(to);
     }
   }
 }

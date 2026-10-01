@@ -8,6 +8,7 @@ import 'package:freecad_launcher/core/errors.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
+import 'package:freecad_launcher/domain/addons/addon_source.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/profiles/profile_manifest.dart';
 import 'package:freecad_launcher/domain/profiles/profile_paths.dart';
@@ -54,6 +55,7 @@ class ManifestImportOutcome {
     required this.profile,
     this.addonsInstalled = 0,
     this.addonsFailed = const [],
+    this.addonsSkipped = const [],
     this.packagesInstalled = 0,
     this.packagesFailed = const [],
     this.warnings = const [],
@@ -62,6 +64,7 @@ class ManifestImportOutcome {
   final Profile profile;
   final int addonsInstalled;
   final List<String> addonsFailed;
+  final List<String> addonsSkipped;
   final int packagesInstalled;
   final List<String> packagesFailed;
   final List<String> warnings;
@@ -129,6 +132,7 @@ class ProfileManifestController {
               gitRef: addon.gitRef,
               version: addon.version,
               pinned: addon.pinnedAt != null,
+              source: addon.source,
             ),
         ],
         pythonPackages: [
@@ -214,12 +218,17 @@ class ProfileManifestController {
 
     final addonsInstalled = <String>[];
     final addonsFailed = <String>[];
+    final addonsSkipped = <String>[];
     var packagesInstalled = 0;
     final packagesFailed = <String>[];
 
     if (reinstall) {
       for (final addon in preview.manifest.addons) {
         onStep?.call(addon.id);
+        if (addonSourceFromStorage(addon.source).isCustom) {
+          addonsSkipped.add(addon.id);
+          continue;
+        }
         final install = _installAddon;
         if (install == null) {
           addonsFailed.add('${addon.id}: installation is unavailable');
@@ -279,6 +288,7 @@ class ProfileManifestController {
         profile: profile,
         addonsInstalled: addonsInstalled.length,
         addonsFailed: addonsFailed,
+        addonsSkipped: addonsSkipped,
         packagesInstalled: packagesInstalled,
         packagesFailed: packagesFailed,
         warnings: [

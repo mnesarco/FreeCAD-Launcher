@@ -63,6 +63,9 @@ InstalledAddon sampleAddon({
   String? gitRef = 'master',
   String? version = '0.4.60',
   DateTime? catalogLastUpdate,
+  String source = 'catalog',
+  String? sourceUrl,
+  String? sourcePath,
 }) {
   return InstalledAddon(
     id: id,
@@ -75,6 +78,9 @@ InstalledAddon sampleAddon({
     updatedAt: _baseTime,
     hasRequirements: false,
     catalogLastUpdate: catalogLastUpdate,
+    source: source,
+    sourceUrl: sourceUrl,
+    sourcePath: sourcePath,
   );
 }
 

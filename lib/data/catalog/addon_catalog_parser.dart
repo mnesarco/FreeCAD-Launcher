@@ -2,15 +2,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:convert';
 
-import 'package:collection/collection.dart';
-import 'package:xml/xml.dart';
-
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/addons/package_xml.dart';
 
-List<Addon> parseAddonCatalog(
-  String jsonText, {
-  String downloadBaseUrl = defaultDownloadBaseUrl,
-}) {
+List<Addon> parseAddonCatalog(String jsonText, {String downloadBaseUrl = defaultDownloadBaseUrl}) {
   final decoded = jsonDecode(jsonText);
   if (decoded is! Map<String, dynamic>) {
     throw const FormatException('Addon catalog root must be a JSON object');
@@ -39,19 +34,13 @@ List<Addon> parseAddonCatalog(
     }
   });
 
-  addons.sort(
-    (a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()),
-  );
+  addons.sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
   return addons;
 }
 
 const String defaultDownloadBaseUrl = 'https://addons.freecad.org/';
 
-AddonBranch? _parseBranch(
-  Map<String, dynamic> raw,
-  String addonId,
-  String downloadBaseUrl,
-) {
+AddonBranch? _parseBranch(Map<String, dynamic> raw, String addonId, String downloadBaseUrl) {
   final gitRef = _string(raw['git_ref']);
   if (gitRef == null) {
     return null;
@@ -115,83 +104,22 @@ AddonMetadata? _parseMetadata(Object? value, String addonId) {
   if (packageXml == null) {
     return null;
   }
-
-  final XmlElement root;
-  try {
-    root = XmlDocument.parse(packageXml).rootElement;
-  } on XmlException {
+  final info = parsePackageXml(packageXml);
+  if (info == null) {
     return null;
   }
 
-  String elementText(String name) {
-    for (final element in root.findElements(name)) {
-      final text = element.innerText.trim();
-      if (text.isNotEmpty) {
-        return text;
-      }
-    }
-    return '';
-  }
-
-  final tags = <String>[];
-  for (final element in root.findAllElements('tag')) {
-    final tag = element.innerText.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '-');
-    if (tag.isNotEmpty && !tags.contains(tag)) {
-      tags.add(tag);
-    }
-  }
-
-  final people = <AddonPerson>[];
-  for (final role in const ['author', 'maintainer', 'contributor']) {
-    for (final element in root.findAllElements(role)) {
-      final name = element.innerText.trim();
-      if (name.isEmpty) {
-        continue;
-      }
-      final contact = element.getAttribute('email');
-      people.add(
-        AddonPerson(
-          name: name,
-          contact: contact,
-          roles: [role],
-        ),
-      );
-    }
-  }
-
-  final content = <AddonContentType>{};
-  final contentRoot = root.findElements('content').firstOrNull ?? root;
-  for (final element in contentRoot.childElements) {
-    switch (element.name.local.toLowerCase()) {
-      case 'workbench':
-        content.add(AddonContentType.workbench);
-      case 'macro':
-        content.add(AddonContentType.macro);
-      case 'preferencepack':
-        content.add(AddonContentType.preferencePack);
-      case 'bundle':
-        content.add(AddonContentType.bundle);
-    }
-  }
-  if (content.isEmpty) {
-    content.add(AddonContentType.other);
-  }
-
-  final minPython = elementText('pythonmin');
-  final icon = _string(value['icon_data']);
-  final requirements = _string(value['requirements_txt']) ?? '';
-
   return AddonMetadata(
-    name: elementText('name').isEmpty ? addonId : elementText('name'),
-    description: elementText('description'),
-    version: elementText('version'),
-    license: elementText('license'),
-    minPython: minPython.isEmpty ? '3.10' : minPython,
-    tags: tags,
-    people: people,
-    content: content,
-    requirements: requirements,
-    iconBase64: icon,
+    name: info.name.isEmpty ? addonId : info.name,
+    description: info.description,
+    version: info.version,
+    license: info.license,
+    minPython: info.minPython,
+    tags: info.tags,
+    people: info.people,
+    content: info.content,
+    requirements: _string(value['requirements_txt']) ?? '',
+    iconBase64: _string(value['icon_data']),
   );
 }
 

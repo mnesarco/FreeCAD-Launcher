@@ -86,15 +86,27 @@ Acceptance (v0.1): after wrapper installation, a new terminal can run
 - FR-4.6 **[v0.1]** Remove an addon from a profile; the catalog stays untouched.
 - FR-4.7 **[v0.1]** If the addon archive contains `requirements.txt`, show the packages and
   offer the FR-6 install flow (never automatic).
-- FR-4.8 **[v0.2]** Install a local addon zip (developer workflow).
+- FR-4.8 **[v0.2]** Install a local addon archive (`.zip`/`.tar.gz`) into a profile
+  (developer workflow).
 - FR-4.9 **[v0.2]** Warn when an addon's FreeCAD range does not match the profile's build.
 - FR-4.10 **[v0.1]** Pin/freeze an installed addon **per profile** (different profiles may pin
   different versions/branches of the same addon): pinned addons are excluded from update
   checks/badges, manual or bundle-driven updates require unpinning first, and the pin travels in
   the profile manifest.
+- FR-4.11 **[v0.2]** Install an addon from a repository URL + branch/ref (GitHub, GitLab,
+  Gitea/Codeberg, or a direct archive URL) and update it later by re-fetching the stored
+  URL/ref (D-086, D-088).
+- FR-4.12 **[v0.2]** Install an addon by linking a local directory as a live development link;
+  removing the addon deletes only the link (D-087). No copy fallback: the source must be a
+  directory and symlink creation failures are reported.
 
 Acceptance (v0.1): installing a workbench adds exactly one directory under `Mod/`, survives
 restart, and is usable inside FreeCAD.
+
+Acceptance (v0.2 custom sources): repository, archive and directory installs require a
+`package.xml` at the addon root, are blocked while the same id is already installed in the
+profile (unless explicitly updated/reinstalled), are recorded with their source
+(`repo`/`zip`/`symlink`) and never appear as catalog update candidates.
 
 ### FR-5 Addon bundles (collections)
 

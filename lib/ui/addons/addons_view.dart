@@ -15,6 +15,7 @@ import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/addons/addon_icon.dart';
 import 'package:freecad_launcher/ui/addons/collections_view.dart';
+import 'package:freecad_launcher/ui/addons/custom_addons_view.dart';
 import 'package:freecad_launcher/ui/addons/requirements_dialog.dart';
 import 'package:freecad_launcher/ui/shell/section_shortcuts.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
@@ -36,7 +37,7 @@ class AddonsViewState extends State<AddonsView>
   String? _selectedAddonId;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
-  late final TabController _tabs = TabController(length: 2, vsync: this);
+  late final TabController _tabs = TabController(length: 3, vsync: this);
 
   @override
   void dispose() {
@@ -88,6 +89,7 @@ class AddonsViewState extends State<AddonsView>
           tabs: [
             Tab(text: l10n.addonsTabCatalog),
             Tab(text: l10n.addonsTabCollections),
+            Tab(text: l10n.addonsTabCustom),
           ],
         ),
         Expanded(
@@ -100,6 +102,7 @@ class AddonsViewState extends State<AddonsView>
                 onOpen: (addon) => setState(() => _selectedAddonId = addon.id),
               ),
               const CollectionsTab(),
+              const CustomAddonsTab(),
             ],
           ),
         ),

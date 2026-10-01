@@ -1837,3 +1837,71 @@ Template:
   reproducible on CI and locally.
 - **Refs**: D-068, S5, M7-01, `.github/workflows/appimage-release.yml`,
   `packaging/appimage/build_appimage.sh`
+
+### D-085 — Custom addon provenance and conflict policy
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: B-10 adds addon installs from a repository URL, a local archive and a local
+  directory link. The existing `installed_addons` row has no way to tell these apart from
+  catalog installs, and update/remove behavior differs per source.
+- **Decision**: schema v6 adds `installed_addons.source` (`catalog|repo|zip|symlink`, default
+  `catalog`) and `sourcePath` (local archive path or symlink target); `sourceUrl` keeps the
+  catalog zip URL and additionally stores the repository URL for `repo`. Update checks
+  (`AddonsController.isUpdateAvailable`, `UpdatesController.outdated`) only consider `catalog`
+  rows. A fresh custom install is blocked while the resolved id already exists in the profile
+  (DB row or an orphaned `Mod/<id>` directory); explicit `Update` (repo) / `Reinstall` (zip)
+  actions may replace the row of the same source with the usual `.old` backup.
+- **Consequences**: provenance is queryable and drives UI/actions; existing rows migrate to
+  `catalog`; users must remove an addon before installing a different source over it.
+- **Refs**: `docs/impl/PLAN-B10-custom-addons.md`, FR-4.8, D-039, D-040, B-10a/B-10b
+
+### D-086 — Custom addon source resolution: package.xml, id and hosts
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: Repository/archive/directory sources carry no catalog metadata; the addon
+  identity (the `Mod/<id>` directory) must be derived deterministically and safely.
+- **Decision**: every custom source must contain a parseable `package.xml` at the addon content
+  root (after the existing single-root stripping); otherwise the install is rejected. The addon
+  id is derived from the repository path segment (URL), the single archive root directory name
+  (fallback: archive filename stem), or the directory basename (dev link), then validated
+  (no path separators/control chars, not `.`/`..`, ≤ 64 chars). Repository URLs support GitHub
+  (`…/archive/<ref>.zip`), GitLab (`…/-/archive/<ref>/<name>-<ref>.zip`) and Gitea/Forgejo/
+  Codeberg (`…/archive/<ref>.zip`); a direct `.zip`/`.tar.gz`/`.tgz` URL is used as-is (ref
+  optional). Unknown hosts are rejected with guidance to paste a direct archive URL. package.xml
+  parsing is extracted from the catalog parser into `domain/addons/package_xml.dart` and reused.
+- **Consequences**: no guessing when metadata is missing; `requirements.txt` is read from the
+  fetched content (archive member or target directory) so consent still happens before placement;
+  package.xml `<icon>` rendering is deferred (generic icon).
+- **Refs**: `docs/impl/PLAN-B10-custom-addons.md`, FR-4.8/FR-4.11 (to add), D-037, B-10a
+
+### D-087 — Dev directory installs use symlinks only
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: The developer workflow needs a live link to a working copy. D-023 allowed a copy
+  fallback for local build AppImages, but copying an addon directory would silently go stale.
+- **Decision**: `AddonInstaller.linkDirectory` creates `Mod/<id>` as a symlink to the selected
+  directory (atomic `.part` + rename). If the filesystem/OS cannot create symlinks, the install
+  fails with a clear error (no copy fallback). Removal detects a link and deletes only the link,
+  never the target; the target is validated as an existing directory and the profile's own `Mod`
+  path is rejected. Symlinked addons are live (no update action) and are not counted in profile
+  sizes twice (`followLinks: false` walks).
+- **Consequences**: dev edits are immediately visible to FreeCAD; Windows installs require
+  symlink privileges and will be rejected otherwise; a broken link stays listed until removed
+  (addon reconciler deferred).
+- **Refs**: `docs/impl/PLAN-B10-custom-addons.md`, D-023, FR-4.12 (to add), B-10d
+
+### D-088 — Custom addon update policy and bundle/manifest scope
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: Custom sources have no catalog timestamps; pretending they update like catalog
+  addons would produce wrong badges, and bundles/manifests can only reinstall catalog ids.
+- **Decision**: repository installs are updateable by re-fetching the stored URL + ref (backup,
+  metadata refresh; pinned rows block); zip installs offer "Reinstall from file"; symlinked
+  installs are live and have no update action. Custom rows are excluded from catalog update
+  checks. Bundles keep searching the catalog only. Profile manifest export marks addon entries
+  with a `source` field and import skips non-catalog entries, reporting the number not
+  reinstalled (additive manifest schema).
+- **Consequences**: no false update badges; custom addons are not portable via bundles/manifests
+  (documented limitation); manifest import cannot silently substitute a catalog addon for a
+  custom one with the same id.
+- **Refs**: `docs/impl/PLAN-B10-custom-addons.md`, D-040, D-055, B-10b/B-10e

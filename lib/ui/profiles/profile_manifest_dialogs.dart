@@ -87,6 +87,8 @@ Future<ManifestImportOutcome?> importProfileManifest(
       outcome.addonsInstalled,
       outcome.packagesInstalled,
     ),
+    if (outcome.addonsSkipped.isNotEmpty)
+      l10n.manifestImportCustomSkipped(outcome.addonsSkipped.length),
     if (outcome.addonsFailed.isNotEmpty || outcome.packagesFailed.isNotEmpty)
       l10n.manifestImportWarnings(
         [...outcome.addonsFailed, ...outcome.packagesFailed].join('; '),

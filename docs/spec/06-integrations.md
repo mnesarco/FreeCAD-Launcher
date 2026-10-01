@@ -112,6 +112,13 @@ cache format. Integration rules for v2:
 - **Safety**: safe-extract with zip-slip and symlink guards; reject entries with absolute paths;
   cap uncompressed size and file count to avoid zip bombs. Installs are atomic: extract into
   `<Mod>/<id>.part`, then rename into place with a `.old` backup when replacing (D-039).
+- **Custom sources** (v0.2, D-085..D-088): repository URL + ref resolves to the host archive
+  URL (GitHub `…/archive/<ref>.zip`, GitLab `…/-/archive/<ref>/…`, Gitea/Codeberg
+  `…/archive/<ref>.zip`) or a direct archive URL; local archives (`.zip`/`.tar.gz`) and dev
+  directories (symlinked in place, hard-fail without symlink support) are also supported. All
+  custom installs require `package.xml` at the content root, are blocked while the id exists in
+  the profile, store `source`/`sourcePath`, are excluded from catalog update checks, and keep
+  requirements consent before placement. Removing a symlinked addon deletes only the link.
 
 ## 3. Macro catalog
 

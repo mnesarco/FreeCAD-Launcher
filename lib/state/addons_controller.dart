@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:freecad_launcher/core/cancellation.dart';
 import 'package:freecad_launcher/core/errors.dart';
 import 'package:freecad_launcher/core/log.dart';
 import 'package:freecad_launcher/core/result.dart';
@@ -14,17 +15,26 @@ import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/addons/addon_id_rules.dart';
+import 'package:freecad_launcher/domain/addons/addon_source.dart';
 import 'package:freecad_launcher/domain/addons/addon_update_rules.dart';
+import 'package:freecad_launcher/domain/addons/repository_archive.dart';
 import 'package:freecad_launcher/domain/builds/freecad_version.dart';
 import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/domain/python/requirements_parser.dart';
 import 'package:freecad_launcher/platform/addon_installer.dart';
+import 'package:freecad_launcher/platform/addon_manifest_reader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/pip_runner.dart';
 import 'package:freecad_launcher/platform/python_env.dart';
 import 'package:freecad_launcher/state/jobs_controller.dart';
 
 enum AddonInstalledFilter { installed, notInstalled }
+
+enum CustomRequirementsDecision { installPackages, addonOnly, cancel }
+
+typedef CustomRequirementsHandler =
+    Future<CustomRequirementsDecision> Function(List<PythonRequirement> requirements);
 
 class AddonsController {
   AddonsController({
@@ -281,9 +291,6 @@ class AddonsController {
     required String addonId,
     required bool pinned,
   }) async {
-    if (installedFor(profileId, addonId) == null) {
-      return const Err(AppError(message: 'Addon is not installed in this profile'));
-    }
     try {
       final updated = await _database.installedAddonsDao.setPinnedAt(
         profileId,
@@ -302,6 +309,9 @@ class AddonsController {
   bool isUpdateAvailable(String profileId, String addonId) {
     final installed = installedFor(profileId, addonId);
     if (installed == null) {
+      return false;
+    }
+    if (!addonSourceFromStorage(installed.source).isCatalog) {
       return false;
     }
     final addon = byId(addonId);
@@ -382,14 +392,13 @@ class AddonsController {
     required String addonId,
     required String profileId,
   }) async {
-    if (installedFor(profileId, addonId) == null) {
+    final installed = await _database.installedAddonsDao.getByAddon(profileId, addonId);
+    if (installed == null) {
       return const Err(AppError(message: 'Addon is not installed in this profile'));
     }
     try {
-      final directory = Directory(p.join(_paths.profilePaths(profileId).mod, addonId));
-      if (directory.existsSync()) {
-        await directory.delete(recursive: true);
-      }
+      final directory = p.join(_paths.profilePaths(profileId).mod, addonId);
+      deleteAddonEntry(directory);
       final deleted = await _database.installedAddonsDao.deleteAddon(profileId, addonId);
       if (deleted == 0) {
         return const Err(AppError(message: 'Addon is not installed in this profile'));
@@ -508,6 +517,7 @@ class AddonsController {
           updatedAt: now,
           catalogLastUpdate: branch.lastUpdateTime,
           sourceUrl: branch.zipUrl,
+          source: AddonSource.catalog.name,
           hasRequirements: branch.hasRequirements,
         ),
       );
@@ -515,8 +525,8 @@ class AddonsController {
         context?.report(detail: 'Installing Python packages');
         await _installRequirements(
           profile: profile,
-          addon: addon,
-          branch: branch,
+          addonId: addon.id,
+          requirementsText: branch.metadata?.requirements ?? '',
           installedAt: now,
           context: context,
         );
@@ -534,13 +544,13 @@ class AddonsController {
 
   Future<void> _installRequirements({
     required Profile profile,
-    required Addon addon,
-    required AddonBranch branch,
+    required String addonId,
+    required String requirementsText,
     required DateTime installedAt,
     JobContext? context,
   }) async {
     final requirements = parseRequirements(
-      branch.metadata?.requirements ?? '',
+      requirementsText,
     ).where((requirement) => requirement.valid).toList();
     if (requirements.isEmpty) {
       return;
@@ -551,8 +561,8 @@ class AddonsController {
       return;
     }
 
-    requirementsInstalling.value = {...requirementsInstalling.value, addon.id};
-    requirementsErrors.value = {...requirementsErrors.value}..remove(addon.id);
+    requirementsInstalling.value = {...requirementsInstalling.value, addonId};
+    requirementsErrors.value = {...requirementsErrors.value}..remove(addonId);
     try {
       final build = await _database.buildsDao.getById(profile.buildId);
       if (build == null) {
@@ -577,7 +587,7 @@ class AddonsController {
         pythonPath: interpreter,
         targetDirectory: targetDirectory,
         packages: requirements.map(requirementSpec).toList(),
-        label: addon.id,
+        label: addonId,
       );
       context?.setLogPath(result.logPath);
       if (!result.isSuccess) {
@@ -590,7 +600,7 @@ class AddonsController {
             profileId: profile.id,
             name: requirement.name,
             targetDir: targetDirectory,
-            source: 'addon:${addon.id}',
+            source: 'addon:$addonId',
             installedAt: installedAt,
           ),
         );
@@ -598,13 +608,529 @@ class AddonsController {
     } on Object catch (error) {
       requirementsErrors.value = {
         ...requirementsErrors.value,
-        addon.id: error is AppError ? error : AppError.from(error, retryable: true),
+        addonId: error is AppError ? error : AppError.from(error, retryable: true),
       };
     } finally {
-      requirementsInstalling.value = {...requirementsInstalling.value}..remove(addon.id);
+      requirementsInstalling.value = {...requirementsInstalling.value}..remove(addonId);
     }
   }
 
+
+  Future<Result<void>> installFromRepository({
+    required String repositoryUrl,
+    required String gitRef,
+    required String profileId,
+    CustomRequirementsHandler? onRequirements,
+  }) {
+    final resolution = resolveRepositoryArchive(repositoryUrl, gitRef);
+    final uri = resolution.uri;
+    if (uri == null) {
+      return Future.value(Err(_archiveResolutionError(resolution.issue!)));
+    }
+    final addonId = _repositoryAddonId(repositoryUrl, resolution);
+    if (addonId == null) {
+      return Future.value(
+        const Err(AppError(message: 'Could not derive the addon id from the repository URL')),
+      );
+    }
+    final ref = gitRef.trim();
+    return _runCustomInstall(
+      label: 'Install $addonId',
+      addonId: addonId,
+      source: AddonSource.repo,
+      profileId: profileId,
+      sourceUrl: repositoryUrl.trim(),
+      gitRef: ref.isEmpty ? null : ref,
+      onRequirements: onRequirements,
+      prepare: (token, context) => _prepareRepositoryArchive(
+        addonId: addonId,
+        uri: uri,
+        gitRef: ref,
+        direct: resolution.direct,
+        profileId: profileId,
+        token: token,
+        context: context,
+      ),
+    );
+  }
+
+  Future<Result<void>> updateFromRepository({
+    required String addonId,
+    required String profileId,
+    CustomRequirementsHandler? onRequirements,
+  }) async {
+    final existing = await _database.installedAddonsDao.getByAddon(profileId, addonId);
+    if (existing == null) {
+      return Future.value(const Err(AppError(message: 'Addon is not installed in this profile')));
+    }
+    if (addonSourceFromStorage(existing.source) != AddonSource.repo) {
+      return Future.value(
+        const Err(AppError(message: 'This addon was not installed from a repository')),
+      );
+    }
+    if (existing.pinnedAt != null) {
+      return const Err(AppError(message: 'Addon is pinned; unpin it before updating'));
+    }
+    final repositoryUrl = existing.sourceUrl;
+    if (repositoryUrl == null || repositoryUrl.trim().isEmpty) {
+      return Future.value(const Err(AppError(message: 'Repository URL is missing')));
+    }
+    final resolution = resolveRepositoryArchive(repositoryUrl, existing.gitRef);
+    final uri = resolution.uri;
+    if (uri == null) {
+      return Future.value(Err(_archiveResolutionError(resolution.issue!)));
+    }
+    if (_repositoryAddonId(repositoryUrl, resolution) != addonId) {
+      return Future.value(
+        const Err(AppError(message: 'The repository no longer matches this addon')),
+      );
+    }
+    final ref = existing.gitRef?.trim() ?? '';
+    return _runCustomInstall(
+      label: 'Update ${existing.displayName}',
+      addonId: addonId,
+      source: AddonSource.repo,
+      profileId: profileId,
+      sourceUrl: repositoryUrl.trim(),
+      gitRef: ref.isEmpty ? null : ref,
+      replaceExisting: true,
+      onRequirements: onRequirements,
+      prepare: (token, context) => _prepareRepositoryArchive(
+        addonId: addonId,
+        uri: uri,
+        gitRef: ref,
+        direct: resolution.direct,
+        profileId: profileId,
+        token: token,
+        context: context,
+      ),
+    );
+  }
+
+  Future<Result<void>> installFromArchive({
+    required String archivePath,
+    required String profileId,
+    String? addonId,
+    CustomRequirementsHandler? onRequirements,
+  }) {
+    final file = File(archivePath);
+    if (!file.existsSync()) {
+      return Future.value(const Err(AppError(message: 'Archive not found')));
+    }
+    final id = addonId ?? addonIdFromArchivePath(archivePath);
+    if (id == null) {
+      return Future.value(
+        const Err(AppError(message: 'Could not derive the addon id from the archive name')),
+      );
+    }
+    final absolute = file.absolute.path;
+    return _runCustomInstall(
+      label: 'Install $id',
+      addonId: id,
+      source: AddonSource.zip,
+      profileId: profileId,
+      sourcePath: absolute,
+      onRequirements: onRequirements,
+      prepare: (token, context) => _prepareLocalArchive(
+        addonId: id,
+        archivePath: absolute,
+        profileId: profileId,
+        token: token,
+      ),
+    );
+  }
+
+  Future<Result<void>> reinstallFromArchive({
+    required String addonId,
+    required String profileId,
+    required String archivePath,
+    CustomRequirementsHandler? onRequirements,
+  }) async {
+    final existing = await _database.installedAddonsDao.getByAddon(profileId, addonId);
+    if (existing == null) {
+      return Future.value(const Err(AppError(message: 'Addon is not installed in this profile')));
+    }
+    if (addonSourceFromStorage(existing.source) != AddonSource.zip) {
+      return Future.value(
+        const Err(AppError(message: 'This addon was not installed from an archive')),
+      );
+    }
+    final file = File(archivePath);
+    if (!file.existsSync()) {
+      return Future.value(const Err(AppError(message: 'Archive not found')));
+    }
+    final absolute = file.absolute.path;
+    return _runCustomInstall(
+      label: 'Reinstall ${existing.displayName}',
+      addonId: addonId,
+      source: AddonSource.zip,
+      profileId: profileId,
+      sourcePath: absolute,
+      replaceExisting: true,
+      onRequirements: onRequirements,
+      prepare: (token, context) => _prepareLocalArchive(
+        addonId: addonId,
+        archivePath: absolute,
+        profileId: profileId,
+        token: token,
+      ),
+    );
+  }
+
+  Future<Result<void>> installFromDirectory({
+    required String sourcePath,
+    required String profileId,
+    String? addonId,
+    CustomRequirementsHandler? onRequirements,
+  }) {
+    final source = Directory(sourcePath);
+    if (!source.existsSync()) {
+      return Future.value(const Err(AppError(message: 'Directory not found')));
+    }
+    final normalized = p.normalize(source.absolute.path);
+    final modRoot = p.normalize(_paths.profilePaths(profileId).mod);
+    if (normalized == modRoot || p.isWithin(modRoot, normalized)) {
+      return Future.value(
+        const Err(AppError(message: 'Choose a directory outside the profile Mod folder')),
+      );
+    }
+    final id = addonId ?? addonIdFromDirectory(normalized);
+    return _runCustomInstall(
+      label: 'Link $id',
+      addonId: id,
+      source: AddonSource.symlink,
+      profileId: profileId,
+      sourcePath: normalized,
+      onRequirements: onRequirements,
+      prepare: (token, context) async => _CustomPreparedContent(
+        root: normalized,
+        commit: () => _installer.linkDirectory(
+          sourceDirectory: normalized,
+          destinationDirectory: _modPath(profileId, id),
+        ),
+        discard: () async {},
+      ),
+    );
+  }
+
+  Future<Result<void>> installCustomInProfile({
+    required InstalledAddon addon,
+    required String profileId,
+    String? archivePath,
+    CustomRequirementsHandler? onRequirements,
+  }) {
+    final source = addonSourceFromStorage(addon.source);
+    switch (source) {
+      case AddonSource.catalog:
+        return Future.value(
+          const Err(AppError(message: 'Only custom addons can be installed this way')),
+        );
+      case AddonSource.repo:
+        final repositoryUrl = addon.sourceUrl;
+        if (repositoryUrl == null || repositoryUrl.trim().isEmpty) {
+          return Future.value(const Err(AppError(message: 'Repository URL is missing')));
+        }
+        return installFromRepository(
+          repositoryUrl: repositoryUrl,
+          gitRef: addon.gitRef ?? '',
+          profileId: profileId,
+          onRequirements: onRequirements,
+        );
+      case AddonSource.zip:
+        final path = archivePath ?? addon.sourcePath;
+        if (path == null || !File(path).existsSync()) {
+          return Future.value(const Err(AppError(message: 'Archive not found')));
+        }
+        return installFromArchive(
+          archivePath: path,
+          profileId: profileId,
+          addonId: addon.addonId,
+          onRequirements: onRequirements,
+        );
+      case AddonSource.symlink:
+        final path = addon.sourcePath;
+        if (path == null || !Directory(path).existsSync()) {
+          return Future.value(const Err(AppError(message: 'Source directory not found')));
+        }
+        return installFromDirectory(
+          sourcePath: path,
+          profileId: profileId,
+          addonId: addon.addonId,
+          onRequirements: onRequirements,
+        );
+    }
+  }
+
+  Future<_CustomPreparedContent> _prepareRepositoryArchive({
+    required String addonId,
+    required Uri uri,
+    required String gitRef,
+    required bool direct,
+    required String profileId,
+    CancellationToken? token,
+    JobContext? context,
+  }) async {
+    context?.report(detail: 'Downloading addon');
+    final archivePath = await _installer.downloadArchive(
+      uri: uri,
+      directory: _paths.downloadsCacheDir,
+      assetName: _archiveAssetName(addonId, uri, gitRef, direct: direct),
+      cancellationToken: token,
+      onProgress: (progress) => context?.report(
+        fraction: progress.fraction,
+        receivedBytes: progress.receivedBytes,
+        totalBytes: progress.totalBytes,
+        detail: 'Downloading addon',
+      ),
+    );
+    final prepared = await _installer.prepareFromArchive(
+      archivePath: archivePath,
+      destinationDirectory: _modPath(profileId, addonId),
+      cancellationToken: token,
+    );
+    return _CustomPreparedContent(
+      root: prepared.contentRoot,
+      commit: () => _installer.commitPrepared(prepared, cancellationToken: token),
+      discard: () async => _installer.discardPrepared(prepared),
+    );
+  }
+
+  Future<_CustomPreparedContent> _prepareLocalArchive({
+    required String addonId,
+    required String archivePath,
+    required String profileId,
+    CancellationToken? token,
+  }) async {
+    final prepared = await _installer.prepareFromArchive(
+      archivePath: archivePath,
+      destinationDirectory: _modPath(profileId, addonId),
+      cancellationToken: token,
+    );
+    return _CustomPreparedContent(
+      root: prepared.contentRoot,
+      commit: () => _installer.commitPrepared(prepared, cancellationToken: token),
+      discard: () async => _installer.discardPrepared(prepared),
+    );
+  }
+
+  Future<Result<void>> _runCustomInstall({
+    required String label,
+    required String addonId,
+    required AddonSource source,
+    required String profileId,
+    String? sourceUrl,
+    String? sourcePath,
+    String? gitRef,
+    bool replaceExisting = false,
+    CustomRequirementsHandler? onRequirements,
+    required Future<_CustomPreparedContent> Function(CancellationToken? token, JobContext? context)
+    prepare,
+  }) async {
+    final jobs = _jobs;
+    if (jobs == null) {
+      return _installCustomInternal(
+        addonId: addonId,
+        source: source,
+        profileId: profileId,
+        sourceUrl: sourceUrl,
+        sourcePath: sourcePath,
+        gitRef: gitRef,
+        replaceExisting: replaceExisting,
+        onRequirements: onRequirements,
+        prepare: prepare,
+      );
+    }
+    final result = await jobs.run<Result<void>>(
+      kind: JobKind.install,
+      label: label,
+      onRetry: () async {
+        await _runCustomInstall(
+          label: label,
+          addonId: addonId,
+          source: source,
+          profileId: profileId,
+          sourceUrl: sourceUrl,
+          sourcePath: sourcePath,
+          gitRef: gitRef,
+          replaceExisting: replaceExisting,
+          onRequirements: onRequirements,
+          prepare: prepare,
+        );
+      },
+      task: (context) => _installCustomInternal(
+        addonId: addonId,
+        source: source,
+        profileId: profileId,
+        sourceUrl: sourceUrl,
+        sourcePath: sourcePath,
+        gitRef: gitRef,
+        replaceExisting: replaceExisting,
+        onRequirements: onRequirements,
+        prepare: prepare,
+        context: context,
+      ),
+    );
+    return result ?? const Err(AppError(message: 'Install cancelled'));
+  }
+
+  Future<Result<void>> _installCustomInternal({
+    required String addonId,
+    required AddonSource source,
+    required String profileId,
+    String? sourceUrl,
+    String? sourcePath,
+    String? gitRef,
+    required bool replaceExisting,
+    CustomRequirementsHandler? onRequirements,
+    required Future<_CustomPreparedContent> Function(CancellationToken? token, JobContext? context)
+    prepare,
+    JobContext? context,
+  }) async {
+    if (validateAddonId(addonId) != null) {
+      return Err(AppError(message: 'Invalid addon id "$addonId"'));
+    }
+    final profile = await _database.profilesDao.getById(profileId);
+    if (profile == null) {
+      return const Err(AppError(message: 'Profile not found'));
+    }
+
+    final existing = await _database.installedAddonsDao.getByAddon(profileId, addonId);
+    if (replaceExisting) {
+      if (existing == null) {
+        return const Err(AppError(message: 'Addon is not installed in this profile'));
+      }
+      if (existing.pinnedAt != null) {
+        return const Err(AppError(message: 'Addon is pinned; unpin it before updating'));
+      }
+    } else {
+      if (existing != null) {
+        return Err(
+          AppError(
+            message: 'Addon "$addonId" is already installed in this profile; remove it first',
+          ),
+        );
+      }
+      final destination = _modPath(profileId, addonId);
+      if (FileSystemEntity.typeSync(destination, followLinks: false) !=
+          FileSystemEntityType.notFound) {
+        return Err(
+          AppError(
+            message: 'A folder named "$addonId" already exists in the profile; remove it first',
+          ),
+        );
+      }
+    }
+
+    installing.value = {...installing.value, addonId};
+    installErrors.value = {...installErrors.value}..remove(addonId);
+    _CustomPreparedContent? prepared;
+    try {
+      if (replaceExisting) {
+        context?.report(detail: 'Backing up current addon');
+        await _backupAddon(profileId, addonId);
+      }
+      prepared = await prepare(context?.token, context);
+      context?.report(detail: 'Reading addon metadata');
+      final info = readPackageXmlInfo(prepared.root);
+      final requirementsText = readRequirementsFromDirectory(prepared.root);
+      var installPackages = false;
+      if (requirementsText != null) {
+        final requirements = parseRequirements(
+          requirementsText,
+        ).where((requirement) => requirement.valid).toList();
+        if (requirements.isNotEmpty && onRequirements != null) {
+          final decision = await onRequirements(requirements);
+          if (decision == CustomRequirementsDecision.cancel) {
+            prepared.discard();
+            prepared = null;
+            return const Err(AppError(message: 'Install cancelled'));
+          }
+          installPackages = decision == CustomRequirementsDecision.installPackages;
+        }
+      }
+      context?.report(detail: 'Installing files');
+      await prepared.commit();
+      prepared = null;
+
+      final now = _clock();
+      final name = info.name.trim().isEmpty ? addonId : info.name.trim();
+      final version = info.version.trim().isEmpty ? null : info.version.trim();
+      await _database.installedAddonsDao.save(
+        InstalledAddon(
+          id: existing?.id ?? const Uuid().v4(),
+          profileId: profileId,
+          addonId: addonId,
+          displayName: name,
+          gitRef: gitRef,
+          version: version,
+          installedAt: existing?.installedAt ?? now,
+          updatedAt: now,
+          catalogLastUpdate: null,
+          sourceUrl: sourceUrl,
+          source: source.name,
+          sourcePath: sourcePath,
+          hasRequirements: requirementsText != null,
+        ),
+      );
+      if (installPackages && requirementsText != null) {
+        context?.report(detail: 'Installing Python packages');
+        await _installRequirements(
+          profile: profile,
+          addonId: addonId,
+          requirementsText: requirementsText,
+          installedAt: now,
+          context: context,
+        );
+      }
+      return const Ok(null);
+    } on Object catch (error) {
+      try {
+        prepared?.discard();
+      } on Object {
+        // The staging directory is best-effort cleanup.
+      }
+      prepared = null;
+      final appError = error is AppError ? error : AppError.from(error, retryable: true);
+      installErrors.value = {...installErrors.value, addonId: appError};
+      context?.fail(appError.message);
+      return Err(appError);
+    } finally {
+      installing.value = {...installing.value}..remove(addonId);
+    }
+  }
+
+  String _modPath(String profileId, String addonId) =>
+      p.join(_paths.profilePaths(profileId).mod, addonId);
+
+  String _archiveAssetName(String addonId, Uri uri, String gitRef, {required bool direct}) {
+    if (direct) {
+      final name = p.basename(uri.path);
+      if (name.isNotEmpty) {
+        return name;
+      }
+    }
+    final ref = _safeFileToken(gitRef);
+    return ref.isEmpty ? '$addonId.zip' : '$addonId-$ref.zip';
+  }
+
+  String _safeFileToken(String value) => value.trim().replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '-');
+
+  String? _repositoryAddonId(String repositoryUrl, ArchiveResolution resolution) {
+    if (resolution.direct && resolution.uri != null) {
+      return addonIdFromArchivePath(resolution.uri!.path);
+    }
+    return addonIdFromRepositoryUrl(repositoryUrl);
+  }
+
+  AppError _archiveResolutionError(ArchiveResolutionIssue issue) {
+    final message = switch (issue) {
+      ArchiveResolutionIssue.invalidUrl => 'Enter a valid http(s) repository or archive URL',
+      ArchiveResolutionIssue.unsupportedScheme => 'Only http(s) URLs are supported',
+      ArchiveResolutionIssue.unsupportedHost => 'Unsupported host; paste a direct archive URL',
+      ArchiveResolutionIssue.missingRef => 'Enter a branch, tag or ref',
+    };
+    return AppError(message: message);
+  }
 
   void clearInstallError(String addonId) {
     installErrors.value = {...installErrors.value}..remove(addonId);
@@ -616,4 +1142,12 @@ class AddonsController {
     _buildsSubscription?.cancel();
     _buildsSubscription = null;
   }
+}
+
+class _CustomPreparedContent {
+  const _CustomPreparedContent({required this.root, required this.commit, required this.discard});
+
+  final String root;
+  final Future<AddonInstallResult> Function() commit;
+  final Future<void> Function() discard;
 }

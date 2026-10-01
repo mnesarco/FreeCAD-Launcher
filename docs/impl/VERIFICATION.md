@@ -235,6 +235,10 @@ Record results in the `STATUS.md` session log (date, OS, FreeCAD version, result
 | Install addon from catalog | ✅ 2026-09-19 — real A2plus install (M4-03); catalog renders live 2026-09-24 | | |
 | Install addon requirement via pip | ✅ 2026-09-19 — real `six` install/uninstall (M4-06/M4-07) | | |
 | Update an outdated addon | ✅ 2026-09-19 — real A2plus install → update (backup) → remove (M4-04) | | |
+| Install addon from repository URL + ref | ✅ 2026-10-01 — real `https://github.com/obelisk79/FreeCAD-Nxt` @ `main` installed via Addons → Custom (`Mod/FreeCAD-Nxt`, package.xml 0.3.1, DB `source=repo`, stored URL); removed afterwards (B-10b) | | |
+| Install addon from a local archive | ✅ 2026-10-01 — real `nxt.zip` installed (`Mod/nxt`, DB `source=zip` + `sourcePath`); removed afterwards (B-10c) | | |
+| Dev-link a local addon folder | ✅ 2026-10-01 — working copy symlinked as `Mod/FreeCAD-Nxt`, live edit visible through the link, remove deleted only the link (source intact) (B-10d) | | |
+| Install a custom addon into another profile | ✅ 2026-10-01 — copied the `FreeCAD-Nxt` dev link from Development into Production 1 via the Custom tab action (profile picker hides profiles that already have it); copy removed, original and source intact (B-10f) | | |
 | Apply a bundle | ⚠ planner/runner/UI tests only (M5-02); no live apply | | |
 | Install + manage a macro | ✅ 2026-09-19 — real catalog install (M5-04/M5-05); Installed list live 2026-09-24 | | |
 | Export/import profile manifest | ✅ 2026-09-20 — codec/controller/UI + cross-OS test (M5-07) | | |

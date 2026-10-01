@@ -283,6 +283,33 @@ void main() {
     expect(updates.outdated.value, hasLength(1));
   });
 
+  test('excludes custom-source addons from catalog update checks', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [addon('A2plus', version: '1.2', lastUpdateTime: DateTime.utc(2026, 9, 19))],
+      freshness: CatalogFreshness.fresh,
+    );
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    await db.installedAddonsDao.save(
+      sampleAddon(
+        addonId: 'A2plus',
+        version: '1.0',
+        catalogLastUpdate: DateTime.utc(2026, 9, 1),
+        source: 'repo',
+      ),
+    );
+
+    final addons = addonsController();
+    addons.start();
+    await pumpEventQueue();
+    await addons.load();
+    await pumpEventQueue();
+    final updates = updatesController(addons, buildsController());
+
+    expect(updates.outdated.value, isEmpty);
+    expect(updates.outdatedByProfile.value, isEmpty);
+  });
+
   test(
     'reports nothing when the installed version matches the catalog',
     () async {

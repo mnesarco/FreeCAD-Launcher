@@ -26,6 +26,10 @@ class InstalledAddons extends Table {
 
   TextColumn get sourceUrl => text().nullable()();
 
+  TextColumn get source => text().withDefault(const Constant('catalog'))();
+
+  TextColumn get sourcePath => text().nullable()();
+
   BoolColumn get hasRequirements => boolean().withDefault(const Constant(false))();
 
   DateTimeColumn get pinnedAt => dateTime().nullable()();

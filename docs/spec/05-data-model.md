@@ -5,14 +5,15 @@
 - **DB is an index, not the source of truth.** Installed builds, profiles, and addons exist on
   disk; the drift DB indexes them. On startup a reconciler marks entries whose files vanished
   as `missing`/`broken` instead of assuming the DB is right.
-- **Fresh start.** No migration from the prototype schema. `schemaVersion = 5`: v1 plus the
+- **Fresh start.** No migration from the prototype schema. `schemaVersion = 6`: v1 plus the
   nullable `builds.pythonPath` (D-020), `macros.license`/`macros.sizeBytes` (D-049, v3),
-  `installed_addons.pinnedAt` (D-056, v4) and `builds.label` (D-069, v5) columns, all added
-  through `onUpgrade` `addColumn`s.
+  `installed_addons.pinnedAt` (D-056, v4), `builds.label` (D-069, v5) and the
+  `installed_addons.source`/`sourcePath` provenance columns (D-085, v6), all added through
+  `onUpgrade` `addColumn`s.
 - All timestamps stored as ISO-8601 strings (`store_date_time_values_as_text: true` in
   `build.yaml`, matching `driftRuntimeOptions.defaultSerializer` in `main.dart`).
 
-## 2. Drift schema (v5)
+## 2. Drift schema (v6)
 
 ### `builds`
 
@@ -67,7 +68,9 @@ removed on failure (D-028).
 | `version` | text? | from package.xml |
 | `installedAt`, `updatedAt` | text | |
 | `catalogLastUpdate` | text? | catalog `last_update_time` at install time (update detection) |
-| `sourceUrl` | text? | zip URL used |
+| `sourceUrl` | text? | catalog zip URL, or repository URL for `repo` installs |
+| `source` | text | `catalog` \| `repo` \| `zip` \| `symlink` (D-085; default `catalog`) |
+| `sourcePath` | text? | local archive path (`zip`) or symlink target (`symlink`) |
 | `hasRequirements` | bool | |
 | `pinnedAt` | text? | frozen version: non-null = pinned (checked per profile+addon row; each profile pins independently) |
 

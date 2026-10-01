@@ -679,6 +679,466 @@ void main() {
     expect((await subject.remove(addonId: 'A2plus', profileId: 'profile-1')).isErr, isTrue);
     subject.dispose();
   });
+  group('custom installs', () {
+    setUp(() async {
+      await db.buildsDao.save(sampleBuild());
+      await db.profilesDao.save(sampleProfile());
+    });
+
+    test('installs from a repository URL and records provenance', () async {
+      downloadSource.streamFactory = () => Stream.fromIterable([
+        catalogZip({
+          'MyAddon-main/package.xml': _packageXml('MyAddon', '1.2.3'),
+          'MyAddon-main/InitGui.py': 'gui',
+        }),
+      ]);
+      final subject = controller();
+
+      final result = await subject.installFromRepository(
+        repositoryUrl: 'https://github.com/owner/MyAddon',
+        gitRef: 'main',
+        profileId: 'profile-1',
+      );
+
+      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+      final modDirectory = p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'MyAddon');
+      expect(File(p.join(modDirectory, 'InitGui.py')).existsSync(), isTrue);
+      final row = await db.installedAddonsDao.getByAddon('profile-1', 'MyAddon');
+      expect(row, isNotNull);
+      expect(row!.source, 'repo');
+      expect(row.sourceUrl, 'https://github.com/owner/MyAddon');
+      expect(row.gitRef, 'main');
+      expect(row.version, '1.2.3');
+      expect(row.catalogLastUpdate, isNull);
+      expect(
+        downloadSource.requests.single.toString(),
+        'https://github.com/owner/MyAddon/archive/main.zip',
+      );
+      subject.dispose();
+    });
+
+    test('rejects a repository archive without package.xml', () async {
+      downloadSource.streamFactory = () => Stream.fromIterable([
+        catalogZip({'MyAddon-main/InitGui.py': 'gui'}),
+      ]);
+      final subject = controller();
+
+      final result = await subject.installFromRepository(
+        repositoryUrl: 'https://github.com/owner/MyAddon',
+        gitRef: 'main',
+        profileId: 'profile-1',
+      );
+
+      expect(result.isErr, isTrue);
+      expect('${result.errorOrNull}', contains('package.xml'));
+      expect(
+        Directory(
+          p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'MyAddon'),
+        ).existsSync(),
+        isFalse,
+      );
+      expect(await db.installedAddonsDao.getByAddon('profile-1', 'MyAddon'), isNull);
+      subject.dispose();
+    });
+
+    test('blocks a custom install when the addon id already exists', () async {
+      await db.installedAddonsDao.save(sampleAddon(addonId: 'MyAddon'));
+      final subject = controller();
+
+      final result = await subject.installFromRepository(
+        repositoryUrl: 'https://github.com/owner/MyAddon',
+        gitRef: 'main',
+        profileId: 'profile-1',
+      );
+
+      expect(result.isErr, isTrue);
+      expect('${result.errorOrNull}', contains('remove it first'));
+      expect(downloadSource.requests, isEmpty);
+      subject.dispose();
+    });
+
+    test('updates a repository addon after backing up the old files', () async {
+      downloadSource.streamFactory = () => Stream.fromIterable([
+        catalogZip({
+          'MyAddon-main/package.xml': _packageXml('MyAddon', '1.0.0'),
+          'MyAddon-main/InitGui.py': 'gui',
+        }),
+      ]);
+      final subject = controller();
+      await subject.installFromRepository(
+        repositoryUrl: 'https://github.com/owner/MyAddon',
+        gitRef: 'main',
+        profileId: 'profile-1',
+      );
+
+      downloadSource.streamFactory = () => Stream.fromIterable([
+        catalogZip({
+          'MyAddon-main/package.xml': _packageXml('MyAddon', '2.0.0'),
+          'MyAddon-main/InitGui.py': 'gui-v2',
+        }),
+      ]);
+      final result = await subject.updateFromRepository(addonId: 'MyAddon', profileId: 'profile-1');
+
+      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+      final row = await db.installedAddonsDao.getByAddon('profile-1', 'MyAddon');
+      expect(row!.version, '2.0.0');
+      expect(row.source, 'repo');
+      final backups = Directory(p.join(tempDirectory.path, 'profiles', 'profile-1', 'backups'));
+      expect(
+        backups.listSync().whereType<Directory>().map((d) => p.basename(d.path)).toList(),
+        contains(startsWith('addon-MyAddon-')),
+      );
+      subject.dispose();
+    });
+
+    test('blocks repository updates while pinned', () async {
+      downloadSource.streamFactory = () => Stream.fromIterable([
+        catalogZip({'MyAddon-main/package.xml': _packageXml('MyAddon', '1.0.0')}),
+      ]);
+      final subject = controller();
+      await subject.installFromRepository(
+        repositoryUrl: 'https://github.com/owner/MyAddon',
+        gitRef: 'main',
+        profileId: 'profile-1',
+      );
+      await subject.pin(addonId: 'MyAddon', profileId: 'profile-1');
+
+      final result = await subject.updateFromRepository(addonId: 'MyAddon', profileId: 'profile-1');
+
+      expect(result.isErr, isTrue);
+      expect('${result.errorOrNull}', contains('pinned'));
+      subject.dispose();
+    });
+
+    test('installs from a local archive and records the path', () async {
+      final archivePath = p.join(tempDirectory.path, 'LocalAddon.zip');
+      File(archivePath).writeAsBytesSync(
+        catalogZip({
+          'LocalAddon/package.xml': _packageXml('LocalAddon', '0.9.0'),
+          'LocalAddon/InitGui.py': 'gui',
+        }),
+      );
+      final subject = controller();
+
+      final result = await subject.installFromArchive(
+        archivePath: archivePath,
+        profileId: 'profile-1',
+      );
+
+      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+      final row = await db.installedAddonsDao.getByAddon('profile-1', 'LocalAddon');
+      expect(row, isNotNull);
+      expect(row!.source, 'zip');
+      expect(row.sourcePath, File(archivePath).absolute.path);
+      expect(row.version, '0.9.0');
+      expect(downloadSource.requests, isEmpty);
+      subject.dispose();
+    });
+
+    test('reinstalls a zip addon from a new file', () async {
+      final first = p.join(tempDirectory.path, 'LocalAddon.zip');
+      File(first).writeAsBytesSync(
+        catalogZip({'LocalAddon/package.xml': _packageXml('LocalAddon', '0.9.0')}),
+      );
+      final subject = controller();
+      await subject.installFromArchive(archivePath: first, profileId: 'profile-1');
+
+      final second = p.join(tempDirectory.path, 'LocalAddon-v2.zip');
+      File(second).writeAsBytesSync(
+        catalogZip({
+          'LocalAddon/package.xml': _packageXml('LocalAddon', '1.0.0'),
+          'LocalAddon/InitGui.py': 'gui',
+        }),
+      );
+      final result = await subject.reinstallFromArchive(
+        addonId: 'LocalAddon',
+        profileId: 'profile-1',
+        archivePath: second,
+      );
+
+      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+      final row = await db.installedAddonsDao.getByAddon('profile-1', 'LocalAddon');
+      expect(row!.version, '1.0.0');
+      expect(
+        File(
+          p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'LocalAddon', 'InitGui.py'),
+        ).existsSync(),
+        isTrue,
+      );
+      subject.dispose();
+    });
+
+    test('asks for requirements consent before placing files', () async {
+      downloadSource.streamFactory = () => Stream.fromIterable([
+        catalogZip({
+          'MyAddon-main/package.xml': _packageXml('MyAddon', '1.0.0'),
+          'MyAddon-main/requirements.txt': 'six>=1.0',
+        }),
+      ]);
+      final subject = controller();
+      var asked = false;
+
+      final result = await subject.installFromRepository(
+        repositoryUrl: 'https://github.com/owner/MyAddon',
+        gitRef: 'main',
+        profileId: 'profile-1',
+        onRequirements: (requirements) async {
+          asked = true;
+          expect(requirements.single.name, 'six');
+          return CustomRequirementsDecision.cancel;
+        },
+      );
+
+      expect(asked, isTrue);
+      expect(result.isErr, isTrue);
+      expect(
+        Directory(
+          p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'MyAddon'),
+        ).existsSync(),
+        isFalse,
+      );
+      expect(
+        Directory(
+          p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'MyAddon.part'),
+        ).existsSync(),
+        isFalse,
+      );
+      expect(await db.installedAddonsDao.getByAddon('profile-1', 'MyAddon'), isNull);
+      expect(subject.installErrors.value, isEmpty);
+      subject.dispose();
+    });
+
+    test('installs accepted requirements into the profile', () async {
+      downloadSource.streamFactory = () => Stream.fromIterable([
+        catalogZip({
+          'MyAddon-main/package.xml': _packageXml('MyAddon', '1.0.0'),
+          'MyAddon-main/requirements.txt': 'six>=1.0',
+        }),
+      ]);
+      final pip = FakePipRunner();
+      final subject = controller(
+        pipRunner: pip,
+        pythonResolver: FakePythonEnvResolver('/opt/freecad/bin/python'),
+      );
+
+      final result = await subject.installFromRepository(
+        repositoryUrl: 'https://github.com/owner/MyAddon',
+        gitRef: 'main',
+        profileId: 'profile-1',
+        onRequirements: (_) async => CustomRequirementsDecision.installPackages,
+      );
+
+      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+      expect(pip.calls.single.packages, ['six>=1.0']);
+      final row = await db.installedAddonsDao.getByAddon('profile-1', 'MyAddon');
+      expect(row!.hasRequirements, isTrue);
+      final packages = await db.pythonPackagesDao.getByProfile('profile-1');
+      expect(packages.single.name, 'six');
+      expect(packages.single.source, 'addon:MyAddon');
+      subject.dispose();
+    });
+
+    test('links a development directory and remove keeps the source', () async {
+      final sourceDirectory = p.join(tempDirectory.path, 'dev', 'DevAddon');
+      Directory(sourceDirectory).createSync(recursive: true);
+      File(
+        p.join(sourceDirectory, 'package.xml'),
+      ).writeAsStringSync(_packageXml('DevAddon', '0.1.0'));
+      File(p.join(sourceDirectory, 'InitGui.py')).writeAsStringSync('live');
+      final subject = controller();
+
+      final result = await subject.installFromDirectory(
+        sourcePath: sourceDirectory,
+        profileId: 'profile-1',
+      );
+
+      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+      expect(result.errorOrNull, isNull);
+      final modDirectory = p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'DevAddon');
+      expect(isAddonLink(modDirectory), isTrue);
+      final row = await db.installedAddonsDao.getByAddon('profile-1', 'DevAddon');
+      expect(row!.source, 'symlink');
+      expect(row.sourcePath, p.normalize(sourceDirectory));
+      expect(subject.isUpdateAvailable('profile-1', 'DevAddon'), isFalse);
+
+      expect((await subject.remove(addonId: 'DevAddon', profileId: 'profile-1')).isOk, isTrue);
+      expect(File(p.join(sourceDirectory, 'InitGui.py')).existsSync(), isTrue);
+      expect(
+        FileSystemEntity.typeSync(modDirectory, followLinks: false),
+        FileSystemEntityType.notFound,
+      );
+      subject.dispose();
+    }, skip: Platform.isWindows);
+
+    test('rejects linking the profile Mod directory', () async {
+      final modRoot = p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod');
+      Directory(modRoot).createSync(recursive: true);
+      final subject = controller();
+
+      final result = await subject.installFromDirectory(
+        sourcePath: modRoot,
+        profileId: 'profile-1',
+      );
+
+      expect(result.isErr, isTrue);
+      subject.dispose();
+    }, skip: Platform.isWindows);
+
+    test('installs a repository addon into another profile', () async {
+      await db.profilesDao.save(sampleProfile(id: 'profile-2', name: 'Other'));
+      downloadSource.streamFactory = () => Stream.fromIterable([
+        catalogZip({
+          'MyAddon-main/package.xml': _packageXml('MyAddon', '1.0.0'),
+          'MyAddon-main/InitGui.py': 'gui',
+        }),
+      ]);
+      final subject = controller();
+      await subject.installFromRepository(
+        repositoryUrl: 'https://github.com/owner/MyAddon',
+        gitRef: 'main',
+        profileId: 'profile-1',
+      );
+      final row = (await db.installedAddonsDao.getByAddon('profile-1', 'MyAddon'))!;
+
+      final result = await subject.installCustomInProfile(
+        addon: row,
+        profileId: 'profile-2',
+      );
+
+      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+      final copied = await db.installedAddonsDao.getByAddon('profile-2', 'MyAddon');
+      expect(copied, isNotNull);
+      expect(copied!.source, 'repo');
+      expect(copied.sourceUrl, 'https://github.com/owner/MyAddon');
+      expect(copied.gitRef, 'main');
+      expect(
+        File(
+          p.join(tempDirectory.path, 'profiles', 'profile-2', 'Mod', 'MyAddon', 'InitGui.py'),
+        ).existsSync(),
+        isTrue,
+      );
+      subject.dispose();
+    });
+
+    test('installs an archive addon into another profile keeping the id', () async {
+      await db.profilesDao.save(sampleProfile(id: 'profile-2', name: 'Other'));
+      final archivePath = p.join(tempDirectory.path, 'LocalAddon.zip');
+      File(archivePath).writeAsBytesSync(
+        catalogZip({'LocalAddon/package.xml': _packageXml('LocalAddon', '0.9.0')}),
+      );
+      final subject = controller();
+      await subject.installFromArchive(archivePath: archivePath, profileId: 'profile-1');
+      final row = (await db.installedAddonsDao.getByAddon('profile-1', 'LocalAddon'))!;
+
+      final renamed = p.join(tempDirectory.path, 'renamed.zip');
+      File(renamed).writeAsBytesSync(
+        catalogZip({'LocalAddon/package.xml': _packageXml('LocalAddon', '0.9.0')}),
+      );
+      final result = await subject.installCustomInProfile(
+        addon: row,
+        profileId: 'profile-2',
+        archivePath: renamed,
+      );
+
+      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+      final copied = await db.installedAddonsDao.getByAddon('profile-2', 'LocalAddon');
+      expect(copied, isNotNull);
+      expect(copied!.source, 'zip');
+      expect(copied.sourcePath, File(renamed).absolute.path);
+      subject.dispose();
+    });
+
+    test('links a development directory into another profile', () async {
+      await db.profilesDao.save(sampleProfile(id: 'profile-2', name: 'Other'));
+      final sourceDirectory = p.join(tempDirectory.path, 'dev2', 'DevAddon');
+      Directory(sourceDirectory).createSync(recursive: true);
+      File(
+        p.join(sourceDirectory, 'package.xml'),
+      ).writeAsStringSync(_packageXml('DevAddon', '0.1.0'));
+      final subject = controller();
+      await subject.installFromDirectory(
+        sourcePath: sourceDirectory,
+        profileId: 'profile-1',
+      );
+      final row = (await db.installedAddonsDao.getByAddon('profile-1', 'DevAddon'))!;
+
+      final result = await subject.installCustomInProfile(
+        addon: row,
+        profileId: 'profile-2',
+      );
+
+      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+      final linkPath = p.join(
+        tempDirectory.path,
+        'profiles',
+        'profile-2',
+        'Mod',
+        'DevAddon',
+      );
+      expect(isAddonLink(linkPath), isTrue);
+      final copied = await db.installedAddonsDao.getByAddon('profile-2', 'DevAddon');
+      expect(copied!.source, 'symlink');
+      expect(copied.sourcePath, p.normalize(sourceDirectory));
+      subject.dispose();
+    }, skip: Platform.isWindows);
+
+    test('blocks installing a custom addon twice into the same profile', () async {
+      downloadSource.streamFactory = () => Stream.fromIterable([
+        catalogZip({'MyAddon-main/package.xml': _packageXml('MyAddon', '1.0.0')}),
+      ]);
+      final subject = controller();
+      await subject.installFromRepository(
+        repositoryUrl: 'https://github.com/owner/MyAddon',
+        gitRef: 'main',
+        profileId: 'profile-1',
+      );
+      final row = (await db.installedAddonsDao.getByAddon('profile-1', 'MyAddon'))!;
+
+      final result = await subject.installCustomInProfile(
+        addon: row,
+        profileId: 'profile-1',
+      );
+
+      expect(result.isErr, isTrue);
+      expect('${result.errorOrNull}', contains('remove it first'));
+      subject.dispose();
+    });
+
+    test('refuses to copy catalog addons with the custom action', () async {
+      final subject = controller();
+
+      final result = await subject.installCustomInProfile(
+        addon: sampleAddon(addonId: 'A2plus'),
+        profileId: 'profile-1',
+      );
+
+      expect(result.isErr, isTrue);
+      expect('${result.errorOrNull}', contains('custom addons'));
+      subject.dispose();
+    });
+
+    test('reports a missing archive when copying a zip addon', () async {
+      await db.profilesDao.save(sampleProfile(id: 'profile-2', name: 'Other'));
+      final archivePath = p.join(tempDirectory.path, 'LocalAddon.zip');
+      File(archivePath).writeAsBytesSync(
+        catalogZip({'LocalAddon/package.xml': _packageXml('LocalAddon', '0.9.0')}),
+      );
+      final subject = controller();
+      await subject.installFromArchive(archivePath: archivePath, profileId: 'profile-1');
+      final row = (await db.installedAddonsDao.getByAddon('profile-1', 'LocalAddon'))!;
+      File(archivePath).deleteSync();
+
+      final result = await subject.installCustomInProfile(
+        addon: row,
+        profileId: 'profile-2',
+      );
+
+      expect(result.isErr, isTrue);
+      expect('${result.errorOrNull}', contains('Archive not found'));
+      subject.dispose();
+    });
+  });
+
 }
 
 List<int> catalogZip(Map<String, String> files) {
@@ -689,3 +1149,14 @@ List<int> catalogZip(Map<String, String> files) {
   });
   return ZipEncoder().encode(archive);
 }
+
+String _packageXml(String name, String version) =>
+    '''
+<package format="1">
+  <name>$name</name>
+  <description>Test addon</description>
+  <version>$version</version>
+  <license>MIT</license>
+  <content><workbench/></content>
+</package>
+''';

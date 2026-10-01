@@ -16,7 +16,8 @@
   `B-10` custom addon installs (plan ready in `PLAN-B10-custom-addons.md`).
 - **Blockers**:
   - M8-03/M8-04 need Windows/macOS machines (OQ-1); nothing else is blocked.
-- **In progress**: none
+- **In progress**: none. `B-10a`..`B-10f` (custom addon installs) are complete with code,
+  tests, docs and live verification — **uncommitted pending review**.
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
     diagnostics, CI workflow, test harness).
@@ -435,6 +436,18 @@
     (FR-4.8), and dev symlink (live, link-only remove); backlog `B-10` expanded into
     `B-10a..B-10e`. Owner choices captured; decisions D-085..D-088 to be recorded at kickoff.
     No code changes.
+  - B-10 implementation (2026-10-01, R22): schema v6 `installed_addons.source`/`sourcePath`
+    (live v5→v6 migration verified), domain helpers (package.xml parser extraction, addon id
+    rules, GitHub/GitLab/Gitea archive URL builder), `AddonInstaller.prepare/commit` +
+    `linkDirectory`, custom install/update/reinstall flows with conflict blocking and
+    pre-placement requirements consent, Addons → **Custom** tab (repository/archive/dev-link
+    forms + custom list with update/reinstall/reveal/remove and **Install in another profile…**),
+    manifest `source` marker with import skip, and D-085..D-088. 582 tests green, analyze clean.
+    Live verification through the UI: real `obelisk79/FreeCAD-Nxt` @ `main` repository install
+    (`source=repo`, removed), local `nxt.zip` install (`source=zip`, removed), dev-symlink
+    install (live edit visible, link-only removal, source intact) and the copy action (dev link
+    copied Development → Production 1, picker hid the source profile; copy removed, original and
+    working copy intact). **Uncommitted pending review.**
 
 ## Session log
 
@@ -541,6 +554,7 @@
 | 2026-10-01 | R19 | History cleanup: dropped the temporary `ping`/`bisect` CI commits with `git-filter-repo` (tree unchanged), force-pushed `devel` and moved `v0.1.0` to the rewritten commit; CI and the tag-path release workflow re-ran green (runs 36815947311 / 36815948224) | — | `docs/impl/STATUS.md` |
 | 2026-10-01 | R20 | README accuracy pass: intro clarified (multiple builds, each backing many profiles), Stable\|Weekly channel documented in Features/Quick start/Updates, all five screenshots recaptured from the current build (Available/Stable for Versions), AI-assistance disclosure added | — | `README.md`, `docs/images/*.jpg`, `docs/impl/STATUS.md`, `docs/impl/VERIFICATION.md` |
 | 2026-10-01 | R21 | B-10 planning: custom addon installs (repo URL + branch, local zip/tar, dev symlink) written up with owner-confirmed choices; B-10 expanded into B-10a..B-10e; no code | B-10 | `docs/impl/PLAN-B10-custom-addons.md`, `docs/impl/TASKS.md`, `docs/impl/STATUS.md` |
+| 2026-10-01 | R22 | B-10 implementation (uncommitted pending review): schema v6 source/sourcePath, domain helpers, installer prepare/commit + linkDirectory, custom install/update/reinstall + conflicts + pre-placement requirements consent, Addons Custom tab with install-in-another-profile action, manifest source skip, D-085..D-088, tests, live Nxt repo/zip/symlink installs and cross-profile copy verified | B-10a..B-10f | `lib/domain/addons/{addon_source,package_xml,addon_id_rules,repository_archive}.dart`, `lib/platform/{addon_installer,addon_manifest_reader}.dart`, `lib/state/{addons_controller,updates_controller,profile_manifest_controller}.dart`, `lib/ui/addons/{addons_view,custom_addons_view}.dart`, `lib/ui/profiles/profile_manifest_dialogs.dart`, `lib/{data,domain,ui,l10n}/**`, `test/**`, `docs/{spec/02-requirements,spec/03-ux,spec/05-data-model,spec/06-integrations,user-guide}.md`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md` |
 
 ## Standing notes for the next agent
 

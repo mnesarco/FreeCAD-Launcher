@@ -104,12 +104,104 @@ void main() {
   });
 
   test('rejects an archive that expands to no files', () async {
-    await expectLater(
-      install(_zip({})),
-      throwsA(isA<AddonInstallException>()),
-    );
+    await expectLater(install(_zip({})), throwsA(isA<AddonInstallException>()));
 
     expect(Directory(destination).existsSync(), isFalse);
     expect(Directory('$destination.part').existsSync(), isFalse);
   });
+
+  test('installFromArchive installs a local file without downloading', () async {
+    final archive = p.join(tempDirectory.path, 'A2plus.zip');
+    File(archive).writeAsBytesSync(
+      _zip({
+        'A2plus-master/InitGui.py': 'gui',
+        'A2plus-master/package.xml': '<package><name>A2plus</name></package>',
+      }),
+    );
+
+    final result = await installer.installFromArchive(
+      archivePath: archive,
+      destinationDirectory: destination,
+    );
+
+    expect(result.directory, destination);
+    expect(File(p.join(destination, 'InitGui.py')).existsSync(), isTrue);
+    expect(Directory('$destination.part').existsSync(), isFalse);
+    expect(source.requests, isEmpty);
+  });
+
+  test('prepareFromArchive can be discarded without touching the destination', () async {
+    final archive = p.join(tempDirectory.path, 'A2plus.zip');
+    File(archive).writeAsBytesSync(_zip({'A2plus-master/InitGui.py': 'gui'}));
+
+    final prepared = await installer.prepareFromArchive(
+      archivePath: archive,
+      destinationDirectory: destination,
+    );
+
+    expect(Directory(prepared.contentRoot).existsSync(), isTrue);
+    expect(File(p.join(prepared.contentRoot, 'InitGui.py')).existsSync(), isTrue);
+
+    installer.discardPrepared(prepared);
+
+    expect(Directory('$destination.part').existsSync(), isFalse);
+    expect(Directory(destination).existsSync(), isFalse);
+  });
+
+  test('commitPrepared replaces an existing addon and cleans staging', () async {
+    Directory(destination).createSync(recursive: true);
+    File(p.join(destination, 'old.txt')).writeAsStringSync('old');
+    final archive = p.join(tempDirectory.path, 'A2plus.zip');
+    File(archive).writeAsBytesSync(_zip({'A2plus-master/new.txt': 'new'}));
+
+    final prepared = await installer.prepareFromArchive(
+      archivePath: archive,
+      destinationDirectory: destination,
+    );
+    await installer.commitPrepared(prepared);
+
+    expect(File(p.join(destination, 'new.txt')).readAsStringSync(), 'new');
+    expect(File(p.join(destination, 'old.txt')).existsSync(), isFalse);
+    expect(Directory('$destination.part').existsSync(), isFalse);
+    expect(Directory('$destination.old').existsSync(), isFalse);
+  });
+
+  group('linkDirectory', () {
+    test('creates a link and removing it keeps the source intact', () async {
+      final sourceDirectory = p.join(tempDirectory.path, 'dev', 'MyAddon');
+      Directory(sourceDirectory).createSync(recursive: true);
+      File(p.join(sourceDirectory, 'InitGui.py')).writeAsStringSync('gui');
+
+      final result = await installer.linkDirectory(
+        sourceDirectory: sourceDirectory,
+        destinationDirectory: destination,
+      );
+
+      expect(result.directory, destination);
+      expect(isAddonLink(destination), isTrue);
+      expect(File(p.join(destination, 'InitGui.py')).readAsStringSync(), 'gui');
+
+      deleteAddonEntry(destination);
+
+      expect(
+        FileSystemEntity.typeSync(destination, followLinks: false),
+        FileSystemEntityType.notFound,
+      );
+      expect(File(p.join(sourceDirectory, 'InitGui.py')).existsSync(), isTrue);
+    });
+
+    test('fails when the destination already exists', () async {
+      final sourceDirectory = p.join(tempDirectory.path, 'dev', 'MyAddon');
+      Directory(sourceDirectory).createSync(recursive: true);
+      Directory(destination).createSync(recursive: true);
+
+      await expectLater(
+        installer.linkDirectory(
+          sourceDirectory: sourceDirectory,
+          destinationDirectory: destination,
+        ),
+        throwsA(isA<AddonInstallException>()),
+      );
+    });
+  }, skip: Platform.isWindows);
 }

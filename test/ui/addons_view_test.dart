@@ -286,4 +286,143 @@ void main() {
     expect(find.text('A2plus'), findsNothing);
     expect(find.text('MacroTool'), findsOneWidget);
   });
+
+  Future<void> openCustomTab(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1400, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await pumpAddons(tester);
+    await tester.tap(find.text('Custom'));
+    await settle(tester);
+  }
+
+  testWidgets('custom tab shows the three forms and the empty state', (tester) async {
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+
+    await openCustomTab(tester);
+
+    expect(find.text('From a repository'), findsOneWidget);
+    expect(find.text('From an archive file'), findsOneWidget);
+    expect(find.text('From a local folder (development)'), findsOneWidget);
+    expect(find.text('No custom addons'), findsOneWidget);
+  });
+
+  testWidgets('custom tab previews the resolved repository archive URL', (tester) async {
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+
+    await openCustomTab(tester);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'https://github.com/owner/repo'),
+      'https://github.com/owner/MyAddon',
+    );
+    await settle(tester);
+
+    expect(find.text('Archive: https://github.com/owner/MyAddon/archive/main.zip'), findsOneWidget);
+  });
+
+  testWidgets('custom tab reports unsupported repository hosts', (tester) async {
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+
+    await openCustomTab(tester);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'https://github.com/owner/repo'),
+      'https://example.com/owner/repo',
+    );
+    await settle(tester);
+
+    expect(find.text('Unsupported host; paste a direct archive URL'), findsOneWidget);
+  });
+
+  testWidgets('custom tab blocks installing an existing addon id', (tester) async {
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    await db.installedAddonsDao.save(
+      sampleAddon(addonId: 'MyAddon', displayName: 'MyAddon', source: 'repo'),
+    );
+
+    await openCustomTab(tester);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'https://github.com/owner/repo'),
+      'https://github.com/owner/MyAddon',
+    );
+    await settle(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Install').first);
+    await settle(tester);
+
+    expect(find.textContaining('remove it first'), findsOneWidget);
+  });
+
+  testWidgets('custom tab lists custom installs with their source', (tester) async {
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    await db.installedAddonsDao.save(
+      sampleAddon(
+        addonId: 'DevAddon',
+        displayName: 'DevAddon',
+        source: 'symlink',
+        sourcePath: '/tmp/dev/DevAddon',
+        version: '0.1.0',
+      ),
+    );
+
+    await openCustomTab(tester);
+
+    expect(find.text('DevAddon'), findsOneWidget);
+    expect(find.textContaining('Dev link'), findsOneWidget);
+    expect(find.byIcon(Icons.folder_open), findsWidgets);
+  });
+
+  testWidgets('custom tab offers installing an addon in another profile', (tester) async {
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    await db.profilesDao.save(sampleProfile(id: 'profile-2', name: 'Second'));
+    await db.installedAddonsDao.save(
+      sampleAddon(
+        addonId: 'MyAddon',
+        displayName: 'MyAddon',
+        source: 'repo',
+        sourceUrl: 'https://github.com/owner/MyAddon',
+        gitRef: 'main',
+      ),
+    );
+
+    await openCustomTab(tester);
+
+    await tester.tap(find.byIcon(Icons.playlist_add));
+    await settle(tester);
+
+    expect(find.textContaining('in another profile'), findsWidgets);
+    expect(find.text('Second'), findsOneWidget);
+
+    await tester.tap(find.text('Cancel'));
+    await settle(tester);
+    expect(find.text('Second'), findsNothing);
+  });
+
+  testWidgets('custom tab hides profiles that already have the addon', (tester) async {
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    await db.installedAddonsDao.save(
+      sampleAddon(
+        addonId: 'MyAddon',
+        displayName: 'MyAddon',
+        source: 'repo',
+        sourceUrl: 'https://github.com/owner/MyAddon',
+        gitRef: 'main',
+      ),
+    );
+
+    await openCustomTab(tester);
+
+    await tester.tap(find.byIcon(Icons.playlist_add));
+    await settle(tester);
+
+    expect(find.text('This addon is already installed in every profile'), findsOneWidget);
+  });
 }

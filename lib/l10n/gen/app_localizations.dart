@@ -1030,6 +1030,12 @@ abstract class AppLocalizations {
   /// **'Could not import the profile'**
   String get manifestImportFailed;
 
+  /// No description provided for @manifestImportCustomSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped {count} custom addon(s) that are not reinstallable from a manifest'**
+  String manifestImportCustomSkipped(int count);
+
   /// No description provided for @manifestImportWarnings.
   ///
   /// In en, this message translates to:
@@ -1461,6 +1467,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Collections'**
   String get addonsTabCollections;
+
+  /// No description provided for @addonsTabCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get addonsTabCustom;
+
+  /// No description provided for @addonsCustomRepoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'From a repository'**
+  String get addonsCustomRepoTitle;
+
+  /// No description provided for @addonsCustomRepoUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Repository URL'**
+  String get addonsCustomRepoUrl;
+
+  /// No description provided for @addonsCustomRepoUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'https://github.com/owner/repo'**
+  String get addonsCustomRepoUrlHint;
+
+  /// No description provided for @addonsCustomRepoRef.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch / ref'**
+  String get addonsCustomRepoRef;
+
+  /// No description provided for @addonsCustomRepoRefHint.
+  ///
+  /// In en, this message translates to:
+  /// **'main'**
+  String get addonsCustomRepoRefHint;
+
+  /// No description provided for @addonsCustomRepoResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive: {url}'**
+  String addonsCustomRepoResolved(String url);
+
+  /// No description provided for @addonsCustomInvalidUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid http(s) repository or archive URL'**
+  String get addonsCustomInvalidUrl;
+
+  /// No description provided for @addonsCustomUnsupportedScheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Only http(s) URLs are supported'**
+  String get addonsCustomUnsupportedScheme;
+
+  /// No description provided for @addonsCustomUnsupportedHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported host; paste a direct archive URL'**
+  String get addonsCustomUnsupportedHost;
+
+  /// No description provided for @addonsCustomMissingRef.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a branch, tag or ref'**
+  String get addonsCustomMissingRef;
+
+  /// No description provided for @addonsCustomArchiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'From an archive file'**
+  String get addonsCustomArchiveTitle;
+
+  /// No description provided for @addonsCustomArchiveField.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive file'**
+  String get addonsCustomArchiveField;
+
+  /// No description provided for @addonsCustomArchiveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a .zip or .tar.gz file'**
+  String get addonsCustomArchiveHint;
+
+  /// No description provided for @addonsCustomArchiveChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose file…'**
+  String get addonsCustomArchiveChoose;
+
+  /// No description provided for @addonsCustomArchiveRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an archive file first'**
+  String get addonsCustomArchiveRequired;
+
+  /// No description provided for @addonsCustomDirectoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'From a local folder (development)'**
+  String get addonsCustomDirectoryTitle;
+
+  /// No description provided for @addonsCustomDirectoryField.
+  ///
+  /// In en, this message translates to:
+  /// **'Local folder'**
+  String get addonsCustomDirectoryField;
+
+  /// No description provided for @addonsCustomDirectoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an addon working copy'**
+  String get addonsCustomDirectoryHint;
+
+  /// No description provided for @addonsCustomDirectoryChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose folder…'**
+  String get addonsCustomDirectoryChoose;
+
+  /// No description provided for @addonsCustomDirectoryRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a folder first'**
+  String get addonsCustomDirectoryRequired;
+
+  /// No description provided for @addonsCustomDirectoryWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'The folder is linked live: changes are picked up by FreeCAD immediately, and removing the addon deletes only the link.'**
+  String get addonsCustomDirectoryWarning;
+
+  /// No description provided for @addonsCustomInstalledTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom addons'**
+  String get addonsCustomInstalledTitle;
+
+  /// No description provided for @addonsCustomEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No custom addons'**
+  String get addonsCustomEmptyTitle;
+
+  /// No description provided for @addonsCustomEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Install an addon from a repository, an archive file or a local folder.'**
+  String get addonsCustomEmptyMessage;
+
+  /// No description provided for @addonsCustomSourceRepo.
+  ///
+  /// In en, this message translates to:
+  /// **'Repository'**
+  String get addonsCustomSourceRepo;
+
+  /// No description provided for @addonsCustomSourceArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get addonsCustomSourceArchive;
+
+  /// No description provided for @addonsCustomSourceLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Dev link'**
+  String get addonsCustomSourceLink;
+
+  /// No description provided for @addonsCustomReinstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Reinstall from file…'**
+  String get addonsCustomReinstall;
+
+  /// No description provided for @addonsCustomInstallInProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Install in another profile…'**
+  String get addonsCustomInstallInProfile;
+
+  /// No description provided for @addonsCustomInstallInProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Install \"{name}\" in another profile'**
+  String addonsCustomInstallInProfileTitle(String name);
+
+  /// No description provided for @addonsCustomAllProfiles.
+  ///
+  /// In en, this message translates to:
+  /// **'This addon is already installed in every profile'**
+  String get addonsCustomAllProfiles;
+
+  /// No description provided for @addonsCustomReveal.
+  ///
+  /// In en, this message translates to:
+  /// **'Open source folder'**
+  String get addonsCustomReveal;
+
+  /// No description provided for @addonsCustomRevealFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the folder'**
+  String get addonsCustomRevealFailed;
 
   /// No description provided for @bundlesCreate.
   ///

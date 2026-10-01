@@ -319,6 +319,55 @@ void main() {
       expect(config, contains(paths.profilePaths(outcome.profile.id).macros));
     });
 
+    test('skips custom-source addons instead of reinstalling them', () async {
+      await db.buildsDao.save(sampleBuild());
+      await repositoryFor(BuildPlatform.linux).create(name: 'Dev', buildId: 'build-1');
+      final addonCalls = <RecordedAddonInstall>[];
+      final controller = controllerFor(
+        installAddon:
+            ({
+              required String addonId,
+              required String? branchRef,
+              required String profileId,
+              required bool installRequirements,
+            }) async {
+              addonCalls.add(
+                RecordedAddonInstall(
+                  addonId: addonId,
+                  branchRef: branchRef,
+                  profileId: profileId,
+                  installRequirements: installRequirements,
+                ),
+              );
+              return const Ok(null);
+            },
+      );
+      final manifest = manifestFor(
+        name: 'Dev',
+        addons: const [
+          ManifestAddon(id: 'A2plus', gitRef: 'master'),
+          ManifestAddon(id: 'DevAddon', source: 'symlink'),
+          ManifestAddon(id: 'RepoAddon', source: 'repo'),
+        ],
+      );
+      final preview = (await controller.previewImport(
+        encodeProfileManifest(manifest),
+      )).valueOrNull!;
+
+      final result = await controller.importManifest(
+        preview: preview,
+        name: preview.suggestedName,
+        buildId: preview.matchingBuild!.id,
+        installRequirements: false,
+      );
+
+      expect(result.isOk, isTrue);
+      final outcome = result.valueOrNull!;
+      expect(outcome.addonsInstalled, 1);
+      expect(outcome.addonsSkipped, ['DevAddon', 'RepoAddon']);
+      expect(addonCalls.single.addonId, 'A2plus');
+    });
+
     test('forces MacroPath when the manifest has no config', () async {
       await db.buildsDao.save(sampleBuild());
       final controller = controllerFor();

@@ -517,6 +517,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manifestImportFailed => 'Could not import the profile';
 
   @override
+  String manifestImportCustomSkipped(int count) {
+    return 'Skipped $count custom addon(s) that are not reinstallable from a manifest';
+  }
+
+  @override
   String manifestImportWarnings(String warnings) {
     return 'Warnings: $warnings';
   }
@@ -751,6 +756,117 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addonsTabCollections => 'Collections';
+
+  @override
+  String get addonsTabCustom => 'Custom';
+
+  @override
+  String get addonsCustomRepoTitle => 'From a repository';
+
+  @override
+  String get addonsCustomRepoUrl => 'Repository URL';
+
+  @override
+  String get addonsCustomRepoUrlHint => 'https://github.com/owner/repo';
+
+  @override
+  String get addonsCustomRepoRef => 'Branch / ref';
+
+  @override
+  String get addonsCustomRepoRefHint => 'main';
+
+  @override
+  String addonsCustomRepoResolved(String url) {
+    return 'Archive: $url';
+  }
+
+  @override
+  String get addonsCustomInvalidUrl =>
+      'Enter a valid http(s) repository or archive URL';
+
+  @override
+  String get addonsCustomUnsupportedScheme => 'Only http(s) URLs are supported';
+
+  @override
+  String get addonsCustomUnsupportedHost =>
+      'Unsupported host; paste a direct archive URL';
+
+  @override
+  String get addonsCustomMissingRef => 'Enter a branch, tag or ref';
+
+  @override
+  String get addonsCustomArchiveTitle => 'From an archive file';
+
+  @override
+  String get addonsCustomArchiveField => 'Archive file';
+
+  @override
+  String get addonsCustomArchiveHint => 'Choose a .zip or .tar.gz file';
+
+  @override
+  String get addonsCustomArchiveChoose => 'Choose file…';
+
+  @override
+  String get addonsCustomArchiveRequired => 'Choose an archive file first';
+
+  @override
+  String get addonsCustomDirectoryTitle => 'From a local folder (development)';
+
+  @override
+  String get addonsCustomDirectoryField => 'Local folder';
+
+  @override
+  String get addonsCustomDirectoryHint => 'Choose an addon working copy';
+
+  @override
+  String get addonsCustomDirectoryChoose => 'Choose folder…';
+
+  @override
+  String get addonsCustomDirectoryRequired => 'Choose a folder first';
+
+  @override
+  String get addonsCustomDirectoryWarning =>
+      'The folder is linked live: changes are picked up by FreeCAD immediately, and removing the addon deletes only the link.';
+
+  @override
+  String get addonsCustomInstalledTitle => 'Custom addons';
+
+  @override
+  String get addonsCustomEmptyTitle => 'No custom addons';
+
+  @override
+  String get addonsCustomEmptyMessage =>
+      'Install an addon from a repository, an archive file or a local folder.';
+
+  @override
+  String get addonsCustomSourceRepo => 'Repository';
+
+  @override
+  String get addonsCustomSourceArchive => 'Archive';
+
+  @override
+  String get addonsCustomSourceLink => 'Dev link';
+
+  @override
+  String get addonsCustomReinstall => 'Reinstall from file…';
+
+  @override
+  String get addonsCustomInstallInProfile => 'Install in another profile…';
+
+  @override
+  String addonsCustomInstallInProfileTitle(String name) {
+    return 'Install \"$name\" in another profile';
+  }
+
+  @override
+  String get addonsCustomAllProfiles =>
+      'This addon is already installed in every profile';
+
+  @override
+  String get addonsCustomReveal => 'Open source folder';
+
+  @override
+  String get addonsCustomRevealFailed => 'Could not open the folder';
 
   @override
   String get bundlesCreate => 'New collection';

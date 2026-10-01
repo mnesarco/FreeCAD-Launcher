@@ -62,6 +62,23 @@ void main() {
     expect(manifest.config['user.cfg'], contains('/home/ana/Macros/'));
   });
 
+  test('round-trips the addon source marker for custom installs', () {
+    final manifest = ProfileManifest(
+      profile: const ManifestProfileInfo(name: 'Custom'),
+      addons: const [
+        ManifestAddon(id: 'DevAddon', source: 'symlink'),
+        ManifestAddon(id: 'RepoAddon', source: 'repo', gitRef: 'main'),
+      ],
+    );
+
+    final decoded = decodeProfileManifest(encodeProfileManifest(manifest));
+    final addons = decoded.valueOrNull!.addons;
+
+    expect(addons.first.source, 'symlink');
+    expect(addons.last.source, 'repo');
+    expect(addons.last.gitRef, 'main');
+  });
+
   test('encoded JSON follows the documented schema', () {
     final data = jsonDecode(encodeProfileManifest(sampleManifest())) as Map<String, dynamic>;
 

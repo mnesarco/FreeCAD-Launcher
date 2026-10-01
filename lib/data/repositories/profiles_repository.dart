@@ -353,6 +353,8 @@ class ProfilesRepository {
           updatedAt: addon.updatedAt,
           catalogLastUpdate: addon.catalogLastUpdate,
           sourceUrl: addon.sourceUrl,
+          source: addon.source,
+          sourcePath: addon.sourcePath,
           hasRequirements: addon.hasRequirements,
         ),
       );

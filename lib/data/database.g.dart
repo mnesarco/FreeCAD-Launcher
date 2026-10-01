@@ -1780,6 +1780,27 @@ class $InstalledAddonsTable extends InstalledAddons
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('catalog'),
+  );
+  static const VerificationMeta _sourcePathMeta = const VerificationMeta(
+    'sourcePath',
+  );
+  @override
+  late final GeneratedColumn<String> sourcePath = GeneratedColumn<String>(
+    'source_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _hasRequirementsMeta = const VerificationMeta(
     'hasRequirements',
   );
@@ -1818,6 +1839,8 @@ class $InstalledAddonsTable extends InstalledAddons
     updatedAt,
     catalogLastUpdate,
     sourceUrl,
+    source,
+    sourcePath,
     hasRequirements,
     pinnedAt,
   ];
@@ -1911,6 +1934,18 @@ class $InstalledAddonsTable extends InstalledAddons
         sourceUrl.isAcceptableOrUnknown(data['source_url']!, _sourceUrlMeta),
       );
     }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
+    if (data.containsKey('source_path')) {
+      context.handle(
+        _sourcePathMeta,
+        sourcePath.isAcceptableOrUnknown(data['source_path']!, _sourcePathMeta),
+      );
+    }
     if (data.containsKey('has_requirements')) {
       context.handle(
         _hasRequirementsMeta,
@@ -1979,6 +2014,14 @@ class $InstalledAddonsTable extends InstalledAddons
         DriftSqlType.string,
         data['${effectivePrefix}source_url'],
       ),
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+      sourcePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_path'],
+      ),
       hasRequirements: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}has_requirements'],
@@ -2007,6 +2050,8 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
   final DateTime updatedAt;
   final DateTime? catalogLastUpdate;
   final String? sourceUrl;
+  final String source;
+  final String? sourcePath;
   final bool hasRequirements;
   final DateTime? pinnedAt;
   const InstalledAddon({
@@ -2020,6 +2065,8 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
     required this.updatedAt,
     this.catalogLastUpdate,
     this.sourceUrl,
+    required this.source,
+    this.sourcePath,
     required this.hasRequirements,
     this.pinnedAt,
   });
@@ -2043,6 +2090,10 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
     }
     if (!nullToAbsent || sourceUrl != null) {
       map['source_url'] = Variable<String>(sourceUrl);
+    }
+    map['source'] = Variable<String>(source);
+    if (!nullToAbsent || sourcePath != null) {
+      map['source_path'] = Variable<String>(sourcePath);
     }
     map['has_requirements'] = Variable<bool>(hasRequirements);
     if (!nullToAbsent || pinnedAt != null) {
@@ -2071,6 +2122,10 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
       sourceUrl: sourceUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(sourceUrl),
+      source: Value(source),
+      sourcePath: sourcePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourcePath),
       hasRequirements: Value(hasRequirements),
       pinnedAt: pinnedAt == null && nullToAbsent
           ? const Value.absent()
@@ -2096,6 +2151,8 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
         json['catalogLastUpdate'],
       ),
       sourceUrl: serializer.fromJson<String?>(json['sourceUrl']),
+      source: serializer.fromJson<String>(json['source']),
+      sourcePath: serializer.fromJson<String?>(json['sourcePath']),
       hasRequirements: serializer.fromJson<bool>(json['hasRequirements']),
       pinnedAt: serializer.fromJson<DateTime?>(json['pinnedAt']),
     );
@@ -2114,6 +2171,8 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'catalogLastUpdate': serializer.toJson<DateTime?>(catalogLastUpdate),
       'sourceUrl': serializer.toJson<String?>(sourceUrl),
+      'source': serializer.toJson<String>(source),
+      'sourcePath': serializer.toJson<String?>(sourcePath),
       'hasRequirements': serializer.toJson<bool>(hasRequirements),
       'pinnedAt': serializer.toJson<DateTime?>(pinnedAt),
     };
@@ -2130,6 +2189,8 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
     DateTime? updatedAt,
     Value<DateTime?> catalogLastUpdate = const Value.absent(),
     Value<String?> sourceUrl = const Value.absent(),
+    String? source,
+    Value<String?> sourcePath = const Value.absent(),
     bool? hasRequirements,
     Value<DateTime?> pinnedAt = const Value.absent(),
   }) => InstalledAddon(
@@ -2145,6 +2206,8 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
         ? catalogLastUpdate.value
         : this.catalogLastUpdate,
     sourceUrl: sourceUrl.present ? sourceUrl.value : this.sourceUrl,
+    source: source ?? this.source,
+    sourcePath: sourcePath.present ? sourcePath.value : this.sourcePath,
     hasRequirements: hasRequirements ?? this.hasRequirements,
     pinnedAt: pinnedAt.present ? pinnedAt.value : this.pinnedAt,
   );
@@ -2166,6 +2229,10 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
           ? data.catalogLastUpdate.value
           : this.catalogLastUpdate,
       sourceUrl: data.sourceUrl.present ? data.sourceUrl.value : this.sourceUrl,
+      source: data.source.present ? data.source.value : this.source,
+      sourcePath: data.sourcePath.present
+          ? data.sourcePath.value
+          : this.sourcePath,
       hasRequirements: data.hasRequirements.present
           ? data.hasRequirements.value
           : this.hasRequirements,
@@ -2186,6 +2253,8 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
           ..write('updatedAt: $updatedAt, ')
           ..write('catalogLastUpdate: $catalogLastUpdate, ')
           ..write('sourceUrl: $sourceUrl, ')
+          ..write('source: $source, ')
+          ..write('sourcePath: $sourcePath, ')
           ..write('hasRequirements: $hasRequirements, ')
           ..write('pinnedAt: $pinnedAt')
           ..write(')'))
@@ -2204,6 +2273,8 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
     updatedAt,
     catalogLastUpdate,
     sourceUrl,
+    source,
+    sourcePath,
     hasRequirements,
     pinnedAt,
   );
@@ -2221,6 +2292,8 @@ class InstalledAddon extends DataClass implements Insertable<InstalledAddon> {
           other.updatedAt == this.updatedAt &&
           other.catalogLastUpdate == this.catalogLastUpdate &&
           other.sourceUrl == this.sourceUrl &&
+          other.source == this.source &&
+          other.sourcePath == this.sourcePath &&
           other.hasRequirements == this.hasRequirements &&
           other.pinnedAt == this.pinnedAt);
 }
@@ -2236,6 +2309,8 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
   final Value<DateTime> updatedAt;
   final Value<DateTime?> catalogLastUpdate;
   final Value<String?> sourceUrl;
+  final Value<String> source;
+  final Value<String?> sourcePath;
   final Value<bool> hasRequirements;
   final Value<DateTime?> pinnedAt;
   final Value<int> rowid;
@@ -2250,6 +2325,8 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
     this.updatedAt = const Value.absent(),
     this.catalogLastUpdate = const Value.absent(),
     this.sourceUrl = const Value.absent(),
+    this.source = const Value.absent(),
+    this.sourcePath = const Value.absent(),
     this.hasRequirements = const Value.absent(),
     this.pinnedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2265,6 +2342,8 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
     required DateTime updatedAt,
     this.catalogLastUpdate = const Value.absent(),
     this.sourceUrl = const Value.absent(),
+    this.source = const Value.absent(),
+    this.sourcePath = const Value.absent(),
     this.hasRequirements = const Value.absent(),
     this.pinnedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2285,6 +2364,8 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? catalogLastUpdate,
     Expression<String>? sourceUrl,
+    Expression<String>? source,
+    Expression<String>? sourcePath,
     Expression<bool>? hasRequirements,
     Expression<DateTime>? pinnedAt,
     Expression<int>? rowid,
@@ -2300,6 +2381,8 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
       if (updatedAt != null) 'updated_at': updatedAt,
       if (catalogLastUpdate != null) 'catalog_last_update': catalogLastUpdate,
       if (sourceUrl != null) 'source_url': sourceUrl,
+      if (source != null) 'source': source,
+      if (sourcePath != null) 'source_path': sourcePath,
       if (hasRequirements != null) 'has_requirements': hasRequirements,
       if (pinnedAt != null) 'pinned_at': pinnedAt,
       if (rowid != null) 'rowid': rowid,
@@ -2317,6 +2400,8 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
     Value<DateTime>? updatedAt,
     Value<DateTime?>? catalogLastUpdate,
     Value<String?>? sourceUrl,
+    Value<String>? source,
+    Value<String?>? sourcePath,
     Value<bool>? hasRequirements,
     Value<DateTime?>? pinnedAt,
     Value<int>? rowid,
@@ -2332,6 +2417,8 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
       updatedAt: updatedAt ?? this.updatedAt,
       catalogLastUpdate: catalogLastUpdate ?? this.catalogLastUpdate,
       sourceUrl: sourceUrl ?? this.sourceUrl,
+      source: source ?? this.source,
+      sourcePath: sourcePath ?? this.sourcePath,
       hasRequirements: hasRequirements ?? this.hasRequirements,
       pinnedAt: pinnedAt ?? this.pinnedAt,
       rowid: rowid ?? this.rowid,
@@ -2371,6 +2458,12 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
     if (sourceUrl.present) {
       map['source_url'] = Variable<String>(sourceUrl.value);
     }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (sourcePath.present) {
+      map['source_path'] = Variable<String>(sourcePath.value);
+    }
     if (hasRequirements.present) {
       map['has_requirements'] = Variable<bool>(hasRequirements.value);
     }
@@ -2396,6 +2489,8 @@ class InstalledAddonsCompanion extends UpdateCompanion<InstalledAddon> {
           ..write('updatedAt: $updatedAt, ')
           ..write('catalogLastUpdate: $catalogLastUpdate, ')
           ..write('sourceUrl: $sourceUrl, ')
+          ..write('source: $source, ')
+          ..write('sourcePath: $sourcePath, ')
           ..write('hasRequirements: $hasRequirements, ')
           ..write('pinnedAt: $pinnedAt, ')
           ..write('rowid: $rowid')
@@ -6122,6 +6217,8 @@ typedef $$InstalledAddonsTableCreateCompanionBuilder =
       required DateTime updatedAt,
       Value<DateTime?> catalogLastUpdate,
       Value<String?> sourceUrl,
+      Value<String> source,
+      Value<String?> sourcePath,
       Value<bool> hasRequirements,
       Value<DateTime?> pinnedAt,
       Value<int> rowid,
@@ -6138,6 +6235,8 @@ typedef $$InstalledAddonsTableUpdateCompanionBuilder =
       Value<DateTime> updatedAt,
       Value<DateTime?> catalogLastUpdate,
       Value<String?> sourceUrl,
+      Value<String> source,
+      Value<String?> sourcePath,
       Value<bool> hasRequirements,
       Value<DateTime?> pinnedAt,
       Value<int> rowid,
@@ -6221,6 +6320,16 @@ class $$InstalledAddonsTableFilterComposer
 
   ColumnFilters<String> get sourceUrl => $composableBuilder(
     column: $table.sourceUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourcePath => $composableBuilder(
+    column: $table.sourcePath,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6312,6 +6421,16 @@ class $$InstalledAddonsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourcePath => $composableBuilder(
+    column: $table.sourcePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get hasRequirements => $composableBuilder(
     column: $table.hasRequirements,
     builder: (column) => ColumnOrderings(column),
@@ -6388,6 +6507,14 @@ class $$InstalledAddonsTableAnnotationComposer
   GeneratedColumn<String> get sourceUrl =>
       $composableBuilder(column: $table.sourceUrl, builder: (column) => column);
 
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get sourcePath => $composableBuilder(
+    column: $table.sourcePath,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get hasRequirements => $composableBuilder(
     column: $table.hasRequirements,
     builder: (column) => column,
@@ -6460,6 +6587,8 @@ class $$InstalledAddonsTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> catalogLastUpdate = const Value.absent(),
                 Value<String?> sourceUrl = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<String?> sourcePath = const Value.absent(),
                 Value<bool> hasRequirements = const Value.absent(),
                 Value<DateTime?> pinnedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -6474,6 +6603,8 @@ class $$InstalledAddonsTableTableManager
                 updatedAt: updatedAt,
                 catalogLastUpdate: catalogLastUpdate,
                 sourceUrl: sourceUrl,
+                source: source,
+                sourcePath: sourcePath,
                 hasRequirements: hasRequirements,
                 pinnedAt: pinnedAt,
                 rowid: rowid,
@@ -6490,6 +6621,8 @@ class $$InstalledAddonsTableTableManager
                 required DateTime updatedAt,
                 Value<DateTime?> catalogLastUpdate = const Value.absent(),
                 Value<String?> sourceUrl = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<String?> sourcePath = const Value.absent(),
                 Value<bool> hasRequirements = const Value.absent(),
                 Value<DateTime?> pinnedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -6504,6 +6637,8 @@ class $$InstalledAddonsTableTableManager
                 updatedAt: updatedAt,
                 catalogLastUpdate: catalogLastUpdate,
                 sourceUrl: sourceUrl,
+                source: source,
+                sourcePath: sourcePath,
                 hasRequirements: hasRequirements,
                 pinnedAt: pinnedAt,
                 rowid: rowid,

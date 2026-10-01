@@ -219,6 +219,12 @@
     }
   },
   "manifestImportFailed": "Could not import the profile",
+  "manifestImportCustomSkipped": "Skipped {count} custom addon(s) that are not reinstallable from a manifest",
+  "@manifestImportCustomSkipped": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "manifestImportWarnings": "Warnings: {warnings}",
   "@manifestImportWarnings": {
     "placeholders": {
@@ -311,6 +317,50 @@
   "addonsEmptyMessage": "Browse the official catalog and install workbenches into a profile.",
   "addonsTabCatalog": "Catalog",
   "addonsTabCollections": "Collections",
+  "addonsTabCustom": "Custom",
+  "addonsCustomRepoTitle": "From a repository",
+  "addonsCustomRepoUrl": "Repository URL",
+  "addonsCustomRepoUrlHint": "https://github.com/owner/repo",
+  "addonsCustomRepoRef": "Branch / ref",
+  "addonsCustomRepoRefHint": "main",
+  "addonsCustomRepoResolved": "Archive: {url}",
+  "@addonsCustomRepoResolved": {
+    "placeholders": {
+      "url": {"type": "String"}
+    }
+  },
+  "addonsCustomInvalidUrl": "Enter a valid http(s) repository or archive URL",
+  "addonsCustomUnsupportedScheme": "Only http(s) URLs are supported",
+  "addonsCustomUnsupportedHost": "Unsupported host; paste a direct archive URL",
+  "addonsCustomMissingRef": "Enter a branch, tag or ref",
+  "addonsCustomArchiveTitle": "From an archive file",
+  "addonsCustomArchiveField": "Archive file",
+  "addonsCustomArchiveHint": "Choose a .zip or .tar.gz file",
+  "addonsCustomArchiveChoose": "Choose file…",
+  "addonsCustomArchiveRequired": "Choose an archive file first",
+  "addonsCustomDirectoryTitle": "From a local folder (development)",
+  "addonsCustomDirectoryField": "Local folder",
+  "addonsCustomDirectoryHint": "Choose an addon working copy",
+  "addonsCustomDirectoryChoose": "Choose folder…",
+  "addonsCustomDirectoryRequired": "Choose a folder first",
+  "addonsCustomDirectoryWarning": "The folder is linked live: changes are picked up by FreeCAD immediately, and removing the addon deletes only the link.",
+  "addonsCustomInstalledTitle": "Custom addons",
+  "addonsCustomEmptyTitle": "No custom addons",
+  "addonsCustomEmptyMessage": "Install an addon from a repository, an archive file or a local folder.",
+  "addonsCustomSourceRepo": "Repository",
+  "addonsCustomSourceArchive": "Archive",
+  "addonsCustomSourceLink": "Dev link",
+  "addonsCustomReinstall": "Reinstall from file…",
+  "addonsCustomInstallInProfile": "Install in another profile…",
+  "addonsCustomInstallInProfileTitle": "Install \"{name}\" in another profile",
+  "@addonsCustomInstallInProfileTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "addonsCustomAllProfiles": "This addon is already installed in every profile",
+  "addonsCustomReveal": "Open source folder",
+  "addonsCustomRevealFailed": "Could not open the folder",
   "bundlesCreate": "New collection",
   "bundlesEmptyTitle": "No collections yet",
   "bundlesEmptyMessage": "Create a collection to save a set of addons and apply it to a profile.",

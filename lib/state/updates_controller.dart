@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:freecad_launcher/data/daos/settings_dao.dart';
+import 'package:freecad_launcher/domain/addons/addon_source.dart';
 import 'package:freecad_launcher/domain/addons/addon_update.dart';
 import 'package:freecad_launcher/domain/addons/addon_update_rules.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
@@ -60,6 +61,9 @@ class UpdatesController {
     final result = <AddonUpdate>[];
     for (final installed in _addons.installedAddons.value) {
       if (installed.pinnedAt != null) {
+        continue;
+      }
+      if (!addonSourceFromStorage(installed.source).isCatalog) {
         continue;
       }
       final addon = _addons.byId(installed.addonId);
