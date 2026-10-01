@@ -15,6 +15,7 @@ import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/profiles/launch_plan.dart';
 import 'package:freecad_launcher/platform/config_snapshots.dart';
+import 'package:freecad_launcher/platform/directory_size.dart';
 import 'package:freecad_launcher/platform/freecad_preferences.dart';
 import 'package:freecad_launcher/platform/launch.dart';
 import 'package:freecad_launcher/platform/paths.dart';
@@ -146,7 +147,7 @@ class ProfilesController {
     final profiles = await _repository.getAll();
     final sizes = <String, int>{};
     for (final profile in profiles) {
-      sizes[profile.id] = await _directorySize(_paths.profilePaths(profile.id).root);
+      sizes[profile.id] = await directorySize(_paths.profilePaths(profile.id).root);
     }
     profileSizes.value = sizes;
   }
@@ -157,28 +158,6 @@ class ProfilesController {
       counts[id] = (counts[id] ?? 0) + 1;
     }
     return counts;
-  }
-
-  Future<int> _directorySize(String root) async {
-    final directory = Directory(root);
-    if (!directory.existsSync()) {
-      return 0;
-    }
-    var total = 0;
-    try {
-      await for (final entity in directory.list(recursive: true, followLinks: false)) {
-        if (entity is File) {
-          try {
-            total += await entity.length();
-          } on FileSystemException {
-            // Files can disappear while walking; skip them.
-          }
-        }
-      }
-    } on FileSystemException {
-      // The profile can be deleted while walking; keep the partial total.
-    }
-    return total;
   }
 
   bool isRunning(String profileId) => runningProfiles.value.contains(profileId);

@@ -112,10 +112,10 @@ failures until the CI job runs green.
 - [x] Rebuild the Windows artifact after R-14/D-095 (colon build-id directories were illegal on
       Windows and broke the first install attempt): Release run 36937972986 green, zip downloaded
       and checksum-verified locally
-- [ ] Rebuild the artifact again after R-15/D-096 (the R-14 retest failed inside 7zr with
-      `CreateProcessW` ERROR_INVALID_PARAMETER from an empty environment block) and retest the
-      Windows smoke matrix from the `.7z` install row; install failures now write
-      `logs/install-<id>-<stamp>.log` (R-16)
+- [ ] Rebuild the artifact after R-15/D-096 + R-17 (the retests failed inside 7zr with
+      `CreateProcessW` ERROR_INVALID_PARAMETER, then in the recursive size walk on a >260-char
+      FreeCAD path) and retest the Windows smoke matrix from the `.7z` install row; install
+      failures now write `logs/install-<id>-<stamp>.log` (R-16)
 - [x] Record the pass in `VERIFICATION.md` §2 (M8 checklist) and §4 (note)
 - [ ] Close OQ-1 in `docs/spec/09-open-questions.md` (Windows side already D-091; macOS remains);
       update spec 07 §2 artifact table when the release lands

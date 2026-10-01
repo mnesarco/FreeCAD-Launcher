@@ -274,7 +274,9 @@ addons/pip/macros, CLI wrapper, reveal) have not been exercised on Windows yet. 
 (`safePathSegment`), retest with a rebuilt artifact pending. The retest then reached 7zr and
 failed with ERROR_INVALID_PARAMETER from `CreateProcessW` (Dart builds a malformed empty
 environment block); fixed by R-15/D-096. Build installs now write `logs/install-<id>-<stamp>.log`
-with the error and stack trace (R-16); retest pending.
+with the error and stack trace (R-16); retest pending. The next retest got through 7zr and failed
+in the recursive size walk (`PathNotFoundException`, FreeCAD path over the 260-char Windows
+limit); fixed by R-17 (`directorySize` skips unreadable subtrees); retest pending.
 
 ## 5. When something fails
 

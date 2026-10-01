@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/platform/archive_extract.dart';
+import 'package:freecad_launcher/platform/directory_size.dart';
 import 'package:freecad_launcher/platform/dmg_extractor.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/process.dart';
@@ -109,7 +110,7 @@ class BuildInstaller {
         executablePath: finalExecutable,
         sizeBytes: request.referenceInPlace
             ? await File(request.archivePath).length()
-            : await _directorySize(moved.path),
+            : await directorySize(moved.path),
         pythonVersion: python?.detectedVersion,
         pythonPath: python?.python?.executablePath,
       );
@@ -209,16 +210,6 @@ class BuildInstaller {
       currentLevel = nextLevel;
     }
     return null;
-  }
-
-  Future<int> _directorySize(String root) async {
-    var total = 0;
-    await for (final entity in Directory(root).list(recursive: true, followLinks: false)) {
-      if (entity is File) {
-        total += await entity.length();
-      }
-    }
-    return total;
   }
 
   Future<PythonDetection?> _detectPython(
