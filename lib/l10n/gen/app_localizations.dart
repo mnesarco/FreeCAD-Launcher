@@ -3124,6 +3124,30 @@ abstract class AppLocalizations {
   /// **'Could not change the pin'**
   String get addonsPinFailed;
 
+  /// No description provided for @addonsDisabledBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get addonsDisabledBadge;
+
+  /// No description provided for @addonsDisable.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable addon (FreeCAD will not load it)'**
+  String get addonsDisable;
+
+  /// No description provided for @addonsEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable addon'**
+  String get addonsEnable;
+
+  /// No description provided for @addonsToggleDisabledFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change the addon state'**
+  String get addonsToggleDisabledFailed;
+
   /// No description provided for @addonsUpdateBadge.
   ///
   /// In en, this message translates to:

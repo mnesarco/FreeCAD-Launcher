@@ -99,6 +99,9 @@ Acceptance (v0.1): after wrapper installation, a new terminal can run
 - FR-4.12 **[v0.2]** Install an addon by linking a local directory as a live development link;
   removing the addon deletes only the link (D-087). No copy fallback: the source must be a
   directory and symlink creation failures are reported.
+- FR-4.13 **[v0.2]** Enable/disable an installed addon **per profile** by toggling the FreeCAD
+  `ADDON_DISABLED` marker in the addon root (D-089). Disabled addons stay installed, remain
+  updatable/pinnable, and are not loaded by FreeCAD.
 
 Acceptance (v0.1): installing a workbench adds exactly one directory under `Mod/`, survives
 restart, and is usable inside FreeCAD.

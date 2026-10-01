@@ -1139,6 +1139,75 @@ void main() {
     });
   });
 
+  group('addon disabled state', () {
+    setUp(() async {
+      await db.buildsDao.save(sampleBuild());
+      await db.profilesDao.save(sampleProfile());
+    });
+
+    String modDirectory() =>
+        p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'A2plus');
+
+    test('disables and enables an installed addon with the marker file', () async {
+      Directory(modDirectory()).createSync(recursive: true);
+      await db.installedAddonsDao.save(sampleAddon(addonId: 'A2plus'));
+      final subject = controller();
+      subject.start();
+      await pumpEventQueue();
+
+      final marker = File(p.join(modDirectory(), 'ADDON_DISABLED'));
+      expect(subject.isAddonDisabled('profile-1', 'A2plus'), isFalse);
+
+      final disabled = await subject.setAddonDisabled(
+        addonId: 'A2plus',
+        profileId: 'profile-1',
+        disabled: true,
+      );
+      expect(disabled.isOk, isTrue);
+      expect(marker.existsSync(), isTrue);
+      expect(subject.isAddonDisabled('profile-1', 'A2plus'), isTrue);
+
+      final enabled = await subject.setAddonDisabled(
+        addonId: 'A2plus',
+        profileId: 'profile-1',
+        disabled: false,
+      );
+      expect(enabled.isOk, isTrue);
+      expect(marker.existsSync(), isFalse);
+      expect(subject.isAddonDisabled('profile-1', 'A2plus'), isFalse);
+      subject.dispose();
+    });
+
+    test('detects a marker created outside the app on refresh', () async {
+      Directory(modDirectory()).createSync(recursive: true);
+      await db.installedAddonsDao.save(sampleAddon(addonId: 'A2plus'));
+      final subject = controller();
+      subject.start();
+      await pumpEventQueue();
+
+      File(p.join(modDirectory(), 'ADDON_DISABLED')).writeAsStringSync('');
+      await subject.refreshDisabledState();
+
+      expect(subject.isAddonDisabled('profile-1', 'A2plus'), isTrue);
+      subject.dispose();
+    });
+
+    test('reports when the addon files are missing', () async {
+      await db.installedAddonsDao.save(sampleAddon(addonId: 'A2plus'));
+      final subject = controller();
+
+      final result = await subject.setAddonDisabled(
+        addonId: 'A2plus',
+        profileId: 'profile-1',
+        disabled: true,
+      );
+
+      expect(result.isErr, isTrue);
+      expect('${result.errorOrNull}', contains('files not found'));
+      subject.dispose();
+    });
+  });
+
 }
 
 List<int> catalogZip(Map<String, String> files) {

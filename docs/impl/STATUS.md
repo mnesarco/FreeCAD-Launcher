@@ -16,8 +16,8 @@
   `B-10` custom addon installs (plan ready in `PLAN-B10-custom-addons.md`).
 - **Blockers**:
   - M8-03/M8-04 need Windows/macOS machines (OQ-1); nothing else is blocked.
-- **In progress**: none. `B-10a`..`B-10f` (custom addon installs) are complete with code,
-  tests, docs and live verification — **uncommitted pending review**.
+- **In progress**: `B-15a` (addon enable/disable) implemented with tests and a live check —
+  **uncommitted**; `B-10a`..`B-10f` are committed (`5a372ab`).
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
     diagnostics, CI workflow, test harness).
@@ -436,6 +436,12 @@
     (FR-4.8), and dev symlink (live, link-only remove); backlog `B-10` expanded into
     `B-10a..B-10e`. Owner choices captured; decisions D-085..D-088 to be recorded at kickoff.
     No code changes.
+  - Addon enable/disable (2026-10-01, R23): Profile → Addons rows gained a switch that
+    writes/removes FreeCAD's `ADDON_DISABLED` marker (D-089, B-15a); state is derived from disk
+    (no schema change), disabled rows show a badge and dimmed title, and the marker is also
+    visible to FreeCAD's own Addon Manager. Live check on Development: File Explorer (managed)
+    and Nxt (dev link) toggled on/off with the expected marker paths. 586 tests green, analyze
+    clean. **Uncommitted.**
   - B-10 implementation (2026-10-01, R22): schema v6 `installed_addons.source`/`sourcePath`
     (live v5→v6 migration verified), domain helpers (package.xml parser extraction, addon id
     rules, GitHub/GitLab/Gitea archive URL builder), `AddonInstaller.prepare/commit` +
@@ -556,6 +562,7 @@
 | 2026-10-01 | R21 | B-10 planning: custom addon installs (repo URL + branch, local zip/tar, dev symlink) written up with owner-confirmed choices; B-10 expanded into B-10a..B-10e; no code | B-10 | `docs/impl/PLAN-B10-custom-addons.md`, `docs/impl/TASKS.md`, `docs/impl/STATUS.md` |
 | 2026-10-01 | R22 | B-10 implementation (uncommitted pending review): schema v6 source/sourcePath, domain helpers, installer prepare/commit + linkDirectory, custom install/update/reinstall + conflicts + pre-placement requirements consent, Addons Custom tab with install-in-another-profile action, manifest source skip, D-085..D-088, tests, live Nxt repo/zip/symlink installs and cross-profile copy verified | B-10a..B-10f | `lib/domain/addons/{addon_source,package_xml,addon_id_rules,repository_archive}.dart`, `lib/platform/{addon_installer,addon_manifest_reader}.dart`, `lib/state/{addons_controller,updates_controller,profile_manifest_controller}.dart`, `lib/ui/addons/{addons_view,custom_addons_view}.dart`, `lib/ui/profiles/profile_manifest_dialogs.dart`, `lib/{data,domain,ui,l10n}/**`, `test/**`, `docs/{spec/02-requirements,spec/03-ux,spec/05-data-model,spec/06-integrations,user-guide}.md`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md` |
 
+| 2026-10-01 | R23 | Addon enable/disable per profile (B-15a, D-089): `ADDON_DISABLED` toggle on Profile → Addons rows, state derived from disk, disabled badge/dim; controller + widget tests and a live managed/dev-link check | B-15a | `lib/state/addons_controller.dart`, `lib/ui/profiles/profile_detail_view.dart`, `lib/l10n/app_en.arb`, `lib/l10n/gen/**`, `test/state/addons_controller_test.dart`, `test/ui/profiles_view_test.dart`, `docs/{spec/02-requirements,spec/03-ux,user-guide}.md`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md` |
 ## Standing notes for the next agent
 
 - The prototype is frozen at tag `prototype-final`; do not resurrect its code or schema.

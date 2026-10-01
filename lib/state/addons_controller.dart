@@ -75,6 +75,7 @@ class AddonsController {
   final freecadFilter = signal<String?>(null);
   final installedCounts = signal<Map<String, int>>({});
   final installedAddons = signal<List<InstalledAddon>>([]);
+  final disabledAddons = signal<Map<String, Set<String>>>({});
   final installing = signal<Set<String>>({});
   final installErrors = signal<Map<String, AppError>>({});
   final requirementsInstalling = signal<Set<String>>({});
@@ -126,6 +127,7 @@ class AddonsController {
         counts[row.addonId] = (counts[row.addonId] ?? 0) + 1;
       }
       installedCounts.value = counts;
+      unawaited(refreshDisabledState(rows));
     });
     _buildsSubscription ??= _database.buildsDao.watchAll().listen((builds) {
       final versions = <String>{};
@@ -304,6 +306,78 @@ class AddonsController {
     } on Object catch (error) {
       return Err(AppError.from(error, retryable: true));
     }
+  }
+
+  static const String disabledMarkerName = 'ADDON_DISABLED';
+
+  bool isAddonDisabled(String profileId, String addonId) {
+    return disabledAddons.value[profileId]?.contains(addonId) ?? false;
+  }
+
+  Future<void> refreshDisabledState([List<InstalledAddon>? rows]) async {
+    final current = rows ?? installedAddons.value;
+    final result = <String, Set<String>>{};
+    for (final row in current) {
+      final marker = File(
+        p.join(_modPath(row.profileId, row.addonId), disabledMarkerName),
+      );
+      if (marker.existsSync()) {
+        (result[row.profileId] ??= <String>{}).add(row.addonId);
+      }
+    }
+    disabledAddons.value = result;
+  }
+
+  Future<Result<void>> setAddonDisabled({
+    required String addonId,
+    required String profileId,
+    required bool disabled,
+  }) async {
+    final installed = await _database.installedAddonsDao.getByAddon(profileId, addonId);
+    if (installed == null) {
+      return const Err(AppError(message: 'Addon is not installed in this profile'));
+    }
+    final directory = Directory(_modPath(profileId, addonId));
+    if (!directory.existsSync()) {
+      return const Err(AppError(message: 'Addon files not found in this profile'));
+    }
+    try {
+      final marker = File(p.join(directory.path, disabledMarkerName));
+      if (disabled) {
+        if (!marker.existsSync()) {
+          marker.writeAsStringSync('Disabled by FreeCAD Launcher\n');
+        }
+      } else if (marker.existsSync()) {
+        marker.deleteSync();
+      }
+      _applyDisabledState(profileId, addonId, disabled);
+      return const Ok(null);
+    } on Object catch (error) {
+      _applyDisabledState(
+        profileId,
+        addonId,
+        File(p.join(directory.path, disabledMarkerName)).existsSync(),
+      );
+      return Err(AppError.from(error, retryable: true));
+    }
+  }
+
+  void _applyDisabledState(String profileId, String addonId, bool disabled) {
+    final current = {
+      for (final entry in disabledAddons.value.entries) entry.key: {...entry.value},
+    };
+    final ids = current[profileId] ?? <String>{};
+    if (disabled) {
+      ids.add(addonId);
+    } else {
+      ids.remove(addonId);
+    }
+    if (ids.isEmpty) {
+      current.remove(profileId);
+    } else {
+      current[profileId] = ids;
+    }
+    disabledAddons.value = current;
   }
 
   bool isUpdateAvailable(String profileId, String addonId) {

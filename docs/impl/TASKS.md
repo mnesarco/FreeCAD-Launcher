@@ -205,6 +205,7 @@ distribution decision recorded (OQ-1).
 | B-12 | i18n translations (if OQ-6 = start later) | NFR-9 | v1.0 |
 | B-13 | Fully isolated private-build profiles (OQ-8) | spec 09 | post-v1.0 |
 | B-14 | CalVer transition readiness (D-078, FEP-0003): stable tags `YY.N` (three releases/year, `26.3` branched 2026-09-30) and monthly patches `YY.N.P`; derive the current stable line from the catalog for the stable/legacy split; ignore RC tags (`26.3rc1`) and dedupe `26.3` vs `26.3.0`; ordering tests + spec 06 §1.3/§1.5. Needed before 27.1 branches (2027-01-31) makes 26.3 legacy | FR-1.1, FR-1.7, FR-1.8 | v0.2 |
+| B-15 | Addon enable/disable per profile via the FreeCAD `ADDON_DISABLED` marker (switch on Profile → Addons rows; state derived from disk) | FR-4.13 | v0.2 |
 
 ### B-01 breakdown — weekly builds (planned, v0.2; D-077)
 
@@ -240,6 +241,12 @@ became D-085..D-088 at kickoff.
 | B-10d | Dev symlink install: `installFromDirectory` (hard-fail without symlink support), link-only remove, live-edit warning, Custom tab folder form + Reveal action | Tests prove remove deletes only the link and target survives; manual live-edit check in FreeCAD | B-10a | M | DONE |
 | B-10e | Verification + docs: real repo/zip/symlink installs in FreeCAD, spec 02/03/05/06, user guide, manifest skip-warning, VERIFICATION rows, decisions D-085..D-088 | Manual pass recorded in STATUS; analyze/tests green; limitations documented | B-10b, B-10c, B-10d | M | DONE |
 | B-10f | Install an already-installed custom addon into another profile: per-row action on the Custom tab with a target-profile picker (profiles that already have it are not offered), reusing the source (repo re-fetch, stored/repicked archive, second dev link) | Controller tests (repo/zip/symlink copy, duplicate blocked, catalog refused, missing archive) + widget tests; live copy verified | B-10b, B-10c, B-10d | S | DONE |
+
+### B-15 breakdown — addon enable/disable per profile (v0.2, D-089)
+
+| ID | Task | Done when | Deps | Effort | Status |
+|---|---|---|---|---|---|
+| B-15a | Toggle on Profile → Addons rows writing/removing `ADDON_DISABLED`; controller derives the disabled set from disk (`refreshDisabledState`, refreshed on the installed-addons stream and tab mount), no schema change; disabled badge/dimmed title | Controller tests (marker create/remove, externally created marker, missing files) + widget toggle test; live check; analyze/tests green | M4-11, D-089 | S | DONE |
 
 Implementation note (2026-10-01, R22): B-10a..B-10f complete but **uncommitted pending
 review** — schema v6 migration verified live; 574 tests green, analyze clean; real repo

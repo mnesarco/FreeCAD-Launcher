@@ -239,6 +239,7 @@ Record results in the `STATUS.md` session log (date, OS, FreeCAD version, result
 | Install addon from a local archive | ✅ 2026-10-01 — real `nxt.zip` installed (`Mod/nxt`, DB `source=zip` + `sourcePath`); removed afterwards (B-10c) | | |
 | Dev-link a local addon folder | ✅ 2026-10-01 — working copy symlinked as `Mod/FreeCAD-Nxt`, live edit visible through the link, remove deleted only the link (source intact) (B-10d) | | |
 | Install a custom addon into another profile | ✅ 2026-10-01 — copied the `FreeCAD-Nxt` dev link from Development into Production 1 via the Custom tab action (profile picker hides profiles that already have it); copy removed, original and source intact (B-10f) | | |
+| Enable/disable an installed addon | ✅ 2026-10-01 — real toggles on Development: File Explorer (managed) and Nxt (dev link) wrote/removed `ADDON_DISABLED` (managed marker under the profile `Mod/`, dev-link marker in the working copy); UI shows the Disabled badge and dimmed row (B-15a) | | |
 | Apply a bundle | ⚠ planner/runner/UI tests only (M5-02); no live apply | | |
 | Install + manage a macro | ✅ 2026-09-19 — real catalog install (M5-04/M5-05); Installed list live 2026-09-24 | | |
 | Export/import profile manifest | ✅ 2026-09-20 — codec/controller/UI + cross-OS test (M5-07) | | |

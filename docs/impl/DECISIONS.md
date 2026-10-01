@@ -1905,3 +1905,22 @@ Template:
   (documented limitation); manifest import cannot silently substitute a catalog addon for a
   custom one with the same id.
 - **Refs**: `docs/impl/PLAN-B10-custom-addons.md`, D-040, D-055, B-10b/B-10e
+
+### D-089 — Addon enable/disable uses the ADDON_DISABLED marker as the source of truth
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: FreeCAD treats an addon as disabled when a file named `ADDON_DISABLED` exists in
+  the addon root (Addon Manager convention). The launcher needs a per-profile toggle without
+  duplicating state or migrating the schema.
+- **Decision**: Profile → Addons rows get an enable/disable switch. Enabling/disabling
+  creates/deletes `Mod/<id>/ADDON_DISABLED`; the controller derives the disabled set from the
+  filesystem (`refreshDisabledState`, refreshed from the installed-addons stream and on tab
+  mount) and keeps no DB column. `setAddonDisabled` validates the row and directory and returns
+  a `Result`. The rule is uniform for catalog, repository, archive and dev-link addons; for a
+  dev link the marker is written through the symlink into the working copy, because FreeCAD
+  reads the resolved addon root.
+- **Consequences**: no schema change; markers created or removed outside the launcher are picked
+  up on refresh; disabled addons stay installed and remain updatable/pinnable; a dev-link working
+  copy gets an untracked `ADDON_DISABLED` file while disabled.
+- **Refs**: FR-4.13 (added), `docs/impl/TASKS.md` B-15a, `lib/state/addons_controller.dart`,
+  `lib/ui/profiles/profile_detail_view.dart`

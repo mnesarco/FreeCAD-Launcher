@@ -249,5 +249,49 @@ void main() {
       );
       expect(icon.base64Data, iconBase64);
     });
+
+    testWidgets('toggles an installed addon with the ADDON_DISABLED marker', (tester) async {
+      final profile = await services.profilesRepository.getByName('Dev');
+      final marker = File(
+        p.join(
+          AppPaths(dataRoot: tempDirectory.path).profilePaths(profile!.id).mod,
+          'A2plus',
+          'ADDON_DISABLED',
+        ),
+      );
+      marker.parent.createSync(recursive: true);
+
+      await pumpProfiles(tester);
+      await tester.tap(find.text('Dev'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      await tester.tap(find.text('Addons'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      final switchFinder = find.descendant(
+        of: find.widgetWithText(ListTile, 'A2plus'),
+        matching: find.byType(Switch),
+      );
+      expect(switchFinder, findsOneWidget);
+      expect(marker.existsSync(), isFalse);
+
+      await tester.tap(switchFinder);
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      expect(marker.existsSync(), isTrue);
+      expect(services.addons.isAddonDisabled(profile.id, 'A2plus'), isTrue);
+      expect(find.text('Disabled'), findsOneWidget);
+
+      await tester.tap(switchFinder);
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      expect(marker.existsSync(), isFalse);
+      expect(find.text('Disabled'), findsNothing);
+    });
   });
 }

@@ -170,6 +170,10 @@ with a notice).
   keep a backup under `<profile>/backups/addon-<id>-<timestamp>/`.
 - **Pin** an addon per profile to freeze it: pinned addons are skipped by update checks, batch
   updates and bundle apply in that profile. Other profiles are unaffected.
+- **Enable/disable**: the switch on each row writes or removes FreeCAD's `ADDON_DISABLED`
+  marker in the addon folder. Disabled addons stay installed (and updatable/pinnable) but are
+  not loaded by FreeCAD. For a dev link the marker is written into the working copy, since
+  FreeCAD reads the linked folder.
 - Installed addons show `Installed in N profile(s)` in the catalog; the profile Addons tab uses
   cached catalog icons offline.
 

@@ -318,7 +318,10 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
     super.didChangeDependencies();
     if (!_started) {
       _started = true;
-      unawaited(AppScope.of(context).addons.ensureCachedCatalog());
+      final addons = AppScope.of(context).addons;
+      addons.start();
+      unawaited(addons.ensureCachedCatalog());
+      unawaited(addons.refreshDisabledState());
     }
   }
 
@@ -344,6 +347,9 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
       for (final addon in AppScope.of(context).addons.addons.watch(context))
         addon.id: addon,
     };
+    final disabledIds =
+        AppScope.of(context).addons.disabledAddons.watch(context)[widget.profileId] ??
+        const <String>{};
 
     if (installed.isEmpty) {
       return EmptyState(
@@ -365,12 +371,18 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
           formatProfileDateTime(l10n, addon.installedAt),
         ].join('  ·  ');
         final pinned = addon.pinnedAt != null;
+        final disabled = disabledIds.contains(addon.addonId);
         return ListTile(
           leading: AddonIcon(
             base64Data: catalogById[addon.addonId]?.primaryBranch.metadata?.iconBase64,
             size: 36,
           ),
-          title: Text(addon.displayName),
+          title: Text(
+            addon.displayName,
+            style: disabled
+                ? TextStyle(color: Theme.of(context).disabledColor)
+                : null,
+          ),
           subtitle: Text(subtitle),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -379,15 +391,50 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
                 CompactBadge(label: l10n.addonsUpdateBadge),
               if (pinned)
                 CompactBadge(icon: Icons.push_pin, label: l10n.addonsPinned),
+              if (disabled)
+                CompactBadge(
+                  icon: Icons.visibility_off_outlined,
+                  label: l10n.addonsDisabledBadge,
+                ),
               IconButton(
                 tooltip: pinned ? l10n.addonsUnpin : l10n.addonsPin,
                 icon: Icon(pinned ? Icons.push_pin : Icons.push_pin_outlined),
                 onPressed: () => _togglePin(context, addon),
               ),
+              Tooltip(
+                message: disabled ? l10n.addonsEnable : l10n.addonsDisable,
+                child: Switch(
+                  value: !disabled,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  onChanged: (_) => _toggleDisabled(context, addon, disabled),
+                ),
+              ),
             ],
           ),
         );
       },
+    );
+  }
+
+  Future<void> _toggleDisabled(
+    BuildContext context,
+    InstalledAddon addon,
+    bool disabled,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final controller = AppScope.of(context).addons;
+    final result = await controller.setAddonDisabled(
+      addonId: addon.addonId,
+      profileId: addon.profileId,
+      disabled: !disabled,
+    );
+    if (!context.mounted || result.isOk) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${l10n.addonsToggleDisabledFailed}: ${result.errorOrNull}'),
+      ),
     );
   }
 

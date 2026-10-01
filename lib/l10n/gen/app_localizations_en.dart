@@ -1640,6 +1640,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addonsPinFailed => 'Could not change the pin';
 
   @override
+  String get addonsDisabledBadge => 'Disabled';
+
+  @override
+  String get addonsDisable => 'Disable addon (FreeCAD will not load it)';
+
+  @override
+  String get addonsEnable => 'Enable addon';
+
+  @override
+  String get addonsToggleDisabledFailed => 'Could not change the addon state';
+
+  @override
   String get addonsUpdateBadge => 'Update available';
 
   @override
