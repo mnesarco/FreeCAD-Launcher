@@ -109,8 +109,10 @@ failures until the CI job runs green.
 - [ ] Not exercised on Windows yet: real FreeCAD 1.1.3 `.7z` install, Python probe, two isolated
       profiles + launch, addon/pip/macro, CLI `.cmd` wrapper, reveal/open — run on the working
       machine or explicitly accept the gap before the `v0.2.0` release
-- [ ] Rebuild the Windows artifact after R-14/D-095 (colon build-id directories were illegal on
-      Windows and broke the first install attempt) and retest from the `.7z` install row
+- [x] Rebuild the Windows artifact after R-14/D-095 (colon build-id directories were illegal on
+      Windows and broke the first install attempt): Release run 36937972986 green, zip downloaded
+      and checksum-verified locally
+- [ ] Retest the Windows smoke matrix from the `.7z` install row with the rebuilt artifact
 - [x] Record the pass in `VERIFICATION.md` §2 (M8 checklist) and §4 (note)
 - [ ] Close OQ-1 in `docs/spec/09-open-questions.md` (Windows side already D-091; macOS remains);
       update spec 07 §2 artifact table when the release lands

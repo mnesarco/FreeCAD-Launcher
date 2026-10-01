@@ -7,8 +7,8 @@
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
   (M8-01/M8-02/**M8-06 DONE**; M8-03 CI pipeline built; the D-094 artifact passed the
   clean-machine network check, but the first real Windows `.7z` install exposed colon build-id
-  directories — fixed by R-14/D-095, artifact rebuild + retest pending; the GitHub Release
-  publish path is untested; M8-04 needs macOS; M8-05 clean-VM pass ready)
+  directories — fixed by R-14/D-095 and the artifact rebuilt (run 36937972986), retest pending;
+  the GitHub Release publish path is untested; M8-04 needs macOS; M8-05 clean-VM pass ready)
 - **Active branch**: `devel` (public) — `main` is reserved for a future release line
 - **Last session**: 2026-10-01
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
@@ -16,18 +16,19 @@
 - **Decisions this session**: **D-095** (dynamic filesystem segments use portable ASCII via
   `safePathSegment`); D-093/D-094 were verified in practice earlier today on a second clean
   Windows machine.
-- **Next action**: commit/push R-14, rebuild the Windows artifact from CI, and rerun the M8-03
-  smoke matrix from the build-install row (real 1.1.3 `.7z` install → Python probe → two
-  isolated profiles + launch → addon/pip/macro → CLI wrapper → reveal); then exercise the
-  untested GitHub Release `create_release` path with the `v0.2.0` prerelease. Backlog: `B-01`
-  legacy channel, `B-14` CalVer readiness (before 27.1 branches, 2027-01-31), `B-02` in-place
-  build updates.
+- **Next action**: copy `~/Downloads/freecad-launcher-windows-r36937972986/` to the Windows
+  machine and rerun the M8-03 smoke matrix from the build-install row (real 1.1.3 `.7z` install →
+  Python probe → two isolated profiles + launch → addon/pip/macro → CLI wrapper → reveal); then
+  exercise the untested GitHub Release `create_release` path with the `v0.2.0` prerelease.
+  Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1 branches, 2027-01-31),
+  `B-02` in-place build updates.
 - **Blockers**:
   - M8-04 still needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker: the
     owner accepted the second-machine pass (startup/catalogs/downloads) as the M8-03
     clean-machine verification; the AV/TLS-inspection caveat stays documented in the user guide.
-- **In progress**: **R-14/D-095** implemented, 604 tests green, analyze clean, uncommitted —
-  artifact rebuild and Windows retest pending. `R-13` (D-090), `B-15a` (D-089) and
+- **In progress**: **R-14/D-095** committed (`031cc0e`) and pushed; Release run 36937972986 green
+  (windows + appimage; publish skipped) and `windows-portable` downloaded locally with the
+  checksum verified. Windows install retest pending. `R-13` (D-090), `B-15a` (D-089) and
   `B-10a`..`B-10f` (D-085..D-088) are committed (`c0a00b9`, `a9e3f1c`, `5a372ab`).
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
@@ -600,6 +601,7 @@
 | 2026-10-01 | R30 | VM still failed after R29 with only `24 system` certificates: `CertOpenSystemStoreW` reads the current-user stores only, while the TLS-inspection root is machine-wide. Switched to `CertOpenStore` with `CERT_SYSTEM_STORE_LOCAL_MACHINE` + `CERT_SYSTEM_STORE_CURRENT_USER` for `ROOT`/`CA` (deduplicated, machine first); Windows-only test raised to `>40` certificates and green in CI (run 36907956427), proving the machine store is loaded. Rebuilt artifact run 36907901612 (15.4 MB, checksum OK) | M8-03, D-094 | `lib/platform/tls_trust.dart`, `test/platform/tls_trust_test.dart`, `docs/impl/{DECISIONS,STATUS}.md` |
 | 2026-10-01 | R31 | Clean Windows machine (different from the TLS-inspection VM) with the D-094 artifact from run 36907901612: app started, all catalogs loaded and downloads completed. Owner accepted this as the M8-03 clean-machine verification, so the TLS-inspection VM is no longer a blocker (AV/TLS caveat stays documented). Remaining M8-03 gate: exercise the GitHub Release publish path with a `v0.2.0` prerelease; the other smoke rows (`.7z` install, probe, profiles, addons/pip/macros, wrapper, reveal) were not exercised | M8-03, D-094 | `docs/impl/{STATUS,VERIFICATION,TASKS,PLAN-M8-windows-release}.md` |
 | 2026-10-01 | R32 | First real Windows `.7z` install (1.1.3) failed with `FileSystemException` on the staging path: catalog build IDs contain `:` and were used as directory names. **D-095/R-14**: shared `safePathSegment` makes dynamic path segments portable ASCII; applied to build dirs, launch logs, macro file/icon names and addon backups; helper + `buildDir` tests (POSIX + Windows contexts). 604 tests green, analyze clean; artifact rebuild + Windows retest pending | R-14, M8-03 | `lib/core/path_segments.dart`, `lib/platform/paths.dart`, `lib/state/{profiles,addons}_controller.dart`, `lib/domain/macros/macro_catalog_entry.dart`, `test/core/path_segments_test.dart`, `test/platform/paths_test.dart`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION,PLAN-M8-windows-release}.md` |
+| 2026-10-01 | R33 | R-14 committed and pushed (`031cc0e`); manual Release run 36937972986 green (windows + appimage jobs; publish skipped as requested). `windows-portable` artifact downloaded to `~/Downloads/freecad-launcher-windows-r36937972986/` (15.4 MB, `sha256sum -c` OK); Windows install retest pending | R-14, M8-03 | `docs/impl/{STATUS,PLAN-M8-windows-release,TASKS}.md` |
 
 ## Standing notes for the next agent
 
