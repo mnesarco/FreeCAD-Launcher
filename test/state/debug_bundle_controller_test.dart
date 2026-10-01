@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:freecad_launcher/core/constants.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/platform/debug_bundle.dart';
 import 'package:freecad_launcher/platform/diagnostics.dart';
@@ -65,7 +66,7 @@ void main() {
     final system = utf8.decode(
       archive.files.firstWhere((file) => file.name == 'system.txt').content,
     );
-    expect(system, contains('FreeCAD Launcher 0.2.0'));
+    expect(system, contains('FreeCAD Launcher $appVersion'));
     expect(system, contains('Builds (1):'));
     expect(system, contains('1.1.3'));
     expect(system, contains('stable'));

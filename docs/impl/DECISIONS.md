@@ -2065,3 +2065,19 @@ Template:
   environment so a regression fails CI.
 - **Refs**: `lib/platform/process.dart`, `test/platform/process_test.dart`, R-15, M8-03,
   `docs/impl/PLAN-M8-windows-release.md`
+
+### D-097 — Release workflow renamed to `release.yml`; `v0.3.0` is the cross-platform release
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: `appimage-release.yml` grew a `windows` job (M8-03) and will gain macOS (M8-04),
+  so its filename no longer matches what it builds. `v0.2.0` was tagged and published earlier
+  today from the AppImage-only pipeline (tag at commit `b2a881c`); the owner chose to leave that
+  release as-is and cut a new minor tag for the first release that carries both artifacts.
+- **Decision**: rename the workflow file to `.github/workflows/release.yml` (workflow `name:
+  Release` unchanged; inputs, jobs and the tag path untouched). Publish `v0.3.0` from the tag
+  path with the Linux AppImage + Windows portable zip; `v0.2.0` remains an AppImage-only interim
+  release. Version `0.3.0` in `pubspec.yaml`/`core/constants.dart`.
+- **Consequences**: the README badge and other references point to `release.yml`; future macOS
+  builds slot into the same workflow; the Windows smoke matrix (M8-03) was verified against the
+  `v0.3.0` artifact line.
+- **Refs**: `.github/workflows/release.yml`, `README.md`, M8-03, M8-04, D-068, D-091, R16

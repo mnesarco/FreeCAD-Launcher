@@ -4,4 +4,4 @@ const String appName = 'FreeCAD Launcher';
 
 const String applicationId = 'org.freecad.ext.launcher';
 
-const String appVersion = '0.2.0';
+const String appVersion = '0.3.0';
