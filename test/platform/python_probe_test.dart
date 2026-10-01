@@ -17,7 +17,9 @@ void main() {
   late ProcessPythonProbe probe;
 
   setUp(() {
-    tempDirectory = Directory.systemTemp.createTempSync('fcl_python_probe_test');
+    tempDirectory = Directory(
+      Directory.systemTemp.createTempSync('fcl_python_probe_test').resolveSymbolicLinksSync(),
+    );
     launcher = FakeProcessLauncher();
     probe = ProcessPythonProbe(processRunner: ProcessRunner(launcher: launcher));
   });
@@ -183,7 +185,7 @@ void main() {
 
   group('headless FreeCAD probe', () {
     test('runs the prototype macro and resolves the interpreter under sys.prefix', () async {
-      final prefix = Directory(p.join(tempDirectory.path, 'freecad'))..createSync();
+      final prefix = Directory(p.join(tempDirectory.path, 'python-prefix'))..createSync();
       final python = File(p.join(prefix.path, 'bin', 'python3.11'))
         ..createSync(recursive: true);
       final executable = File(p.join(tempDirectory.path, 'FreeCAD'))..createSync();
@@ -214,7 +216,7 @@ void main() {
     test('prefers a sibling FreeCADCmd', () async {
       final command = File(p.join(tempDirectory.path, 'FreeCADCmd'))..createSync();
       final executable = File(p.join(tempDirectory.path, 'FreeCAD'))..createSync();
-      final prefix = Directory(p.join(tempDirectory.path, 'freecad'))..createSync();
+      final prefix = Directory(p.join(tempDirectory.path, 'python-prefix'))..createSync();
       final python = File(p.join(prefix.path, 'bin', 'python3.11'))
         ..createSync(recursive: true);
 
@@ -276,7 +278,7 @@ void main() {
     });
 
     test('rejects interpreters that do not match the headless version', () async {
-      final prefix = Directory(p.join(tempDirectory.path, 'freecad'))..createSync();
+      final prefix = Directory(p.join(tempDirectory.path, 'python-prefix'))..createSync();
       File(p.join(prefix.path, 'bin', 'python3.10')).createSync(recursive: true);
       final executable = File(p.join(tempDirectory.path, 'FreeCAD'))..createSync();
 

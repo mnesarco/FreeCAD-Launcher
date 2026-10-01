@@ -12,8 +12,7 @@ class FreeCadPreferences {
   /// when the file does not exist yet. Returns false when an existing file
   /// cannot be edited (it is left untouched).
   bool ensureMacroPath({required String userCfgPath, required String macroPath}) {
-    final value =
-        '${macroPath.replaceAll(RegExp(r'[\\/]+$'), '')}${Platform.pathSeparator == '\\' ? '\\' : '/'}';
+    final value = '${macroPath.replaceAll('\\', '/').replaceAll(RegExp(r'/+$'), '')}/';
     try {
       final file = File(userCfgPath);
       final XmlDocument document;

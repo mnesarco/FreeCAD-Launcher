@@ -3,7 +3,7 @@
 # FreeCAD Launcher
 
 [![CI](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/ci.yml/badge.svg)](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/ci.yml)
-[![Release AppImage](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/appimage-release.yml/badge.svg)](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/appimage-release.yml)
+[![Release](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/appimage-release.yml/badge.svg)](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/appimage-release.yml)
 
 A desktop application that manages multiple FreeCAD builds (versions) side by side and fully
 isolated profiles: a single build can back any number of profiles, and each profile gets its own
@@ -14,8 +14,9 @@ settings, addons, macros and Python packages.
 ## Status
 
 - **v0.2 (in progress, Linux-first).** `v0.1.0` is available on the Releases page; the Linux
-  AppImage pipeline is productionized and the application is verified on Linux, while
-  Windows/macOS packaging is planned (see `docs/spec/08-roadmap.md` and `docs/impl/STATUS.md`).
+  AppImage pipeline is productionized and the application is verified on Linux. The Windows
+  portable-zip pipeline is in progress (M8-03, D-091); macOS packaging is planned (see
+  `docs/spec/08-roadmap.md` and `docs/impl/STATUS.md`).
 - Managed catalog builds require **FreeCAD 1.0 or newer**; user-supplied binaries (local files,
   URLs, self-compiled executables) are unconstrained.
 
@@ -50,8 +51,10 @@ settings, addons, macros and Python packages.
 
 ## Install
 
-Download the latest AppImage from the
-[Releases page](https://github.com/mnesarco/FreeCAD-Launcher/releases):
+Download the latest artifact from the
+[Releases page](https://github.com/mnesarco/FreeCAD-Launcher/releases).
+
+**Linux** — AppImage:
 
 ```sh
 chmod +x FreeCADLauncher-<version>-x86_64.AppImage
@@ -61,10 +64,17 @@ chmod +x FreeCADLauncher-<version>-x86_64.AppImage
 Verify the download with the published checksum, and if your system lacks FUSE, run it with
 `APPIMAGE_EXTRACT_AND_RUN=1`.
 
-Releases are built by the manually triggered **Release AppImage** workflow
-(Actions → *Release AppImage* → *Run workflow*), which builds the AppImage on CI, verifies the
-SHA-256 sidecar, smoke-tests the binary and optionally publishes a GitHub Release. Pushing a
-`vX.Y.Z` tag triggers the same workflow.
+**Windows** — portable zip (`FreeCADLauncher-<version>-windows-x86_64.zip`): extract it anywhere
+and run `freecad_launcher.exe`. The binary is unsigned, so SmartScreen may show a warning
+(More info → Run anyway). The zip also contains `7zr.exe` (required to extract the official
+FreeCAD `.7z` portable builds), `LICENSE` and `THIRD_PARTY_NOTICES.md`.
+
+Verify the download with the published `.sha256` sidecar (`Get-FileHash -Algorithm SHA256`).
+
+Releases are built by the manually triggered **Release** workflow
+(Actions → *Release* → *Run workflow*), which builds both the AppImage and the Windows portable
+zip on CI, verifies the checksums, smoke-tests both binaries and optionally publishes a GitHub
+Release. Pushing a `vX.Y.Z` tag triggers the same workflow.
 
 Local test builds:
 

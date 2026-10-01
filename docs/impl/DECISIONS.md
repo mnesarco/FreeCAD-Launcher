@@ -1940,3 +1940,36 @@ Template:
   link for now).
 - **Refs**: `docs/impl/TASKS.md` R-13, `lib/ui/profiles/profile_detail_view.dart`,
   `lib/ui/profiles/profile_actions.dart`, `lib/platform/file_actions.dart`, R-08
+
+### D-091 — Windows launcher distribution: portable zip, unsigned
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: OQ-1 (how Windows/macOS launcher binaries are distributed) was still open while
+  M8-03/M8-06 work started. The owner confirmed the direction for the Windows v0.2 artifact in
+  the planning session for `PLAN-M8-windows-release.md`.
+- **Decision**: The Windows launcher ships as an **unsigned portable `.zip`**
+  (`FreeCADLauncher-<ver>-windows-x86_64.zip`) containing the Flutter release bundle plus
+  `7zr.exe`, `LICENSE`, `THIRD_PARTY_NOTICES.md` and the README, with a `.sha256` sidecar,
+  built, smoke-tested and published by the existing release workflow on `v*` tags and manual
+  dispatch. No installer and no code signing in v0.2; the SmartScreen warning is documented in
+  the user guide and release notes. OQ-1 is resolved with option (b) for Windows (macOS stays
+  M8-04).
+- **Consequences**: CI needs a Windows packaging script and a release job; the artifact must
+  keep `7zr.exe` beside `freecad_launcher.exe` (required by `SevenZipExtractor.bundled`);
+  signing can be revisited later without changing the archive layout.
+- **Refs**: `docs/spec/09-open-questions.md` OQ-1, `docs/spec/07-distribution.md` §2,
+  `docs/impl/PLAN-M8-windows-release.md`, `docs/impl/TASKS.md` M8-03, D-018
+
+### D-092 — `MacroPath` is written to user.cfg with forward slashes
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: `FreeCadPreferences.ensureMacroPath` appended `Platform.pathSeparator`, so the
+  forced `MacroPath` ended with `\` on Windows while the Linux-verified behavior (D-053) and the
+  cross-platform tests expect `/`. FreeCAD/Qt accept `/` on Windows, and a single canonical
+  form keeps the config diffable and the tests OS-independent.
+- **Decision**: Normalize backslashes to `/` and always terminate the forced `MacroPath` with a
+  single `/` in `user.cfg`, independent of the host OS.
+- **Consequences**: Config files read identically on all platforms; the Windows manual pass
+  (M8-03) must confirm FreeCAD loads macros from the forced path on Windows.
+- **Refs**: `docs/impl/PLAN-M8-windows-release.md`, D-053, `lib/platform/freecad_preferences.dart`,
+  `docs/impl/TASKS.md` M8-06

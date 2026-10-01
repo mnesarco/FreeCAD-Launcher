@@ -9,11 +9,11 @@
 
 ## 2. Launcher artifacts
 
-| OS | v0.1 artifact | Notes |
+| OS | v0.2 artifact | Notes |
 |---|---|---|
-| Linux | `FreeCADLauncher-<ver>-x86_64.AppImage` + `.sha256` | Primary distribution channel (locked decision) |
-| Windows | none in v0.1 | See OQ-1; `flutter build windows` must still succeed in CI |
-| macOS | none in v0.1 | See OQ-1; `flutter build macos` must still succeed in CI |
+| Linux | `FreeCADLauncher-<ver>-x86_64.AppImage` + `.sha256` + `.zsync` | Primary distribution channel (locked decision) |
+| Windows | `FreeCADLauncher-<ver>-windows-x86_64.zip` + `.sha256` | Unsigned portable zip (D-091); contains the Flutter bundle, `7zr.exe` + its license, `LICENSE`, `THIRD_PARTY_NOTICES.md` and the README |
+| macOS | none yet | See OQ-1/M8-04; `flutter build macos` returns with the macOS CI job |
 
 The launcher itself never bundles FreeCAD; it downloads builds at runtime. This keeps the
 license surface clean (GPL-3.0-or-later for our code; FreeCAD remains distributed by its authors).
@@ -54,14 +54,13 @@ flutter build <platform> --release
 
 ### 4.2 Release workflow (tag `v*`)
 
-1. Run the full test matrix.
-2. Build the Linux AppImage and sidecar checksum.
-3. Create a GitHub release with:
-   - AppImage + sha256,
-   - source archive,
-   - generated changelog section,
-   - update-information string compatibility (zsync file hosted in the release).
-4. Verify the release notes do not contain tokens and the checksums match.
+1. Run the full test matrix (CI on the branch; the release workflow builds both OS artifacts).
+2. Build the Linux AppImage (`.sha256` + `.zsync`) and smoke-test it under Xvfb.
+3. Build the Windows portable zip (`packaging/windows/build_portable.ps1`) and smoke-test
+   `freecad_launcher.exe --version`.
+4. A shared publish job attaches both sets of artifacts to a GitHub release with the generated
+   changelog section (AppImage + sha256 + zsync, portable zip + sha256).
+5. Verify the release notes do not contain tokens and the checksums match.
 
 ### 4.3 Branching
 

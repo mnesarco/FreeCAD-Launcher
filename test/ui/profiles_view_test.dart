@@ -117,7 +117,10 @@ void main() {
       launcher.handles.single.exit(0);
       await tester.pump();
 
-      expect(launcher.specs.single.executable, 'xdg-open');
+      final expectedOpener = Platform.isWindows
+          ? 'explorer.exe'
+          : (Platform.isMacOS ? 'open' : 'xdg-open');
+      expect(launcher.specs.single.executable, expectedOpener);
       expect(launcher.specs.single.arguments, [
         services.paths.profilePaths(profile!.id).root,
       ]);
@@ -143,8 +146,14 @@ void main() {
       launcher.handles.single.exit(0);
       await tester.pump();
 
-      expect(launcher.specs.single.executable, 'xdg-open');
-      expect(launcher.specs.single.arguments, [logPath]);
+      final expectedOpener = Platform.isWindows
+          ? 'cmd'
+          : (Platform.isMacOS ? 'open' : 'xdg-open');
+      expect(launcher.specs.single.executable, expectedOpener);
+      expect(
+        launcher.specs.single.arguments,
+        Platform.isWindows ? ['/c', 'start', '', logPath] : [logPath],
+      );
     });
 
     testWidgets('lists installed macros in the profile detail', (tester) async {

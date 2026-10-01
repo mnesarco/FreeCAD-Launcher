@@ -123,9 +123,9 @@ void main() {
       '--console',
       '--version',
       '-u',
-      '/data/profiles/p1/user.cfg',
+      posixPaths.userCfg,
       '-s',
-      '/data/profiles/p1/system.cfg',
+      posixPaths.systemCfg,
     ]);
   });
 

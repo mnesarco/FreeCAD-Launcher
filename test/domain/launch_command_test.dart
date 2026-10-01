@@ -42,7 +42,7 @@ void main() {
     ]);
     expect(command.environment.containsKey('PATH'), isFalse);
     expect(command.removedEnvironment, ['PYTHONPATH', 'VIRTUAL_ENV']);
-    expect(command.arguments, ['-u', '/data/profiles/p1/user.cfg', '-s', '/data/profiles/p1/system.cfg']);
+    expect(command.arguments, ['-u', paths.userCfg, '-s', paths.systemCfg]);
   });
 
   test('escapes posix values and arguments', () {

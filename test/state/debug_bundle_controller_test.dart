@@ -6,9 +6,9 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/data/database.dart';
-import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/platform/debug_bundle.dart';
 import 'package:freecad_launcher/platform/diagnostics.dart';
+import 'package:freecad_launcher/platform/host.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/state/debug_bundle_controller.dart';
 import 'package:path/path.dart' as p;
@@ -36,7 +36,7 @@ void main() {
       database: db,
       diagnostics: DiagnosticsService(
         paths: paths,
-        platform: BuildPlatform.linux,
+        platform: hostPlatform,
         environment: const {},
         fuseDeviceExists: () => true,
       ),

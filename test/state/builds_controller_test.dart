@@ -910,6 +910,7 @@ void main() {
   });
 
   test('setCustomPython reports interpreter probe failures', () async {
+    final notPython = File(p.join(tempDirectory.path, 'not-python'))..createSync();
     await database.buildsDao.save(sampleBuild(id: 'custom:1', kind: BuildKind.custom));
     final probe = FakePythonProbe()
       ..interpreterResult = const PythonDetection(reason: 'not a Python interpreter');
@@ -917,7 +918,7 @@ void main() {
 
     final result = await controller.setCustomPython(
       buildId: 'custom:1',
-      pythonExecutable: '/bin/false',
+      pythonExecutable: notPython.path,
     );
 
     expect(result.isErr, isTrue);

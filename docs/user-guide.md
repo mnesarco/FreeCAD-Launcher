@@ -44,7 +44,7 @@ isolated profiles.
 
 Download the latest AppImage from the
 [Releases page](https://github.com/mnesarco/FreeCAD-Launcher/releases) (built by CI through the
-manually triggered *Release AppImage* workflow) or build it locally (see the README). Then:
+manually triggered *Release* workflow) or build it locally (see the README). Then:
 
 ```sh
 chmod +x FreeCADLauncher-<version>-x86_64.AppImage
@@ -56,15 +56,30 @@ chmod +x FreeCADLauncher-<version>-x86_64.AppImage
 - Optional desktop integration: install the AppImage with AppImageLauncher or copy the bundled
   `.desktop` file from `usr/share/applications/freecad-launcher.desktop` inside the AppImage.
 
+### Windows (portable zip)
+
+Download `FreeCADLauncher-<version>-windows-x86_64.zip` from the Releases page, verify its
+`.sha256` sidecar if you like, and extract it anywhere (the folder contains
+`freecad_launcher.exe`, the Flutter runtime, `7zr.exe` and the license/notices). Run
+`freecad_launcher.exe`.
+
+- Windows 10/11 x86_64.
+- The executable is **unsigned**: SmartScreen may warn on first run (More info → Run anyway).
+- `7zr.exe` must stay next to `freecad_launcher.exe`; it is what extracts the official FreeCAD
+  `.7z` portable builds.
+- Dev-link addons need symlink privileges (enable Developer Mode or run elevated).
+
 ### From source (development)
 
 ```sh
 flutter pub get
 dart run build_runner build --delete-conflicting-outputs
-flutter run -d linux
+flutter run -d linux    # or -d windows
 ```
 
-Requires Flutter 3.41.4 (stable) and the usual Linux desktop build dependencies.
+Requires Flutter 3.41.4 (stable) and the usual desktop build dependencies for the target OS.
+On Windows, build the portable zip with `flutter build windows --release` followed by
+`packaging/windows/build_portable.ps1`.
 
 ## First run
 
@@ -372,7 +387,10 @@ environment details and diagnostics — never your database, profiles or tokens.
 
 ## Known limitations (v0.2)
 
-- Linux only: Windows/macOS artifacts are planned (packaging/deployment phase).
+- The Windows portable zip is unsigned (SmartScreen warning) and macOS artifacts are still
+  planned (M8-04).
+- On Windows, Qt keeps some registry state shared between profiles; FreeCAD-level isolation
+  (`FREECAD_USER_HOME`, config, `Mod/`, macros, temporary files) is still per profile.
 - Weekly builds are available (Versions → Available → Weekly); the legacy 1.0.x channel is not
   exposed yet (the support floor is FreeCAD 1.0+ for catalog builds).
 - Build updates are notify-only: install the new version from Versions → Available and rebind

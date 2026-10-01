@@ -57,7 +57,7 @@ class DebugBundleService {
               .map(redactSensitive)
               .join('\n');
           archive.addFile(
-            _textFile(p.join('logs', p.basename(file.path)), redacted),
+            _textFile('logs/${p.basename(file.path)}', redacted),
           );
           logFiles++;
         } on FileSystemException {

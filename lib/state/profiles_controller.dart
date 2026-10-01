@@ -343,9 +343,6 @@ class ProfilesController {
     unawaited(() async {
       final code = await handle.exitCode;
       _finishLaunch(profile.id, code);
-      if (!exitCompleter.isCompleted) {
-        exitCompleter.complete(code);
-      }
       await Future.wait([
         stdoutDone.timeout(const Duration(seconds: 5), onTimeout: () {}),
         stderrDone.timeout(const Duration(seconds: 5), onTimeout: () {}),
@@ -359,6 +356,9 @@ class ProfilesController {
         await logSink.close();
       } on Object {
         // The sink may already be closed.
+      }
+      if (!exitCompleter.isCompleted) {
+        exitCompleter.complete(code);
       }
     }());
 

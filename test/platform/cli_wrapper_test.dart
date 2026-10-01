@@ -63,9 +63,12 @@ exec "/opt/app/freecad_launcher" "\$@"
   });
 
   test('reports when the wrapper directory is on PATH', () {
-    final directory = p.join(tempDirectory.path, '.local', 'bin');
+    final directory = p.posix.join(tempDirectory.path, '.local', 'bin');
     expect(installer(pathEnvironment: directory).status().onPath, isTrue);
-    expect(installer(pathEnvironment: '/usr/bin:$directory:/bin').status().onPath, isTrue);
+    expect(
+      installer(pathEnvironment: '/usr/bin:$directory').status().onPath,
+      isTrue,
+    );
     expect(installer(pathEnvironment: '/usr/bin').status().onPath, isFalse);
   });
 

@@ -102,7 +102,26 @@ void main() {
   for (final library in _bundledLibraries) {
     buffer.writeln('- $library');
   }
+  final sevenZipLicense = File('third_party/7zip/license.txt')
+      .readAsStringSync()
+      .replaceAll('\r\n', '\n')
+      .trimRight();
   buffer
+    ..writeln()
+    ..writeln('## Bundled executables')
+    ..writeln()
+    ..writeln(
+      'The Windows portable build bundles the official 7-Zip standalone console '
+      'executable `third_party/7zip/7zr.exe` (SHA-256 '
+      '`ad4c82fadcbdf93c03b4fc440f300509c7d60c5c2f4d183e35d9d70d6957037d`, 602,624 bytes), '
+      'used to extract the official FreeCAD `.7z` archives. 7-Zip is licensed under '
+      'LGPL-2.1-or-later; the unRAR restriction does not apply because `7zr` contains no '
+      'RAR code.',
+    )
+    ..writeln()
+    ..writeln('```text')
+    ..writeln(sevenZipLicense)
+    ..writeln('```')
     ..writeln()
     ..writeln('## FreeCAD trademark')
     ..writeln()
