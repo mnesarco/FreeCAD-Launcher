@@ -201,7 +201,7 @@ distribution decision recorded (OQ-1).
 | B-07 | GitHub token UX with secure storage (OQ-3) | FR-12.2 | v0.2 |
 | B-08 | Profile templates | FR-2.8 | v0.2 |
 | B-09 | CLI addon/bundle subcommands | FR-3.5 | v0.2 |
-| B-10 | Local addon zip install (developer mode) | FR-4.8 | v0.2 |
+| B-10 | Custom addon installs: repository URL + branch (updateable), local zip/tar (FR-4.8), dev symlink; details in [PLAN-B10-custom-addons.md](PLAN-B10-custom-addons.md) | FR-4.8, FR-4.11/FR-4.12 (to add) | v0.2 |
 | B-12 | i18n translations (if OQ-6 = start later) | NFR-9 | v1.0 |
 | B-13 | Fully isolated private-build profiles (OQ-8) | spec 09 | post-v1.0 |
 | B-14 | CalVer transition readiness (D-078, FEP-0003): stable tags `YY.N` (three releases/year, `26.3` branched 2026-09-30) and monthly patches `YY.N.P`; derive the current stable line from the catalog for the stable/legacy split; ignore RC tags (`26.3rc1`) and dedupe `26.3` vs `26.3.0`; ordering tests + spec 06 §1.3/§1.5. Needed before 27.1 branches (2027-01-31) makes 26.3 legacy | FR-1.1, FR-1.7, FR-1.8 | v0.2 |
@@ -224,3 +224,18 @@ list). Deriving an API version from the Python probe is possible follow-up work.
 
 CalVer (D-078/B-14) does not change this plan: weekly update checks are date-based and stable
 update ordering stays numeric across schemas.
+
+### B-10 breakdown — custom addon installs (planned, v0.2)
+
+All three sources require `package.xml` at the addon root; fresh installs are blocked while the
+id exists in the profile; details, API shapes and test matrix in
+[PLAN-B10-custom-addons.md](PLAN-B10-custom-addons.md). Owner choices are recorded there and
+become D-085..D-088 at kickoff.
+
+| ID | Task | Done when | Deps | Effort | Status |
+|---|---|---|---|---|---|
+| B-10a | Foundations: schema v6 (`installed_addons.source`/`sourcePath`, migration), `AddonSource` enum, package.xml parser extraction, addon id rules, archive URL builder (GitHub/GitLab/Gitea/Codeberg/direct), `AddonInstaller.installFromArchive` + `linkDirectory`, requirements peek (zip/tar/dir), source-aware update guards | Unit tests for URL builder, id rules and parser refactor; installer tests for local archive atomic replace and symlink creation; catalog tests stay green; `build_runner` clean | B-10 plan, M1-04, D-039 | M | TODO |
+| B-10b | Repository URL install + update: controller flows (conflict block, jobs, consent callback), `updateFromRepository`, Custom tab repo form + custom-install list, l10n, profile source chip | Controller tests (row provenance, conflict, pin-blocked update, custom rows excluded from `outdated`); widget tests for the form; manual install from a real repo recorded | B-10a | M | TODO |
+| B-10c | Local archive install + reinstall: file picker (zip/tar.gz), id from root/filename, `installFromZip`/`reinstallFromZip`, Custom tab archive form + actions | Controller/installer tests incl. flat vs single-root archives; widget tests; manual zip install recorded | B-10a | M | TODO |
+| B-10d | Dev symlink install: `installFromDirectory` (hard-fail without symlink support), link-only remove, live-edit warning, Custom tab folder form + Reveal action | Tests prove remove deletes only the link and target survives; manual live-edit check in FreeCAD | B-10a | M | TODO |
+| B-10e | Verification + docs: real repo/zip/symlink installs in FreeCAD, spec 02/03/05/06, user guide, manifest skip-warning, VERIFICATION rows, decisions D-085..D-088 | Manual pass recorded in STATUS; analyze/tests green; limitations documented | B-10b, B-10c, B-10d | M | TODO |

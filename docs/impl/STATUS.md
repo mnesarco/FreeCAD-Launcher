@@ -12,7 +12,8 @@
 - **Next action**: run `M8-05` (clean-machine Linux validation) with the published
   `v0.1.0` AppImage; `M8-06` cross-platform test portability can be done without machines;
   `M8-03`/`M8-04` wait for Windows/macOS machines (OQ-1). Backlog: `B-01` legacy channel,
-  `B-14` CalVer readiness (before 27.1 branches, 2027-01-31), `B-02` in-place build updates.
+  `B-14` CalVer readiness (before 27.1 branches, 2027-01-31), `B-02` in-place build updates,
+  `B-10` custom addon installs (plan ready in `PLAN-B10-custom-addons.md`).
 - **Blockers**:
   - M8-03/M8-04 need Windows/macOS machines (OQ-1); nothing else is blocked.
 - **In progress**: none
@@ -429,6 +430,11 @@
     can back any number of isolated profiles; the **Stable | Weekly** channel is documented in
     Features, Quick start and Updates; all five README screenshots were recaptured from the
     current build (light theme, 1280×720; Versions shows Available/Stable). No code changes.
+  - Planning (2026-10-01, R21): custom addon installs specified in
+    `docs/impl/PLAN-B10-custom-addons.md` — repository URL + branch (updateable), local zip/tar
+    (FR-4.8), and dev symlink (live, link-only remove); backlog `B-10` expanded into
+    `B-10a..B-10e`. Owner choices captured; decisions D-085..D-088 to be recorded at kickoff.
+    No code changes.
 
 ## Session log
 
@@ -534,6 +540,7 @@
 | 2026-10-01 | R18 | First release: `v0.1.0` pre-release published from the manual workflow (run 36812429637) with AppImage + sha256 + zsync; M8-01 DONE; tag fetched locally | M8-01 | `docs/impl/{TASKS,STATUS,VERIFICATION}.md` |
 | 2026-10-01 | R19 | History cleanup: dropped the temporary `ping`/`bisect` CI commits with `git-filter-repo` (tree unchanged), force-pushed `devel` and moved `v0.1.0` to the rewritten commit; CI and the tag-path release workflow re-ran green (runs 36815947311 / 36815948224) | — | `docs/impl/STATUS.md` |
 | 2026-10-01 | R20 | README accuracy pass: intro clarified (multiple builds, each backing many profiles), Stable\|Weekly channel documented in Features/Quick start/Updates, all five screenshots recaptured from the current build (Available/Stable for Versions), AI-assistance disclosure added | — | `README.md`, `docs/images/*.jpg`, `docs/impl/STATUS.md`, `docs/impl/VERIFICATION.md` |
+| 2026-10-01 | R21 | B-10 planning: custom addon installs (repo URL + branch, local zip/tar, dev symlink) written up with owner-confirmed choices; B-10 expanded into B-10a..B-10e; no code | B-10 | `docs/impl/PLAN-B10-custom-addons.md`, `docs/impl/TASKS.md`, `docs/impl/STATUS.md` |
 
 ## Standing notes for the next agent
 
