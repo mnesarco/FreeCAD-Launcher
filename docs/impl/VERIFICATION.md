@@ -172,7 +172,8 @@ target, exception).
 - [x] AppImage builds reproducibly locally (S5/M7-01) and runs on the host with/without FUSE
 - [x] `LICENSE` and `THIRD_PARTY_NOTICES.md` present; SPDX headers on sources; the AppImage
       ships both under `/usr/share/doc/freecad-launcher/` (M7-03/D-074, 2026-09-24)
-- [x] README + user guide written, links checked, screenshots current (M7-04, 2026-09-24)
+- [x] README + user guide written, links checked, screenshots current (M7-04, 2026-09-24;
+      screenshots recaptured from the current build 2026-10-01, R20)
 - [x] No secrets or tokens in logs or artifacts — debug-bundle review (M6-06), notices/scripts
       scanned, v0.1 has no token support (OQ-3 deferred)
 

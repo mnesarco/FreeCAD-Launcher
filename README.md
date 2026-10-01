@@ -5,9 +5,9 @@
 [![CI](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/ci.yml/badge.svg)](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/ci.yml)
 [![Release AppImage](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/appimage-release.yml/badge.svg)](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/appimage-release.yml)
 
-A desktop application that manages multiple FreeCAD builds and fully isolated profiles:
-each profile gets its own settings, addons, macros and Python packages, while all profiles share
-one installed FreeCAD copy.
+A desktop application that manages multiple FreeCAD builds (versions) side by side and fully
+isolated profiles: a single build can back any number of profiles, and each profile gets its own
+settings, addons, macros and Python packages.
 
 ![Home dashboard](docs/images/home.jpg)
 
@@ -21,8 +21,10 @@ one installed FreeCAD copy.
 
 ## Features
 
-- **Builds** — install stable releases from the official FreeCAD release catalog, import a local
-  file or URL, or register a self-compiled executable in place; verify, relabel and remove.
+- **Builds** — install stable or weekly development releases from the official FreeCAD release
+  catalog (**Stable | Weekly** channel; the latest 52 weeklies, with a confirmation warning for
+  development-quality builds), import a local file or URL, or register a self-compiled
+  executable in place; verify, relabel and remove.
 - **Profiles** — one profile per task/project with isolated `FREECAD_USER_HOME`, `user.cfg` /
   `system.cfg`, `Mod/`, macros, Python target and temporary files. Launch from the app, from the
   Home dashboard, or via the CLI.
@@ -35,7 +37,8 @@ one installed FreeCAD copy.
 - **Macros** — install from the official macro catalog, list, open, reveal and delete per profile.
 - **Config** — timestamped `user.cfg`/`system.cfg` snapshots with restore, plus portable
   profile manifest export/import.
-- **Updates** — notify-only checks for addon and FreeCAD build updates (no silent changes).
+- **Updates** — notify-only checks for addon and FreeCAD build updates, tracking stable and
+  weekly channels separately (no silent changes).
 - **Jobs** — downloads and installs run through a shared queue with progress, cancel, retry and
   per-launch log files.
 - **Settings** — theme, update cadence, log level, cache management, CLI wrapper installation,
@@ -80,8 +83,8 @@ For development, run from source with `flutter run -d linux`.
 
 ## Quick start
 
-1. **Install a build** — Versions → *Available* → **Install** for the latest stable FreeCAD.
-   Use the *Custom* tab to import a local AppImage/archive, a URL, or to register a
+1. **Install a build** — Versions → *Available* → choose the **Stable | Weekly** channel, then
+   **Install**. Use the *Custom* tab to import a local AppImage/archive, a URL, or to register a
    self-compiled FreeCAD executable in place.
 2. **Create a profile** — Profiles → **New profile**, pick the build. The profile gets its own
    isolated environment.
@@ -153,3 +156,9 @@ Documentation map:
   live state).
 - `docs/user-guide.md` — end-user guide.
 - `addon_index_spec.md` — addon catalog format (upstream data format).
+
+## AI assistance
+
+Development of FreeCAD Launcher is assisted by **DeepSeek 4.1 Flash**. The project is
+spec-driven: it is architected, designed and developed by a human with AI assistance — not
+vibe-coded.
