@@ -355,6 +355,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profilesConfigOpenFailed => 'Could not open the folder';
 
   @override
+  String get profilesOpenLog => 'Open log file';
+
+  @override
+  String get profilesOpenLogFailed => 'Could not open the log file';
+
+  @override
   String get profilesStatusMissing => 'Build missing';
 
   @override

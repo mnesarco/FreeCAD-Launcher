@@ -49,6 +49,19 @@ Future<void> openProfileFolder(BuildContext context, String profileId) async {
   }
 }
 
+Future<void> openProfileLog(BuildContext context, String path) async {
+  final l10n = AppLocalizations.of(context);
+  final services = AppScope.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  try {
+    await services.fileActions.open(path);
+  } on Object catch (error) {
+    messenger.showSnackBar(
+      SnackBar(content: Text('${l10n.profilesOpenLogFailed}: $error')),
+    );
+  }
+}
+
 String formatProfileDateTime(AppLocalizations l10n, DateTime? value) {
   if (value == null) {
     return l10n.profilesNeverUsed;

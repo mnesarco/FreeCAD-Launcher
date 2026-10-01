@@ -273,9 +273,10 @@ class _OverviewTab extends StatelessWidget {
             title: l10n.profilesRunning,
             children: [
               _InfoRow(
-                label: 'log',
+                label: l10n.jobsLog,
                 value: '$launchLog${_logSize(launchLog)}',
-                selectable: true,
+                tooltip: l10n.profilesOpenLog,
+                onTap: () => unawaited(openProfileLog(context, launchLog)),
               ),
             ],
           ),
@@ -693,17 +694,22 @@ class _InfoRow extends StatelessWidget {
     required this.label,
     required this.value,
     this.selectable = false,
+    this.onTap,
+    this.tooltip,
   });
 
   final String label;
   final String value;
   final bool selectable;
+  final VoidCallback? onTap;
+  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+    final onTap = this.onTap;
+    final row = Padding(
+      padding: EdgeInsets.symmetric(vertical: onTap == null ? 2 : 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -719,9 +725,29 @@ class _InfoRow extends StatelessWidget {
           Expanded(
             child: selectable
                 ? SelectableText(value, style: theme.textTheme.bodySmall)
-                : Text(value, style: theme.textTheme.bodySmall),
+                : Text(
+                    value,
+                    style: onTap == null
+                        ? theme.textTheme.bodySmall
+                        : theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            decoration: TextDecoration.underline,
+                            decorationColor: theme.colorScheme.primary,
+                          ),
+                  ),
           ),
         ],
+      ),
+    );
+    if (onTap == null) {
+      return row;
+    }
+    return Tooltip(
+      message: tooltip ?? value,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(4),
+        child: row,
       ),
     );
   }

@@ -16,8 +16,9 @@
   `B-10` custom addon installs (plan ready in `PLAN-B10-custom-addons.md`).
 - **Blockers**:
   - M8-03/M8-04 need Windows/macOS machines (OQ-1); nothing else is blocked.
-- **In progress**: `B-15a` (addon enable/disable) implemented with tests and a live check —
-  **uncommitted**; `B-10a`..`B-10f` are committed (`5a372ab`).
+- **In progress**: `R-13` (clickable launch-log row in Profile → Overview, D-090) implemented
+  with a widget test — **uncommitted**; `B-15a` and `B-10a`..`B-10f` are committed
+  (`a9e3f1c`, `5a372ab`).
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
     diagnostics, CI workflow, test harness).
@@ -444,7 +445,7 @@
     (no schema change), disabled rows show a badge and dimmed title, and the marker is also
     visible to FreeCAD's own Addon Manager. Live check on Development: File Explorer (managed)
     and Nxt (dev link) toggled on/off with the expected marker paths. 586 tests green, analyze
-    clean. **Uncommitted.**
+    clean; committed (`a9e3f1c`).
   - B-10 implementation (2026-10-01, R22): schema v6 `installed_addons.source`/`sourcePath`
     (live v5→v6 migration verified), domain helpers (package.xml parser extraction, addon id
     rules, GitHub/GitLab/Gitea archive URL builder), `AddonInstaller.prepare/commit` +
@@ -456,7 +457,12 @@
     (`source=repo`, removed), local `nxt.zip` install (`source=zip`, removed), dev-symlink
     install (live edit visible, link-only removal, source intact) and the copy action (dev link
     copied Development → Production 1, picker hid the source profile; copy removed, original and
-    working copy intact). **Uncommitted pending review.**
+    working copy intact). Committed (`5a372ab`).
+  - R-13 (2026-10-01, D-090): the Profile → Overview `Log` row is now a clickable link that
+    opens the launch log with the system default text editor (`FileActions.open`), with a
+    localized label/tooltip and a failure snackbar; `_InfoRow` gained an optional `onTap`.
+    587 tests green (9 manual probes skipped), analyze clean; **uncommitted**. Widget test
+    asserts the `xdg-open <log>` command.
 
 ## Session log
 
@@ -567,7 +573,10 @@
 
 | 2026-10-01 | R23 | Addon enable/disable per profile (B-15a, D-089): `ADDON_DISABLED` toggle on Profile → Addons rows, state derived from disk, disabled badge/dim; controller + widget tests and a live managed/dev-link check | B-15a | `lib/state/addons_controller.dart`, `lib/ui/profiles/profile_detail_view.dart`, `lib/l10n/app_en.arb`, `lib/l10n/gen/**`, `test/state/addons_controller_test.dart`, `test/ui/profiles_view_test.dart`, `docs/{spec/02-requirements,spec/03-ux,user-guide}.md`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md` |
 
-| 2026-10-01 | R24 | Version bump to 0.2.0 (`pubspec.yaml`, `core/constants.dart`) + README/spec/user-guide current-version labels and debug-bundle test | — | `pubspec.yaml`, `lib/core/constants.dart`, `test/state/debug_bundle_controller_test.dart`, `README.md`, `docs/spec/03-ux.md`, `docs/user-guide.md`, `docs/impl/STATUS.md` |## Standing notes for the next agent
+| 2026-10-01 | R24 | Version bump to 0.2.0 (`pubspec.yaml`, `core/constants.dart`) + README/spec/user-guide current-version labels and debug-bundle test | — | `pubspec.yaml`, `lib/core/constants.dart`, `test/state/debug_bundle_controller_test.dart`, `README.md`, `docs/spec/03-ux.md`, `docs/user-guide.md`, `docs/impl/STATUS.md` |
+| 2026-10-01 | R25 | R-13 launch-log link (D-090): Profile → Overview `Log` row opens the launch log with the system default text editor via `FileActions.open`, localized label/tooltip, failure snackbar; widget test asserts `xdg-open <log>`; 587 tests green, analyze clean | R-13 | `lib/ui/profiles/{profile_detail_view,profile_actions}.dart`, `lib/l10n/app_en.arb`, `lib/l10n/gen/**`, `test/ui/profiles_view_test.dart`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md` |
+
+## Standing notes for the next agent
 
 - The prototype is frozen at tag `prototype-final`; do not resurrect its code or schema.
 - Read `docs/impl/DECISIONS.md` before proposing alternatives to anything already decided.

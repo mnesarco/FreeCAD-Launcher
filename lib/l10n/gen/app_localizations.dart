@@ -760,6 +760,18 @@ abstract class AppLocalizations {
   /// **'Could not open the folder'**
   String get profilesConfigOpenFailed;
 
+  /// No description provided for @profilesOpenLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Open log file'**
+  String get profilesOpenLog;
+
+  /// No description provided for @profilesOpenLogFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the log file'**
+  String get profilesOpenLogFailed;
+
   /// No description provided for @profilesStatusMissing.
   ///
   /// In en, this message translates to:

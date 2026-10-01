@@ -116,6 +116,8 @@
   "profilesConfigSnapshotDeleted": "Snapshot deleted",
   "profilesConfigFailed": "Config action failed",
   "profilesConfigOpenFailed": "Could not open the folder",
+  "profilesOpenLog": "Open log file",
+  "profilesOpenLogFailed": "Could not open the log file",
   "profilesStatusMissing": "Build missing",
   "profilesStatusBroken": "Build broken",
   "profilesShowCommand": "Show launch command",

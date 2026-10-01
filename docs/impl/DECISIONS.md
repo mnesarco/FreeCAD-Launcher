@@ -1924,3 +1924,19 @@ Template:
   copy gets an untracked `ADDON_DISABLED` file while disabled.
 - **Refs**: FR-4.13 (added), `docs/impl/TASKS.md` B-15a, `lib/state/addons_controller.dart`,
   `lib/ui/profiles/profile_detail_view.dart`
+
+### D-090 — Launch log opens in the default text editor from the profile Overview
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: The profile detail Overview shows the last launch log path as read-only
+  selectable text, so inspecting the log means locating the file manually.
+- **Decision**: The log row keeps the path and size but becomes a clickable link (primary
+  color, underline, tooltip) whose tap calls `FileActions.open(path)` — the existing
+  platform action that delegates to the OS default application (`xdg-open` / `open` /
+  `start`). Failures surface as a snackbar; no new platform code. The row label switches
+  from the hardcoded `log` to the localized `jobsLog` key.
+- **Consequences**: A missing file or a headless session shows the standard file-action
+  failure snackbar; the jobs-dialog log lines are unchanged (only the Overview row is a
+  link for now).
+- **Refs**: `docs/impl/TASKS.md` R-13, `lib/ui/profiles/profile_detail_view.dart`,
+  `lib/ui/profiles/profile_actions.dart`, `lib/platform/file_actions.dart`, R-08

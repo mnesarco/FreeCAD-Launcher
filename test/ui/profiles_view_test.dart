@@ -123,6 +123,30 @@ void main() {
       ]);
     });
 
+    testWidgets('opens the launch log from the profile overview', (tester) async {
+      final profile = await services.profilesRepository.getByName('Dev');
+      final logPath = p.join(tempDirectory.path, 'logs', 'launch-Dev.log');
+      File(logPath).createSync(recursive: true);
+      services.profiles.launchLogs.value = {profile!.id: logPath};
+
+      await pumpProfiles(tester);
+      await tester.tap(find.text('Dev'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      final logFinder = find.textContaining('launch-Dev.log');
+      await tester.ensureVisible(logFinder);
+      await tester.pump();
+      await tester.tap(logFinder);
+      await tester.pump();
+      launcher.handles.single.exit(0);
+      await tester.pump();
+
+      expect(launcher.specs.single.executable, 'xdg-open');
+      expect(launcher.specs.single.arguments, [logPath]);
+    });
+
     testWidgets('lists installed macros in the profile detail', (tester) async {
       final profile = await services.profilesRepository.getByName('Dev');
       File(

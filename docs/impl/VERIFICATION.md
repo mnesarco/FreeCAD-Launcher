@@ -165,6 +165,10 @@ and throws `FileActionException` on non-zero exits; Settings and the profile Con
 failure snackbar. Covered by `test/platform/file_actions_test.dart` (env inheritance, reveal
 target, exception).
 
+R-13 (2026-10-01, D-090): the profile Overview `Log` row is a clickable link that opens the
+launch log with the OS default application (`FileActions.open`); failures show a snackbar.
+Covered by `test/ui/profiles_view_test.dart` (asserts `xdg-open <log path>`).
+
 
 ### M7 — Linux v0.1 completion
 
