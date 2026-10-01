@@ -56,7 +56,7 @@ failures until the CI job runs green.
 
 ## Implementation phases
 
-### Phase 1 — M8-06 test portability (code done, Windows CI verification pending)
+### Phase 1 — M8-06 test portability (DONE, CI run 36897077869)
 
 - [x] `debug_bundle.dart` zip entry names use `/` (keep `p.basename` for the file name)
 - [x] `freecad_preferences.dart` normalizes the MacroPath value to `/` (D-092)
@@ -65,7 +65,8 @@ failures until the CI job runs green.
       per-platform commands, distinct fixture names, resolved temp paths)
 - [x] Re-enable `flutter test` on Windows in `ci.yml` (drop the Linux-only `if`)
 - [x] `flutter analyze` clean + full Linux suite green (587 tests, 9 skipped)
-- [ ] Push and iterate on Windows CI until green (requires a commit + push)
+- [x] Push and iterate on Windows CI until green (run 36897077869: Windows 576 passed / 14
+      skipped, second iteration fixed the last 6 failures)
 
 ### Phase 2 — Windows bundle completeness (done)
 
@@ -80,14 +81,18 @@ failures until the CI job runs green.
       `THIRD_PARTY_NOTICES.md` + README) and writes the `.sha256` sidecar (LF, zip is created
       with forward-slash entry names via `ZipFile.CreateFromDirectory`)
 
-### Phase 3 — CI release integration (done, first run pending)
+### Phase 3 — CI release integration (pipeline verified, publish path pending)
 
 - [x] `appimage-release.yml`: `name: Release`, new `windows` job (build, package, `--version`
       smoke test with a 60 s timeout, artifact upload) and a shared `publish` job
       (`needs: [appimage, windows]`) that downloads both artifact sets and creates/uploads the
       GitHub Release (tag/version validation unchanged; `create_release`/`tag`/`prerelease`
       inputs apply to both)
-- [ ] Exercise the untested `create_release` path with a throwaway prerelease run
+- [x] Pipeline exercised with a no-publish manual run (36898044793): appimage ✓, windows ✓
+      (15.4 MB zip, `sha256sum -c` OK, `7zr.exe` hash pinned, `--version` smoke test),
+      `publish` correctly skipped; artifact downloaded and inspected locally
+- [ ] Exercise the untested `create_release` path with a `v0.2.0` prerelease run (after the
+      Windows VM pass)
 
 ### Phase 4 — Verification and docs
 

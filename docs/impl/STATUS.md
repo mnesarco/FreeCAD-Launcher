@@ -5,23 +5,25 @@
 
 - **Updated**: 2026-10-01
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
-  (M8-01/M8-02 DONE; **M8-06 test portability WIP**; **M8-03 Windows portable zip WIP**;
-  M8-04 needs macOS; M8-05 clean-VM pass ready with the published AppImage)
+  (M8-01/M8-02/**M8-06 DONE**; M8-03 CI pipeline verified and artifact built — clean-machine
+  manual pass pending; M8-04 needs macOS; M8-05 clean-VM pass ready with the published AppImage)
 - **Active branch**: `devel` (public) — `main` is reserved for a future release line
 - **Last session**: 2026-10-01
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
   `TASKS.md` so work can resume after an interruption.
 - **Decisions this session**: **D-091** (Windows = unsigned portable `.zip`, resolves OQ-1
   option b) and **D-092** (`MacroPath` always written with `/`).
-- **Next action**: finish M8-06 (fix the 20 Windows test failures listed in the plan, re-enable
-  `flutter test` on Windows in `ci.yml`), then M8-03 (7zr in the bundle, notices, `.ico`, portable
-  zip script, Windows release job). Backlog: `B-01` legacy channel, `B-14` CalVer readiness
-  (before 27.1 branches, 2027-01-31), `B-02` in-place build updates.
+- **Next action**: extract the CI-built `FreeCADLauncher-0.2.0-windows-x86_64.zip`
+  (run 36898044793 artifact) on the Windows VM and run the M8-03 smoke matrix (real 1.1.3 `.7z`
+  install, Python probe, two isolated profiles + launch, addon/pip/macro, CLI wrapper, reveal),
+  then fill `VERIFICATION.md` §4; after that, exercise the GitHub Release path and decide on the
+  `v0.2.0` prerelease. Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1
+  branches, 2027-01-31), `B-02` in-place build updates.
 - **Blockers**:
-  - M8-03 clean-machine pass needs the owner's Windows VM (CI smoke covers the rest); M8-04
-    still needs a macOS machine.
-- **In progress**: M8-06 + M8-03 per the plan; `R-13` (D-090), `B-15a` (D-089) and
-  `B-10a`..`B-10f` (D-085..D-088) are committed (`c0a00b9`, `a9e3f1c`, `5a372ab`).
+  - M8-03 clean-machine pass needs the owner's Windows VM; M8-04 still needs a macOS machine.
+- **In progress**: nothing active in code; M8-03 manual verification pending (artifact ready at
+  run 36898044793). `R-13` (D-090), `B-15a` (D-089) and `B-10a`..`B-10f` (D-085..D-088) are
+  committed (`c0a00b9`, `a9e3f1c`, `5a372ab`).
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
     diagnostics, CI workflow, test harness).
@@ -578,7 +580,8 @@
 
 | 2026-10-01 | R24 | Version bump to 0.2.0 (`pubspec.yaml`, `core/constants.dart`) + README/spec/user-guide current-version labels and debug-bundle test | — | `pubspec.yaml`, `lib/core/constants.dart`, `test/state/debug_bundle_controller_test.dart`, `README.md`, `docs/spec/03-ux.md`, `docs/user-guide.md`, `docs/impl/STATUS.md` |
 | 2026-10-01 | R25 | R-13 launch-log link (D-090): Profile → Overview `Log` row opens the launch log with the system default text editor via `FileActions.open`, localized label/tooltip, failure snackbar; widget test asserts `xdg-open <log>`; 587 tests green, analyze clean | R-13 | `lib/ui/profiles/{profile_detail_view,profile_actions}.dart`, `lib/l10n/app_en.arb`, `lib/l10n/gen/**`, `test/ui/profiles_view_test.dart`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md` |
-| 2026-10-01 | R26 | Windows release plan saved (`PLAN-M8-windows-release.md`); **D-091** (unsigned portable zip, OQ-1 Windows resolved) and **D-092** (MacroPath `/`); M8-06 fixes: debug-bundle zip separators, log-sink close before exitCode, test portability (path joins, host platform, per-platform openers, case-insensitive fixture names, canonical temp paths); Windows tests re-enabled in `ci.yml`; M8-03 bundle: 7zr+license in CMake, 7-Zip notices, rocket `.ico`, `packaging/windows/build_portable.ps1`; release workflow now has a Windows job + shared publisher; 587 tests green, analyze clean (uncommitted; Windows CI run pending) | M8-03, M8-06 | `docs/impl/PLAN-M8-windows-release.md`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md`, `docs/spec/{07-distribution,09-open-questions}.md`, `README.md`, `docs/user-guide.md`, `.github/workflows/{ci,appimage-release}.yml`, `windows/CMakeLists.txt`, `windows/runner/resources/app_icon.ico`, `packaging/windows/**`, `tool/generate_third_party_notices.dart`, `THIRD_PARTY_NOTICES.md`, `lib/{platform/debug_bundle,platform/freecad_preferences,state/profiles_controller}.dart`, `test/**` |
+| 2026-10-01 | R26 | Windows release plan saved (`PLAN-M8-windows-release.md`); **D-091** (unsigned portable zip, OQ-1 Windows resolved) and **D-092** (MacroPath `/`); M8-06 fixes: debug-bundle zip separators, log-sink close before exitCode, test portability (path joins, host platform, per-platform openers, case-insensitive fixture names, canonical temp paths); Windows tests re-enabled in `ci.yml`; M8-03 bundle: 7zr+license in CMake, 7-Zip notices, rocket `.ico`, `packaging/windows/build_portable.ps1`; release workflow now has a Windows job + shared publisher; 587 tests green, analyze clean; committed (`005a6c3`, `1c12218`) | M8-03, M8-06 | `docs/impl/PLAN-M8-windows-release.md`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md`, `docs/spec/{07-distribution,09-open-questions}.md`, `README.md`, `docs/user-guide.md`, `.github/workflows/{ci,appimage-release}.yml`, `windows/CMakeLists.txt`, `windows/runner/resources/app_icon.ico`, `packaging/windows/**`, `tool/generate_third_party_notices.dart`, `THIRD_PARTY_NOTICES.md`, `lib/{platform/debug_bundle,platform/freecad_preferences,state/profiles_controller}.dart`, `test/**` |
+| 2026-10-01 | R27 | **M8-06 DONE**: CI run 36897077869 green on Ubuntu + Windows with `flutter test` on both (Windows 576 passed / 14 skipped); second iteration portabilized the remaining 6 failures (host-platform wrapper PATH, normalized MacroPath expectations in prefs/manifest tests, larger surface for the launch-log widget test) and moved `actions/checkout` to v5 (Node 24, deprecation annotation gone). **M8-03 CI pipeline verified**: manual Release run 36898044793 built the Windows job (portable zip, 7zr hash, `--version` smoke test) and the AppImage; `publish` skipped as requested. Artifact downloaded and verified locally: `FreeCADLauncher-0.2.0-windows-x86_64.zip` 15.4 MB, POSIX entry names, `sha256sum -c` OK, `7zr.exe` = `ad4c82fa…`, license/notices/README present | M8-06, M8-03 | `.github/workflows/{ci,appimage-release}.yml`, `test/{platform/cli_wrapper_test,platform/freecad_preferences_test,state/profile_manifest_controller_test,ui/profiles_view_test}.dart`, `docs/impl/{TASKS,STATUS,VERIFICATION}.md` |
 
 ## Standing notes for the next agent
 
