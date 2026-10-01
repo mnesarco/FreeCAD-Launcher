@@ -2788,6 +2788,42 @@ abstract class AppLocalizations {
   /// **'Copyright 2026 Frank Martínez <mnesarco at gmail>'**
   String get settingsCopyright;
 
+  /// No description provided for @settingsAboutOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'About FreeCAD Launcher'**
+  String get settingsAboutOpen;
+
+  /// No description provided for @aboutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About FreeCAD Launcher'**
+  String get aboutTitle;
+
+  /// No description provided for @aboutLogoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'FreeCAD logo'**
+  String get aboutLogoLabel;
+
+  /// No description provided for @aboutTrademark.
+  ///
+  /// In en, this message translates to:
+  /// **'FreeCAD and the FreeCAD logo are trademarks of the FreeCAD Project Association AISBL.'**
+  String get aboutTrademark;
+
+  /// No description provided for @aboutProject.
+  ///
+  /// In en, this message translates to:
+  /// **'FreeCAD Launcher is an independent, community driven, open source project developed and maintained by Frank D. Martínez <aka mnesarco>.'**
+  String get aboutProject;
+
+  /// No description provided for @aboutClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get aboutClose;
+
   /// No description provided for @settingsDiagnostics.
   ///
   /// In en, this message translates to:

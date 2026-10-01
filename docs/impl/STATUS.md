@@ -387,6 +387,13 @@
     show the holder line, and `tool/generate_third_party_notices.dart` emits it in the notices
     header (regenerated, diff is the single line). 516 tests green (9 manual probes skipped),
     analyze clean.
+  - R-12 — **D-080**: About dialog with the official FreeCAD logo. The official
+    `org.freecad.FreeCAD.svg` (extracted from the official 1.1.3 AppImage) is bundled at
+    `assets/images/freecad-logo.svg`; Settings › About opens a dialog showing the 96 px logo,
+    version/license/copyright, the FPA trademark notice and the independent-project statement
+    (Frank D. Martínez, aka mnesarco). README and the notices generator switched from "ships no
+    FreeCAD artwork" to the attribution-only logo wording; notices regenerated. 517 tests green
+    (9 manual probes skipped), analyze clean; live dialog verified.
 
 ## Session log
 
@@ -483,6 +490,7 @@
 | 2026-09-30 | R9 | Cap the weekly list at the latest 52 (one year), newest first (`BuildsController.weeklyBuildLimit`); controller test + spec/user-guide wording | B-01 | `lib/state/builds_controller.dart`, `test/state/builds_controller_test.dart`, `docs/spec/03-ux.md`, `docs/user-guide.md`, `docs/impl/STATUS.md` |
 | 2026-09-30 | R10 | Home news card extended from 5 to 10 posts (`_NewsCard.maxItems`); widget test asserts the limit | — | `lib/ui/home/home_view.dart`, `test/ui/home_view_test.dart`, `docs/impl/STATUS.md` |
 | 2026-09-30 | R11 | D-079 copyright notices: `SPDX-FileCopyrightText` in 240 SPDX-tagged files, README/About/notices holder line, notices regenerated; 516 tests green | R-11 | `docs/impl/{DECISIONS,TASKS,STATUS}.md`, `README.md`, `THIRD_PARTY_NOTICES.md`, `tool/generate_third_party_notices.dart`, `lib/l10n/app_en.arb`, `lib/ui/settings/settings_view.dart`, `lib/**`, `test/**`, `packaging/**` |
+| 2026-09-30 | R12 | D-080 About dialog: bundled official FreeCAD logo, FPA trademark notice and independent-project statement, opened from Settings › About; README/notices wording updated; 517 tests green, live check | R-12 | `docs/impl/{DECISIONS,TASKS,STATUS}.md`, `README.md`, `THIRD_PARTY_NOTICES.md`, `tool/generate_third_party_notices.dart`, `assets/images/freecad-logo.svg`, `pubspec.yaml`, `lib/ui/settings/{about_dialog.dart,settings_view.dart}`, `lib/l10n/**`, `test/ui/settings_view_test.dart` |
 
 ## Standing notes for the next agent
 

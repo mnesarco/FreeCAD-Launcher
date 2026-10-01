@@ -1459,6 +1459,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Copyright 2026 Frank Martínez <mnesarco at gmail>';
 
   @override
+  String get settingsAboutOpen => 'About FreeCAD Launcher';
+
+  @override
+  String get aboutTitle => 'About FreeCAD Launcher';
+
+  @override
+  String get aboutLogoLabel => 'FreeCAD logo';
+
+  @override
+  String get aboutTrademark =>
+      'FreeCAD and the FreeCAD logo are trademarks of the FreeCAD Project Association AISBL.';
+
+  @override
+  String get aboutProject =>
+      'FreeCAD Launcher is an independent, community driven, open source project developed and maintained by Frank D. Martínez <aka mnesarco>.';
+
+  @override
+  String get aboutClose => 'Close';
+
+  @override
   String get settingsDiagnostics => 'Diagnostics';
 
   @override

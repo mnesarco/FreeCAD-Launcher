@@ -115,8 +115,12 @@ components and their licenses are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY
 
 Copyright 2026 Frank Martínez <mnesarco at gmail>.
 
-FreeCAD and the FreeCAD logo are trademarks of the FreeCAD Project Association AISBL. This
-launcher ships no FreeCAD artwork; FreeCAD itself is installed by the user from official sources.
+FreeCAD and the FreeCAD logo are trademarks of the FreeCAD Project Association AISBL. The
+launcher bundles the official FreeCAD logo unmodified for attribution only (About dialog);
+FreeCAD itself is installed by the user from official sources.
+
+FreeCAD Launcher is an independent, community driven, open source project developed and
+maintained by Frank D. Martínez (aka mnesarco).
 
 ## Development
 

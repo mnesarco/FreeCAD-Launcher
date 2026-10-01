@@ -15,6 +15,7 @@ import 'package:freecad_launcher/domain/settings/app_settings.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/platform/diagnostics.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/ui/settings/about_dialog.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
 
 class SettingsView extends StatefulWidget {
@@ -434,6 +435,13 @@ class _SettingsViewState extends State<SettingsView> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.info_outline),
+              title: Text(l10n.settingsAboutOpen),
+              trailing: const Icon(Icons.open_in_new, size: 16),
+              onTap: () => showLauncherAboutDialog(context),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.numbers_outlined),
               title: Text(l10n.settingsVersion),
               subtitle: Text('$appName $appVersion'),
             ),

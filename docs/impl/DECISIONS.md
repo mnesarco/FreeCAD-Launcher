@@ -1750,3 +1750,23 @@ Template:
   the line deterministic; the About card needs one l10n string.
 - **Refs**: D-074, `TASKS.md` R-11, `LICENSE`, `README.md`, `THIRD_PARTY_NOTICES.md`,
   `tool/generate_third_party_notices.dart`
+
+### D-080 — About dialog with the official FreeCAD logo
+- **Date**: 2026-09-30
+- **Status**: Accepted
+- **Context**: D-070/R-02 deliberately shipped no FreeCAD artwork and the README/notices stated
+  so. The owner wants the About experience to show the official FreeCAD logo (big) together
+  with the FPA trademark notice and the independent-project statement.
+- **Decision**:
+  - The official `org.freecad.FreeCAD.svg` app icon (extracted from the official FreeCAD 1.1.3
+    AppImage, bundled unmodified) is stored at `assets/images/freecad-logo.svg`.
+  - A dedicated About dialog, opened from the Settings › About card, shows the logo at 96 px,
+    the trademark line ("FreeCAD and the FreeCAD logo are trademarks of the FreeCAD Project
+    Association AISBL.") and the statement that FreeCAD Launcher is an independent, community
+    driven, open source project developed and maintained by Frank D. Martínez (aka mnesarco).
+  - README and `THIRD_PARTY_NOTICES.md` change from "ships no FreeCAD artwork" to "bundles the
+    official logo unmodified for attribution only".
+- **Consequences**: the repo and AppImage now contain FreeCAD artwork; the trademark section
+  documents its attribution-only use; D-070's glyph-font decision is unaffected.
+- **Refs**: D-070, D-011, `TASKS.md` R-12, `assets/images/freecad-logo.svg`, `README.md`,
+  `tool/generate_third_party_notices.dart`

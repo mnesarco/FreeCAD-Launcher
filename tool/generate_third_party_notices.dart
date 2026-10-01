@@ -108,8 +108,10 @@ void main() {
     ..writeln()
     ..writeln(
       'FreeCAD and the FreeCAD logo are trademarks of the FreeCAD Project Association '
-      'AISBL. This launcher ships no FreeCAD artwork; the FreeCAD application itself is '
-      'installed by the user from official sources. See <https://www.freecad.org>.',
+      'AISBL. The launcher bundles the official FreeCAD logo (`assets/images/freecad-logo.svg`, '
+      'from the official FreeCAD AppImage) unmodified, for attribution in the About dialog '
+      'only; the FreeCAD application itself is installed by the user from official sources. '
+      'See <https://www.freecad.org>.',
     )
     ..writeln()
     ..writeln('## Dart and Flutter packages')

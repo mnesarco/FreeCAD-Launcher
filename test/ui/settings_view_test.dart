@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/core/log.dart';
 import 'package:freecad_launcher/data/database.dart';
@@ -133,5 +134,31 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('1 KiB'), findsNothing);
+  });
+
+  testWidgets('opens the About dialog with the FreeCAD logo and notices', (tester) async {
+    await pumpSettings(tester);
+
+    await tester.scrollUntilVisible(
+      find.text('About FreeCAD Launcher'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('About FreeCAD Launcher'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SvgPicture), findsOneWidget);
+    expect(
+      find.textContaining('trademarks of the FreeCAD Project Association AISBL'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('independent, community driven, open source project'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SvgPicture), findsNothing);
   });
 }
