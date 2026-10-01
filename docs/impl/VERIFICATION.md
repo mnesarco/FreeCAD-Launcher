@@ -200,11 +200,15 @@ M7-01 (D-071) productionization checks (2026-09-21):
 
 ### M8 — Packaging, CI & cross-platform release (deferred, D-072)
 
-- [ ] GitHub tag run of `release-appimage.yml` (blocked on a remote, OQ-7)
-- [ ] `FreeCADLauncher-<ver>-x86_64.AppImage` + SHA-256 published; checksums verified
-- [ ] Release workflow: matrix tests, changelog, release creation; dry-run from an RC tag succeeds
-      and notes contain no tokens
-- [ ] First CI matrix run green on GitHub
+- [x] Manual GitHub run of `appimage-release.yml` (2026-10-01, run 36810294004): AppImage built,
+      sidecar verified and smoke-tested on CI (`--version` under Xvfb); artifact downloaded and
+      re-verified locally (29.9 MB, `sha256sum -c` OK, `FreeCAD Launcher 0.1.0`)
+- [ ] GitHub Release published with `FreeCADLauncher-<ver>-x86_64.AppImage` + SHA-256 + zsync
+      (workflow supports `create_release`/`tag`/`prerelease`)
+- [ ] Release workflow: matrix tests, changelog, release creation; dry-run release notes contain
+      no tokens
+- [x] First CI matrix run green on GitHub (ubuntu + windows; macOS removed per D-083, tests
+      Linux-only per D-082)
 - [ ] Windows/macOS artifacts built, installed and launched on clean machines (OQ-1)
 - [ ] Clean-machine Linux first-run flow completes with the published AppImage (M8-05)
 

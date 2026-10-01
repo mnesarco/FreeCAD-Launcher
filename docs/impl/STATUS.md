@@ -413,7 +413,12 @@
     refused registration on GitHub (stale parse cache; identical content under another filename
     registers), so it was renamed to **`appimage-release.yml`**. The first runs exposed two
     workflow bugs — missing `ninja-build libgtk-3-dev` and a stale rolling `continuous` runtime
-    pin — both fixed (runtime now pinned to the dated `20251108` release, **D-084**).
+    pin — both fixed (runtime now pinned to the dated `20251108` release, **D-084**). The
+    subsequent manual run succeeded end-to-end (run 36810294004, 1m54s): AppImage 29.9 MB,
+    sidecar verified, Xvfb smoke test, artifact uploaded; the artifact was downloaded and
+    re-verified locally (`sha256sum -c` OK, `--version` = FreeCAD Launcher 0.1.0). M8-02 is
+    DONE; the GitHub Release creation path (`create_release`/`tag`/`prerelease`) is still
+    untested.
 
 ## Session log
 
@@ -515,6 +520,7 @@
 | 2026-10-01 | R14 | Published to `mnesarco/FreeCAD-Launcher`: pushed `devel`, first CI run (Linux green; empty `assets/macros/` fixed), Windows/macOS test gating (**D-082**, M8-06) | M8-02 | `docs/impl/{DECISIONS,TASKS,STATUS}.md`, `.github/workflows/ci.yml`, `pubspec.yaml` |
 | 2026-10-01 | R15 | CI fully green (ubuntu/macOS/windows); macOS job then removed from the matrix (**D-083**, returns with M8-04); Linux+Windows remain with Linux tests and both release builds | M8-02 | `.github/workflows/ci.yml`, `docs/impl/{DECISIONS,TASKS,STATUS}.md` |
 | 2026-10-01 | R16 | Manual AppImage workflow: renamed to `appimage-release.yml` (GitHub refused the old path), fixed missing GTK/ninja deps and pinned the type-2 runtime to the dated `20251108` release (**D-084**) | M8-01 | `.github/workflows/appimage-release.yml`, `packaging/appimage/build_appimage.sh`, `README.md`, `docs/impl/{DECISIONS,STATUS,VERIFICATION}.md` |
+| 2026-10-01 | R17 | First CI-built AppImage from GitHub verified: run 36810294004 built/uploaded `FreeCADLauncher-0.1.0-x86_64.AppImage` (29.9 MB) + sha256 + zsync; artifact re-verified locally; M8-02 DONE | M8-01, M8-02 | `docs/impl/{TASKS,STATUS,VERIFICATION}.md` |
 
 ## Standing notes for the next agent
 
