@@ -3,7 +3,7 @@
 # FreeCAD Launcher
 
 [![CI](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/ci.yml/badge.svg)](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/ci.yml)
-[![Release AppImage](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/release-appimage.yml/badge.svg)](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/release-appimage.yml)
+[![Release AppImage](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/appimage-release.yml/badge.svg)](https://github.com/mnesarco/FreeCAD-Launcher/actions/workflows/appimage-release.yml)
 
 A desktop application that manages multiple FreeCAD builds and fully isolated profiles:
 each profile gets its own settings, addons, macros and Python packages, while all profiles share
