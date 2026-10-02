@@ -42,9 +42,10 @@ dependencies:
   drift: ^2.35.1
   path: ^1.9.1
   file_selector: ^1.1.0
-  flutter_svg: ^2.0.17
+  # flutter_svg: ^2.0.17
+  flutter_svg: ^2.3.0
   url_launcher: ^6.3.2
-  xml: ^6.6.1
+  xml: ^7.0.1
   crypto:
   archive: ^4.0.9
   collection: ^1.19.1
