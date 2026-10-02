@@ -15,16 +15,18 @@
   `TASKS.md` so work can resume after an interruption.
 - **Decisions this session**: **D-101** (signals 7.1: no signal writes during build, R-23 fixed by
   a post-frame refresh; deprecated `.watch()` → implicit-tracking migration planned as **B-17**,
-  sequenced after the B-16 signals upgrade).
-- **Next action**: finish the B-16 `signals_flutter` 6 → 7 group on branch `deps-upgrade-1`
-  (R-23 is fixed; still to do: live click-through per
-  [PLAN-dependency-upgrades.md](PLAN-dependency-upgrades.md), then the B-17 migration per
-  [PLAN-signals-implicit-migration.md](PLAN-signals-implicit-migration.md)); then retest `v0.4.1`
-  on Linux (weekly install + open logs/folder + Python package install from the AppImage); then
-  M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine). Next releases continue the `0.4.x`
-  line. Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1 branches,
-  2027-01-31), `B-02` in-place build updates, `R-21` (custom AppImage symlink cleanup), `B-16`
-  dependency upgrades ([plan](PLAN-dependency-upgrades.md)).
+  sequenced after the B-16 signals upgrade) and **D-102** (`signals_lint` deferred from the
+  signals group: 7.1.0 caps `analyzer <14`).
+- **Next action**: B-16 on branch `deps-upgrade-1` — signals group landed (`fcc90a7`, `2b2cdf7`)
+  but is not pushed, so CI is pending; commit the xml 7 `XmlName.parts` cleanup in
+  `lib/platform/freecad_preferences.dart` (uncommitted, completes the `[dep] upgrade
+  flutter_svg,xml` commit); then start B-17 per
+  [PLAN-signals-implicit-migration.md](PLAN-signals-implicit-migration.md). After B-16: retest
+  `v0.4.1` on Linux (weekly install + open logs/folder + Python package install from the
+  AppImage); then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine). Next releases
+  continue the `0.4.x` line. Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1
+  branches, 2027-01-31), `B-02` in-place build updates, `R-21` (custom AppImage symlink cleanup),
+  `B-16` dependency upgrades ([plan](PLAN-dependency-upgrades.md)).
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
 - **In progress**: **`v0.4.1` pre-release published** (manual `create_release=true`, run
@@ -34,10 +36,11 @@
   `_PythonInstallDialog` StatefulWidget; live driver click-through installed `six` cleanly;
   regression test fails on the old code). `v0.4.1` carries R-18..R-22; 614 tests green. `R-19`
   live AppImage check, `R-21` and `B-16` remain.
-- **B-16 signals upgrade** (branch `deps-upgrade-1`, uncommitted): 7.1.0 resolves; **R-23** fixed
-  (Config/Backups tab refreshes deferred to a post-frame callback; regression test fails on the
-  old code); 615 tests green; analyze shows only the 127 pending `.watch()` deprecations tracked
-  by B-17. Crash root cause and migration plan recorded in D-101 /
+- **B-16 signals upgrade** (branch `deps-upgrade-1`): landed as `fcc90a7` (R-23 fix) and
+  `2b2cdf7` (`[dep] upgrade signals_flutter` 6.3.1 → 7.1.0; `signals_lint` deferred per D-102).
+  Verified: codegen fresh, 615 tests green, analyze only the 127 `.watch` deprecations (B-17) and
+  a live click-through of every screen plus hot reload with zero runtime errors; CI on push
+  pending. Crash root cause and migration plan in D-101 /
   [PLAN-signals-implicit-migration.md](PLAN-signals-implicit-migration.md).
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
@@ -656,6 +659,8 @@
 | 2026-10-01 | R45 | **v0.4.1 pre-release published** (manual `create_release=true`, tag `v0.4.1`, run 36955018205; publish job green): `FreeCADLauncher-0.4.1-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.1-x86_64.AppImage` + `.sha256` + `.zsync`, both `sha256sum -c` verified after download; tag at `0c61e25` includes the R-22 fix. Version bumped 0.4.0 → 0.4.1; README/spec/VERIFICATION/STATUS updated | R-22, M8-03 | `lib/core/constants.dart`, `pubspec.yaml`, `README.md`, `docs/spec/{03-ux,07-distribution}.md`, `docs/impl/{VERIFICATION,TASKS,STATUS}.md` |
 
 | 2026-10-02 | R46 | Signals 7.1 crash root-caused (**R-23**): `refreshConfigSnapshots` wrote during `didChangeDependencies`; 7.1 effects call `markNeedsBuild()` synchronously (6.x deferred to `endOfFrame`) and implicit `SignalWidget`/`SignalStatefulWidget` fail identically in the same `TabBarView` structure, so `.watch()` is not the cause. Fix: post-frame refresh at both Config/Backups mounts + widget regression test (fails on the old code). Also wrote the B-17 implicit-tracking migration plan (**D-101**): 127 sites / 34 classes, API mapping, traps, per-batch process. 615 tests green, analyze unchanged (127 B-17 deprecations) | R-23, B-17, D-101 | `docs/impl/PLAN-signals-implicit-migration.md`, `docs/impl/{DECISIONS,TASKS,STATUS,PLAN-dependency-upgrades}.md`, `lib/ui/profiles/config_snapshots_view.dart`, `test/ui/config_snapshots_view_test.dart` |
+
+| 2026-10-02 | R47 | **B-16 signals group landed**: `[dep] upgrade signals_flutter` 6.3.1 → 7.1.0 (`2b2cdf7`, pubspec/lock only) after dropping `signals_lint` — latest 7.1.0 caps `analyzer <14` and would downgrade analyzer 14.4.0→13.3.0 / `_fe_analyzer_shared` 108→103 / `source_gen` 4.3.0→4.2.4 (**D-102**). Verified codegen fresh, 615 tests green, analyze only the 127 B-17 `.watch` deprecations, and a live xdotool/MCP click-through of Home, Profiles + all six detail tabs (including R-23 Config → Backups), Versions ×3, Addons ×3, Macros ×2 and Settings with zero runtime errors and a successful hot reload | B-16, D-102 | `pubspec.{yaml,lock}`, `docs/impl/{DECISIONS,PLAN-signals-implicit-migration,TASKS,STATUS}.md` |
 
 ## Standing notes for the next agent
 
