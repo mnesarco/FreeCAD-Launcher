@@ -18,10 +18,9 @@
   "homeStatAddons": "Addons",
   "homeStatMacros": "Macros",
   "homeStatPackages": "Python packages",
-  "homeLastUsed": "Last used profile",
+  "homeRecentProfiles": "Recent profiles",
+  "homeOpenProfile": "Open profile",
   "homeLaunch": "Launch",
-  "homeNoProfiles": "No profiles yet",
-  "homeLastUsedNever": "Never used",
   "homeUpdates": "Updates",
   "homeUpdatesAvailable": "{count} updates available",
   "@homeUpdatesAvailable": {

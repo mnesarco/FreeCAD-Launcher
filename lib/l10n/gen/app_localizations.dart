@@ -202,29 +202,23 @@ abstract class AppLocalizations {
   /// **'Python packages'**
   String get homeStatPackages;
 
-  /// No description provided for @homeLastUsed.
+  /// No description provided for @homeRecentProfiles.
   ///
   /// In en, this message translates to:
-  /// **'Last used profile'**
-  String get homeLastUsed;
+  /// **'Recent profiles'**
+  String get homeRecentProfiles;
+
+  /// No description provided for @homeOpenProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Open profile'**
+  String get homeOpenProfile;
 
   /// No description provided for @homeLaunch.
   ///
   /// In en, this message translates to:
   /// **'Launch'**
   String get homeLaunch;
-
-  /// No description provided for @homeNoProfiles.
-  ///
-  /// In en, this message translates to:
-  /// **'No profiles yet'**
-  String get homeNoProfiles;
-
-  /// No description provided for @homeLastUsedNever.
-  ///
-  /// In en, this message translates to:
-  /// **'Never used'**
-  String get homeLastUsedNever;
 
   /// No description provided for @homeUpdates.
   ///

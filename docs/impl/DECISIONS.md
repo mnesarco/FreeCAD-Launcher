@@ -1399,7 +1399,7 @@ Template:
 
 ### D-067 — Home dashboard, news feed and shell navigation state (M6-12)
 - **Date**: 2026-09-21
-- **Status**: Accepted
+- **Status**: Accepted; superseded by D-104 (single last-used-card clause only)
 - **Context**: Home was a static welcome screen; the product owner asked for a dashboard
   (general stats, launch the last used profile, check for updates) plus a user-configurable
   RSS/Atom news section (default `https://freecad.org/news.rss`, which currently 404s). Four
@@ -2198,3 +2198,21 @@ Template:
   resolves on CI; dev machines must match 3.47.6.
 - **Refs**: `.github/workflows/{ci,release}.yml`, `pubspec.lock`, `TASKS.md` B-16,
   `docs/impl/PLAN-dependency-upgrades.md`, D-071
+
+### D-104 — Home shows a row of recent profiles instead of a single last-used card
+- **Date**: 2026-10-02
+- **Status**: Accepted (supersedes D-067's single last-used-card clause)
+- **Context**: D-067/M6-12 gave Home one “Last used profile” card with a Launch button. The owner
+  wants quicker access — one click to launch any of the recently used profiles.
+- **Decision**: Home's top section becomes a “Recent profiles” row of up to five compact cards:
+  profiles with a `lastUsedAt`, newest launch first, build status `installed` only (missing/
+  broken builds are hidden). The whole card launches through the existing `launchProfile` guards
+  (health check, macOS quarantine consent, failure snackbar); a chevron opens the profile detail.
+  The row scrolls horizontally with fixed ~220 px cards and is hidden when no profile qualifies.
+  The old last-used card and its empty branch are removed.
+- **Consequences**: `ProfilesController` gains a derived `recentProfiles` computed (no schema
+  change); `HomeView` gains an optional `onOpenProfile` callback wired by `AppShell` to
+  `ProfilesViewState.openProfile`; spec 03 §2.1 and the Home widget tests are updated. A profile
+  whose build later goes missing disappears from Home but stays reachable in Profiles.
+- **Refs**: `TASKS.md` B-18, `docs/impl/PLAN-B18-home-recent-profiles.md`, `docs/spec/03-ux.md`
+  §2.1, D-067, `lib/ui/home/home_view.dart`

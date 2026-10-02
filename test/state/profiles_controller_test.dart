@@ -266,4 +266,59 @@ void main() {
     await started.launch!.exitCode;
     controller.dispose();
   });
+
+  group('recentProfiles', () {
+    test('keeps used healthy profiles, newest first, capped at five', () {
+      final controller = buildController();
+      controller.buildsById.value = {'build-1': sampleBuild()};
+      controller.profiles.value = [
+        for (var index = 0; index < 7; index++)
+          sampleProfile(
+            id: 'profile-$index',
+            name: 'P$index',
+            lastUsedAt: DateTime.utc(2026, 9, 10 + index),
+          ),
+      ];
+
+      final recent = controller.recentProfiles.value;
+
+      expect(recent, hasLength(5));
+      expect(
+        recent.map((profile) => profile.id),
+        ['profile-6', 'profile-5', 'profile-4', 'profile-3', 'profile-2'],
+      );
+      controller.dispose();
+    });
+
+    test('excludes never-used, unhealthy and orphaned profiles', () {
+      final controller = buildController();
+      controller.buildsById.value = {
+        'build-1': sampleBuild(),
+        'build-missing': sampleBuild(id: 'build-missing', status: BuildStatus.missing),
+        'build-broken': sampleBuild(id: 'build-broken', status: BuildStatus.broken),
+      };
+      controller.profiles.value = [
+        sampleProfile(id: 'used', lastUsedAt: DateTime.utc(2026, 9, 20)),
+        sampleProfile(id: 'never'),
+        sampleProfile(
+          id: 'unhealthy',
+          buildId: 'build-missing',
+          lastUsedAt: DateTime.utc(2026, 9, 21),
+        ),
+        sampleProfile(
+          id: 'broken',
+          buildId: 'build-broken',
+          lastUsedAt: DateTime.utc(2026, 9, 22),
+        ),
+        sampleProfile(
+          id: 'orphan',
+          buildId: 'does-not-exist',
+          lastUsedAt: DateTime.utc(2026, 9, 23),
+        ),
+      ];
+
+      expect(controller.recentProfiles.value.map((profile) => profile.id), ['used']);
+      controller.dispose();
+    });
+  });
 }

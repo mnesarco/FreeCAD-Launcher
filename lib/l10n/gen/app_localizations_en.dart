@@ -64,16 +64,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeStatPackages => 'Python packages';
 
   @override
-  String get homeLastUsed => 'Last used profile';
+  String get homeRecentProfiles => 'Recent profiles';
+
+  @override
+  String get homeOpenProfile => 'Open profile';
 
   @override
   String get homeLaunch => 'Launch';
-
-  @override
-  String get homeNoProfiles => 'No profiles yet';
-
-  @override
-  String get homeLastUsedNever => 'Never used';
 
   @override
   String get homeUpdates => 'Updates';

@@ -45,6 +45,7 @@ Profile sampleProfile({
   String name = 'Default',
   String buildId = 'build-1',
   String pythonVersion = '3.11',
+  DateTime? lastUsedAt,
 }) {
   return Profile(
     id: id,
@@ -53,6 +54,7 @@ Profile sampleProfile({
     pythonVersion: pythonVersion,
     createdAt: _baseTime,
     updatedAt: _baseTime,
+    lastUsedAt: lastUsedAt,
   );
 }
 

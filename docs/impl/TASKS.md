@@ -219,6 +219,7 @@ distribution decision recorded (OQ-1).
 | B-15 | Addon enable/disable per profile via the FreeCAD `ADDON_DISABLED` marker (switch on Profile → Addons rows; state derived from disk) | FR-4.13 | v0.2 |
 | B-16 | Dependency upgrades (plan in [PLAN-dependency-upgrades.md](PLAN-dependency-upgrades.md)): patch/minor first, then `signals_flutter` 7, `xml` 7 and the drift/sqlite3 majors in isolated commits, each with `build_runner`, analyze/tests, Linux+Windows CI, real smoke and packaging verification; PR #2 (all groups, Flutter 3.47.6 per D-103) and the follow-up B-17 cleanup PR #3 are merged, devel CI green and the no-publish release smoke (run 37063249302) verified both artifacts — the Linux real catalog install + isolated profile launch passed owner verification 2026-10-02; only the Windows-machine smoke remains, on hold (no Windows machine available as of 2026-10-02) | — | post-M8 (`0.4.x`) |
 | B-17 | Migrate off the deprecated `signals_flutter` `.watch(context)`/`Watch` API to implicit tracking (`SignalWidget`/`SignalStatefulWidget`, `SignalBuilder`); 127 sites / 34 classes; plan in [PLAN-signals-implicit-migration.md](PLAN-signals-implicit-migration.md); not a fix for R-23 (write-during-build rule applies to every API) | B-16, D-101 | post-M8 (`0.4.x`) |
+| B-18 | Home “Recent profiles” row: replace the single last-used card with a top row of up to five recent-profile cards clickable to launch (last launch order, unhealthy hidden, chevron opens the detail); plan in [PLAN-B18-home-recent-profiles.md](PLAN-B18-home-recent-profiles.md) | D-104, D-067 | v0.4.x |
 
 ### B-01 breakdown — weekly builds (planned, v0.2; D-077)
 
@@ -278,6 +279,19 @@ must drop the flag.
 | B-17b | Profiles/builds/home: `profiles_view` (9), `builds_view` (10), `profile_detail_view` (11), `home_view` (12) | Same; live pass on Home, Profiles + six detail tabs and Versions | B-17a | M | DONE — implicit tracking in 4 files / 10 classes; 615 tests green, `.watch` deprecations 116 → 74; live pass recorded under B-17d |
 | B-17c | Addons/macros: `addons_view` (22), `collections_view` (16), `macros_view` (14) | Same; live pass on Addons Catalog/Custom/Collections/detail and both Macros tabs | B-17a | M | DONE — implicit tracking in 3 files / 11 classes; `BundleDetailView` now tracks `bundles`/`items` itself (old sticky `watch()` masked the parent's early return; caught by a collections widget test); 615 tests green, `.watch` deprecations 74 → 22; live pass under B-17d |
 | B-17d | Settings/updates + verification: `settings_view` (13), `updates_summary_sheet` (9); zero `deprecated_member_use`, full suite, Linux+Windows CI and AppImage smoke | `grep lib` finds no `.watch(context)`; analyze clean; CI + packaging smoke green | B-17b, B-17c | M | DONE — implicit tracking in settings/updates; `grep` finds no `.watch()`/`Watch`, `flutter analyze` **0 issues** (the `--no-fatal-infos` bridge is removed); 615 tests green; live pass incl. a live dark↔light theme switch; PR [#3](https://github.com/mnesarco/FreeCAD-Launcher/pull/3) CI green on Ubuntu + Windows (run 37058324255). Packaging smoke stays with B-16 Phase 3 |
+
+### B-18 breakdown — Home “Recent profiles” row (planned, v0.4.x, D-104)
+
+Owner choices confirmed 2026-10-02 (last 5 by last launch; hide when none/unhealthy; whole card
+launches + chevron detail shortcut; compact cards; horizontal scroll). Details and file list in
+[PLAN-B18-home-recent-profiles.md](PLAN-B18-home-recent-profiles.md).
+
+| ID | Task | Done when | Deps | Effort | Status |
+|---|---|---|---|---|---|
+| B-18a | `ProfilesController.recentProfiles` computed (used profiles, `BuildStatus.installed` only, newest first, cap 5) + controller unit tests | Order/limit/health/exclusion tests green | D-030, D-104 | S | DONE — computed + 2 controller tests |
+| B-18b | Home UI: move the section to the top, horizontal row of fixed-width compact cards (name, build label/channel, last-used, running badge), whole-card launch, l10n keys | Widget tests for visibility/order/5-cap/health/running/launch; analyze/tests green | B-18a | M | DONE — top row + compact cards + l10n; 6 new Home widget tests; analyze clean, 624 tests green |
+| B-18c | Detail shortcut: `ProfilesViewState.openProfile(id)` + `AppShell` `onOpenProfile` wiring + chevron | Widget test asserts the callback/selection; live check | B-18b | S | DONE — `openProfile` + AppShell wiring + profiles widget test; live chevron → detail verified |
+| B-18d | Verification + docs: spec 03 §2.1, remove obsolete l10n keys, live pass (launch, shortcut, narrow-window scroll), CI | Spec/STATUS updated; analyze/tests + CI green; live pass recorded | B-18c | S | DONE (local) — spec 03 §2.1 updated, obsolete keys removed; live pass (row/order, chevron → detail, narrow-window horizontal scroll, zero runtime errors); launch tap is widget-tested with a spy (no live FreeCAD spawn); PR CI pending |
 
 Implementation note (2026-10-01, R22): B-10a..B-10f complete but **uncommitted pending
 review** — schema v6 migration verified live; 574 tests green, analyze clean; real repo

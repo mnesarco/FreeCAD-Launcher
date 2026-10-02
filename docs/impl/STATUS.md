@@ -23,7 +23,9 @@
   AppImage); then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine). Next releases
   continue the `0.4.x` line. Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1
   branches, 2027-01-31), `B-02` in-place build updates, `R-21` (custom AppImage symlink cleanup),
-  `B-16` dependency upgrades ([plan](PLAN-dependency-upgrades.md)).
+  `B-18` Home “Recent profiles” row — implemented on `b18-home-recent-profiles`, PR pending
+  ([plan](PLAN-B18-home-recent-profiles.md)), `B-16` dependency upgrades
+  ([plan](PLAN-dependency-upgrades.md)).
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
   - The B-16 Phase 3 Windows-machine smoke is **on hold** (no Windows machine available as of
@@ -52,6 +54,14 @@
   full live click-through incl. a live dark↔light theme switch, zero runtime errors; **merged to
   `devel`** (PR [#3](https://github.com/mnesarco/FreeCAD-Launcher/pull/3), run 37059277836
   green).
+- **B-18 Home “Recent profiles” row** (branch `b18-home-recent-profiles`): `ProfilesController`
+  gains a `recentProfiles` computed (used profiles with installed builds, newest first, cap 5)
+  and Home's top section is a horizontally scrollable row of up to five compact cards — the whole
+  card launches through the existing `launchProfile` guards and a chevron opens the profile
+  detail via the new `ProfilesViewState.openProfile`/`AppShell` wiring. Spec 03 §2.1 and l10n
+  updated (obsolete keys removed); 9 new tests (624 green, analyze clean); live pass verified the
+  order, chevron navigation and the narrow-window horizontal scroll with zero runtime errors;
+  PR/CI pending.
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
     diagnostics, CI workflow, test harness).
@@ -683,6 +693,10 @@
 | 2026-10-02 | R52 | Owner verified the upgraded app on a Linux machine: real catalog install + isolated profile launch, **all passed, no issues** (B-16 Phase 3). `VERIFICATION.md` §4 Linux cells and the plan updated; only the Windows-machine smoke remains | B-16, D-103 | `docs/impl/{PLAN-dependency-upgrades,VERIFICATION,STATUS,TASKS}.md` |
 
 | 2026-10-02 | R53 | B-16 Phase 3 Windows-machine smoke placed **on hold** (no Windows machine available); B-16 is otherwise complete (Windows CI job + portable-zip build green). Recorded in the plan, TASKS and the blockers list; next work is the `v0.4.1` Linux retest | B-16 | `docs/impl/{PLAN-dependency-upgrades,TASKS,STATUS}.md` |
+
+| 2026-10-02 | R54 | Planning: **B-18** Home “Recent profiles” row — up to 5 recent-profile cards at the top of Home, whole card launches, chevron opens the profile detail, unhealthy builds hidden, horizontal scroll; owner choices captured in **D-104** (supersedes D-067's last-used-card clause), plan [PLAN-B18-home-recent-profiles.md](PLAN-B18-home-recent-profiles.md) and B-18a..d breakdown recorded; no code | B-18, D-104 | `docs/impl/{PLAN-B18-home-recent-profiles,DECISIONS,TASKS,STATUS}.md` |
+
+| 2026-10-02 | R55 | **B-18 Home “Recent profiles” row implemented** (branch `b18-home-recent-profiles`): `ProfilesController.recentProfiles` computed (used + installed only, newest first, cap 5), top row of compact cards (whole card launches, chevron opens the detail through the new `ProfilesViewState.openProfile`/`AppShell` callback), l10n keys, spec 03 §2.1; 9 new tests (624 green, analyze clean); live pass (order, chevron → detail, narrow-window horizontal scroll, zero runtime errors); PR/CI pending | B-18, D-104 | `lib/state/profiles_controller.dart`, `lib/ui/{home/home_view,profiles/profiles_view,shell/app_shell}.dart`, `lib/l10n/**`, `docs/spec/03-ux.md`, `test/**`, `docs/impl/**` |
 
 ## Standing notes for the next agent
 

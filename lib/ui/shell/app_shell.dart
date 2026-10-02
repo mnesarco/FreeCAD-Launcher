@@ -128,7 +128,12 @@ class _AppShellState extends State<AppShell> {
         icon: Icons.home_outlined,
         selectedIcon: Icons.home,
         label: l10n.navHome,
-        view: const HomeView(),
+        view: HomeView(
+          onOpenProfile: (profileId) {
+            shell.select(AppSection.profiles);
+            _profilesKey.currentState?.openProfile(profileId);
+          },
+        ),
       ),
       _Section(
         icon: Icons.workspaces_outlined,

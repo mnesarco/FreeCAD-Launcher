@@ -104,6 +104,21 @@ void main() {
       expect(find.textContaining('1.1.3'), findsWidgets);
     });
 
+    testWidgets('openProfile opens the detail view programmatically', (tester) async {
+      final profile = await services.profilesRepository.getByName('Dev');
+      await pumpProfiles(tester);
+
+      tester
+          .state<ProfilesViewState>(find.byType(ProfilesView))
+          .openProfile(profile!.id);
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      expect(find.text('Overview'), findsOneWidget);
+      expect(find.text('Backups'), findsOneWidget);
+    });
+
     testWidgets('opens the profile folder from the detail header', (tester) async {
       final profile = await services.profilesRepository.getByName('Dev');
       await pumpProfiles(tester);
