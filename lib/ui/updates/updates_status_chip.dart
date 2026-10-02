@@ -7,14 +7,14 @@ import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/updates/updates_summary_sheet.dart';
 
-class UpdatesStatusChip extends StatelessWidget {
+class UpdatesStatusChip extends SignalWidget {
   const UpdatesStatusChip({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final count = AppScope.of(context).updates.outdatedCount.watch(context);
+    final count = AppScope.of(context).updates.outdatedCount.value;
     if (count == 0) {
       return const SizedBox.shrink();
     }

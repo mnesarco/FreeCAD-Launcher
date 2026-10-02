@@ -14,7 +14,7 @@ import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/macros/macro_icon.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 
-class InstalledMacrosList extends StatefulWidget {
+class InstalledMacrosList extends SignalStatefulWidget {
   const InstalledMacrosList({super.key, required this.profileId});
 
   final String profileId;
@@ -41,8 +41,8 @@ class _InstalledMacrosListState extends State<InstalledMacrosList> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).macros;
-    final installed = controller.installedMacros.watch(context);
-    final catalog = controller.macros.watch(context);
+    final installed = controller.installedMacros.value;
+    final catalog = controller.macros.value;
     final catalogByFileName = {
       for (final entry in catalog) entry.fileName: entry,
     };

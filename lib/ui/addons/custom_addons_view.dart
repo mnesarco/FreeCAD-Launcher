@@ -19,7 +19,7 @@ import 'package:freecad_launcher/ui/addons/requirements_dialog.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
 
-class CustomAddonsTab extends StatefulWidget {
+class CustomAddonsTab extends SignalStatefulWidget {
   const CustomAddonsTab({super.key});
 
   @override
@@ -62,17 +62,15 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final services = AppScope.of(context);
-    final profiles = services.profiles.profiles.watch(context);
+    final profiles = services.profiles.profiles.value;
     var profileId = _profileId;
     if (profileId == null || !profiles.any((profile) => profile.id == profileId)) {
       profileId = profiles.isEmpty ? null : profiles.first.id;
     }
-    final installed =
-        services.addons.installedAddons
-            .watch(context)
-            .where((row) => addonSourceFromStorage(row.source).isCustom)
-            .toList()
-          ..sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
+    final installed = services.addons.installedAddons.value
+        .where((row) => addonSourceFromStorage(row.source).isCustom)
+        .toList()
+      ..sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
     final profileNames = {for (final profile in profiles) profile.id: profile.name};
 
     return ListView(

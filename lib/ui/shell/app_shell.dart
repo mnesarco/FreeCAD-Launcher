@@ -20,7 +20,7 @@ import 'package:freecad_launcher/ui/updates/updates_status_chip.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/shell_controller.dart';
 
-class AppShell extends StatefulWidget {
+class AppShell extends SignalStatefulWidget {
   const AppShell({super.key});
 
   @override
@@ -122,7 +122,7 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final shell = AppScope.of(context).shell;
-    final section = shell.section.watch(context);
+    final section = shell.section.value;
     final sections = [
       _Section(
         icon: Icons.home_outlined,
@@ -212,14 +212,14 @@ class _Section {
   final Widget view;
 }
 
-class _StatusBar extends StatelessWidget {
+class _StatusBar extends SignalWidget {
   const _StatusBar();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final jobs = AppScope.of(context).jobs.jobs.watch(context);
+    final jobs = AppScope.of(context).jobs.jobs.value;
     final active = jobs.where((job) => job.isActive).toList();
 
     return Container(

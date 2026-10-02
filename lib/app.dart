@@ -8,14 +8,14 @@ import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/shell/app_shell.dart';
 
-class FreeCadLauncherApp extends StatelessWidget {
+class FreeCadLauncherApp extends SignalWidget {
   const FreeCadLauncherApp({super.key, required this.services});
 
   final AppServices services;
 
   @override
   Widget build(BuildContext context) {
-    final themeMode = services.settings.themeMode.watch(context);
+    final themeMode = services.settings.themeMode.value;
     return AppScope(
       services: services,
       child: MaterialApp(
