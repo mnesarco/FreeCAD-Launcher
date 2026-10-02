@@ -274,7 +274,7 @@ must drop the flag.
 
 | ID | Task | Done when | Deps | Effort | Status |
 |---|---|---|---|---|---|
-| B-17a | Small files: `app.dart`, `app_shell`, `jobs_dialog`, `updates_status_chip`, `config_snapshots_view`, `installed_macros`, `custom_addons_view` (11 sites) | No new analyze diagnostics; widget tests green; live check of the touched screens | B-16, D-101 | S | TODO |
+| B-17a | Small files: `app.dart`, `app_shell`, `jobs_dialog`, `updates_status_chip`, `config_snapshots_view`, `installed_macros`, `custom_addons_view` (11 sites) | No new analyze diagnostics; widget tests green; live check of the touched screens | B-16, D-101 | S | DONE — implicit tracking in 7 files; 615 tests green, `.watch` deprecations 127 → 116; live pass recorded under B-17d |
 | B-17b | Profiles/builds/home: `profiles_view` (9), `builds_view` (10), `profile_detail_view` (11), `home_view` (12) | Same; live pass on Home, Profiles + six detail tabs and Versions | B-17a | M | TODO |
 | B-17c | Addons/macros: `addons_view` (22), `collections_view` (16), `macros_view` (14) | Same; live pass on Addons Catalog/Custom/Collections/detail and both Macros tabs | B-17a | M | TODO |
 | B-17d | Settings/updates + verification: `settings_view` (13), `updates_summary_sheet` (9); zero `deprecated_member_use`, full suite, Linux+Windows CI and AppImage smoke | `grep lib` finds no `.watch(context)`; analyze clean; CI + packaging smoke green | B-17b, B-17c | M | TODO |

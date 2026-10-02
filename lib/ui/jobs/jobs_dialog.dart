@@ -28,14 +28,14 @@ Future<void> showJobsDialog(BuildContext context) {
   );
 }
 
-class JobsList extends StatelessWidget {
+class JobsList extends SignalWidget {
   const JobsList({super.key});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).jobs;
-    final jobs = controller.jobs.watch(context).reversed.toList();
+    final jobs = controller.jobs.value.reversed.toList();
 
     if (jobs.isEmpty) {
       return Center(child: Text(l10n.jobsEmpty));

@@ -12,7 +12,7 @@ import 'package:freecad_launcher/platform/config_snapshots.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/profiles/profile_manifest_dialogs.dart';
 
-class ProfileConfigTab extends StatefulWidget {
+class ProfileConfigTab extends SignalStatefulWidget {
   const ProfileConfigTab({super.key, required this.profileId});
 
   final String profileId;
@@ -44,7 +44,7 @@ class _ProfileConfigTabState extends State<ProfileConfigTab> {
     final services = AppScope.of(context);
     final paths = services.paths.profilePaths(widget.profileId);
     final snapshots =
-        services.profiles.configSnapshots.watch(context)[widget.profileId] ?? const [];
+        services.profiles.configSnapshots.value[widget.profileId] ?? const [];
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -133,7 +133,7 @@ class _ProfileConfigTabState extends State<ProfileConfigTab> {
   }
 }
 
-class ProfileBackupsTab extends StatefulWidget {
+class ProfileBackupsTab extends SignalStatefulWidget {
   const ProfileBackupsTab({super.key, required this.profileId});
 
   final String profileId;
@@ -164,7 +164,7 @@ class _ProfileBackupsTabState extends State<ProfileBackupsTab> {
     final l10n = AppLocalizations.of(context);
     final services = AppScope.of(context);
     final snapshots =
-        services.profiles.configSnapshots.watch(context)[widget.profileId] ?? const [];
+        services.profiles.configSnapshots.value[widget.profileId] ?? const [];
 
     return ListView(
       padding: const EdgeInsets.all(16),
