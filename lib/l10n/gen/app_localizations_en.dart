@@ -46,24 +46,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeStepAddons => 'Install addons';
 
   @override
-  String get homeStatus => 'Status';
-
-  @override
-  String get homeStatBuilds => 'Versions';
-
-  @override
-  String get homeStatProfiles => 'Profiles';
-
-  @override
-  String get homeStatAddons => 'Addons';
-
-  @override
-  String get homeStatMacros => 'Macros';
-
-  @override
-  String get homeStatPackages => 'Python packages';
-
-  @override
   String get homeRecentProfiles => 'Recent profiles';
 
   @override

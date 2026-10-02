@@ -11,7 +11,6 @@ import 'package:freecad_launcher/domain/news/news_item.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/shell_controller.dart';
-import 'package:freecad_launcher/ui/icons.dart';
 import 'package:freecad_launcher/ui/profiles/profile_actions.dart';
 import 'package:freecad_launcher/ui/profiles/profile_dialogs.dart';
 import 'package:freecad_launcher/ui/updates/updates_summary_sheet.dart';
@@ -65,9 +64,6 @@ class HomeViewState extends State<HomeView> {
 
     final builds = services.builds.installedBuilds.value;
     final profiles = services.profiles.profiles.value;
-    final addons = services.addons.installedAddons.value;
-    final macros = services.macros.installedMacros.value;
-    final packages = services.python.packages.value;
     final outdated = services.updates.outdatedCount.value;
     final checking = services.updates.checking.value;
     final newsItems = services.news.items.value;
@@ -102,44 +98,6 @@ class HomeViewState extends State<HomeView> {
           ),
           const SizedBox(height: 16),
         ],
-        _SectionTitle(title: l10n.homeStatus),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            _StatCard(
-              icon: FreeCADIcons.freecad,
-              label: l10n.homeStatBuilds,
-              value: builds.length,
-              onTap: () => shell.select(AppSection.versions),
-            ),
-            _StatCard(
-              icon: Icons.workspaces_outlined,
-              label: l10n.homeStatProfiles,
-              value: profiles.length,
-              onTap: () => shell.select(AppSection.profiles),
-            ),
-            _StatCard(
-              icon: Icons.extension_outlined,
-              label: l10n.homeStatAddons,
-              value: addons.length,
-              onTap: () => shell.select(AppSection.addons),
-            ),
-            _StatCard(
-              icon: Icons.auto_fix_high_outlined,
-              label: l10n.homeStatMacros,
-              value: macros.length,
-              onTap: () => shell.select(AppSection.macros),
-            ),
-            _StatCard(
-              icon: Icons.terminal_outlined,
-              label: l10n.homeStatPackages,
-              value: packages.length,
-              onTap: () => shell.select(AppSection.profiles),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
         _SectionTitle(title: l10n.homeUpdates),
         Card(
           margin: EdgeInsets.zero,
@@ -340,60 +298,6 @@ class _SectionTitle extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(title, style: Theme.of(context).textTheme.titleMedium),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final int value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: SizedBox(
-          width: 180,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Icon(icon, size: 28, color: theme.colorScheme.primary),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$value',
-                        style: theme.textTheme.titleLarge,
-                      ),
-                      Text(
-                        label,
-                        style: theme.textTheme.bodySmall,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
