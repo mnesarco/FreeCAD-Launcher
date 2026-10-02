@@ -1541,7 +1541,7 @@ Template:
 
 ### D-071 — AppImage productionization (M7-01)
 - **Date**: 2026-09-21
-- **Status**: Accepted
+- **Status**: Accepted; superseded by D-103 (toolchain pin clause only)
 - **Context**: S5/D-068 proved the pipeline; M7-01 must make a tag build a shippable artifact.
   Three production choices were confirmed with the product owner (CI Flutter pin, placeholder
   policy, icon sizes).
@@ -2181,3 +2181,20 @@ Template:
   diagnostics and `analysis_options.yaml` keeps no plugin block; B-17 decides whether to adopt a
   compatible linter at migration time.
 - **Refs**: `TASKS.md` B-16/B-17, `docs/impl/PLAN-signals-implicit-migration.md`, `pubspec.lock`
+
+### D-103 — CI and release toolchain moves to Flutter 3.47.6
+- **Date**: 2026-10-02
+- **Status**: Accepted (supersedes D-071's toolchain-pin clause only)
+- **Context**: The B-16 drift upgrade (`drift_dev` 2.35.1) requires `analyzer >=13.1` and thus
+  `meta ^1.18.3`, while the D-071 pin Flutter 3.41.4 ships `meta 1.17.0`; `flutter pub get`
+  therefore failed in CI on both Linux and Windows before any test ran. The working-tree lock was
+  resolved with Flutter 3.47.6 (stable, 2026-09-30, `meta 1.19.0`), the SDK the 615-test suite
+  and the live pass already run on locally.
+- **Decision**: Pin CI (`ci.yml`) and both release jobs (`release.yml`) to Flutter **3.47.6**
+  (stable) and update the user-guide/plan references; the Dart SDK constraint stays `^3.11.0`.
+  D-071's other clauses (placeholder policy, icon sizes) remain in force.
+- **Consequences**: Release artifacts are built with 3.47.6 from the next run on, so B-16
+  Phase 3 must smoke the AppImage/Windows jobs on the new SDK before a release; drift 2.35.1
+  resolves on CI; dev machines must match 3.47.6.
+- **Refs**: `.github/workflows/{ci,release}.yml`, `pubspec.lock`, `TASKS.md` B-16,
+  `docs/impl/PLAN-dependency-upgrades.md`, D-071
