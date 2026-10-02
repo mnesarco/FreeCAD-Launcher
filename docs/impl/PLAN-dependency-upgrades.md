@@ -13,7 +13,8 @@ zip).
 
 ## Baseline (2026-10-01, `v0.4.0`)
 
-- Flutter pinned to **3.41.4** in CI; Dart SDK constraint `^3.11.0`; `pubspec.lock` committed.
+- Flutter pinned to **3.41.4** in CI (moved to **3.47.6** on 2026-10-02, D-103); Dart SDK
+  constraint `^3.11.0`; `pubspec.lock` committed.
 - `flutter pub outdated` snapshot (direct dependencies; *resolvable* = reachable after relaxing
   direct constraints):
 
@@ -69,8 +70,9 @@ Each group is a separate commit with its own verification; revert just the faili
       [PLAN-signals-implicit-migration.md](PLAN-signals-implicit-migration.md)
 - [ ] `xml` 6 → 7: config read/write, `package.xml`, news feed; launch a profile and confirm
       `MacroPath` stays `<profile>/Macros/`
-- [ ] `drift`/`drift_dev`/`sqlite3` (only once resolvable): regenerate, run a migration test on a
-      copy of a real v6 database, exercise every DAO; verify sqlite loads in both artifacts
+- [ ] `drift`/`drift_dev`/`sqlite3` (only once resolvable; resolvable with Flutter 3.47.6,
+      D-103 — in PR #2, CI pending): regenerate, run a migration test on a copy of a real v6
+      database, exercise every DAO; verify sqlite loads in both artifacts
 - [ ] Remaining minors already covered by Phase 1
 - [ ] If a group cannot be stabilized, keep the working set and record the blocked bump in
       `TASKS.md` with the reason
@@ -98,4 +100,4 @@ Each group is a separate commit with its own verification; revert just the faili
 ## Refs
 
 `TASKS.md` B-16, `docs/impl/DECISIONS.md` (record any decision if a bump changes architecture),
-`pubspec.yaml`, `pubspec.lock`, `.github/workflows/ci.yml` (Flutter 3.41.4 pin).
+`pubspec.yaml`, `pubspec.lock`, `.github/workflows/ci.yml` (Flutter pin: 3.47.6, D-103).
