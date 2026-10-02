@@ -18,13 +18,13 @@
   sequenced after the B-16 signals upgrade), **D-102** (`signals_lint` deferred from the
   signals group: 7.1.0 caps `analyzer <14`) and **D-103** (Flutter pin 3.41.4 → 3.47.6, required
   by the drift 2.35.1 bump).
-- **Next action**: push the B-17 branch, open its PR and get CI green (Linux + Windows) — that
-  closes B-17d/B-17; then run the B-16 Phase 3 packaging smoke (manual `release.yml`, no
-  publish); retest `v0.4.1` on Linux (weekly install + open logs/folder + Python package install
-  from the AppImage); then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine). Next
-  releases continue the `0.4.x` line. Backlog: `B-01` legacy channel, `B-14` CalVer readiness
-  (before 27.1 branches, 2027-01-31), `B-02` in-place build updates, `R-21` (custom AppImage
-  symlink cleanup), `B-16` dependency upgrades
+- **Next action**: merge the green B-17 PR
+  [#3](https://github.com/mnesarco/FreeCAD-Launcher/pull/3) on owner approval; then run the B-16
+  Phase 3 packaging smoke (manual `release.yml`, no publish); retest `v0.4.1` on Linux (weekly
+  install + open logs/folder + Python package install from the AppImage); then M8-05 (clean-VM
+  Linux first-run) and M8-04 (macOS machine). Next releases continue the `0.4.x` line. Backlog:
+  `B-01` legacy channel, `B-14` CalVer readiness (before 27.1 branches, 2027-01-31), `B-02`
+  in-place build updates, `R-21` (custom AppImage symlink cleanup), `B-16` dependency upgrades
   ([plan](PLAN-dependency-upgrades.md)).
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
@@ -53,8 +53,9 @@
   `8009cfc`, B-17d commit pending); `flutter analyze` is back to **No issues found** and the
   `--no-fatal-infos` CI bridge is removed. B-17c found that implicit tracking drops unused
   subscriptions (the old `watch()` was sticky) and fixed `BundleDetailView`. 615 tests green;
-  full live click-through incl. a live dark↔light theme switch, zero runtime errors; PR/CI
-  pending.
+  full live click-through incl. a live dark↔light theme switch, zero runtime errors; PR
+  [#3](https://github.com/mnesarco/FreeCAD-Launcher/pull/3) CI **green on Ubuntu + Windows**
+  (run 37058324255) and merges on owner approval.
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
     diagnostics, CI workflow, test harness).
@@ -679,7 +680,7 @@
 
 | 2026-10-02 | R49 | PR [#2](https://github.com/mnesarco/FreeCAD-Launcher/pull/2) second CI run (37045958881) reached tests on Flutter 3.47.6 but failed on (a) `THIRD_PARTY_NOTICES.md` drift from the upgraded dependency set and (b) Windows `flutter analyze` exit 1 on the 127 tracked `.watch` infos. Regenerated the notices and set `flutter analyze --no-fatal-infos` in CI until B-17 removes the deprecated calls; third run 37046623647 **green on Ubuntu (4m36s) + Windows (9m2s)** | B-16, B-17 | `.github/workflows/ci.yml`, `THIRD_PARTY_NOTICES.md`, `docs/impl/{PLAN-signals-implicit-migration,TASKS,STATUS}.md` |
 
-| 2026-10-02 | R50 | **B-17 signals migration done locally**: all 127 `.watch()` sites in 34 classes moved to `SignalWidget`/`SignalStatefulWidget` in four batches (`6c9f375`, `f2c24ee`, `8009cfc`, B-17d commit); `flutter analyze` back to 0 issues, `--no-fatal-infos` bridge removed; B-17c found implicit tracking drops unused subscriptions (old sticky `watch()`) and fixed `BundleDetailView`; 615 tests green; full live pass incl. a live dark↔light theme switch, zero runtime errors; PR CI pending | B-17, D-101 | `lib/**`, `.github/workflows/ci.yml`, `docs/impl/{PLAN-signals-implicit-migration,TASKS,STATUS}.md` |
+| 2026-10-02 | R50 | **B-17 signals migration done locally**: all 127 `.watch()` sites in 34 classes moved to `SignalWidget`/`SignalStatefulWidget` in four batches (`6c9f375`, `f2c24ee`, `8009cfc`, B-17d commit); `flutter analyze` back to 0 issues, `--no-fatal-infos` bridge removed; B-17c found implicit tracking drops unused subscriptions (old sticky `watch()`) and fixed `BundleDetailView`; 615 tests green; full live pass incl. a live dark↔light theme switch, zero runtime errors; PR #3 CI **green on Ubuntu + Windows** (run 37058324255), merge on owner approval | B-17, D-101 | `lib/**`, `.github/workflows/ci.yml`, `docs/impl/{PLAN-signals-implicit-migration,TASKS,STATUS}.md` |
 
 ## Standing notes for the next agent
 
