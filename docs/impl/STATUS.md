@@ -659,6 +659,6 @@
 - Publishing (D-081): public repo `mnesarco/FreeCAD-Launcher`, branch `devel`, releases only
   from CI (`release.yml`, tag push or manual `workflow_dispatch` with optional `create_release`).
   CI runs Linux + Windows with tests on both; macOS is disabled per D-083 until M8-04.
-  `v0.4.0` is the only available release (D-100); the `0.4.x` line continues.
+  `v0.4.1` is the only available release (D-100); the `0.4.x` line continues.
 - `AGENTS.md` is tracked again (no longer git-excluded); keep it in sync with `docs/impl/`
   when conventions or the project state change.
