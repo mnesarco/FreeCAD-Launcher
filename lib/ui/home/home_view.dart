@@ -15,9 +15,13 @@ import 'package:freecad_launcher/ui/icons.dart';
 import 'package:freecad_launcher/ui/profiles/profile_actions.dart';
 import 'package:freecad_launcher/ui/profiles/profile_dialogs.dart';
 import 'package:freecad_launcher/ui/updates/updates_summary_sheet.dart';
+import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 
 class HomeView extends SignalStatefulWidget {
-  const HomeView({super.key});
+  const HomeView({super.key, this.onOpenProfile, this.onLaunchProfile});
+
+  final ValueChanged<String>? onOpenProfile;
+  final ValueChanged<Profile>? onLaunchProfile;
 
   @override
   State<HomeView> createState() => HomeViewState();
@@ -71,27 +75,9 @@ class HomeViewState extends State<HomeView> {
     final newsLoaded = services.news.loaded.value;
     final newsStale = services.news.stale.value;
     final newsError = services.news.error.value;
-
-    Profile? lastUsed;
-    for (final profile in profiles) {
-      final usedAt = profile.lastUsedAt;
-      if (usedAt == null) {
-        continue;
-      }
-      if (lastUsed == null || usedAt.isAfter(lastUsed.lastUsedAt!)) {
-        lastUsed = profile;
-      }
-    }
-    lastUsed ??= profiles.isEmpty ? null : profiles.first;
-    Build? lastBuild;
-    if (lastUsed != null) {
-      for (final build in builds) {
-        if (build.id == lastUsed.buildId) {
-          lastBuild = build;
-          break;
-        }
-      }
-    }
+    final recent = services.profiles.recentProfiles.value;
+    final buildsById = services.profiles.buildsById.value;
+    final runningProfiles = services.profiles.runningProfiles.value;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -105,6 +91,17 @@ class HomeViewState extends State<HomeView> {
             ),
             onInstallAddons: () => shell.select(AppSection.addons),
           ),
+        if (recent.isNotEmpty) ...[
+          _SectionTitle(title: l10n.homeRecentProfiles),
+          _RecentProfilesRow(
+            profiles: recent,
+            buildsById: buildsById,
+            runningProfiles: runningProfiles,
+            onLaunch: widget.onLaunchProfile,
+            onOpenProfile: widget.onOpenProfile,
+          ),
+          const SizedBox(height: 16),
+        ],
         _SectionTitle(title: l10n.homeStatus),
         Wrap(
           spacing: 12,
@@ -141,35 +138,6 @@ class HomeViewState extends State<HomeView> {
               onTap: () => shell.select(AppSection.profiles),
             ),
           ],
-        ),
-        const SizedBox(height: 16),
-        _SectionTitle(title: l10n.homeLastUsed),
-        Card(
-          margin: EdgeInsets.zero,
-          child: lastUsed == null
-              ? ListTile(
-                  leading: const Icon(Icons.person_off_outlined),
-                  title: Text(l10n.homeNoProfiles),
-                )
-              : ListTile(
-                  leading: const Icon(Icons.play_circle_outline),
-                  title: Text(lastUsed.name),
-                  subtitle: Text(
-                    [
-                      if (lastBuild != null) lastBuild.displayLabel,
-                      if (lastBuild != null) lastBuild.channel.name,
-                      if (lastUsed.lastUsedAt != null)
-                        formatProfileDateTime(l10n, lastUsed.lastUsedAt)
-                      else
-                        l10n.homeLastUsedNever,
-                    ].join('  ·  '),
-                  ),
-                  trailing: FilledButton.icon(
-                    onPressed: () => launchProfile(context, lastUsed!),
-                    icon: const Icon(Icons.play_arrow),
-                    label: Text(l10n.homeLaunch),
-                  ),
-                ),
         ),
         const SizedBox(height: 16),
         _SectionTitle(title: l10n.homeUpdates),
@@ -217,6 +185,148 @@ class HomeViewState extends State<HomeView> {
       return;
     }
     await showUpdatesSummarySheet(context);
+  }
+}
+
+class _RecentProfilesRow extends StatelessWidget {
+  const _RecentProfilesRow({
+    required this.profiles,
+    required this.buildsById,
+    required this.runningProfiles,
+    required this.onLaunch,
+    required this.onOpenProfile,
+  });
+
+  final List<Profile> profiles;
+  final Map<String, Build> buildsById;
+  final Set<String> runningProfiles;
+  final ValueChanged<Profile>? onLaunch;
+  final ValueChanged<String>? onOpenProfile;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 120,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: profiles.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final profile = profiles[index];
+          return SizedBox(
+            width: 220,
+            child: _RecentProfileCard(
+              profile: profile,
+              buildInfo: buildsById[profile.buildId],
+              running: runningProfiles.contains(profile.id),
+              onLaunch: onLaunch,
+              onOpenProfile: onOpenProfile,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _RecentProfileCard extends StatelessWidget {
+  const _RecentProfileCard({
+    required this.profile,
+    required this.buildInfo,
+    required this.running,
+    required this.onLaunch,
+    required this.onOpenProfile,
+  });
+
+  final Profile profile;
+  final Build? buildInfo;
+  final bool running;
+  final ValueChanged<Profile>? onLaunch;
+  final ValueChanged<String>? onOpenProfile;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final buildLine = [
+      if (buildInfo != null) buildInfo!.displayLabel,
+      if (buildInfo != null) buildInfo!.channel.name,
+    ].join('  ·  ');
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Tooltip(
+        message: l10n.homeLaunch,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            final launch = onLaunch;
+            if (launch != null) {
+              launch(profile);
+            } else {
+              launchProfile(context, profile);
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        profile.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall,
+                      ),
+                    ),
+                    if (running)
+                      CompactBadge(
+                        icon: Icons.play_arrow,
+                        label: l10n.profilesRunning,
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  buildLine,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall,
+                ),
+                const Spacer(),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.history,
+                      size: 14,
+                      color: theme.colorScheme.outline,
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        formatProfileDateTime(l10n, profile.lastUsedAt),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                    if (onOpenProfile != null)
+                      IconButton(
+                        icon: const Icon(Icons.chevron_right),
+                        tooltip: l10n.homeOpenProfile,
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () => onOpenProfile!(profile.id),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

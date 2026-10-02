@@ -103,6 +103,19 @@ class ProfilesController {
   final launchLogs = signal<Map<String, String>>({});
   final lastExitCodes = signal<Map<String, int>>({});
 
+  late final recentProfiles = computed<List<Profile>>(() {
+    final builds = buildsById.value;
+    final recent = profiles.value
+        .where(
+          (profile) =>
+              profile.lastUsedAt != null &&
+              builds[profile.buildId]?.status == BuildStatus.installed,
+        )
+        .toList()
+      ..sort((a, b) => b.lastUsedAt!.compareTo(a.lastUsedAt!));
+    return recent.take(5).toList(growable: false);
+  });
+
   final Map<String, int> _runningCounts = {};
 
   StreamSubscription<List<Profile>>? _profilesSubscription;

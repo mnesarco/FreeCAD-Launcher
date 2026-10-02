@@ -137,6 +137,10 @@ class ProfilesViewState extends State<ProfilesView> implements SectionShortcuts 
 
   void createProfile() => unawaited(_createProfile(context));
 
+  void openProfile(String profileId) {
+    setState(() => _selectedProfileId = profileId);
+  }
+
   Future<void> _importProfile(BuildContext context) async {
     final outcome = await importProfileManifest(context);
     if (outcome == null || !mounted) {

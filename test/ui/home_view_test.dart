@@ -11,6 +11,7 @@ import 'package:freecad_launcher/data/catalog/news_feed.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart'
     show CatalogFreshness;
 import 'package:freecad_launcher/data/database.dart';
+import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/platform/addon_installer.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
@@ -113,7 +114,11 @@ void main() {
     }
   }
 
-  Future<void> pumpHome(WidgetTester tester) async {
+  Future<void> pumpHome(
+    WidgetTester tester, {
+    ValueChanged<String>? onOpenProfile,
+    ValueChanged<Profile>? onLaunchProfile,
+  }) async {
     await tester.runAsync(() async {
       await tester.pumpWidget(
         AppScope(
@@ -121,7 +126,12 @@ void main() {
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const Scaffold(body: HomeView()),
+            home: Scaffold(
+              body: HomeView(
+                onOpenProfile: onOpenProfile,
+                onLaunchProfile: onLaunchProfile,
+              ),
+            ),
           ),
         ),
       );
@@ -135,8 +145,15 @@ void main() {
     await settle(tester);
   }
 
-  testWidgets('shows stats, last used profile, updates and news', (tester) async {
-    await db.buildsDao.save(sampleBuild());
+  Future<void> seedInstalledBuild({String id = 'build-1', String version = '1.1.3'}) async {
+    final directory = Directory(p.join(tempDirectory.path, 'builds', id))
+      ..createSync(recursive: true);
+    final executable = File(p.join(directory.path, 'FreeCAD.AppImage'))..createSync();
+    await db.buildsDao.save(sampleBuild(id: id, version: version, localPath: executable.path));
+  }
+
+  testWidgets('shows stats, recent profiles, updates and news', (tester) async {
+    await seedInstalledBuild();
     await db.profilesDao.save(sampleProfile());
     await db.profilesDao.touchLastUsed('profile-1', DateTime.utc(2026, 9, 20, 11));
     await db.installedAddonsDao.save(sampleAddon(addonId: 'A2plus'));
@@ -154,16 +171,114 @@ void main() {
     expect(find.text('Addons'), findsOneWidget);
     expect(find.text('Macros'), findsOneWidget);
     expect(find.text('Python packages'), findsOneWidget);
-    expect(find.text('Last used profile'), findsOneWidget);
+    expect(find.text('Recent profiles'), findsOneWidget);
     expect(find.text('Default'), findsOneWidget);
-    expect(find.text('Launch'), findsOneWidget);
+    expect(find.text('Last used profile'), findsNothing);
     expect(find.text('Everything is up to date'), findsOneWidget);
     expect(find.text('FreeCAD 1.2 released'), findsOneWidget);
     expect(find.text('The 1.2 release brings a new sketcher.'), findsOneWidget);
   });
 
+  testWidgets('hides the recent profiles row when nobody used a profile', (tester) async {
+    await seedInstalledBuild();
+    await db.profilesDao.save(sampleProfile());
+    newsSource.streamFactory = () => Stream.fromIterable([utf8.encode(rss)]);
+
+    await pumpHome(tester);
+
+    expect(find.text('Recent profiles'), findsNothing);
+    expect(find.text('Default'), findsNothing);
+  });
+
+  testWidgets('lists up to five recent profiles, newest first', (tester) async {
+    tester.view.physicalSize = const Size(1600, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await seedInstalledBuild();
+    for (var index = 0; index < 6; index++) {
+      await db.profilesDao.save(sampleProfile(id: 'profile-$index', name: 'P$index'));
+      await db.profilesDao.touchLastUsed(
+        'profile-$index',
+        DateTime.utc(2026, 9, 10 + index),
+      );
+    }
+    newsSource.streamFactory = () => Stream.fromIterable([utf8.encode(rss)]);
+
+    await pumpHome(tester);
+
+    expect(find.text('Recent profiles'), findsOneWidget);
+    expect(find.text('P5'), findsOneWidget);
+    expect(find.text('P4'), findsOneWidget);
+    expect(find.text('P1'), findsOneWidget);
+    expect(find.text('P0'), findsNothing);
+    expect(
+      tester.getTopLeft(find.text('P5')).dx,
+      lessThan(tester.getTopLeft(find.text('P4')).dx),
+    );
+  });
+
+  testWidgets('hides recent profiles whose build is unhealthy', (tester) async {
+    await seedInstalledBuild();
+    await db.buildsDao.save(
+      sampleBuild(id: 'build-missing', version: '1.2.0', status: BuildStatus.missing),
+    );
+    await db.profilesDao.save(sampleProfile(id: 'healthy', name: 'Healthy'));
+    await db.profilesDao.save(
+      sampleProfile(id: 'unhealthy', name: 'Unhealthy', buildId: 'build-missing'),
+    );
+    await db.profilesDao.touchLastUsed('healthy', DateTime.utc(2026, 9, 20));
+    await db.profilesDao.touchLastUsed('unhealthy', DateTime.utc(2026, 9, 21));
+    newsSource.streamFactory = () => Stream.fromIterable([utf8.encode(rss)]);
+
+    await pumpHome(tester);
+
+    expect(find.text('Healthy'), findsOneWidget);
+    expect(find.text('Unhealthy'), findsNothing);
+  });
+
+  testWidgets('shows the running badge on a recent profile', (tester) async {
+    await seedInstalledBuild();
+    await db.profilesDao.save(sampleProfile());
+    await db.profilesDao.touchLastUsed('profile-1', DateTime.utc(2026, 9, 20));
+    newsSource.streamFactory = () => Stream.fromIterable([utf8.encode(rss)]);
+
+    await pumpHome(tester);
+    services.profiles.runningProfiles.value = {'profile-1'};
+    await settle(tester);
+
+    expect(find.text('Running'), findsOneWidget);
+  });
+
+  testWidgets('tapping a recent profile card launches it', (tester) async {
+    await seedInstalledBuild();
+    await db.profilesDao.save(sampleProfile());
+    await db.profilesDao.touchLastUsed('profile-1', DateTime.utc(2026, 9, 20));
+    newsSource.streamFactory = () => Stream.fromIterable([utf8.encode(rss)]);
+    String? launched;
+
+    await pumpHome(tester, onLaunchProfile: (profile) => launched = profile.id);
+    await tester.tap(find.text('Default'));
+    await settle(tester);
+
+    expect(launched, 'profile-1');
+  });
+
+  testWidgets('the card chevron opens the profile detail', (tester) async {
+    await seedInstalledBuild();
+    await db.profilesDao.save(sampleProfile());
+    await db.profilesDao.touchLastUsed('profile-1', DateTime.utc(2026, 9, 20));
+    newsSource.streamFactory = () => Stream.fromIterable([utf8.encode(rss)]);
+    String? opened;
+
+    await pumpHome(tester, onOpenProfile: (profileId) => opened = profileId);
+    await tester.tap(find.byIcon(Icons.chevron_right));
+    await settle(tester);
+
+    expect(opened, 'profile-1');
+  });
+
   testWidgets('shows at most ten news posts', (tester) async {
-    await db.buildsDao.save(sampleBuild());
+    await seedInstalledBuild();
     await db.profilesDao.save(sampleProfile());
     final items = [
       for (var index = 0; index < 12; index++)
