@@ -549,6 +549,30 @@ void main() {
     expect(buildDirectory.existsSync(), isFalse);
   });
 
+  test('legacy unsanitized build directories are still resolved', () async {
+    if (Platform.isWindows) {
+      return;
+    }
+    const id = 'stable:1.1.3:linux:x86_64';
+    final legacyDirectory = Directory(p.join(paths.buildsDir, id))..createSync(recursive: true);
+    final executable = File(p.join(legacyDirectory.path, 'FreeCAD.AppImage'))
+      ..writeAsStringSync('binary');
+    await database.buildsDao.save(
+      sampleBuild(id: id, localPath: executable.path, status: BuildStatus.installed),
+    );
+    final controller = buildController();
+
+    await controller.reconcile();
+
+    final stored = await database.buildsDao.getById(id);
+    expect(stored!.status, BuildStatus.installed);
+
+    final result = await controller.remove(id);
+    expect(result.isOk, isTrue);
+    expect(legacyDirectory.existsSync(), isFalse);
+    controller.dispose();
+  });
+
   test('remove is blocked while profiles use the build', () async {
     final buildDirectory = Directory(paths.buildDir('build-1'))..createSync(recursive: true);
     await database.buildsDao.save(sampleBuild(id: 'build-1'));

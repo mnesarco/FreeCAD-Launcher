@@ -115,7 +115,7 @@ class PythonController {
     try {
       final interpreter = await _pythonResolver.resolve(
         kind: build.kind,
-        buildDirectory: _paths.buildDir(build.id),
+        buildDirectory: _paths.existingBuildDir(build.id) ?? _paths.buildDir(build.id),
         executablePath: build.localPath,
         storedPythonPath: build.pythonPath,
       );

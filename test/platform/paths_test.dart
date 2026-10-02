@@ -47,6 +47,19 @@ void main() {
     );
   });
 
+  test('existingBuildDir resolves legacy unsanitized directories', () {
+    if (Platform.isWindows) {
+      return;
+    }
+    const id = 'stable:1.1.3:linux:x86_64';
+    final legacy = Directory(p.join(paths.buildsDir, id))..createSync(recursive: true);
+    expect(paths.existingBuildDir(id), legacy.path);
+
+    final sanitized = Directory(paths.buildDir(id))..createSync(recursive: true);
+    expect(paths.existingBuildDir(id), sanitized.path);
+    expect(paths.buildDirCandidates(id), [sanitized.path, legacy.path]);
+  });
+
   test('ensureBaseDirectories creates every base directory', () async {
     await paths.ensureBaseDirectories();
 

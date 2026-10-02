@@ -651,7 +651,7 @@ class AddonsController {
       }
       final interpreter = await resolver.resolve(
         kind: build.kind,
-        buildDirectory: _paths.buildDir(build.id),
+        buildDirectory: _paths.existingBuildDir(build.id) ?? _paths.buildDir(build.id),
         executablePath: build.localPath,
         storedPythonPath: build.pythonPath,
       );

@@ -16,6 +16,7 @@ Build sampleBuild({
   BuildPlatform platform = BuildPlatform.linux,
   String arch = 'x86_64',
   String? assetName = 'FreeCAD_1.1.3-Linux-x86_64-py311.AppImage',
+  String? localPath,
   String? pythonVersion = '3.11',
   BuildStatus status = BuildStatus.installed,
 }) {
@@ -28,7 +29,7 @@ Build sampleBuild({
     platform: platform,
     arch: arch,
     assetName: assetName,
-    localPath: '/data/builds/$id',
+    localPath: localPath ?? '/data/builds/$id',
     sha256: 'abc123',
     verified: true,
     pythonVersion: pythonVersion,

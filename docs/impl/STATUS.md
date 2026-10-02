@@ -6,27 +6,30 @@
 - **Updated**: 2026-10-01
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
   (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; `v0.3.0` is published with the Linux AppImage and
-  the Windows portable zip after the full Windows smoke matrix passed on a clean machine; Linux
-  regression fixes R-18/R-19 await an AppImage retest; M8-04 needs macOS; M8-05 clean-VM Linux
-  pass ready)
+  the Windows portable zip after the full Windows smoke matrix passed on a clean machine; the
+  Linux regression audit (R40) found and fixed R-18/R-19/R-20; M8-04 needs macOS; M8-05
+  clean-VM Linux pass ready)
 - **Active branch**: `devel` (public) — `main` is reserved for a future release line
 - **Last session**: 2026-10-01
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
   `TASKS.md` so work can resume after an interruption.
 - **Decisions this session**: **D-095** (portable ASCII path segments), **D-096** (Windows
-  launches never send an empty environment block) and **D-097** (release workflow renamed
-  `release.yml`; `v0.3.0` is the first cross-platform release); D-093/D-094 were verified earlier
-  today on a second clean Windows machine.
-- **Next action**: `v0.3.0` is released (`release.yml`, run 36943644212); remaining M8 items are
-  M8-05 (clean-VM Linux first-run with the published AppImage) and M8-04 (macOS machine needed).
-  Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1 branches, 2027-01-31),
-  `B-02` in-place build updates.
+  launches never send an empty environment block), **D-097** (release workflow renamed
+  `release.yml`; `v0.3.0` is the first cross-platform release), **D-098** (openers get a
+  sanitized AppImage environment) and **D-099** (pre-D-095 build directories remain resolvable);
+  D-093/D-094 were verified earlier today on a second clean Windows machine.
+- **Next action**: commit/push R-18..R-20, rebuild the artifact, and retest on Linux (weekly
+  install + open logs/folder from the AppImage). Remaining M8 items: M8-05 (clean-VM Linux
+  first-run) and M8-04 (macOS machine). Backlog: `B-01` legacy channel, `B-14` CalVer readiness
+  (before 27.1 branches, 2027-01-31), `B-02` in-place build updates, `R-21` (custom AppImage
+  symlink cleanup).
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
-- **In progress**: **R-18** (weekly AppImage install aborted by probe-directory cleanup ENOTCONN)
-  and **R-19**/**D-098** (open logs/folder opened the browser from the AppImage) fixed, 611 tests
-  green, uncommitted — AppImage/Windows artifact rebuild + retest pending. `v0.3.0` remains the
-  published release; the Windows matrix pass is recorded in `VERIFICATION.md` §2/§4.
+- **In progress**: **R-18** verified against the real `weekly-2026.10.01` AppImage (Python 3.13
+  probe + cleanup OK); **R-19/D-098** fixed (live AppImage check pending); **R-20/D-099** added by
+  the Linux regression audit (pre-D-095 build dirs); **R-21** filed (pre-existing custom AppImage
+  symlink leak). 613 tests green — artifact rebuild + retest pending. `v0.3.0` remains the
+  published release; the Windows matrix pass is in `VERIFICATION.md` §2/§4.
   `R-14`..`R-17` and the release preparation are committed (`031cc0e`, `57b99fd`, `734124e`,
   `216c599`); `R-13` (D-090), `B-15a` (D-089) and `B-10a`..`B-10f` (D-085..D-088) are committed
   (`c0a00b9`, `a9e3f1c`, `5a372ab`).
@@ -631,6 +634,7 @@
 | 2026-10-01 | R37 | **v0.3.0 released** (**D-097**): version bump to 0.3.0, workflow renamed to `release.yml`, tag `v0.3.0` pushed → run 36943644212 (windows + appimage + publish all green); GitHub Release created with `FreeCADLauncher-0.3.0-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.3.0-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified from the downloaded release. **M8-03 DONE**; M8-04/M8-05 remain | M8-03, D-097 | `pubspec.yaml`, `lib/core/constants.dart`, `.github/workflows/{appimage-release.yml => release.yml}`, `README.md`, `docs/spec/03-ux.md`, `test/state/debug_bundle_controller_test.dart`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION,PLAN-M8-windows-release}.md` |
 | 2026-10-01 | R38 | README/user-guide Windows coverage: supported-platform line, Windows checksum command, data root (`%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher`), CLI wrapper path/`freecad-launcher.cmd`, Windows local build and troubleshooting entries; user guide limitations retitled v0.3 | M8-03 | `README.md`, `docs/user-guide.md`, `docs/impl/STATUS.md` |
 | 2026-10-01 | R39 | Two Linux regressions from the v0.3.0 AppImage: weekly install failed with `ENOTCONN` deleting the probe dir (FUSE mount inside probe `TMPDIR` still tearing down) → **R-18** best-effort cleanup with retries; "open logs folder" opened the browser because openers inherited the AppImage `LD_LIBRARY_PATH` (system `gio` undefined symbol) → **R-19/D-098** `openerEnvironment` scrub. Reproduced the `gio` failure locally with the AppImage libs; 611 tests green, analyze clean; artifact retest pending | R-18, R-19, D-098 | `lib/platform/python_probe.dart`, `lib/platform/file_actions.dart`, `test/platform/file_actions_test.dart`, `docs/impl/{DECISIONS,TASKS,STATUS}.md` |
+| 2026-10-01 | R40 | **Linux regression audit** of the Windows-support changes (baseline `c0a00b9`): every shared-code change reviewed; only D-095 had a real Linux regression — pre-D-095 managed builds resolved to a sanitized (missing) directory, so they were reported `missing` and orphaned on remove → **R-20/D-099** `existingBuildDir`/`buildDirCandidates` fallback in status/reconcile/verify/remove and Python resolution. R-18 verified against the real `weekly-2026.10.01` AppImage (Python 3.13 detected, probe dir removed); D-096 is Windows-guarded; opener env equivalent outside an AppImage; tls_trust is Windows-guarded plus the optional `ca-bundle.pem`; directorySize values unchanged. Filed **R-21** (custom AppImage symlink dirs not cleaned on remove — pre-existing at `c0a00b9`). 613 tests green, analyze clean | R-18..R-21, D-099 | `lib/platform/paths.dart`, `lib/state/{builds,python,addons}_controller.dart`, `test/platform/paths_test.dart`, `test/state/builds_controller_test.dart`, `test/data/test_fixtures.dart`, `docs/impl/{DECISIONS,TASKS,STATUS}.md` |
 
 ## Standing notes for the next agent
 

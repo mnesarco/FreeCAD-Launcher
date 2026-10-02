@@ -41,6 +41,24 @@ class AppPaths {
 
   String buildDir(String buildId) => _p.join(buildsDir, safePathSegment(buildId));
 
+  /// Directory names a build may use: the D-095 sanitized name and, on POSIX,
+  /// the legacy unsanitized one from installs created before D-095.
+  List<String> buildDirCandidates(String buildId) {
+    final sanitized = buildDir(buildId);
+    final legacy = _p.join(buildsDir, buildId);
+    return legacy == sanitized ? [sanitized] : [sanitized, legacy];
+  }
+
+  /// Existing build directory, preferring the sanitized name.
+  String? existingBuildDir(String buildId) {
+    for (final candidate in buildDirCandidates(buildId)) {
+      if (Directory(candidate).existsSync()) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
   ProfilePaths profilePaths(String profileId) =>
       ProfilePaths(_p.join(profilesDir, profileId), context: _p);
 

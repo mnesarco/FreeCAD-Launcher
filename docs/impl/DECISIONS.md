@@ -2101,3 +2101,22 @@ Template:
   AppImage; any system-tool spawn from the AppImage should reuse `openerEnvironment`; DISPLAY/
   Wayland/DBus stay inherited; unit tests cover the sanitizer.
 - **Refs**: `lib/platform/file_actions.dart`, R-19, R-08, D-068, `packaging/appimage/AppRun`
+
+### D-099 — Pre-D-095 build directories remain resolvable
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: D-095 changed managed build directories from `<channel>:<version>:<platform>:<arch>`
+  to a sanitized ASCII name on every platform. POSIX installs made before D-095 (for example
+  `builds/stable:1.1.3:linux:x86_64`) were still referenced by absolute paths in the database,
+  but status/verify/remove resolved the new sanitized name, so upgraded installs were reported
+  `missing` (launch blocked) and removal left the real directory orphaned. Found in the Linux
+  regression audit of the Windows-support changes (R40).
+- **Decision**: `AppPaths.existingBuildDir` and `buildDirCandidates` resolve the sanitized name
+  first and fall back to the legacy unsanitized name; `BuildsController` (status, reconcile,
+  verify, remove) and the Python resolvers use the resolved directory. New installs keep writing
+  the sanitized name; `remove` deletes both candidates. No directory migration is performed.
+- **Consequences**: upgrading keeps pre-D-095 builds usable; legacy directories are cleaned on
+  removal or on a later reinstall; Windows is unaffected because colon names could never exist
+  there; the fallback only ever reads a second path when the sanitized directory is absent.
+- **Refs**: `lib/platform/paths.dart`, `lib/state/{builds,python,addons}_controller.dart`, D-095,
+  R-20

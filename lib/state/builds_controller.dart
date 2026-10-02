@@ -128,7 +128,7 @@ class BuildsController {
     if (build.kind == BuildKind.custom) {
       return executable.existsSync() ? BuildStatus.installed : BuildStatus.missing;
     }
-    final directory = Directory(_paths.buildDir(build.id));
+    final directory = Directory(_paths.existingBuildDir(build.id) ?? _paths.buildDir(build.id));
     if (!directory.existsSync()) {
       return BuildStatus.missing;
     }
@@ -378,9 +378,11 @@ class BuildsController {
 
     await _database.buildsDao.deleteById(buildId);
     if (build.kind != BuildKind.custom) {
-      final buildDirectory = Directory(_paths.buildDir(buildId));
-      if (buildDirectory.existsSync()) {
-        buildDirectory.deleteSync(recursive: true);
+      for (final path in _paths.buildDirCandidates(buildId)) {
+        final buildDirectory = Directory(path);
+        if (buildDirectory.existsSync()) {
+          buildDirectory.deleteSync(recursive: true);
+        }
       }
     }
     return const Ok(null);
