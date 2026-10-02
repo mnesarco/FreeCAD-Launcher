@@ -64,7 +64,9 @@ and verified.
 Each group is a separate commit with its own verification; revert just the failing group.
 
 - [ ] `signals_flutter` 6 → 7 (with `signals_core`/`preact_signals`): adapt call sites, full
-      widget tests, live UI click-through (list above)
+      widget tests, live UI click-through (list above); the deferred `.watch(context)` →
+      implicit-tracking cleanup is B-17 per
+      [PLAN-signals-implicit-migration.md](PLAN-signals-implicit-migration.md)
 - [ ] `xml` 6 → 7: config read/write, `package.xml`, news feed; launch a profile and confirm
       `MacroPath` stays `<profile>/Macros/`
 - [ ] `drift`/`drift_dev`/`sqlite3` (only once resolvable): regenerate, run a migration test on a

@@ -197,6 +197,7 @@ distribution decision recorded (OQ-1).
 | R-20 | Pre-D-095 managed build directories (POSIX) were reported `missing` after D-095 sanitized names, blocking launches and orphaning the directory on remove; `existingBuildDir`/`buildDirCandidates` fall back to the legacy unsanitized name in status/reconcile/verify/remove and Python resolution (D-099) | Controller test (legacy colon directory reconciles installed and is deleted on remove) + paths tests; analyze/tests green | D-095 | S | DONE — 2 new tests |
 | R-21 | Custom local AppImage removal (D-023) leaves the `builds/<id>/` symlink directory behind: `remove` skips directory cleanup for every custom build instead of only in-place executables; clean the link when `localPath` lives under `builds/`, never the target (pre-existing, found in the R40 audit) | Controller test (link deleted, target intact; in-place executable untouched) | D-023, R-05 | S | TODO |
 | R-22 | Python-tab install dialog disposed its `TextEditingController` as soon as `showDialog` returned, while the closing route still rebuilt the `TextField`: "A TextEditingController was used after being disposed" cascading into `InheritedElement.debugDeactivated` (`_dependentsIsEmpty`) and a red error screen; the controller now lives in a `_PythonInstallDialog` StatefulWidget | Widget regression test opens/cancels the dialog and asserts no exception (fails on the old code); live driver click-through installs `six` cleanly; analyze/tests green | M4-07, M6-11 | S | DONE — fix + regression test verified both ways (614 tests green) |
+| R-23 | `signals_flutter` 7.1: first visit to the profile Backups tab (after Config) crashed with `SignalEffectException` — `ProfilesController.refreshConfigSnapshots` wrote `configSnapshots` from `didChangeDependencies`, and 7.1 subscriptions call `markNeedsBuild()` synchronously (6.3.1 deferred to `endOfFrame`); both tab mounts now defer the refresh to a post-frame callback (D-101) | Widget regression test: Config → Backups does not throw and the empty state renders (fails on the old code); analyze/tests green | B-16, D-101 | S | DONE — regression test fails on the old code with `SignalEffectException` and passes with the post-frame fix; 615 tests green, analyze unchanged (127 B-17 deprecations) |
 
 ## Backlog (post-MVP, scheduled when v0.1 is released)
 
@@ -217,6 +218,7 @@ distribution decision recorded (OQ-1).
 | B-14 | CalVer transition readiness (D-078, FEP-0003): stable tags `YY.N` (three releases/year, `26.3` branched 2026-09-30) and monthly patches `YY.N.P`; derive the current stable line from the catalog for the stable/legacy split; ignore RC tags (`26.3rc1`) and dedupe `26.3` vs `26.3.0`; ordering tests + spec 06 §1.3/§1.5. Needed before 27.1 branches (2027-01-31) makes 26.3 legacy | FR-1.1, FR-1.7, FR-1.8 | v0.2 |
 | B-15 | Addon enable/disable per profile via the FreeCAD `ADDON_DISABLED` marker (switch on Profile → Addons rows; state derived from disk) | FR-4.13 | v0.2 |
 | B-16 | Dependency upgrades (plan in [PLAN-dependency-upgrades.md](PLAN-dependency-upgrades.md)): patch/minor first, then `signals_flutter` 7, `xml` 7 and the drift/sqlite3 majors in isolated commits, each with `build_runner`, analyze/tests, Linux+Windows CI, real smoke and packaging verification | — | post-M8 (`0.4.x`) |
+| B-17 | Migrate off the deprecated `signals_flutter` `.watch(context)`/`Watch` API to implicit tracking (`SignalWidget`/`SignalStatefulWidget`, `SignalBuilder`); 127 sites / 34 classes; plan in [PLAN-signals-implicit-migration.md](PLAN-signals-implicit-migration.md); not a fix for R-23 (write-during-build rule applies to every API) | B-16, D-101 | post-M8 (`0.4.x`) |
 
 ### B-01 breakdown — weekly builds (planned, v0.2; D-077)
 
@@ -258,6 +260,19 @@ became D-085..D-088 at kickoff.
 | ID | Task | Done when | Deps | Effort | Status |
 |---|---|---|---|---|---|
 | B-15a | Toggle on Profile → Addons rows writing/removing `ADDON_DISABLED`; controller derives the disabled set from disk (`refreshDisabledState`, refreshed on the installed-addons stream and tab mount), no schema change; disabled badge/dimmed title | Controller tests (marker create/remove, externally created marker, missing files) + widget toggle test; live check; analyze/tests green | M4-11, D-089 | S | DONE |
+
+### B-17 breakdown — signals implicit-tracking migration (planned, D-101)
+
+Implicit tracking does **not** fix R-23 by itself; the no-write-during-build rule applies to every
+subscription API. API mapping, file list and migration traps in
+[PLAN-signals-implicit-migration.md](PLAN-signals-implicit-migration.md).
+
+| ID | Task | Done when | Deps | Effort | Status |
+|---|---|---|---|---|---|
+| B-17a | Small files: `app.dart`, `app_shell`, `jobs_dialog`, `updates_status_chip`, `config_snapshots_view`, `installed_macros`, `custom_addons_view` (11 sites) | No new analyze diagnostics; widget tests green; live check of the touched screens | B-16, D-101 | S | TODO |
+| B-17b | Profiles/builds/home: `profiles_view` (9), `builds_view` (10), `profile_detail_view` (11), `home_view` (12) | Same; live pass on Home, Profiles + six detail tabs and Versions | B-17a | M | TODO |
+| B-17c | Addons/macros: `addons_view` (22), `collections_view` (16), `macros_view` (14) | Same; live pass on Addons Catalog/Custom/Collections/detail and both Macros tabs | B-17a | M | TODO |
+| B-17d | Settings/updates + verification: `settings_view` (13), `updates_summary_sheet` (9); zero `deprecated_member_use`, full suite, Linux+Windows CI and AppImage smoke | `grep lib` finds no `.watch(context)`; analyze clean; CI + packaging smoke green | B-17b, B-17c | M | TODO |
 
 Implementation note (2026-10-01, R22): B-10a..B-10f complete but **uncommitted pending
 review** — schema v6 migration verified live; 574 tests green, analyze clean; real repo

@@ -3,27 +3,28 @@
 > Live file. Every session updates this at start and end. Keep it short — details belong in
 > `TASKS.md` and `DECISIONS.md`.
 
-- **Updated**: 2026-10-01
+- **Updated**: 2026-10-02
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
   (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; **`v0.4.1` is the only available release**
   (pre-release) with the Linux AppImage and the Windows portable zip; it carries the Linux
   regression fixes R-18..R-22; releases before 0.4.0 were withdrawn by the owner (D-100) and the
   `0.4.x` line continues; M8-04 needs macOS; M8-05 clean-VM Linux pass ready)
 - **Active branch**: `devel` (public) — `main` is reserved for a future release line
-- **Last session**: 2026-10-01
+- **Last session**: 2026-10-02
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
   `TASKS.md` so work can resume after an interruption.
-- **Decisions this session**: **D-095** (portable ASCII path segments), **D-096** (Windows
-  launches never send an empty environment block), **D-097** (release workflow renamed
-  `release.yml`), **D-098** (openers get a sanitized AppImage environment), **D-099** (pre-D-095
-  build directories remain resolvable) and **D-100** (pre-0.4.0 releases withdrawn; `0.4.x`
-  continues); D-093/D-094 were verified earlier today on a second clean Windows machine.
-- **Next action**: retest `v0.4.1` on Linux (weekly install + open logs/folder + Python package
-  install from the AppImage); then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine).
-  Next releases continue the `0.4.x` line. Backlog: `B-01` legacy channel, `B-14` CalVer
-  readiness (before 27.1 branches, 2027-01-31), `B-02` in-place build updates, `R-21` (custom
-  AppImage symlink cleanup), `B-16` dependency upgrades
-  ([plan](PLAN-dependency-upgrades.md)).
+- **Decisions this session**: **D-101** (signals 7.1: no signal writes during build, R-23 fixed by
+  a post-frame refresh; deprecated `.watch()` → implicit-tracking migration planned as **B-17**,
+  sequenced after the B-16 signals upgrade).
+- **Next action**: finish the B-16 `signals_flutter` 6 → 7 group on branch `deps-upgrade-1`
+  (R-23 is fixed; still to do: live click-through per
+  [PLAN-dependency-upgrades.md](PLAN-dependency-upgrades.md), then the B-17 migration per
+  [PLAN-signals-implicit-migration.md](PLAN-signals-implicit-migration.md)); then retest `v0.4.1`
+  on Linux (weekly install + open logs/folder + Python package install from the AppImage); then
+  M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine). Next releases continue the `0.4.x`
+  line. Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1 branches,
+  2027-01-31), `B-02` in-place build updates, `R-21` (custom AppImage symlink cleanup), `B-16`
+  dependency upgrades ([plan](PLAN-dependency-upgrades.md)).
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
 - **In progress**: **`v0.4.1` pre-release published** (manual `create_release=true`, run
@@ -33,6 +34,11 @@
   `_PythonInstallDialog` StatefulWidget; live driver click-through installed `six` cleanly;
   regression test fails on the old code). `v0.4.1` carries R-18..R-22; 614 tests green. `R-19`
   live AppImage check, `R-21` and `B-16` remain.
+- **B-16 signals upgrade** (branch `deps-upgrade-1`, uncommitted): 7.1.0 resolves; **R-23** fixed
+  (Config/Backups tab refreshes deferred to a post-frame callback; regression test fails on the
+  old code); 615 tests green; analyze shows only the 127 pending `.watch()` deprecations tracked
+  by B-17. Crash root cause and migration plan recorded in D-101 /
+  [PLAN-signals-implicit-migration.md](PLAN-signals-implicit-migration.md).
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
     diagnostics, CI workflow, test harness).
@@ -648,6 +654,8 @@
 | 2026-10-01 | R43 | Planning: dependency-upgrade plan saved ([PLAN-dependency-upgrades.md](PLAN-dependency-upgrades.md), backlog **B-16**) with the `pub outdated` snapshot, per-package risk table, phased patch/minor → majors process, packaging verification and rollback rules; no code change | B-16 | `docs/impl/{PLAN-dependency-upgrades,TASKS,STATUS}.md` |
 | 2026-10-01 | R44 | Python-tab package install crashed the UI: the dialog's `TextEditingController` was disposed when `showDialog` returned while the closing route still rebuilt the `TextField` (use-after-dispose → `InheritedElement.debugDeactivated`/`_dependentsIsEmpty` assert). **R-22**: controller moved into a `_PythonInstallDialog` StatefulWidget. Reproduced live with a temporary Flutter driver entrypoint (installs `six`); after the fix the flow completes with the success snackbar and no exceptions; regression widget test fails on the old code. 614 tests green, analyze clean; temporary driver files/pubspec reverted | R-22 | `lib/ui/profiles/profile_detail_view.dart`, `test/ui/profiles_view_test.dart`, `docs/impl/{TASKS,STATUS}.md` |
 | 2026-10-01 | R45 | **v0.4.1 pre-release published** (manual `create_release=true`, tag `v0.4.1`, run 36955018205; publish job green): `FreeCADLauncher-0.4.1-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.1-x86_64.AppImage` + `.sha256` + `.zsync`, both `sha256sum -c` verified after download; tag at `0c61e25` includes the R-22 fix. Version bumped 0.4.0 → 0.4.1; README/spec/VERIFICATION/STATUS updated | R-22, M8-03 | `lib/core/constants.dart`, `pubspec.yaml`, `README.md`, `docs/spec/{03-ux,07-distribution}.md`, `docs/impl/{VERIFICATION,TASKS,STATUS}.md` |
+
+| 2026-10-02 | R46 | Signals 7.1 crash root-caused (**R-23**): `refreshConfigSnapshots` wrote during `didChangeDependencies`; 7.1 effects call `markNeedsBuild()` synchronously (6.x deferred to `endOfFrame`) and implicit `SignalWidget`/`SignalStatefulWidget` fail identically in the same `TabBarView` structure, so `.watch()` is not the cause. Fix: post-frame refresh at both Config/Backups mounts + widget regression test (fails on the old code). Also wrote the B-17 implicit-tracking migration plan (**D-101**): 127 sites / 34 classes, API mapping, traps, per-batch process. 615 tests green, analyze unchanged (127 B-17 deprecations) | R-23, B-17, D-101 | `docs/impl/PLAN-signals-implicit-migration.md`, `docs/impl/{DECISIONS,TASKS,STATUS,PLAN-dependency-upgrades}.md`, `lib/ui/profiles/config_snapshots_view.dart`, `test/ui/config_snapshots_view_test.dart` |
 
 ## Standing notes for the next agent
 
