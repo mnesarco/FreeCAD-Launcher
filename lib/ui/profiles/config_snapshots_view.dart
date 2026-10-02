@@ -27,10 +27,15 @@ class _ProfileConfigTabState extends State<ProfileConfigTab> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_loaded) {
-      _loaded = true;
-      AppScope.of(context).profiles.refreshConfigSnapshots(widget.profileId);
+    if (_loaded) {
+      return;
     }
+    _loaded = true;
+    final controller = AppScope.of(context).profiles;
+    final profileId = widget.profileId;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.refreshConfigSnapshots(profileId);
+    });
   }
 
   @override
@@ -143,10 +148,15 @@ class _ProfileBackupsTabState extends State<ProfileBackupsTab> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_loaded) {
-      _loaded = true;
-      AppScope.of(context).profiles.refreshConfigSnapshots(widget.profileId);
+    if (_loaded) {
+      return;
     }
+    _loaded = true;
+    final controller = AppScope.of(context).profiles;
+    final profileId = widget.profileId;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.refreshConfigSnapshots(profileId);
+    });
   }
 
   @override

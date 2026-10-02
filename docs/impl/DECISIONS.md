@@ -2136,3 +2136,32 @@ Template:
   `v0.1.0`–`v0.3.0` still exist for reference.
 - **Refs**: `README.md`, `docs/spec/07-distribution.md`, `docs/impl/VERIFICATION.md`, R41/R42,
   M8-03
+
+### D-101 — Signals 7.1: defer build-phase writes and adopt implicit tracking
+- **Date**: 2026-10-02
+- **Status**: Accepted
+- **Context**: Testing the `signals_flutter` 7.1.0 upgrade (B-16) crashed on the profile detail
+  Backups tab: `ProfilesController.refreshConfigSnapshots` wrote `configSnapshots` from
+  `didChangeDependencies` (build phase) and `preact_signals`' `endBatch` rethrew the Flutter
+  "setState() or markNeedsBuild() called during build" error as a `SignalEffectException`.
+  7.1 subscriptions call `markNeedsBuild()` synchronously, while 6.3.1's `ElementWatcher`
+  deferred to `endOfFrame`. A throwaway test confirmed implicit
+  `SignalWidget`/`SignalStatefulWidget` tracking fails identically in the same `TabBarView`
+  structure, so the deprecated `.watch(context)` API (127 sites) is not the cause and migrating
+  to implicit tracking would not fix the crash.
+- **Decision**:
+  - Signal writes must never run inside a frame (`build`/`didChangeDependencies`/layout). The
+    Config/Backups tab mounts now defer `refreshConfigSnapshots` to a post-frame callback
+    (R-23), with a widget regression test (Config -> Backups).
+  - Implicit tracking is the target widget API for the signals 7.1 line: whole widgets use
+    `SignalWidget`/`SignalStatefulWidget`, localized scopes use `SignalBuilder`, and
+    `.watch(context)`/`Watch` are removed per `PLAN-signals-implicit-migration.md` (B-17),
+    sequenced after the B-16 signals dependency commit is stable.
+- **Consequences**: `.watch(context)` keeps working (deprecated) until B-17, so 127
+  `deprecated_member_use` infos remain in the meantime; the no-write-during-build rule is
+  enforced in review and any lazily invoked read must use `SignalBuilder` (only synchronous
+  build reads are tracked). Worth reporting upstream: `SignalEffectException.toString()` hides
+  the inner error, and the 7.1 elements lost the 6.x end-of-frame deferral.
+- **Refs**: `docs/impl/PLAN-signals-implicit-migration.md`, `TASKS.md` B-16/B-17/R-23,
+  `lib/ui/profiles/config_snapshots_view.dart`, `lib/state/profiles_controller.dart`,
+  `test/ui/config_snapshots_view_test.dart`, signals_flutter 7.1.0 `src/widgets/*.dart`

@@ -44,6 +44,32 @@ void main() {
     }
   }
 
+  testWidgets('switching from Config to Backups does not throw (R-23)', (tester) async {
+    await tester.pumpWidget(
+      AppScope(
+        services: services,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: ProfileDetailView(profileId: 'profile-1', onBack: () {}),
+          ),
+        ),
+      ),
+    );
+    services.profiles.start();
+    await settle(tester);
+
+    await tester.tap(find.text('Config'));
+    await settle(tester);
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.text('Backups'));
+    await settle(tester);
+    expect(tester.takeException(), isNull);
+    expect(find.text('No config snapshots yet.'), findsOneWidget);
+  });
+
   testWidgets('shows config paths and backs up then restores the config', (tester) async {
     await tester.pumpWidget(
       AppScope(
