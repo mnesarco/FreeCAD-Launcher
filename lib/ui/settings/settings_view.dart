@@ -18,7 +18,7 @@ import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/settings/about_dialog.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
 
-class SettingsView extends StatefulWidget {
+class SettingsView extends SignalStatefulWidget {
   const SettingsView({super.key});
 
   @override
@@ -177,21 +177,19 @@ class _SettingsViewState extends State<SettingsView> {
     final results = _report?.results ?? const <DiagnosticResult>[];
 
     final settings = services.settings;
-    final themeMode = settings.themeMode.watch(context);
-    final updateCadence = settings.updateCadence.watch(context);
-    final logLevel = settings.logLevel.watch(context);
-    final cacheRetention = settings.cacheRetention.watch(context);
-    final cacheSizes = services.cache.sizes.watch(context);
-    final cacheBusy = services.cache.busy.watch(context);
-    final bundleBusy = services.debugBundle.exporting.watch(context);
-    final jobsActive = services.jobs.jobs
-        .watch(context)
-        .any((job) => job.isActive);
-    final wrapperInstalled = settings.wrapperInstalled.watch(context);
-    final wrapperOnPath = settings.wrapperOnPath.watch(context);
-    final wrapperPath = settings.wrapperPath.watch(context);
-    final wrapperDirectory = settings.wrapperDirectory.watch(context);
-    final wrapperBusy = settings.wrapperBusy.watch(context);
+    final themeMode = settings.themeMode.value;
+    final updateCadence = settings.updateCadence.value;
+    final logLevel = settings.logLevel.value;
+    final cacheRetention = settings.cacheRetention.value;
+    final cacheSizes = services.cache.sizes.value;
+    final cacheBusy = services.cache.busy.value;
+    final bundleBusy = services.debugBundle.exporting.value;
+    final jobsActive = services.jobs.jobs.value.any((job) => job.isActive);
+    final wrapperInstalled = settings.wrapperInstalled.value;
+    final wrapperOnPath = settings.wrapperOnPath.value;
+    final wrapperPath = settings.wrapperPath.value;
+    final wrapperDirectory = settings.wrapperDirectory.value;
+    final wrapperBusy = settings.wrapperBusy.value;
 
     final wrapperStatus = !wrapperInstalled
         ? l10n.settingsCliWrapperNotInstalled

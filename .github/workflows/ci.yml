@@ -56,8 +56,7 @@ jobs:
           git diff --exit-code THIRD_PARTY_NOTICES.md
 
       - name: Analyze
-        # `.watch()` deprecations are tracked by B-17; drop --no-fatal-infos with it.
-        run: flutter analyze --no-fatal-infos
+        run: flutter analyze
 
       - name: Test
         run: flutter test
