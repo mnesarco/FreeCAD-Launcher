@@ -22,7 +22,7 @@ isolated profiles.
 - [Keyboard shortcuts](#keyboard-shortcuts)
 - [Data locations](#data-locations)
 - [Troubleshooting](#troubleshooting)
-- [Known limitations (v0.2)](#known-limitations-v02)
+- [Known limitations (v0.3)](#known-limitations-v03)
 
 ## Concepts
 
@@ -296,8 +296,9 @@ Manifest export/import recreates a profile on another machine without copying pa
 - **General** — theme (System/Light/Dark), update-check cadence, data directory shortcut.
 - **Logs** — log level (applied live), open the logs folder, export a **debug bundle** (zip with
   redacted logs, environment and diagnostics; no database) and reveal it.
-- **CLI wrapper** — installs a `freecad-launcher` wrapper into a user binary directory so you
-  can launch profiles from a terminal; shows PATH guidance (report-only) and removal.
+- **CLI wrapper** — installs a `freecad-launcher` wrapper into a user binary directory
+  (`~/.local/bin` on Linux, `%LOCALAPPDATA%\FreeCADLauncher\bin` on Windows), so you can launch
+  profiles from a terminal; shows PATH guidance (report-only) and removal.
 - **Cache** — per-category sizes (downloads, GitHub releases, addons, macros, news), clear a
   category, and *Clean up now* to prune downloads older than the retention period
   (Forever/7/30/90 days, default 30). The next catalog load refetches cleared data.
@@ -316,6 +317,9 @@ freecad-launcher --version
 freecad-launcher --help
 ```
 
+On Windows the wrapper is `freecad-launcher.cmd` under
+`%LOCALAPPDATA%\FreeCADLauncher\bin`; call it with the full path or add that directory to `PATH`.
+
 Exit codes: `0` success, `1` failure, `2` usage error. Running the binary without arguments opens
 the graphical application.
 
@@ -331,8 +335,9 @@ the graphical application.
 
 ## Data locations
 
-Linux: `~/.local/share/org.freecad.ext.launcher/` (Windows: under `%APPDATA%`; macOS:
-`~/Library/Application Support/`).
+Linux: `~/.local/share/org.freecad.ext.launcher/`. Windows:
+`%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher\`. macOS:
+`~/Library/Application Support/`.
 
 ```
 config.db          # index over the filesystem (builds, profiles, addons, packages, bundles, macros)
@@ -404,7 +409,7 @@ the error is written to the log.
 Settings → Logs → **Export debug bundle** and attach the zip. It contains redacted logs,
 environment details and diagnostics — never your database, profiles or tokens.
 
-## Known limitations (v0.2)
+## Known limitations (v0.3)
 
 - The Windows portable zip is unsigned (SmartScreen warning) and macOS artifacts are still
   planned (M8-04).
@@ -416,5 +421,6 @@ environment details and diagnostics — never your database, profiles or tokens.
   exposed yet (the support floor is FreeCAD 1.0+ for catalog builds).
 - Build updates are notify-only: install the new version from Versions → Available and rebind
   profiles manually.
-- No launcher self-update yet; replace the AppImage manually.
+- No launcher self-update yet; replace the AppImage manually (on Windows, extract the newer zip
+  over a fresh folder).
 - i18n scaffolding is in place but v0.2 ships English only.

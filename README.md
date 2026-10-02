@@ -51,27 +51,33 @@ settings, addons, macros and Python packages.
 ## Install
 
 Download the latest artifact from the
-[Releases page](https://github.com/mnesarco/FreeCAD-Launcher/releases).
+[Releases page](https://github.com/mnesarco/FreeCAD-Launcher/releases). Supported platforms:
+**Linux x86_64** (AppImage) and **Windows 10/11 x86_64** (portable zip); macOS packaging is
+planned.
 
-**Linux** — AppImage:
+**Linux** — `FreeCADLauncher-<version>-x86_64.AppImage`:
 
 ```sh
 chmod +x FreeCADLauncher-<version>-x86_64.AppImage
 ./FreeCADLauncher-<version>-x86_64.AppImage
 ```
 
-Verify the download with the published checksum, and if your system lacks FUSE, run it with
-`APPIMAGE_EXTRACT_AND_RUN=1`.
+Verify the download with the published `.sha256` sidecar (`sha256sum -c`), and if your system
+lacks FUSE, run it with `APPIMAGE_EXTRACT_AND_RUN=1`.
 
-**Windows** — portable zip (`FreeCADLauncher-<version>-windows-x86_64.zip`): extract it anywhere
-and run `freecad_launcher.exe`. The binary is unsigned, so SmartScreen may show a warning
-(More info → Run anyway). The zip also contains `7zr.exe` (required to extract the official
-FreeCAD `.7z` portable builds), `LICENSE` and `THIRD_PARTY_NOTICES.md`. The launcher trusts the
+**Windows** — `FreeCADLauncher-<version>-windows-x86_64.zip`: extract it anywhere and run
+`freecad_launcher.exe`. Keep `7zr.exe` next to the executable — it extracts the official FreeCAD
+`.7z` portable builds. The binary is unsigned, so SmartScreen may show a warning (More info →
+Run anyway); verify the `.sha256` sidecar first if you like:
+
+```powershell
+Get-FileHash -Algorithm SHA256 .\FreeCADLauncher-<version>-windows-x86_64.zip
+```
+
+The zip also contains `LICENSE`, `THIRD_PARTY_NOTICES.md` and the README. The launcher trusts the
 Windows certificate stores at startup (TLS inspection/corporate CAs work); if your firewall,
 antivirus or EDR still blocks the app, allow `freecad_launcher.exe` for outbound HTTPS
 (Settings → Diagnostics → Network reports connectivity).
-
-Verify the download with the published `.sha256` sidecar (`Get-FileHash -Algorithm SHA256`).
 
 Releases are built by the manually triggered **Release** workflow
 (Actions → *Release* → *Run workflow*), which builds both the AppImage and the Windows portable
@@ -83,15 +89,16 @@ Local test builds:
 ```sh
 flutter pub get
 dart run build_runner build --delete-conflicting-outputs
-ALLOW_PLACEHOLDER_UPDATE_INFO=1 packaging/appimage/build_appimage.sh
+ALLOW_PLACEHOLDER_UPDATE_INFO=1 packaging/appimage/build_appimage.sh    # Linux AppImage
 ```
 
-The script pins and verifies `appimagetool` and the AppImage runtime, and writes
-`build/appimage/FreeCADLauncher-<version>-x86_64.AppImage` plus `.sha256` and `.zsync` files.
-`ALLOW_PLACEHOLDER_UPDATE_INFO=1` is only needed for local builds without a real repository
-identity.
+On Windows, build the portable zip with `flutter build windows --release` followed by
+`packaging/windows/build_portable.ps1`. The AppImage script pins and verifies `appimagetool` and
+the AppImage runtime, and writes `build/appimage/FreeCADLauncher-<version>-x86_64.AppImage` plus
+`.sha256` and `.zsync` files; `ALLOW_PLACEHOLDER_UPDATE_INFO=1` is only needed for local builds
+without a real repository identity.
 
-For development, run from source with `flutter run -d linux`.
+For development, run from source with `flutter run -d linux` (or `-d windows`).
 
 ## Quick start
 
@@ -104,19 +111,23 @@ For development, run from source with `flutter run -d linux`.
    config snapshot / import a profile manifest.
 4. **Launch** — **Launch** on the profile card or Home's last-used card. FreeCAD runs with the
    profile's `user.cfg`/`system.cfg`; per-launch logs are written under the data directory.
-5. **Optional CLI** — Settings → *CLI wrapper* installs `freecad-launcher` into `~/.local/bin`
-   so profiles can be launched from a shell:
+5. **Optional CLI** — Settings → *CLI wrapper* installs `freecad-launcher` (`~/.local/bin` on
+   Linux, `%LOCALAPPDATA%\FreeCADLauncher\bin\freecad-launcher.cmd` on Windows) so profiles can
+   be launched from a shell:
 
    ```sh
    freecad-launcher list
    freecad-launcher run "My profile" -- --some-freecad-arg
    ```
 
+   On Windows use `freecad-launcher.cmd`, or add the install directory to `PATH`.
+
 Full instructions: **[User guide](docs/user-guide.md)**.
 
 ## Data, privacy and logs
 
-- Data root (Linux): `~/.local/share/org.freecad.ext.launcher` (shown in Settings → General).
+- Data root: Linux `~/.local/share/org.freecad.ext.launcher`, Windows
+  `%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher` (shown in Settings → General).
   It contains the database, installed builds, profiles, exports, downloads cache and logs.
 - Logs: `<data>/logs/`. Settings → Logs can export a **debug bundle** (redacted logs +
   environment summary, no database) for bug reports.
@@ -129,6 +140,10 @@ See the [user guide](docs/user-guide.md#troubleshooting). Common cases:
 
 - **AppImage does not start** — install FUSE (`libfuse2`) or run with
   `APPIMAGE_EXTRACT_AND_RUN=1`.
+- **SmartScreen warns on Windows** — the portable zip is unsigned; choose *More info → Run
+  anyway* (verify the `.sha256` sidecar first if you like).
+- **Windows blocks the catalogs or news** — allow `freecad_launcher.exe` outbound HTTPS in your
+  firewall/antivirus; Settings → Diagnostics → Network names the failing endpoint.
 - **"No versions available"** — check your connection and use *Check for updates*; the cached
   catalog is used offline with a stale-data notice.
 - **A build is missing/broken** — the Installed tab shows a badge; use *Verify* to re-check and
