@@ -5471,8 +5471,10 @@ class $$BuildsTableTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) =>
-                    (e.readTable(table), $$BuildsTableReferences(db, table, e)),
+                (e) => (
+                  e.readTable<$BuildsTable, Build>(table),
+                  $$BuildsTableReferences(db, table, e),
+                ),
               )
               .toList(),
           prefetchHooksCallback: ({profilesRefs = false}) {
@@ -6062,7 +6064,7 @@ class $$ProfilesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ProfilesTable, Profile>(table),
                   $$ProfilesTableReferences(db, table, e),
                 ),
               )
@@ -6646,7 +6648,7 @@ class $$InstalledAddonsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$InstalledAddonsTable, InstalledAddon>(table),
                   $$InstalledAddonsTableReferences(db, table, e),
                 ),
               )
@@ -7011,7 +7013,7 @@ class $$PythonPackagesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$PythonPackagesTable, PythonPackage>(table),
                   $$PythonPackagesTableReferences(db, table, e),
                 ),
               )
@@ -7326,7 +7328,7 @@ class $$BundlesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$BundlesTable, Bundle>(table),
                   $$BundlesTableReferences(db, table, e),
                 ),
               )
@@ -7593,7 +7595,7 @@ class $$BundleItemsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$BundleItemsTable, BundleItem>(table),
                   $$BundleItemsTableReferences(db, table, e),
                 ),
               )
@@ -8009,8 +8011,10 @@ class $$MacrosTableTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) =>
-                    (e.readTable(table), $$MacrosTableReferences(db, table, e)),
+                (e) => (
+                  e.readTable<$MacrosTable, Macro>(table),
+                  $$MacrosTableReferences(db, table, e),
+                ),
               )
               .toList(),
           prefetchHooksCallback: ({profileId = false}) {
@@ -8276,7 +8280,16 @@ class $$CatalogCacheTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$CatalogCacheTable, CatalogCacheEntry>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $CatalogCacheTable,
+                    CatalogCacheEntry
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -8412,7 +8425,16 @@ class $$SettingsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$SettingsTable, Setting>(table),
+                  BaseReferences<_$AppDatabase, $SettingsTable, Setting>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
