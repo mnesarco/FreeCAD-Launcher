@@ -39,9 +39,12 @@
 - **B-16 dependency upgrades** (branch `deps-upgrade-1`, pushed; draft PR
   [#2](https://github.com/mnesarco/FreeCAD-Launcher/pull/2)): drift, flutter_svg/xml, signals 7.1
   and the R-23 fix (`d7cf10b`, `cdbbec2`, `fcc90a7`, `2b2cdf7`, `6a2c08f`) plus the toolchain
-  move to Flutter 3.47.6 (`d0f5c1a`, D-103). The first CI run (37044201129) failed at `pub get`
-  because the drift bump needs `meta ^1.18.3` while the old pin shipped 1.17.0; the re-run on
-  3.47.6 is pending. Local evidence: codegen fresh, 615 tests green, analyze only the 127
+  move to Flutter 3.47.6 (`d0f5c1a`, D-103). CI run 37044201129 failed at `pub get` because the
+  drift bump needs `meta ^1.18.3` while the old pin shipped 1.17.0; the 3.47.6 re-run
+  (37045958881) then failed on third-party-notices drift and on Windows `flutter analyze` exiting
+  1 for the 127 tracked `.watch` infos. Both fixed (notices regenerated; CI uses
+  `flutter analyze --no-fatal-infos` until B-17) and a third run is pending. Local evidence:
+  codegen fresh, 615 tests green, analyze only the 127
   `.watch` deprecations (B-17), live click-through of every screen + hot reload, zero runtime
   errors. Crash root cause and migration plan in D-101 /
   [PLAN-signals-implicit-migration.md](PLAN-signals-implicit-migration.md).
@@ -666,6 +669,8 @@
 | 2026-10-02 | R47 | **B-16 signals group landed**: `[dep] upgrade signals_flutter` 6.3.1 → 7.1.0 (`2b2cdf7`, pubspec/lock only) after dropping `signals_lint` — latest 7.1.0 caps `analyzer <14` and would downgrade analyzer 14.4.0→13.3.0 / `_fe_analyzer_shared` 108→103 / `source_gen` 4.3.0→4.2.4 (**D-102**). Verified codegen fresh, 615 tests green, analyze only the 127 B-17 `.watch` deprecations, and a live xdotool/MCP click-through of Home, Profiles + all six detail tabs (including R-23 Config → Backups), Versions ×3, Addons ×3, Macros ×2 and Settings with zero runtime errors and a successful hot reload | B-16, D-102 | `pubspec.{yaml,lock}`, `docs/impl/{DECISIONS,PLAN-signals-implicit-migration,TASKS,STATUS}.md` |
 
 | 2026-10-02 | R48 | B-16 PR prepared on `deps-upgrade-1`: xml 7 `XmlName.parts` cleanup (`6a2c08f`), branch pushed, draft PR [#2](https://github.com/mnesarco/FreeCAD-Launcher/pull/2) opened. First CI run (37044201129) failed at `pub get` — drift 2.35.1 needs `meta ^1.18.3` while the Flutter 3.41.4 pin ships 1.17.0 — so CI/release moved to Flutter 3.47.6 (`d0f5c1a`, **D-103**, supersedes D-071's pin clause); re-run pending | B-16, D-103 | `.github/workflows/{ci,release}.yml`, `lib/platform/freecad_preferences.dart`, `docs/{user-guide,impl/{DECISIONS,PLAN-dependency-upgrades,TASKS,STATUS}}.md` |
+
+| 2026-10-02 | R49 | PR [#2](https://github.com/mnesarco/FreeCAD-Launcher/pull/2) second CI run (37045958881) reached tests on Flutter 3.47.6 but failed on (a) `THIRD_PARTY_NOTICES.md` drift from the upgraded dependency set and (b) Windows `flutter analyze` exit 1 on the 127 tracked `.watch` infos. Regenerated the notices and set `flutter analyze --no-fatal-infos` in CI until B-17 removes the deprecated calls; third run pending | B-16, B-17 | `.github/workflows/ci.yml`, `THIRD_PARTY_NOTICES.md`, `docs/impl/{PLAN-signals-implicit-migration,TASKS,STATUS}.md` |
 
 ## Standing notes for the next agent
 

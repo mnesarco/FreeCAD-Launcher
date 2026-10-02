@@ -268,7 +268,9 @@ subscription API. API mapping, file list and migration traps in
 [PLAN-signals-implicit-migration.md](PLAN-signals-implicit-migration.md).
 
 `signals_lint` is deferred (**D-102**): the latest 7.1.0 caps `analyzer <14` and would downgrade
-the analyzer/`source_gen` chain; re-evaluate it at B-17 start.
+the analyzer/`source_gen` chain; re-evaluate it at B-17 start. Until the B-17 migration is done,
+CI runs `flutter analyze --no-fatal-infos` (triggered by the 127 `.watch` deprecations); B-17d
+must drop the flag.
 
 | ID | Task | Done when | Deps | Effort | Status |
 |---|---|---|---|---|---|
