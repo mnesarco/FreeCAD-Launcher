@@ -18,14 +18,16 @@
   sequenced after the B-16 signals upgrade), **D-102** (`signals_lint` deferred from the
   signals group: 7.1.0 caps `analyzer <14`) and **D-103** (Flutter pin 3.41.4 → 3.47.6, required
   by the drift 2.35.1 bump).
-- **Next action**: B-16/B-17 are done except the owner's Windows-machine smoke (B-16 Phase 3).
-  Then retest `v0.4.1` on Linux (weekly install + open logs/folder + Python package install from
-  the AppImage); then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine). Next releases
+- **Next action**: the B-16 Windows-machine smoke is on hold (no machine); proceed with the
+  `v0.4.1` Linux retest (weekly install + open logs/folder + Python package install from the
+  AppImage); then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine). Next releases
   continue the `0.4.x` line. Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1
   branches, 2027-01-31), `B-02` in-place build updates, `R-21` (custom AppImage symlink cleanup),
   `B-16` dependency upgrades ([plan](PLAN-dependency-upgrades.md)).
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
+  - The B-16 Phase 3 Windows-machine smoke is **on hold** (no Windows machine available as of
+    2026-10-02); B-16 is otherwise complete.
 - **In progress**: **`v0.4.1` pre-release published** (manual `create_release=true`, run
   36955018205, tag at `0c61e25`) with `FreeCADLauncher-0.4.1-windows-x86_64.zip` + `.sha256` and
   `FreeCADLauncher-0.4.1-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
@@ -679,6 +681,8 @@
 | 2026-10-02 | R51 | B-17 PR #3 merged to `devel` (rebase, branch deleted); **B-16 Phase 3 no-publish release smoke** (run 37063249302) green — appimage 103 s / windows 221 s / publish skipped; artifacts downloaded and verified (`sha256sum -c` OK, AppImage `--version` = 0.4.1 exit 0 + GUI dashboard rendered, Windows zip = portable bundle + `7zr.exe` + license/notices). Remaining B-16 Phase 3: real 1.1.3 catalog install and the Windows-machine smoke (owner-dependent) | B-16, B-17, D-103 | `docs/impl/{PLAN-dependency-upgrades,STATUS,TASKS}.md` |
 
 | 2026-10-02 | R52 | Owner verified the upgraded app on a Linux machine: real catalog install + isolated profile launch, **all passed, no issues** (B-16 Phase 3). `VERIFICATION.md` §4 Linux cells and the plan updated; only the Windows-machine smoke remains | B-16, D-103 | `docs/impl/{PLAN-dependency-upgrades,VERIFICATION,STATUS,TASKS}.md` |
+
+| 2026-10-02 | R53 | B-16 Phase 3 Windows-machine smoke placed **on hold** (no Windows machine available); B-16 is otherwise complete (Windows CI job + portable-zip build green). Recorded in the plan, TASKS and the blockers list; next work is the `v0.4.1` Linux retest | B-16 | `docs/impl/{PLAN-dependency-upgrades,TASKS,STATUS}.md` |
 
 ## Standing notes for the next agent
 

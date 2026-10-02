@@ -96,8 +96,9 @@ Each group is a separate commit with its own verification; revert just the faili
   **owner-verified 2026-10-02** on a Linux machine: install + isolated profile launch, all
   passed, no issues.
 - [ ] If a Windows machine is available: install + launch smoke (full matrix not required for a
-      dependency-only change, but the binary must start and load catalogs) — needs the owner's
-      machine.
+      dependency-only change, but the binary must start and load catalogs) — **on hold**: no
+      Windows machine available as of 2026-10-02; the Windows CI job and the portable-zip build
+      are green.
 - [ ] Only after Phase 3 may a `0.4.x` release be cut (D-100 line).
 
 ## Rollback
