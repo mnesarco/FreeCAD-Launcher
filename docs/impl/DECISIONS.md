@@ -2165,3 +2165,19 @@ Template:
 - **Refs**: `docs/impl/PLAN-signals-implicit-migration.md`, `TASKS.md` B-16/B-17/R-23,
   `lib/ui/profiles/config_snapshots_view.dart`, `lib/state/profiles_controller.dart`,
   `test/ui/config_snapshots_view_test.dart`, signals_flutter 7.1.0 `src/widgets/*.dart`
+
+### D-102 — `signals_lint` deferred from the B-16 signals group
+- **Date**: 2026-10-02
+- **Status**: Accepted
+- **Context**: The signals 7.1 upgrade WIP added `signals_lint` 7.1.0 as an analyzer plugin to
+  aid the `.watch()` migration. Its transitive constraint `analyzer <14` downgraded the project
+  toolchain (analyzer 14.4.0 -> 13.3.0, `_fe_analyzer_shared` 108 -> 103, `source_gen` 4.3.0 ->
+  4.2.4) and the SDK warns that legacy analyzer plugins are being removed. 7.1.0 is the latest
+  release, no upgrade avoids the cap, and it produced no additional diagnostics here.
+- **Decision**: Keep the P1 dependency commit signals-only (`signals_flutter` 7.1.0) with the
+  analyzer chain at 14.4.0; defer `signals_lint` to B-17 and re-evaluate only if upstream drops
+  the analyzer cap or migrates to the supported analyzer-plugin API.
+- **Consequences**: `.watch()` sites are found through the normal `deprecated_member_use`
+  diagnostics and `analysis_options.yaml` keeps no plugin block; B-17 decides whether to adopt a
+  compatible linter at migration time.
+- **Refs**: `TASKS.md` B-16/B-17, `docs/impl/PLAN-signals-implicit-migration.md`, `pubspec.lock`

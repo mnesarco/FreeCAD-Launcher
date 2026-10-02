@@ -104,10 +104,16 @@ hard rule for this migration:
 
 ### P1 — land the B-16 signals group (upgrade stabilization)
 
-- [ ] Complete `PLAN-dependency-upgrades.md` Phase 1/Phase 2 for `signals_flutter` 6 → 7 as a
-      dependency-only commit (`.watch` stays, deprecated but functional) with the full widget
-      suite and the live click-through list below.
-- [ ] Only after P1 is stable (green CI + live pass), start P2.
+- [x] Landed 2026-10-02 as `2b2cdf7` (`[dep] upgrade signals_flutter`; 6.3.1 → 7.1.0,
+      `signals_core`/`preact_signals` 7.0.0). `signals_lint` is intentionally **not** included:
+      7.1.0 (latest) caps `analyzer <14` and would downgrade the toolchain (D-102).
+      Verified: `build_runner` codegen fresh, 615 tests green, analyze has only the 127 `.watch`
+      deprecations, and a live click-through (Home, Profiles + all six tabs including the R-23
+      Config → Backups path, Versions Installed/Available/Custom, Addons
+      Catalog/Collections/Custom, Macros Installed/Catalog, Settings) with zero runtime errors
+      and a successful hot reload.
+- [ ] Only after P1 is stable (green CI + live pass), start P2. Local stability is proven; the
+      remote CI run happens on push (`devel`/`main`) and is still pending.
 
 ### P2 — migration batches (one commit each)
 

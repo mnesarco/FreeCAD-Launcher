@@ -217,7 +217,7 @@ distribution decision recorded (OQ-1).
 | B-13 | Fully isolated private-build profiles (OQ-8) | spec 09 | post-v1.0 |
 | B-14 | CalVer transition readiness (D-078, FEP-0003): stable tags `YY.N` (three releases/year, `26.3` branched 2026-09-30) and monthly patches `YY.N.P`; derive the current stable line from the catalog for the stable/legacy split; ignore RC tags (`26.3rc1`) and dedupe `26.3` vs `26.3.0`; ordering tests + spec 06 §1.3/§1.5. Needed before 27.1 branches (2027-01-31) makes 26.3 legacy | FR-1.1, FR-1.7, FR-1.8 | v0.2 |
 | B-15 | Addon enable/disable per profile via the FreeCAD `ADDON_DISABLED` marker (switch on Profile → Addons rows; state derived from disk) | FR-4.13 | v0.2 |
-| B-16 | Dependency upgrades (plan in [PLAN-dependency-upgrades.md](PLAN-dependency-upgrades.md)): patch/minor first, then `signals_flutter` 7, `xml` 7 and the drift/sqlite3 majors in isolated commits, each with `build_runner`, analyze/tests, Linux+Windows CI, real smoke and packaging verification | — | post-M8 (`0.4.x`) |
+| B-16 | Dependency upgrades (plan in [PLAN-dependency-upgrades.md](PLAN-dependency-upgrades.md)): patch/minor first, then `signals_flutter` 7, `xml` 7 and the drift/sqlite3 majors in isolated commits, each with `build_runner`, analyze/tests, Linux+Windows CI, real smoke and packaging verification; the `signals_flutter` group landed 2026-10-02 (`2b2cdf7`) | — | post-M8 (`0.4.x`) |
 | B-17 | Migrate off the deprecated `signals_flutter` `.watch(context)`/`Watch` API to implicit tracking (`SignalWidget`/`SignalStatefulWidget`, `SignalBuilder`); 127 sites / 34 classes; plan in [PLAN-signals-implicit-migration.md](PLAN-signals-implicit-migration.md); not a fix for R-23 (write-during-build rule applies to every API) | B-16, D-101 | post-M8 (`0.4.x`) |
 
 ### B-01 breakdown — weekly builds (planned, v0.2; D-077)
@@ -266,6 +266,9 @@ became D-085..D-088 at kickoff.
 Implicit tracking does **not** fix R-23 by itself; the no-write-during-build rule applies to every
 subscription API. API mapping, file list and migration traps in
 [PLAN-signals-implicit-migration.md](PLAN-signals-implicit-migration.md).
+
+`signals_lint` is deferred (**D-102**): the latest 7.1.0 caps `analyzer <14` and would downgrade
+the analyzer/`source_gen` chain; re-evaluate it at B-17 start.
 
 | ID | Task | Done when | Deps | Effort | Status |
 |---|---|---|---|---|---|
