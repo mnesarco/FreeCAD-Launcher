@@ -18,14 +18,12 @@
   sequenced after the B-16 signals upgrade), **D-102** (`signals_lint` deferred from the
   signals group: 7.1.0 caps `analyzer <14`) and **D-103** (Flutter pin 3.41.4 → 3.47.6, required
   by the drift 2.35.1 bump).
-- **Next action**: B-16/B-17 are done; the remaining B-16 Phase 3 checks are owner-dependent —
-  the real Linux catalog install with the upgraded app (1.1.3 AppImage, ~780 MiB download) and a
-  Windows-machine install/launch smoke. Then retest `v0.4.1` on Linux (weekly install + open
-  logs/folder + Python package install from the AppImage); then M8-05 (clean-VM Linux first-run)
-  and M8-04 (macOS machine). Next releases continue the `0.4.x` line. Backlog: `B-01` legacy
-  channel, `B-14` CalVer readiness (before 27.1 branches, 2027-01-31), `B-02` in-place build
-  updates, `R-21` (custom AppImage symlink cleanup), `B-16` dependency upgrades
-  ([plan](PLAN-dependency-upgrades.md)).
+- **Next action**: B-16/B-17 are done except the owner's Windows-machine smoke (B-16 Phase 3).
+  Then retest `v0.4.1` on Linux (weekly install + open logs/folder + Python package install from
+  the AppImage); then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine). Next releases
+  continue the `0.4.x` line. Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1
+  branches, 2027-01-31), `B-02` in-place build updates, `R-21` (custom AppImage symlink cleanup),
+  `B-16` dependency upgrades ([plan](PLAN-dependency-upgrades.md)).
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
 - **In progress**: **`v0.4.1` pre-release published** (manual `create_release=true`, run
@@ -40,8 +38,9 @@
   `fcc90a7`, `2b2cdf7`, `6a2c08f`, `d0f5c1a`; devel CI green, run 37063237308), followed by the
   B-17 `.watch()` cleanup (PR #3, below). The no-publish release smoke (run 37063249302) built
   and verified the AppImage (`sha256` OK, `--version` = 0.4.1, GUI dashboard) and the Windows zip
-  (portable bundle + `7zr.exe` + license/notices); the real Linux catalog install and a
-  Windows-machine smoke remain owner checks. Crash root cause and migration plan in D-101 /
+  (portable bundle + `7zr.exe` + license/notices); the real Linux catalog install and an
+  isolated profile launch were **owner-verified on a Linux machine 2026-10-02** (all passed, no
+  issues) — only the Windows-machine smoke remains. Crash root cause and migration plan in D-101 /
   [PLAN-signals-implicit-migration.md](PLAN-signals-implicit-migration.md).
 - **B-17 signals implicit-tracking migration** (branch `signals-implicit-migration`): all 127
   `.watch(context)` sites across 34 classes migrated in four batches (`6c9f375`, `f2c24ee`,
@@ -678,6 +677,8 @@
 | 2026-10-02 | R50 | **B-17 signals migration done locally**: all 127 `.watch()` sites in 34 classes moved to `SignalWidget`/`SignalStatefulWidget` in four batches (`6c9f375`, `f2c24ee`, `8009cfc`, B-17d commit); `flutter analyze` back to 0 issues, `--no-fatal-infos` bridge removed; B-17c found implicit tracking drops unused subscriptions (old sticky `watch()`) and fixed `BundleDetailView`; 615 tests green; full live pass incl. a live dark↔light theme switch, zero runtime errors; PR #3 CI **green on Ubuntu + Windows** (run 37058324255), merge on owner approval | B-17, D-101 | `lib/**`, `.github/workflows/ci.yml`, `docs/impl/{PLAN-signals-implicit-migration,TASKS,STATUS}.md` |
 
 | 2026-10-02 | R51 | B-17 PR #3 merged to `devel` (rebase, branch deleted); **B-16 Phase 3 no-publish release smoke** (run 37063249302) green — appimage 103 s / windows 221 s / publish skipped; artifacts downloaded and verified (`sha256sum -c` OK, AppImage `--version` = 0.4.1 exit 0 + GUI dashboard rendered, Windows zip = portable bundle + `7zr.exe` + license/notices). Remaining B-16 Phase 3: real 1.1.3 catalog install and the Windows-machine smoke (owner-dependent) | B-16, B-17, D-103 | `docs/impl/{PLAN-dependency-upgrades,STATUS,TASKS}.md` |
+
+| 2026-10-02 | R52 | Owner verified the upgraded app on a Linux machine: real catalog install + isolated profile launch, **all passed, no issues** (B-16 Phase 3). `VERIFICATION.md` §4 Linux cells and the plan updated; only the Windows-machine smoke remains | B-16, D-103 | `docs/impl/{PLAN-dependency-upgrades,VERIFICATION,STATUS,TASKS}.md` |
 
 ## Standing notes for the next agent
 

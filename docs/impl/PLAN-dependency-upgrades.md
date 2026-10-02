@@ -2,8 +2,9 @@
 
 > **Status**: **done** (2026-10-02). All automated checks are green: PR #2 (drift/flutter_svg/xml/
 > signals 7.1 + R-23 fix) and PR #3 (B-17 `.watch()` cleanup) merged to `devel`, devel CI green,
-> and the no-publish release smoke (run 37063249302) built and verified both artifacts. Only the
-> owner-dependent real-install checks remain (Linux catalog install, Windows machine smoke).
+> the no-publish release smoke (run 37063249302) built and verified both artifacts, and the
+> owner verified a real Linux catalog install + isolated profile launch on the upgraded app.
+> Only the owner-dependent Windows-machine smoke remains.
 
 ## Goal
 
@@ -60,10 +61,11 @@ and verified.
       (run repeatedly through the sessions; `lib/**/*.g.dart` diff clean).
 - [x] `flutter analyze` + `flutter test`; CI green on Linux **and** Windows (PR #2 run
       37047738009, devel push 37063237308, PR #3 run 37059277836).
-- [ ] Real smoke: install a build, launch a profile, load addon/macro catalogs, edit a config
-      snapshot, export a debug bundle, build the AppImage. Catalogs, config tabs and the
-      AppImage build are verified; the real FreeCAD install/launch and debug-bundle export
-      remain (see Phase 3).
+- [x] Real smoke: install a build, launch a profile, load addon/macro catalogs, edit a config
+      snapshot, export a debug bundle, build the AppImage. Owner-verified 2026-10-02 on Linux:
+      a real catalog install with the upgraded app succeeded and an isolated profile launched
+      (no issues); catalogs, config tabs and the AppImage build were verified in the sessions;
+      a live config-snapshot write and the debug-bundle export remain test-covered only.
 - [x] Commit if green; otherwise revert `pubspec.lock`/`pubspec.yaml` (no revert needed).
 
 ## Phase 2 — selected majors, one group at a time
@@ -90,8 +92,9 @@ Each group is a separate commit with its own verification; revert just the faili
       221 s, publish skipped). Artifacts downloaded, `sha256sum -c` OK, AppImage `--version` =
       “FreeCAD Launcher 0.4.1” (exit 0), GUI launched and rendered the dashboard, and the
       Windows zip contains the portable bundle + `7zr.exe` + license/notices.
-- [ ] Real Linux install of a catalog build with the upgraded app (1.1.3 AppImage) — needs the
-      ~780 MiB download; deferred.
+- [x] Real Linux install of a catalog build with the upgraded app (1.1.3 AppImage) —
+  **owner-verified 2026-10-02** on a Linux machine: install + isolated profile launch, all
+  passed, no issues.
 - [ ] If a Windows machine is available: install + launch smoke (full matrix not required for a
       dependency-only change, but the binary must start and load catalogs) — needs the owner's
       machine.

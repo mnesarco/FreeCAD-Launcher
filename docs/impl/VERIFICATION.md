@@ -261,10 +261,10 @@ Record results in the `STATUS.md` session log (date, OS, FreeCAD version, result
 
 | Scenario | Linux | Windows | macOS |
 |---|---|---|---|
-| Install latest stable build | ✅ 2026-09-24 — 1.1.3 AppImage (782.8 MiB), Python 3.11 detected (M7-06) | ✅ 2026-10-01 — 1.1.3 `.7z` extracted with the bundled `7zr.exe`, Python probed (owner matrix pass, artifact run 36941684639) | |
+| Install latest stable build | ✅ 2026-09-24 — 1.1.3 AppImage (782.8 MiB), Python 3.11 detected (M7-06); post-upgrade re-run 2026-10-02 — real catalog install with the upgraded app (B-16, owner-verified, no issues) | ✅ 2026-10-01 — 1.1.3 `.7z` extracted with the bundled `7zr.exe`, Python probed (owner matrix pass, artifact run 36941684639) | |
 | Install a weekly build | ✅ 2026-09-30 — real `weekly-2026.09.30` AppImage (767.3 MiB, checksum verified, Python 3.13 probed, headless `--version` = FreeCAD 26.3.0); two profiles created/launched isolated on it (B-01d) | | |
 | Create two profiles, verify isolation | ✅ 2026-09-30 — real 1.0.2: distinct markers in `FREECAD_USER_HOME`/`TMPDIR`/`Mod`, inherited `HOME` passed through, no `home/` dir (R-09; M3-10) | ✅ 2026-10-01 (same pass) | |
-| Launch from app | ✅ 2026-09-24 — GUI launch (1.1.3), running badge, log, exit tracking; headless M3-04/M3-05 | ✅ 2026-10-01 (same pass) | |
+| Launch from app | ✅ 2026-09-24 — GUI launch (1.1.3), running badge, log, exit tracking; headless M3-04/M3-05; post-upgrade profile launch smoke 2026-10-02 (B-16, owner-verified) | ✅ 2026-10-01 (same pass) | |
 | Launch via CLI wrapper | ✅ 2026-09-19 — wrapper ran the built CLI (M3-09) | ✅ 2026-10-01 (same pass) | |
 | Install addon from catalog | ✅ 2026-09-19 — real A2plus install (M4-03); catalog renders live 2026-09-24 | ✅ 2026-10-01 (same pass) | |
 | Install addon requirement via pip | ✅ 2026-09-19 — real `six` install/uninstall (M4-06/M4-07) | ✅ 2026-10-01 (same pass) | |
