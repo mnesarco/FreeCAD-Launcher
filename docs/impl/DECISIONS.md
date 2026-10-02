@@ -2081,3 +2081,23 @@ Template:
   builds slot into the same workflow; the Windows smoke matrix (M8-03) was verified against the
   `v0.3.0` artifact line.
 - **Refs**: `.github/workflows/release.yml`, `README.md`, M8-03, M8-04, D-068, D-091, R16
+
+### D-098 — System file openers get a sanitized environment outside the AppImage
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: R-08 made `FileActions` inherit the parent environment so `xdg-open` receives
+  DISPLAY/DBus. Inside the AppImage, `AppRun` exports `LD_LIBRARY_PATH` (bundled GTK/GLib) and
+  `XDG_DATA_DIRS`; the spawned `xdg-open` then runs the system `gio`, which aborts with
+  `symbol lookup error: undefined symbol: g_string_free_and_steal` because the AppImage's older
+  GLib wins. Opening the logs folder therefore fell back to the browser instead of the file
+  manager. Reproduced locally with `env LD_LIBRARY_PATH=<appdir>/usr/lib gio mime inode/directory`
+  (clean env resolves `nemo.desktop`).
+- **Decision**: `FileActions` spawns openers with a full copy of the parent environment minus the
+  AppImage runtime variables (`APPIMAGE`, `APPDIR`, `OWD`, `ARGV0`, `LD_LIBRARY_PATH`,
+  `LD_PRELOAD`) and with `XDG_DATA_DIRS` filtered of the AppDir prefix (fallback
+  `/usr/local/share:/usr/share`); `includeParentEnvironment` is false because the copy is
+  complete. Outside an AppImage the environment is unchanged.
+- **Consequences**: open/reveal (Settings, profile folder, launch log, macro, addon) work from the
+  AppImage; any system-tool spawn from the AppImage should reuse `openerEnvironment`; DISPLAY/
+  Wayland/DBus stay inherited; unit tests cover the sanitizer.
+- **Refs**: `lib/platform/file_actions.dart`, R-19, R-08, D-068, `packaging/appimage/AppRun`

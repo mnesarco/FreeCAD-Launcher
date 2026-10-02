@@ -1,9 +1,36 @@
 // SPDX-FileCopyrightText: 2026 Frank Martínez <mnesarco at gmail>
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:io';
+
 import 'package:path/path.dart' as p;
 
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/platform/process.dart';
+
+Map<String, String> openerEnvironment(Map<String, String> parent) {
+  final environment = Map<String, String>.from(parent);
+  final appDir = environment['APPDIR'];
+  if (appDir == null || appDir.isEmpty) {
+    return environment;
+  }
+  // Inside an AppImage the bundled libraries break system openers (`gio` hits
+  // undefined symbols via LD_LIBRARY_PATH), so `xdg-open` falls back to the
+  // browser. Openers get a copy of the environment without the AppImage parts.
+  environment.remove('APPIMAGE');
+  environment.remove('APPDIR');
+  environment.remove('OWD');
+  environment.remove('ARGV0');
+  environment.remove('LD_LIBRARY_PATH');
+  environment.remove('LD_PRELOAD');
+  final dataDirs = (environment['XDG_DATA_DIRS'] ?? '')
+      .split(':')
+      .where((entry) => entry.isNotEmpty && !entry.startsWith(appDir))
+      .toList(growable: false);
+  environment['XDG_DATA_DIRS'] = dataDirs.isEmpty
+      ? '/usr/local/share:/usr/share'
+      : dataDirs.join(':');
+  return environment;
+}
 
 class FileActionException implements Exception {
   const FileActionException(this.executable, this.exitCode, this.stderr);
@@ -45,7 +72,8 @@ class FileActions {
       ProcessSpec(
         executable: command.first,
         arguments: command.skip(1).toList(),
-        includeParentEnvironment: true,
+        environment: openerEnvironment(Platform.environment),
+        includeParentEnvironment: false,
       ),
     );
     if (!result.isSuccess) {

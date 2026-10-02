@@ -6,8 +6,9 @@
 - **Updated**: 2026-10-01
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
   (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; `v0.3.0` is published with the Linux AppImage and
-  the Windows portable zip after the full Windows smoke matrix passed on a clean machine; M8-04
-  needs macOS; M8-05 clean-VM Linux pass ready)
+  the Windows portable zip after the full Windows smoke matrix passed on a clean machine; Linux
+  regression fixes R-18/R-19 await an AppImage retest; M8-04 needs macOS; M8-05 clean-VM Linux
+  pass ready)
 - **Active branch**: `devel` (public) — `main` is reserved for a future release line
 - **Last session**: 2026-10-01
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
@@ -22,8 +23,10 @@
   `B-02` in-place build updates.
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
-- **In progress**: nothing active. `v0.3.0` verified: release assets downloaded and both
-  `sha256sum -c` checks pass; the Windows matrix pass is recorded in `VERIFICATION.md` §2/§4.
+- **In progress**: **R-18** (weekly AppImage install aborted by probe-directory cleanup ENOTCONN)
+  and **R-19**/**D-098** (open logs/folder opened the browser from the AppImage) fixed, 611 tests
+  green, uncommitted — AppImage/Windows artifact rebuild + retest pending. `v0.3.0` remains the
+  published release; the Windows matrix pass is recorded in `VERIFICATION.md` §2/§4.
   `R-14`..`R-17` and the release preparation are committed (`031cc0e`, `57b99fd`, `734124e`,
   `216c599`); `R-13` (D-090), `B-15a` (D-089) and `B-10a`..`B-10f` (D-085..D-088) are committed
   (`c0a00b9`, `a9e3f1c`, `5a372ab`).
@@ -627,6 +630,7 @@
 | 2026-10-01 | R36 | **M8-03 clean-machine verification passed**: owner ran the full Windows smoke matrix with the R-17 artifact (run 36941684639) — 1.1.3 `.7z` install + Python probe, two isolated profiles + launch, catalog/pip/custom addons, enable/disable, macros, manifest, offline catalog, CLI wrapper, reveal. `VERIFICATION.md` §2/§4 Windows column filled; M8-03 only needs the `v0.2.0` prerelease publish | M8-03 | `docs/impl/{VERIFICATION,STATUS,TASKS,PLAN-M8-windows-release}.md` |
 | 2026-10-01 | R37 | **v0.3.0 released** (**D-097**): version bump to 0.3.0, workflow renamed to `release.yml`, tag `v0.3.0` pushed → run 36943644212 (windows + appimage + publish all green); GitHub Release created with `FreeCADLauncher-0.3.0-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.3.0-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified from the downloaded release. **M8-03 DONE**; M8-04/M8-05 remain | M8-03, D-097 | `pubspec.yaml`, `lib/core/constants.dart`, `.github/workflows/{appimage-release.yml => release.yml}`, `README.md`, `docs/spec/03-ux.md`, `test/state/debug_bundle_controller_test.dart`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION,PLAN-M8-windows-release}.md` |
 | 2026-10-01 | R38 | README/user-guide Windows coverage: supported-platform line, Windows checksum command, data root (`%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher`), CLI wrapper path/`freecad-launcher.cmd`, Windows local build and troubleshooting entries; user guide limitations retitled v0.3 | M8-03 | `README.md`, `docs/user-guide.md`, `docs/impl/STATUS.md` |
+| 2026-10-01 | R39 | Two Linux regressions from the v0.3.0 AppImage: weekly install failed with `ENOTCONN` deleting the probe dir (FUSE mount inside probe `TMPDIR` still tearing down) → **R-18** best-effort cleanup with retries; "open logs folder" opened the browser because openers inherited the AppImage `LD_LIBRARY_PATH` (system `gio` undefined symbol) → **R-19/D-098** `openerEnvironment` scrub. Reproduced the `gio` failure locally with the AppImage libs; 611 tests green, analyze clean; artifact retest pending | R-18, R-19, D-098 | `lib/platform/python_probe.dart`, `lib/platform/file_actions.dart`, `test/platform/file_actions_test.dart`, `docs/impl/{DECISIONS,TASKS,STATUS}.md` |
 
 ## Standing notes for the next agent
 

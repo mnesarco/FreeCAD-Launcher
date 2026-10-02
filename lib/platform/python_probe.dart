@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import 'package:freecad_launcher/core/log.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/platform/process.dart';
 
@@ -241,10 +242,25 @@ class ProcessPythonProbe implements PythonProbe {
         ),
       );
     } finally {
-      if (scriptDirectory.existsSync()) {
-        scriptDirectory.deleteSync(recursive: true);
+      await _cleanUpProbeDirectory(scriptDirectory);
+    }
+  }
+
+  Future<void> _cleanUpProbeDirectory(Directory directory) async {
+    for (var attempt = 0; attempt < 3; attempt++) {
+      try {
+        if (!directory.existsSync()) {
+          return;
+        }
+        await directory.delete(recursive: true);
+        return;
+      } on FileSystemException {
+        // An AppImage FUSE mount inside the probe TMPDIR can still be tearing
+        // down (ENOTCONN); retry briefly, then leave the directory to the OS.
+        await Future<void>.delayed(const Duration(milliseconds: 300));
       }
     }
+    appLogger.warn('Could not remove the Python probe directory ${directory.path}');
   }
 
   Map<String, Object?>? _parseProbePayload(String stdout) {
