@@ -126,13 +126,14 @@ hard rule for this migration:
 | B-17a small files | `app.dart`, `app_shell`, `jobs_dialog`, `updates_status_chip`, `config_snapshots_view`, `installed_macros`, `custom_addons_view` | 11 | [x] `6c9f375` |
 | B-17b profiles/builds/home | `profiles_view`, `builds_view`, `profile_detail_view`, `home_view` | 42 | [x] `f2c24ee` |
 | B-17c addons/macros | `addons_view`, `collections_view`, `macros_view` | 52 | [x] `8009cfc` |
-| B-17d settings/updates + verification | `settings_view`, `updates_summary_sheet` | 22 | [x] local (`BundleDetailView` sticky-subscription fix included in B-17c) |
+| B-17d settings/updates + verification | `settings_view`, `updates_summary_sheet` | 22 | [x] `9233ad3` |
 
 ### P3 — verification and cleanup
 
 - [x] `flutter analyze` has zero `deprecated_member_use` and reports **No issues found**;
       `grep -rn "\.watch(context\|Watch(" lib` returns nothing.
-- [x] `flutter test` green (Linux, 615 tests). CI on Linux + Windows runs via the B-17 PR.
+- [x] `flutter test` green (Linux, 615 tests) and CI green on Linux + Windows — PR
+      [#3](https://github.com/mnesarco/FreeCAD-Launcher/pull/3), run 37058324255.
 - [x] `flutter analyze` default strictness restored (the `--no-fatal-infos` bridge is removed
       from `ci.yml`).
 - [x] Live click-through per `PLAN-dependency-upgrades.md` risk table: Home, Profiles (all six
@@ -141,7 +142,8 @@ hard rule for this migration:
       Settings plus a live dark↔light theme switch; zero runtime errors (Jobs dialog not
       exercised — no active jobs).
 - [ ] Packaging smoke: AppImage `--version` + GUI, Windows job smoke (deferred to B-16 Phase 3).
-- [x] Update `STATUS.md`/`TASKS.md`; B-17d/B-17 close when the B-17 PR CI is green.
+- [x] Update `STATUS.md`/`TASKS.md`; B-17d/B-17 are DONE (PR #3 CI green; merge on owner
+      approval).
 
 ## Per-batch procedure
 
