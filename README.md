@@ -13,7 +13,7 @@ settings, addons, macros and Python packages.
 
 ## Status
 
-- **v0.4.0** is the current release (GitHub pre-release) with the Linux AppImage and the Windows
+- **v0.4.1** is the current release (GitHub pre-release) with the Linux AppImage and the Windows
   portable zip (unsigned; D-091). Earlier `v0.1.0`–`v0.3.0` releases were withdrawn; the `0.4.x`
   line continues. macOS packaging is planned (see `docs/spec/08-roadmap.md` and
   `docs/impl/STATUS.md`).

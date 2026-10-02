@@ -238,6 +238,10 @@ M7-01 (D-071) productionization checks (2026-09-21):
       36947395864): `FreeCADLauncher-0.4.0-windows-x86_64.zip` + `.sha256` and
       `FreeCADLauncher-0.4.0-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified from
       the release page; tag points at `b8e17f7` (Linux regression fixes R-18..R-20)
+- [x] Pre-release `v0.4.1` (manual `create_release=true`, tag `v0.4.1`, `prerelease=true`, run
+      36955018205): `FreeCADLauncher-0.4.1-windows-x86_64.zip` + `.sha256` and
+      `FreeCADLauncher-0.4.1-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified from
+      the release page; tag points at `0c61e25` (Python install-dialog fix R-22)
 - [ ] macOS artifacts built, installed and launched on clean machines (M8-04, OQ-1)
 - [ ] Clean-machine Linux first-run flow completes with the published AppImage (M8-05)
 - Note (D-100): `v0.1.0`–`v0.3.0` releases were withdrawn by the owner; `v0.4.0` is the only
