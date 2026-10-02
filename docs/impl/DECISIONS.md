@@ -2120,3 +2120,19 @@ Template:
   there; the fallback only ever reads a second path when the sanitized directory is absent.
 - **Refs**: `lib/platform/paths.dart`, `lib/state/{builds,python,addons}_controller.dart`, D-095,
   R-20
+
+### D-100 — Pre-0.4.0 releases withdrawn; the 0.4.x line continues
+- **Date**: 2026-10-01
+- **Status**: Accepted
+- **Context**: Releases `v0.1.0`–`v0.3.0` were built during the Linux-first phase (`v0.1.0` and
+  `v0.2.0` AppImage-only, `v0.3.0` the first cross-platform one) and `v0.3.0` carried the Linux
+  regressions fixed in `v0.4.0`. The owner removed their GitHub Releases so the public Releases
+  page only offers the current line; the git tags remain for history.
+- **Decision**: `v0.4.0` is the only available release (published as a pre-release) and the
+  `0.4.x` line is the supported release line going forward; future fixes ship as `0.4.x`
+  releases, promoted to stable when the owner decides.
+- **Consequences**: README and spec 07 describe `v0.4.0` as the current release; verification
+  records for the withdrawn releases remain in `VERIFICATION.md`/STATUS as history; tags
+  `v0.1.0`–`v0.3.0` still exist for reference.
+- **Refs**: `README.md`, `docs/spec/07-distribution.md`, `docs/impl/VERIFICATION.md`, R41/R42,
+  M8-03

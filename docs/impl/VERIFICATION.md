@@ -232,13 +232,17 @@ M7-01 (D-071) productionization checks (2026-09-21):
 - [x] Cross-platform release `v0.3.0` (tag push `v0.3.0` → `release.yml`, run 36943644212): the
       `publish` job created the release with `FreeCADLauncher-0.3.0-windows-x86_64.zip` +
       `.sha256` and `FreeCADLauncher-0.3.0-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars
-      verified locally after download from the release page
+      verified locally after download from the release page (release later withdrawn by the owner,
+      D-100)
 - [x] Pre-release `v0.4.0` (manual `create_release=true`, tag `v0.4.0`, `prerelease=true`, run
       36947395864): `FreeCADLauncher-0.4.0-windows-x86_64.zip` + `.sha256` and
       `FreeCADLauncher-0.4.0-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified from
       the release page; tag points at `b8e17f7` (Linux regression fixes R-18..R-20)
 - [ ] macOS artifacts built, installed and launched on clean machines (M8-04, OQ-1)
 - [ ] Clean-machine Linux first-run flow completes with the published AppImage (M8-05)
+- Note (D-100): `v0.1.0`–`v0.3.0` releases were withdrawn by the owner; `v0.4.0` is the only
+  available release (pre-release) and the `0.4.x` line continues. The entries above document the
+  historical verification; the tags still exist.
 
 ## 3. UI state checklist (per screen)
 

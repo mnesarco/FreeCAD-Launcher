@@ -1,13 +1,14 @@
 # PLAN M8 — Windows release in CI
 
-> **Status**: **Windows release shipped** (2026-10-01): `v0.3.0` is published from CI with the
-> portable `.zip` + AppImage after the full clean-machine smoke matrix passed. macOS packaging
-> remains in M8-04. Written so the work can resume after an interruption; update the checkboxes
-> as items land.
+> **Status**: **Windows release shipped** (2026-10-01): `v0.4.0` is published from CI with the
+> portable `.zip` + AppImage after the full clean-machine smoke matrix passed (the earlier
+> `v0.1.0`–`v0.3.0` releases were withdrawn; the `0.4.x` line continues). macOS packaging remains
+> in M8-04. Written so the work can resume after an interruption; update the checkboxes as items
+> land.
 
 ## Goal
 
-Publish a Windows launcher artifact from GitHub CI for the `v0.2.0` release line:
+Publish a Windows launcher artifact from GitHub CI for the `0.4.x` release line:
 a portable `FreeCADLauncher-<ver>-windows-x86_64.zip` with a SHA-256 sidecar, next to the
 existing Linux AppImage, built and smoke-tested on `windows-latest`, and verified on a clean
 Windows machine.
@@ -115,10 +116,10 @@ failures until the CI job runs green.
       36941684639 green, zip downloaded and checksum-verified; the full matrix then passed;
       install failures now write `logs/install-<id>-<stamp>.log` (R-16)
 - [x] Record the pass in `VERIFICATION.md` §2 (M8 checklist) and §4 (note)
-- [ ] Close OQ-1 in `docs/spec/09-open-questions.md` (Windows published in `v0.3.0`; macOS
-      remains for M8-04); spec 07 §2 artifact table updated for `v0.3.0`
-- [x] README `Status` updated for `v0.3.0` (Windows zip + AppImage; unsigned/SmartScreen notes
-      already in the user guide)
+- [ ] Close OQ-1 in `docs/spec/09-open-questions.md` (Windows published in `v0.4.0`; macOS
+      remains for M8-04); spec 07 §2 artifact table updated for `v0.4.0`
+- [x] README `Status` updated for the `0.4.x` line (Windows zip + AppImage; unsigned/SmartScreen
+      notes already in the user guide)
 - [x] Update `STATUS.md`/`TASKS.md` and append the session log (R31)
 
 ## Known risks / open items
