@@ -110,14 +110,14 @@ class BuildsViewState extends State<BuildsView> implements SectionShortcuts {
   }
 }
 
-class _InstalledTab extends StatelessWidget {
+class _InstalledTab extends SignalWidget {
   const _InstalledTab();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).builds;
-    final builds = controller.installedBuilds.watch(context);
+    final builds = controller.installedBuilds.value;
 
     if (builds.isEmpty) {
       return EmptyState(
@@ -137,7 +137,7 @@ class _InstalledTab extends StatelessWidget {
   }
 }
 
-class _InstalledBuildTile extends StatelessWidget {
+class _InstalledBuildTile extends SignalWidget {
   const _InstalledBuildTile({required this.buildInfo});
 
   final Build buildInfo;
@@ -148,9 +148,7 @@ class _InstalledBuildTile extends StatelessWidget {
     final controller = AppScope.of(context).builds;
     final theme = Theme.of(context);
     BuildUpdate? buildUpdate;
-    for (final update in AppScope.of(
-      context,
-    ).updates.outdatedBuilds.watch(context)) {
+    for (final update in AppScope.of(context).updates.outdatedBuilds.value) {
       if (update.buildId == buildInfo.id) {
         buildUpdate = update;
         break;
@@ -389,7 +387,7 @@ class _RelabelDialogState extends State<_RelabelDialog> {
   }
 }
 
-class _AvailableTab extends StatefulWidget {
+class _AvailableTab extends SignalStatefulWidget {
   const _AvailableTab();
 
   @override
@@ -419,14 +417,14 @@ class _AvailableTabState extends State<_AvailableTab> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).builds;
-    final stable = controller.availableBuilds.watch(context);
-    final weekly = controller.weeklyBuilds.watch(context);
+    final stable = controller.availableBuilds.value;
+    final weekly = controller.weeklyBuilds.value;
     final isWeekly = _channel == BuildChannel.weekly;
     final candidates = isWeekly ? weekly : stable;
-    final loading = controller.loadingCatalog.watch(context);
-    final error = controller.catalogError.watch(context);
+    final loading = controller.loadingCatalog.value;
+    final error = controller.catalogError.value;
     final stale =
-        controller.catalogFreshness.watch(context) == CatalogFreshness.stale;
+        controller.catalogFreshness.value == CatalogFreshness.stale;
 
     Widget body;
     if (error != null && candidates.isEmpty) {
@@ -518,7 +516,7 @@ class _AvailableTabState extends State<_AvailableTab> {
   }
 }
 
-class _AvailableBuildTile extends StatelessWidget {
+class _AvailableBuildTile extends SignalWidget {
   const _AvailableBuildTile({required this.candidate});
 
   final BuildCandidate candidate;
@@ -527,9 +525,9 @@ class _AvailableBuildTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).builds;
-    final progress = controller.installProgress.watch(context)[candidate.id];
+    final progress = controller.installProgress.value[candidate.id];
     final installed = controller.isInstalled(candidate);
-    final error = controller.installErrors.watch(context)[candidate.id];
+    final error = controller.installErrors.value[candidate.id];
     final theme = Theme.of(context);
 
     final subtitle = [
@@ -638,7 +636,7 @@ class _AvailableBuildTile extends StatelessWidget {
   }
 }
 
-class _CustomTab extends StatefulWidget {
+class _CustomTab extends SignalStatefulWidget {
   const _CustomTab();
 
   @override
@@ -795,7 +793,7 @@ class _CustomTabState extends State<_CustomTab> with AutomaticKeepAliveClientMix
     super.build(context);
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).builds;
-    final progressByBuild = controller.installProgress.watch(context);
+    final progressByBuild = controller.installProgress.value;
     InstallProgress? progress;
     for (final entry in progressByBuild.entries) {
       if (entry.key.startsWith('custom:')) {

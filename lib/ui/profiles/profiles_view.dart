@@ -18,7 +18,7 @@ import 'package:freecad_launcher/ui/shell/section_shortcuts.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 
-class ProfilesView extends StatefulWidget {
+class ProfilesView extends SignalStatefulWidget {
   const ProfilesView({super.key});
 
   @override
@@ -42,9 +42,9 @@ class ProfilesViewState extends State<ProfilesView> implements SectionShortcuts 
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).profiles;
-    final profiles = controller.profiles.watch(context);
-    final loaded = controller.profilesLoaded.watch(context);
-    final error = controller.profilesError.watch(context);
+    final profiles = controller.profiles.value;
+    final loaded = controller.profilesLoaded.value;
+    final error = controller.profilesError.value;
 
     final selectedId = _selectedProfileId;
     if (selectedId != null && profiles.any((profile) => profile.id == selectedId)) {
@@ -146,7 +146,7 @@ class ProfilesViewState extends State<ProfilesView> implements SectionShortcuts 
   }
 }
 
-class _ProfileCard extends StatelessWidget {
+class _ProfileCard extends SignalWidget {
   const _ProfileCard({required this.profile, required this.onOpen});
 
   final Profile profile;
@@ -156,14 +156,14 @@ class _ProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).profiles;
-    final builds = controller.buildsById.watch(context);
+    final builds = controller.buildsById.value;
     final build = builds[profile.buildId];
-    final running = controller.runningProfiles.watch(context).contains(profile.id);
-    final addons = controller.addonCounts.watch(context)[profile.id] ?? 0;
+    final running = controller.runningProfiles.value.contains(profile.id);
+    final addons = controller.addonCounts.value[profile.id] ?? 0;
     final updatesOutdated =
-        AppScope.of(context).updates.outdatedByProfile.watch(context)[profile.id]?.length ?? 0;
-    final packages = controller.packageCounts.watch(context)[profile.id] ?? 0;
-    final size = controller.profileSizes.watch(context)[profile.id];
+        AppScope.of(context).updates.outdatedByProfile.value[profile.id]?.length ?? 0;
+    final packages = controller.packageCounts.value[profile.id] ?? 0;
+    final size = controller.profileSizes.value[profile.id];
 
     final versionLine = [
       if (build != null) build.displayLabel,

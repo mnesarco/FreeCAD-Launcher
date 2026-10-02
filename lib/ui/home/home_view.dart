@@ -16,7 +16,7 @@ import 'package:freecad_launcher/ui/profiles/profile_actions.dart';
 import 'package:freecad_launcher/ui/profiles/profile_dialogs.dart';
 import 'package:freecad_launcher/ui/updates/updates_summary_sheet.dart';
 
-class HomeView extends StatefulWidget {
+class HomeView extends SignalStatefulWidget {
   const HomeView({super.key});
 
   @override
@@ -59,18 +59,18 @@ class HomeViewState extends State<HomeView> {
     final services = AppScope.of(context);
     final shell = services.shell;
 
-    final builds = services.builds.installedBuilds.watch(context);
-    final profiles = services.profiles.profiles.watch(context);
-    final addons = services.addons.installedAddons.watch(context);
-    final macros = services.macros.installedMacros.watch(context);
-    final packages = services.python.packages.watch(context);
-    final outdated = services.updates.outdatedCount.watch(context);
-    final checking = services.updates.checking.watch(context);
-    final newsItems = services.news.items.watch(context);
-    final newsLoading = services.news.loading.watch(context);
-    final newsLoaded = services.news.loaded.watch(context);
-    final newsStale = services.news.stale.watch(context);
-    final newsError = services.news.error.watch(context);
+    final builds = services.builds.installedBuilds.value;
+    final profiles = services.profiles.profiles.value;
+    final addons = services.addons.installedAddons.value;
+    final macros = services.macros.installedMacros.value;
+    final packages = services.python.packages.value;
+    final outdated = services.updates.outdatedCount.value;
+    final checking = services.updates.checking.value;
+    final newsItems = services.news.items.value;
+    final newsLoading = services.news.loading.value;
+    final newsLoaded = services.news.loaded.value;
+    final newsStale = services.news.stale.value;
+    final newsError = services.news.error.value;
 
     Profile? lastUsed;
     for (final profile in profiles) {

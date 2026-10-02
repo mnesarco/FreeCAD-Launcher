@@ -21,7 +21,7 @@ import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
 
-class ProfileDetailView extends StatelessWidget {
+class ProfileDetailView extends SignalWidget {
   const ProfileDetailView({
     super.key,
     required this.profileId,
@@ -36,7 +36,7 @@ class ProfileDetailView extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final services = AppScope.of(context);
     final controller = services.profiles;
-    final profiles = controller.profiles.watch(context);
+    final profiles = controller.profiles.value;
 
     Profile? profile;
     for (final candidate in profiles) {
@@ -69,10 +69,8 @@ class ProfileDetailView extends StatelessWidget {
     }
 
     final current = profile;
-    final running = controller.runningProfiles
-        .watch(context)
-        .contains(current.id);
-    final build = controller.buildsById.watch(context)[current.buildId];
+    final running = controller.runningProfiles.value.contains(current.id);
+    final build = controller.buildsById.value[current.buildId];
 
     return DefaultTabController(
       length: 6,
@@ -193,7 +191,7 @@ class _DetailHeader extends StatelessWidget {
   }
 }
 
-class _OverviewTab extends StatelessWidget {
+class _OverviewTab extends SignalWidget {
   const _OverviewTab({required this.profile, required this.buildInfo});
 
   final Profile profile;
@@ -204,7 +202,7 @@ class _OverviewTab extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final services = AppScope.of(context);
     final paths = services.paths.profilePaths(profile.id);
-    final launchLog = services.profiles.launchLogs.watch(context)[profile.id];
+    final launchLog = services.profiles.launchLogs.value[profile.id];
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -302,7 +300,7 @@ class _OverviewTab extends StatelessWidget {
   }
 }
 
-class _ProfileAddonsTab extends StatefulWidget {
+class _ProfileAddonsTab extends SignalStatefulWidget {
   const _ProfileAddonsTab({required this.profileId});
 
   final String profileId;
@@ -330,26 +328,20 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).profiles;
-    final installed =
-        controller.installedAddons
-            .watch(context)
-            .where((addon) => addon.profileId == widget.profileId)
-            .toList()
-          ..sort(
-            (a, b) => a.displayName.toLowerCase().compareTo(
-              b.displayName.toLowerCase(),
-            ),
-          );
+    final installed = controller.installedAddons.value
+        .where((addon) => addon.profileId == widget.profileId)
+        .toList()
+      ..sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
     final outdatedIds = {
-      for (final update in AppScope.of(context).updates.outdated.watch(context))
+      for (final update in AppScope.of(context).updates.outdated.value)
         if (update.profileId == widget.profileId) update.addonId,
     };
     final catalogById = {
-      for (final addon in AppScope.of(context).addons.addons.watch(context))
+      for (final addon in AppScope.of(context).addons.addons.value)
         addon.id: addon,
     };
     final disabledIds =
-        AppScope.of(context).addons.disabledAddons.watch(context)[widget.profileId] ??
+        AppScope.of(context).addons.disabledAddons.value[widget.profileId] ??
         const <String>{};
 
     if (installed.isEmpty) {
@@ -460,7 +452,7 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
   }
 }
 
-class _ProfilePythonTab extends StatefulWidget {
+class _ProfilePythonTab extends SignalStatefulWidget {
   const _ProfilePythonTab({required this.profileId});
 
   final String profileId;
@@ -485,18 +477,12 @@ class _ProfilePythonTabState extends State<_ProfilePythonTab> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).python;
-    final installed =
-        controller.packages
-            .watch(context)
-            .where((package) => package.profileId == widget.profileId)
-            .toList()
-          ..sort(
-            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-          );
-    final installing = controller.installing
-        .watch(context)
-        .contains(widget.profileId);
-    final error = controller.errors.watch(context)[widget.profileId];
+    final installed = controller.packages.value
+        .where((package) => package.profileId == widget.profileId)
+        .toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    final installing = controller.installing.value.contains(widget.profileId);
+    final error = controller.errors.value[widget.profileId];
 
     return Column(
       children: [
