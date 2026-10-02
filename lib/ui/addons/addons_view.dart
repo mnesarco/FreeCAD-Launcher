@@ -111,7 +111,7 @@ class AddonsViewState extends State<AddonsView>
   }
 }
 
-class _CatalogTab extends StatelessWidget {
+class _CatalogTab extends SignalWidget {
   const _CatalogTab({
     required this.searchController,
     required this.searchFocusNode,
@@ -142,20 +142,20 @@ class _CatalogTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).addons;
-    final loading = controller.loading.watch(context);
-    final loaded = controller.loaded.watch(context);
-    final error = controller.error.watch(context);
-    final addons = controller.addons.watch(context);
-    final filtered = controller.filteredAddons.watch(context);
-    final freshness = controller.freshness.watch(context);
-    final freecadFilter = controller.freecadFilter.watch(context);
-    final versions = controller.freecadVersions.watch(context);
-    final installedCounts = controller.installedCounts.watch(context);
-    final query = controller.query.watch(context);
+    final loading = controller.loading.value;
+    final loaded = controller.loaded.value;
+    final error = controller.error.value;
+    final addons = controller.addons.value;
+    final filtered = controller.filteredAddons.value;
+    final freshness = controller.freshness.value;
+    final freecadFilter = controller.freecadFilter.value;
+    final versions = controller.freecadVersions.value;
+    final installedCounts = controller.installedCounts.value;
+    final query = controller.query.value;
     final updates = AppScope.of(context).updates;
-    final checking = updates.checking.watch(context);
+    final checking = updates.checking.value;
     final outdatedByAddon = <String, int>{};
-    for (final update in updates.outdated.watch(context)) {
+    for (final update in updates.outdated.value) {
       outdatedByAddon[update.addonId] =
           (outdatedByAddon[update.addonId] ?? 0) + 1;
     }
@@ -375,7 +375,7 @@ class _AddonCard extends StatelessWidget {
   }
 }
 
-class AddonDetailView extends StatefulWidget {
+class AddonDetailView extends SignalStatefulWidget {
   const AddonDetailView({
     super.key,
     required this.addonId,
@@ -396,7 +396,7 @@ class _AddonDetailViewState extends State<AddonDetailView> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).addons;
-    final catalog = controller.addons.watch(context);
+    final catalog = controller.addons.value;
     Addon? addon;
     for (final candidate in catalog) {
       if (candidate.id == widget.addonId) {
@@ -419,23 +419,21 @@ class _AddonDetailViewState extends State<AddonDetailView> {
       );
     }
 
-    final profiles = AppScope.of(context).profiles.profiles.watch(context);
+    final profiles = AppScope.of(context).profiles.profiles.value;
     var profileId = _profileId;
     if (profileId == null ||
         !profiles.any((profile) => profile.id == profileId)) {
       profileId = profiles.isEmpty ? null : profiles.first.id;
     }
     final currentAddon = addon;
-    final selectedBranches = controller.selectedBranches.watch(context);
+    final selectedBranches = controller.selectedBranches.value;
     final selectedRef =
         selectedBranches[currentAddon.id] ?? currentAddon.primaryBranch.gitRef;
     final metadata = currentAddon.primaryBranch.metadata;
-    final installedRows = controller.installedAddons.watch(context);
+    final installedRows = controller.installedAddons.value;
     final installedCount =
-        controller.installedCounts.watch(context)[currentAddon.id] ?? 0;
-    final installing = controller.installing
-        .watch(context)
-        .contains(currentAddon.id);
+        controller.installedCounts.value[currentAddon.id] ?? 0;
+    final installing = controller.installing.value.contains(currentAddon.id);
     final installedInSelected =
         profileId != null &&
         installedRows.any(
@@ -447,12 +445,8 @@ class _AddonDetailViewState extends State<AddonDetailView> {
         !pinned &&
         profileId != null &&
         controller.isUpdateAvailable(profileId, currentAddon.id);
-    final installError = controller.installErrors.watch(
-      context,
-    )[currentAddon.id];
-    final requirementsError = controller.requirementsErrors.watch(
-      context,
-    )[currentAddon.id];
+    final installError = controller.installErrors.value[currentAddon.id];
+    final requirementsError = controller.requirementsErrors.value[currentAddon.id];
     final canInstall = profileId != null && !installing && !installedInSelected;
 
     return Column(
@@ -908,15 +902,15 @@ String _contentLabel(AppLocalizations l10n, AddonContentType content) {
   };
 }
 
-class _FilterMenu extends StatelessWidget {
+class _FilterMenu extends SignalWidget {
   const _FilterMenu();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).addons;
-    final contents = controller.contentFilter.watch(context);
-    final installed = controller.installedFilter.watch(context);
+    final contents = controller.contentFilter.value;
+    final installed = controller.installedFilter.value;
     final activeCount = contents.length + installed.length;
 
     return MenuAnchor(

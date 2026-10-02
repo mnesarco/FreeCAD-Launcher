@@ -86,7 +86,7 @@ class MacrosViewState extends State<MacrosView>
   }
 }
 
-class _InstalledTab extends StatelessWidget {
+class _InstalledTab extends SignalWidget {
   const _InstalledTab();
 
   @override
@@ -94,9 +94,9 @@ class _InstalledTab extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final services = AppScope.of(context);
     final controller = services.macros;
-    final profiles = services.profiles.profiles.watch(context);
+    final profiles = services.profiles.profiles.value;
 
-    var profileId = controller.selectedProfileId.watch(context);
+    var profileId = controller.selectedProfileId.value;
     if (profileId == null || !profiles.any((profile) => profile.id == profileId)) {
       profileId = profiles.isEmpty ? null : profiles.first.id;
     }
@@ -119,7 +119,7 @@ class _InstalledTab extends StatelessWidget {
   }
 }
 
-class _CatalogTab extends StatelessWidget {
+class _CatalogTab extends SignalWidget {
   const _CatalogTab({required this.searchFocusNode});
 
   final FocusNode searchFocusNode;
@@ -129,16 +129,16 @@ class _CatalogTab extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final services = AppScope.of(context);
     final controller = services.macros;
-    final loading = controller.loading.watch(context);
-    final loaded = controller.loaded.watch(context);
-    final error = controller.error.watch(context);
-    final freshness = controller.freshness.watch(context);
-    final macros = controller.macros.watch(context);
-    final filtered = controller.filtered.watch(context);
-    final query = controller.query.watch(context);
-    final installing = controller.installing.watch(context);
-    final installErrors = controller.installErrors.watch(context);
-    final installedRows = controller.installedMacros.watch(context);
+    final loading = controller.loading.value;
+    final loaded = controller.loaded.value;
+    final error = controller.error.value;
+    final freshness = controller.freshness.value;
+    final macros = controller.macros.value;
+    final filtered = controller.filtered.value;
+    final query = controller.query.value;
+    final installing = controller.installing.value;
+    final installErrors = controller.installErrors.value;
+    final installedRows = controller.installedMacros.value;
 
     Widget body;
     if (loading && macros.isEmpty) {
@@ -265,7 +265,7 @@ class _CatalogTab extends StatelessWidget {
   }
 }
 
-class _InstallMacroDialog extends StatefulWidget {
+class _InstallMacroDialog extends SignalStatefulWidget {
   const _InstallMacroDialog({required this.macro});
 
   final MacroCatalogEntry macro;
@@ -281,8 +281,8 @@ class _InstallMacroDialogState extends State<_InstallMacroDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final services = AppScope.of(context);
-    final profiles = services.profiles.profiles.watch(context);
-    final installedRows = services.macros.installedMacros.watch(context);
+    final profiles = services.profiles.profiles.value;
+    final installedRows = services.macros.installedMacros.value;
 
     bool isInstalled(String profileId) => installedRows.any(
       (row) => row.profileId == profileId && row.fileName == widget.macro.fileName,

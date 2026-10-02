@@ -21,7 +21,7 @@ import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
 
-class CollectionsTab extends StatefulWidget {
+class CollectionsTab extends SignalStatefulWidget {
   const CollectionsTab({super.key});
 
   @override
@@ -49,10 +49,10 @@ class _CollectionsTabState extends State<CollectionsTab> {
       );
     }
 
-    final bundles = controller.bundles.watch(context);
-    final items = controller.items.watch(context);
-    final loading = controller.loading.watch(context);
-    final error = controller.error.watch(context);
+    final bundles = controller.bundles.value;
+    final items = controller.items.value;
+    final loading = controller.loading.value;
+    final error = controller.error.value;
 
     Widget body;
     if (loading && bundles.isEmpty) {
@@ -187,7 +187,7 @@ class _CollectionsTabState extends State<CollectionsTab> {
   }
 }
 
-class BundleDetailView extends StatefulWidget {
+class BundleDetailView extends SignalStatefulWidget {
   const BundleDetailView({
     super.key,
     required this.bundleId,
@@ -478,7 +478,7 @@ class _BundleItemTile extends StatelessWidget {
   }
 }
 
-class BundleEditDialog extends StatefulWidget {
+class BundleEditDialog extends SignalStatefulWidget {
   const BundleEditDialog({super.key, this.bundle});
 
   final Bundle? bundle;
@@ -511,7 +511,7 @@ class _BundleEditDialogState extends State<BundleEditDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final services = AppScope.of(context);
-    final profiles = services.profiles.profiles.watch(context);
+    final profiles = services.profiles.profiles.value;
     final controller = services.bundles;
 
     return AlertDialog(
@@ -622,7 +622,7 @@ class _BundleEditDialogState extends State<BundleEditDialog> {
   }
 }
 
-class AddAddonDialog extends StatefulWidget {
+class AddAddonDialog extends SignalStatefulWidget {
   const AddAddonDialog({super.key, required this.bundleId});
 
   final String bundleId;
@@ -638,9 +638,9 @@ class _AddAddonDialogState extends State<AddAddonDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final services = AppScope.of(context);
-    final addons = services.addons.addons.watch(context);
-    final loading = services.addons.loading.watch(context);
-    final error = services.addons.error.watch(context);
+    final addons = services.addons.addons.value;
+    final loading = services.addons.loading.value;
+    final error = services.addons.error.value;
     final items = services.bundles
         .itemsFor(widget.bundleId)
         .map((item) => item.addonId)
@@ -742,7 +742,7 @@ class _AddAddonDialogState extends State<AddAddonDialog> {
   }
 }
 
-class BundleApplyDialog extends StatefulWidget {
+class BundleApplyDialog extends SignalStatefulWidget {
   const BundleApplyDialog({super.key, required this.bundleId});
 
   final String bundleId;
@@ -760,14 +760,13 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final services = AppScope.of(context);
-    final applying = services.bundleApply.applying.watch(context);
-    final completed = services.bundleApply.completed.watch(context);
-    final total = services.bundleApply.total.watch(context);
-    final profiles = services.profiles.profiles.watch(context);
-    final catalog = services.addons.addons.watch(context);
-    final installedRows = services.addons.installedAddons.watch(context);
-    final bundleItems = services.bundles.items
-        .watch(context)
+    final applying = services.bundleApply.applying.value;
+    final completed = services.bundleApply.completed.value;
+    final total = services.bundleApply.total.value;
+    final profiles = services.profiles.profiles.value;
+    final catalog = services.addons.addons.value;
+    final installedRows = services.addons.installedAddons.value;
+    final bundleItems = services.bundles.items.value
         .where((item) => item.bundleId == widget.bundleId);
 
     final profileId =
@@ -991,7 +990,7 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
   }
 }
 
-class BundleImportDialog extends StatefulWidget {
+class BundleImportDialog extends SignalStatefulWidget {
   const BundleImportDialog({super.key, required this.jsonText});
 
   final String jsonText;
@@ -1077,7 +1076,7 @@ class _BundleImportDialogState extends State<BundleImportDialog> {
   }
 
   List<String> _unresolved(BundleJson decoded) {
-    final catalog = AppScope.of(context).addons.addons.watch(context);
+    final catalog = AppScope.of(context).addons.addons.value;
     final ids = {for (final addon in catalog) addon.id};
     return [
       for (final item in decoded.items)

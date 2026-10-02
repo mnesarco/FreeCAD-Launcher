@@ -83,7 +83,11 @@ hard rule for this migration:
 2. Only signals read **synchronously during the widget's own `build`** are tracked. Reads in
    `initState`/`didChangeDependencies`, event handlers, futures and lazily invoked closures
    (`itemBuilder`, `LayoutBuilder`, dialogs) are *not* tracked — wrap the actual reading widget
-   in `SignalBuilder` or move the read into a real widget's `build`.
+   in `SignalBuilder` or move the read into a real widget's `build`. Implicit tracking also
+   **drops subscriptions the latest build no longer reads**, unlike the old sticky `watch()`
+   extension: a child must track its own reads instead of relying on a parent's stale
+   subscription (B-17c: `BundleDetailView`, whose parent early-returns before reading
+   `bundles`/`items`).
 3. `SignalWidget.build` reads must stay direct (`.value`); `peek()`/`.get()`/`call()` do not
    register with `onSignalRead`.
 4. Audit that each removed `.watch(context)` used the widget's own build context; a different
