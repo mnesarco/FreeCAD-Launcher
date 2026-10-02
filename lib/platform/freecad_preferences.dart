@@ -26,16 +26,17 @@ class FreeCadPreferences {
       group = _ensureGroup(group, 'BaseApp');
       group = _ensureGroup(group, 'Preferences');
       group = _ensureGroup(group, 'Macro');
-      for (final node in group.childElements
-          .where((element) => element.name.local == 'FCText')
-          .where((element) => element.getAttribute('Name') == 'MacroPath')
-          .toList()) {
+      for (final node
+          in group.childElements
+              .where((element) => element.name.local == 'FCText')
+              .where((element) => element.getAttribute('Name') == 'MacroPath')
+              .toList()) {
         node.parent?.children.remove(node);
       }
       group.children.add(
         XmlElement(
-          XmlName('FCText'),
-          [XmlAttribute(XmlName('Name'), 'MacroPath')],
+          XmlName.parts('FCText'),
+          [XmlAttribute(XmlName.parts('Name'), 'MacroPath')],
           [XmlText(value)],
         ),
       );
@@ -49,20 +50,22 @@ class FreeCadPreferences {
   }
 
   XmlDocument _emptyDocument() {
-    final macro = XmlElement(XmlName('FCParamGroup'), [XmlAttribute(XmlName('Name'), 'Macro')]);
+    final macro = XmlElement(XmlName.parts('FCParamGroup'), [
+      XmlAttribute(XmlName.parts('Name'), 'Macro'),
+    ]);
     final preferences = XmlElement(
-      XmlName('FCParamGroup'),
-      [XmlAttribute(XmlName('Name'), 'Preferences')],
+      XmlName.parts('FCParamGroup'),
+      [XmlAttribute(XmlName.parts('Name'), 'Preferences')],
       [macro],
     );
     final baseApp = XmlElement(
-      XmlName('FCParamGroup'),
-      [XmlAttribute(XmlName('Name'), 'BaseApp')],
+      XmlName.parts('FCParamGroup'),
+      [XmlAttribute(XmlName.parts('Name'), 'BaseApp')],
       [preferences],
     );
     final root = XmlElement(
-      XmlName('FCParamGroup'),
-      [XmlAttribute(XmlName('Name'), 'Root')],
+      XmlName.parts('FCParamGroup'),
+      [XmlAttribute(XmlName.parts('Name'), 'Root')],
       [baseApp],
     );
     final declaration = XmlDeclaration()
@@ -70,7 +73,7 @@ class FreeCadPreferences {
       ..encoding = 'utf-8';
     return XmlDocument([
       declaration,
-      XmlElement(XmlName('FCParameters'), [], [root]),
+      XmlElement(XmlName.parts('FCParameters'), [], [root]),
     ]);
   }
 
@@ -80,7 +83,9 @@ class FreeCadPreferences {
         return child;
       }
     }
-    final group = XmlElement(XmlName('FCParamGroup'), [XmlAttribute(XmlName('Name'), name)]);
+    final group = XmlElement(XmlName.parts('FCParamGroup'), [
+      XmlAttribute(XmlName.parts('Name'), name),
+    ]);
     parent.children.add(group);
     return group;
   }
