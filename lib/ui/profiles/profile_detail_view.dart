@@ -569,38 +569,10 @@ class _ProfilePythonTabState extends State<_ProfilePythonTab> {
   Future<void> _install(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).python;
-    final textController = TextEditingController();
     final specText = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.pythonInstallTitle),
-        content: SizedBox(
-          width: 480,
-          child: FormRow(
-            label: l10n.pythonPackagesLabel,
-            padding: EdgeInsets.zero,
-            field: FormTextField(
-              controller: textController,
-              autofocus: true,
-              maxLines: 5,
-              minLines: 3,
-              hintText: l10n.pythonSpecs,
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.versionsCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(textController.text),
-            child: Text(l10n.pythonInstall),
-          ),
-        ],
-      ),
+      builder: (context) => _PythonInstallDialog(l10n: l10n),
     );
-    textController.dispose();
     if (specText == null || specText.trim().isEmpty || !context.mounted) {
       return;
     }
@@ -660,6 +632,57 @@ class _ProfilePythonTabState extends State<_ProfilePythonTab> {
       (error) => messenger.showSnackBar(
         SnackBar(content: Text('${l10n.pythonRemoveFailed}: $error')),
       ),
+    );
+  }
+}
+
+class _PythonInstallDialog extends StatefulWidget {
+  const _PythonInstallDialog({required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  State<_PythonInstallDialog> createState() => _PythonInstallDialogState();
+}
+
+class _PythonInstallDialogState extends State<_PythonInstallDialog> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = widget.l10n;
+    return AlertDialog(
+      title: Text(l10n.pythonInstallTitle),
+      content: SizedBox(
+        width: 480,
+        child: FormRow(
+          label: l10n.pythonPackagesLabel,
+          padding: EdgeInsets.zero,
+          field: FormTextField(
+            controller: _controller,
+            autofocus: true,
+            maxLines: 5,
+            minLines: 3,
+            hintText: l10n.pythonSpecs,
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.versionsCancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_controller.text),
+          child: Text(l10n.pythonInstall),
+        ),
+      ],
     );
   }
 }

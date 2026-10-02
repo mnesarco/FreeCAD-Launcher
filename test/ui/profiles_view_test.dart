@@ -219,6 +219,33 @@ void main() {
       expect(find.textContaining('v1.26.4'), findsOneWidget);
     });
 
+    testWidgets('closing the Python install dialog does not reuse a disposed controller', (
+      tester,
+    ) async {
+      await pumpProfiles(tester);
+      await tester.tap(find.text('Dev'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      await tester.tap(
+        find.descendant(of: find.byType(TabBar), matching: find.text('Python')),
+      );
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      await tester.tap(find.text('Install packages'));
+      await tester.pumpAndSettle();
+      expect(find.text('Install Python packages'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'six');
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('shows installed addons in the profile detail', (tester) async {
       await pumpProfiles(tester);
       await tester.tap(find.text('Dev'));

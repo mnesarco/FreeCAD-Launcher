@@ -18,21 +18,22 @@
   `release.yml`), **D-098** (openers get a sanitized AppImage environment), **D-099** (pre-D-095
   build directories remain resolvable) and **D-100** (pre-0.4.0 releases withdrawn; `0.4.x`
   continues); D-093/D-094 were verified earlier today on a second clean Windows machine.
-- **Next action**: retest `v0.4.0` on Linux (weekly install + open logs/folder from the AppImage);
-  then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine). Next releases continue the
-  `0.4.x` line. Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1 branches,
-  2027-01-31), `B-02` in-place build updates, `R-21` (custom AppImage symlink cleanup), `B-16`
-  dependency upgrades ([plan](PLAN-dependency-upgrades.md)).
+- **Next action**: commit the R-22 UI fix and cut a `0.4.1` pre-release with it; retest on Linux
+  (weekly install + open logs/folder from the AppImage); then M8-05 (clean-VM Linux first-run)
+  and M8-04 (macOS machine). Next releases continue the `0.4.x` line. Backlog: `B-01` legacy
+  channel, `B-14` CalVer readiness (before 27.1 branches, 2027-01-31), `B-02` in-place build
+  updates, `R-21` (custom AppImage symlink cleanup), `B-16` dependency upgrades
+  ([plan](PLAN-dependency-upgrades.md)).
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
-- **In progress**: **v0.4.0 is the only release**: published through the manual
-  `create_release=true` path (run 36947395864, tag at `b8e17f7`) with
-  `FreeCADLauncher-0.4.0-windows-x86_64.zip` + `.sha256` and
-  `FreeCADLauncher-0.4.0-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
-  download; earlier releases were removed (D-100). `R-18` verified against the real
-  `weekly-2026.10.01` AppImage (Python 3.13 probe + cleanup OK); **R-19/D-098** fixed (live
-  AppImage check pending); **R-20/D-099** covers pre-D-095 build dirs; **R-21** filed
-  (pre-existing custom AppImage symlink leak). 613 tests green.
+- **In progress**: **R-22** fixed and verified (Python-tab install dialog disposed its
+  `TextEditingController` while the closing route still rebuilt the `TextField`, cascading into
+  the `_dependentsIsEmpty` assertion): controller moved into a `_PythonInstallDialog`
+  StatefulWidget, live driver click-through installed `six` cleanly, regression widget test fails
+  on the old code. 614 tests green, analyze clean, uncommitted. `v0.4.0` remains the only
+  release; earlier releases were removed (D-100). `R-18` verified against the real
+  `weekly-2026.10.01` AppImage; **R-19/D-098** fixed (live AppImage check pending); **R-20/D-099**
+  covers pre-D-095 build dirs; **R-21** filed (pre-existing custom AppImage symlink leak).
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
     diagnostics, CI workflow, test harness).
@@ -642,6 +643,7 @@
 | 2026-10-01 | R41 | **v0.4.0 pre-release published** (manual `create_release=true`, tag `v0.4.0`, `prerelease=true`, run 36947395864; publish job green): `FreeCADLauncher-0.4.0-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.0-x86_64.AppImage` + `.sha256` + `.zsync`, both `sha256sum -c` verified after download; tag at `b8e17f7` includes the R-18..R-20 Linux fixes. Version bumped 0.3.0 → 0.4.0 | M8-03 | `lib/core/constants.dart`, `pubspec.yaml`, `README.md`, `docs/spec/{03-ux,07-distribution}.md`, `docs/impl/{VERIFICATION,TASKS,STATUS,PLAN-M8-windows-release}.md` |
 | 2026-10-01 | R42 | Owner withdrew all releases before `v0.4.0`; `v0.4.0` is the only available release and the `0.4.x` line continues (**D-100**). README/spec/plan/VERIFICATION/STATUS updated; tags `v0.1.0`–`v0.3.0` remain for history | D-100 | `README.md`, `docs/spec/07-distribution.md`, `docs/impl/{DECISIONS,VERIFICATION,STATUS,PLAN-M8-windows-release}.md` |
 | 2026-10-01 | R43 | Planning: dependency-upgrade plan saved ([PLAN-dependency-upgrades.md](PLAN-dependency-upgrades.md), backlog **B-16**) with the `pub outdated` snapshot, per-package risk table, phased patch/minor → majors process, packaging verification and rollback rules; no code change | B-16 | `docs/impl/{PLAN-dependency-upgrades,TASKS,STATUS}.md` |
+| 2026-10-01 | R44 | Python-tab package install crashed the UI: the dialog's `TextEditingController` was disposed when `showDialog` returned while the closing route still rebuilt the `TextField` (use-after-dispose → `InheritedElement.debugDeactivated`/`_dependentsIsEmpty` assert). **R-22**: controller moved into a `_PythonInstallDialog` StatefulWidget. Reproduced live with a temporary Flutter driver entrypoint (installs `six`); after the fix the flow completes with the success snackbar and no exceptions; regression widget test fails on the old code. 614 tests green, analyze clean; temporary driver files/pubspec reverted | R-22 | `lib/ui/profiles/profile_detail_view.dart`, `test/ui/profiles_view_test.dart`, `docs/impl/{TASKS,STATUS}.md` |
 
 ## Standing notes for the next agent
 
