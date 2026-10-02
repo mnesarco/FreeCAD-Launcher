@@ -129,6 +129,8 @@ hard rule for this migration:
 - [ ] `flutter analyze` has zero `deprecated_member_use`; `grep -rn "\.watch(context\|Watch(" lib`
       returns only unrelated drift `.watch()` calls.
 - [ ] `flutter test` green (Linux), CI green on Linux + Windows.
+- [ ] Restore `flutter analyze` default strictness (drop `--no-fatal-infos` from `ci.yml`, added
+      while the 127 `.watch` infos existed).
 - [ ] Live click-through per `PLAN-dependency-upgrades.md` risk table: Home, Profiles (all six
       tabs), Versions (Installed/Custom/Available), Addons (Catalog/Custom/Collections/detail),
       Macros (Installed/Catalog), Settings, Jobs dialog, status bar.
