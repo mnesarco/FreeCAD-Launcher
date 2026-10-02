@@ -5,30 +5,28 @@
 
 - **Updated**: 2026-10-01
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
-  (M8-01/M8-02/**M8-06 DONE**; M8-03 CI pipeline built and the **full Windows smoke matrix
-  passed on a clean machine (2026-10-01, artifact run 36941684639)** after fixing R-14/D-095,
-  R-15/D-096 and R-17; only the GitHub Release publish remains; M8-04 needs macOS; M8-05
-  clean-VM pass ready)
+  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; `v0.3.0` is published with the Linux AppImage and
+  the Windows portable zip after the full Windows smoke matrix passed on a clean machine; M8-04
+  needs macOS; M8-05 clean-VM Linux pass ready)
 - **Active branch**: `devel` (public) — `main` is reserved for a future release line
 - **Last session**: 2026-10-01
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
   `TASKS.md` so work can resume after an interruption.
-- **Decisions this session**: **D-095** (portable ASCII path segments) and **D-096** (Windows
-  launches never send an empty environment block); D-093/D-094 were verified earlier today on a
-  second clean Windows machine.
-- **Next action**: publish the `v0.2.0` prerelease through the manual Release workflow
-  (`create_release=true`, `tag=v0.2.0`, `prerelease=true`) and verify the release assets (Windows
-  `.zip` + `.sha256`, AppImage + `.sha256` + `.zsync`); that exercises the last untested publish
-  path and closes M8-03. Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1
-  branches, 2027-01-31), `B-02` in-place build updates; M8-05 clean-VM Linux pass remains.
+- **Decisions this session**: **D-095** (portable ASCII path segments), **D-096** (Windows
+  launches never send an empty environment block) and **D-097** (release workflow renamed
+  `release.yml`; `v0.3.0` is the first cross-platform release); D-093/D-094 were verified earlier
+  today on a second clean Windows machine.
+- **Next action**: `v0.3.0` is released (`release.yml`, run 36943644212); remaining M8 items are
+  M8-05 (clean-VM Linux first-run with the published AppImage) and M8-04 (macOS machine needed).
+  Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1 branches, 2027-01-31),
+  `B-02` in-place build updates.
 - **Blockers**:
-  - M8-04 still needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker: the
-    owner accepted the second-machine pass as the M8-03 clean-machine verification; the
-    AV/TLS-inspection caveat stays documented in the user guide.
-- **In progress**: Windows matrix pass recorded in `VERIFICATION.md` §2/§4; R-15/R-16/R-17
-  committed and pushed (`57b99fd`, `734124e`), CI green on Ubuntu + Windows. Only the `v0.2.0`
-  prerelease publish is pending. `R-14`/D-095 committed (`031cc0e`); `R-13` (D-090), `B-15a`
-  (D-089) and `B-10a`..`B-10f` (D-085..D-088) are committed (`c0a00b9`, `a9e3f1c`, `5a372ab`).
+  - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
+- **In progress**: nothing active. `v0.3.0` verified: release assets downloaded and both
+  `sha256sum -c` checks pass; the Windows matrix pass is recorded in `VERIFICATION.md` §2/§4.
+  `R-14`..`R-17` and the release preparation are committed (`031cc0e`, `57b99fd`, `734124e`,
+  `216c599`); `R-13` (D-090), `B-15a` (D-089) and `B-10a`..`B-10f` (D-085..D-088) are committed
+  (`c0a00b9`, `a9e3f1c`, `5a372ab`).
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
     diagnostics, CI workflow, test harness).
@@ -499,7 +497,12 @@
     609 tests green, analyze clean; artifact rebuild + Windows retest pending.
   - M8-03 Windows matrix (2026-10-01): the owner ran the full clean-machine smoke matrix with the
     artifact from run 36941684639 and **all scenarios passed**; `VERIFICATION.md` §2/§4 Windows
-    column filled. M8-03 remains WIP only for the `v0.2.0` prerelease publish.
+    column filled.
+  - Release (2026-10-01, **D-097**): version bumped to `0.3.0`, workflow renamed
+    `appimage-release.yml` → `release.yml` (badge updated), tag `v0.3.0` pushed; the tag path ran
+    the full workflow (run 36943644212: windows + appimage + publish all green) and the `publish`
+    job created the GitHub Release with the Windows zip + AppImage (+ sidecars/zsync). Both
+    sidecars re-verified after downloading from the release. **M8-03 DONE.**
 
 ## Session log
 
@@ -622,6 +625,7 @@
 | 2026-10-01 | R33 | R-14 committed and pushed (`031cc0e`); manual Release run 36937972986 green (windows + appimage jobs; publish skipped as requested). `windows-portable` artifact downloaded to `~/Downloads/freecad-launcher-windows-r36937972986/` (15.4 MB, `sha256sum -c` OK); Windows install retest pending | R-14, M8-03 | `docs/impl/{STATUS,PLAN-M8-windows-release,TASKS}.md` |
 | 2026-10-01 | R35 | R-15 retest log: 7zr extraction OK, then `PathNotFoundException` from the recursive size walk on a FreeCAD path over the 260-char Windows limit. **R-17**: shared tolerant `directorySize` (per-directory error handling) used by `BuildInstaller` and `ProfilesController`; 3 new tests. 609 tests green, analyze clean; artifact rebuild + Windows retest pending | R-17, M8-03 | `lib/platform/directory_size.dart`, `lib/platform/build_installer.dart`, `lib/state/profiles_controller.dart`, `test/platform/directory_size_test.dart`, `docs/impl/{TASKS,STATUS,VERIFICATION,PLAN-M8-windows-release}.md` |
 | 2026-10-01 | R36 | **M8-03 clean-machine verification passed**: owner ran the full Windows smoke matrix with the R-17 artifact (run 36941684639) — 1.1.3 `.7z` install + Python probe, two isolated profiles + launch, catalog/pip/custom addons, enable/disable, macros, manifest, offline catalog, CLI wrapper, reveal. `VERIFICATION.md` §2/§4 Windows column filled; M8-03 only needs the `v0.2.0` prerelease publish | M8-03 | `docs/impl/{VERIFICATION,STATUS,TASKS,PLAN-M8-windows-release}.md` |
+| 2026-10-01 | R37 | **v0.3.0 released** (**D-097**): version bump to 0.3.0, workflow renamed to `release.yml`, tag `v0.3.0` pushed → run 36943644212 (windows + appimage + publish all green); GitHub Release created with `FreeCADLauncher-0.3.0-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.3.0-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified from the downloaded release. **M8-03 DONE**; M8-04/M8-05 remain | M8-03, D-097 | `pubspec.yaml`, `lib/core/constants.dart`, `.github/workflows/{appimage-release.yml => release.yml}`, `README.md`, `docs/spec/03-ux.md`, `test/state/debug_bundle_controller_test.dart`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION,PLAN-M8-windows-release}.md` |
 
 ## Standing notes for the next agent
 
@@ -631,7 +635,7 @@
   catalog-derived (D-078): supported stable lines older than the newest one present. Weekly
   builds are exposed in Versions → Available (D-077). CalVer readiness is backlog B-14.
 - Publishing (D-081): public repo `mnesarco/FreeCAD-Launcher`, branch `devel`, releases only
-  from CI (`appimage-release.yml`, manual `workflow_dispatch` with optional `create_release`).
-  CI runs Linux + Windows; macOS is disabled per D-083; tests are Linux-only per D-082/M8-06.
+  from CI (`release.yml`, tag push or manual `workflow_dispatch` with optional `create_release`).
+  CI runs Linux + Windows with tests on both; macOS is disabled per D-083 until M8-04.
 - `AGENTS.md` is tracked again (no longer git-excluded); keep it in sync with `docs/impl/`
   when conventions or the project state change.

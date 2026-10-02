@@ -1,11 +1,9 @@
 # PLAN M8 — Windows release in CI
 
-> **Status**: In progress (2026-10-01). Owner choices confirmed in the planning session:
-> portable `.zip`, Windows tests (M8-06) fixed **before** the release, unsigned binary,
-> clean-machine pass plus CI smoke tests. The clean-machine pass was accepted on a second Windows
-> machine (startup/catalogs/downloads, R31); the full smoke matrix and the release publish path
-> remain. Written so the work can resume after an interruption; update the checkboxes as items
-> land.
+> **Status**: **Windows release shipped** (2026-10-01): `v0.3.0` is published from CI with the
+> portable `.zip` + AppImage after the full clean-machine smoke matrix passed. macOS packaging
+> remains in M8-04. Written so the work can resume after an interruption; update the checkboxes
+> as items land.
 
 ## Goal
 
@@ -97,8 +95,10 @@ failures until the CI job runs green.
 - [x] Pipeline exercised with a no-publish manual run (36898044793): appimage ✓, windows ✓
       (15.4 MB zip, `sha256sum -c` OK, `7zr.exe` hash pinned, `--version` smoke test),
       `publish` correctly skipped; artifact downloaded and inspected locally
-- [ ] Exercise the untested `create_release` path with a `v0.2.0` prerelease run (Windows matrix
-      pass done 2026-10-01; this is the last M8-03 item)
+- [x] Publish path exercised with the `v0.3.0` tag push (run 36943644212: windows + appimage +
+      publish green; release created with both artifacts and sidecars verified). The manual
+      `workflow_dispatch` `create_release=true` input itself was not separately run (same
+      `publish` job)
 
 ### Phase 4 — Verification and docs
 
@@ -115,10 +115,10 @@ failures until the CI job runs green.
       36941684639 green, zip downloaded and checksum-verified; the full matrix then passed;
       install failures now write `logs/install-<id>-<stamp>.log` (R-16)
 - [x] Record the pass in `VERIFICATION.md` §2 (M8 checklist) and §4 (note)
-- [ ] Close OQ-1 in `docs/spec/09-open-questions.md` (Windows side already D-091; macOS remains);
-      update spec 07 §2 artifact table when the release lands
-- [ ] README `Status` and `docs/user-guide.md` Windows notes were added in R26; re-check before
-      the `v0.2.0` release
+- [ ] Close OQ-1 in `docs/spec/09-open-questions.md` (Windows published in `v0.3.0`; macOS
+      remains for M8-04); spec 07 §2 artifact table updated for `v0.3.0`
+- [x] README `Status` updated for `v0.3.0` (Windows zip + AppImage; unsigned/SmartScreen notes
+      already in the user guide)
 - [x] Update `STATUS.md`/`TASKS.md` and append the session log (R31)
 
 ## Known risks / open items
