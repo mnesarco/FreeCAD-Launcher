@@ -95,10 +95,10 @@ failures until the CI job runs green.
 - [x] Pipeline exercised with a no-publish manual run (36898044793): appimage ✓, windows ✓
       (15.4 MB zip, `sha256sum -c` OK, `7zr.exe` hash pinned, `--version` smoke test),
       `publish` correctly skipped; artifact downloaded and inspected locally
-- [x] Publish path exercised with the `v0.3.0` tag push (run 36943644212: windows + appimage +
-      publish green; release created with both artifacts and sidecars verified). The manual
-      `workflow_dispatch` `create_release=true` input itself was not separately run (same
-      `publish` job)
+- [x] Publish path exercised end to end: tag push `v0.3.0` (stable, run 36943644212) and the
+      manual `workflow_dispatch` `create_release=true` input with `v0.4.0` (`prerelease=true`,
+      run 36947395864); both releases carry the AppImage + Windows zip and the sidecars were
+      verified
 
 ### Phase 4 — Verification and docs
 

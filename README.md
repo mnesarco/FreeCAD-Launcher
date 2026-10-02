@@ -13,8 +13,8 @@ settings, addons, macros and Python packages.
 
 ## Status
 
-- **v0.3.0** is available on the Releases page with the Linux AppImage and the Windows portable
-  zip (unsigned; D-091). The Windows pipeline was verified on a clean machine (M8-03); macOS
+- **v0.4.0** is available as a pre-release on the Releases page with the Linux AppImage and the
+  Windows portable zip (unsigned; D-091); `v0.3.0` remains the latest stable release. macOS
   packaging is planned (see `docs/spec/08-roadmap.md` and `docs/impl/STATUS.md`).
 - Managed catalog builds require **FreeCAD 1.0 or newer**; user-supplied binaries (local files,
   URLs, self-compiled executables) are unconstrained.

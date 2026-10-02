@@ -226,13 +226,17 @@ M7-01 (D-071) productionization checks (2026-09-21):
       R-14/D-095, R-15/D-096 and R-17 the owner ran the full §4 smoke matrix with the run
       36941684639 artifact and all scenarios passed. The TLS-inspection VM was not re-checked
       (AV/TLS caveat documented in the user guide)
-- [ ] GitHub Release creation path exercised for tagged/manual publishes (both OS artifacts) — the
-      tag path is now verified with `v0.3.0` (see below); the `workflow_dispatch`
-      `create_release=true` input path itself is still untested (same `publish` job)
+- [x] GitHub Release creation path exercised for tagged/manual publishes (both OS artifacts): the
+      tag path with `v0.3.0` (run 36943644212) and the manual `workflow_dispatch`
+      `create_release=true` input path with `v0.4.0` (run 36947395864)
 - [x] Cross-platform release `v0.3.0` (tag push `v0.3.0` → `release.yml`, run 36943644212): the
       `publish` job created the release with `FreeCADLauncher-0.3.0-windows-x86_64.zip` +
       `.sha256` and `FreeCADLauncher-0.3.0-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars
       verified locally after download from the release page
+- [x] Pre-release `v0.4.0` (manual `create_release=true`, tag `v0.4.0`, `prerelease=true`, run
+      36947395864): `FreeCADLauncher-0.4.0-windows-x86_64.zip` + `.sha256` and
+      `FreeCADLauncher-0.4.0-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified from
+      the release page; tag points at `b8e17f7` (Linux regression fixes R-18..R-20)
 - [ ] macOS artifacts built, installed and launched on clean machines (M8-04, OQ-1)
 - [ ] Clean-machine Linux first-run flow completes with the published AppImage (M8-05)
 

@@ -5,10 +5,9 @@
 
 - **Updated**: 2026-10-01
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
-  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; `v0.3.0` is published with the Linux AppImage and
-  the Windows portable zip after the full Windows smoke matrix passed on a clean machine; the
-  Linux regression audit (R40) found and fixed R-18/R-19/R-20; M8-04 needs macOS; M8-05
-  clean-VM Linux pass ready)
+  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; `v0.3.0` stable and **`v0.4.0` pre-release** are
+  published with the Linux AppImage and the Windows portable zip; `v0.4.0` carries the Linux
+  regression fixes R-18..R-20; M8-04 needs macOS; M8-05 clean-VM Linux pass ready)
 - **Active branch**: `devel` (public) — `main` is reserved for a future release line
 - **Last session**: 2026-10-01
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
@@ -18,21 +17,18 @@
   `release.yml`; `v0.3.0` is the first cross-platform release), **D-098** (openers get a
   sanitized AppImage environment) and **D-099** (pre-D-095 build directories remain resolvable);
   D-093/D-094 were verified earlier today on a second clean Windows machine.
-- **Next action**: commit/push R-18..R-20, rebuild the artifact, and retest on Linux (weekly
-  install + open logs/folder from the AppImage). Remaining M8 items: M8-05 (clean-VM Linux
-  first-run) and M8-04 (macOS machine). Backlog: `B-01` legacy channel, `B-14` CalVer readiness
-  (before 27.1 branches, 2027-01-31), `B-02` in-place build updates, `R-21` (custom AppImage
-  symlink cleanup).
+- **Next action**: retest `v0.4.0` on Linux (weekly install + open logs/folder from the AppImage);
+  then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine). Backlog: `B-01` legacy channel,
+  `B-14` CalVer readiness (before 27.1 branches, 2027-01-31), `B-02` in-place build updates,
+  `R-21` (custom AppImage symlink cleanup).
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
-- **In progress**: **R-18** verified against the real `weekly-2026.10.01` AppImage (Python 3.13
-  probe + cleanup OK); **R-19/D-098** fixed (live AppImage check pending); **R-20/D-099** added by
-  the Linux regression audit (pre-D-095 build dirs); **R-21** filed (pre-existing custom AppImage
-  symlink leak). 613 tests green — artifact rebuild + retest pending. `v0.3.0` remains the
-  published release; the Windows matrix pass is in `VERIFICATION.md` §2/§4.
-  `R-14`..`R-17` and the release preparation are committed (`031cc0e`, `57b99fd`, `734124e`,
-  `216c599`); `R-13` (D-090), `B-15a` (D-089) and `B-10a`..`B-10f` (D-085..D-088) are committed
-  (`c0a00b9`, `a9e3f1c`, `5a372ab`).
+- **In progress**: **v0.4.0 pre-release published** (manual `create_release=true`, run
+  36947395864, tag at `b8e17f7`) with `FreeCADLauncher-0.4.0-windows-x86_64.zip` + `.sha256` and
+  `FreeCADLauncher-0.4.0-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
+  download. `R-18` verified against the real `weekly-2026.10.01` AppImage (Python 3.13 probe +
+  cleanup OK); **R-19/D-098** fixed (live AppImage check pending); **R-20/D-099** covers pre-D-095
+  build dirs; **R-21** filed (pre-existing custom AppImage symlink leak). 613 tests green.
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
     diagnostics, CI workflow, test harness).
@@ -509,6 +505,10 @@
     the full workflow (run 36943644212: windows + appimage + publish all green) and the `publish`
     job created the GitHub Release with the Windows zip + AppImage (+ sidecars/zsync). Both
     sidecars re-verified after downloading from the release. **M8-03 DONE.**
+  - Linux fixes + pre-release (2026-10-01): R-18 (probe-directory cleanup), R-19/D-098 (sanitized
+    opener environment) and R-20/D-099 (pre-D-095 build directories) landed; version bumped to
+    `0.4.0` and published as a **pre-release** through the manual `create_release=true` path
+    (run 36947395864) with the Windows zip + AppImage; both sidecars verified.
 
 ## Session log
 
@@ -635,6 +635,7 @@
 | 2026-10-01 | R38 | README/user-guide Windows coverage: supported-platform line, Windows checksum command, data root (`%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher`), CLI wrapper path/`freecad-launcher.cmd`, Windows local build and troubleshooting entries; user guide limitations retitled v0.3 | M8-03 | `README.md`, `docs/user-guide.md`, `docs/impl/STATUS.md` |
 | 2026-10-01 | R39 | Two Linux regressions from the v0.3.0 AppImage: weekly install failed with `ENOTCONN` deleting the probe dir (FUSE mount inside probe `TMPDIR` still tearing down) → **R-18** best-effort cleanup with retries; "open logs folder" opened the browser because openers inherited the AppImage `LD_LIBRARY_PATH` (system `gio` undefined symbol) → **R-19/D-098** `openerEnvironment` scrub. Reproduced the `gio` failure locally with the AppImage libs; 611 tests green, analyze clean; artifact retest pending | R-18, R-19, D-098 | `lib/platform/python_probe.dart`, `lib/platform/file_actions.dart`, `test/platform/file_actions_test.dart`, `docs/impl/{DECISIONS,TASKS,STATUS}.md` |
 | 2026-10-01 | R40 | **Linux regression audit** of the Windows-support changes (baseline `c0a00b9`): every shared-code change reviewed; only D-095 had a real Linux regression — pre-D-095 managed builds resolved to a sanitized (missing) directory, so they were reported `missing` and orphaned on remove → **R-20/D-099** `existingBuildDir`/`buildDirCandidates` fallback in status/reconcile/verify/remove and Python resolution. R-18 verified against the real `weekly-2026.10.01` AppImage (Python 3.13 detected, probe dir removed); D-096 is Windows-guarded; opener env equivalent outside an AppImage; tls_trust is Windows-guarded plus the optional `ca-bundle.pem`; directorySize values unchanged. Filed **R-21** (custom AppImage symlink dirs not cleaned on remove — pre-existing at `c0a00b9`). 613 tests green, analyze clean | R-18..R-21, D-099 | `lib/platform/paths.dart`, `lib/state/{builds,python,addons}_controller.dart`, `test/platform/paths_test.dart`, `test/state/builds_controller_test.dart`, `test/data/test_fixtures.dart`, `docs/impl/{DECISIONS,TASKS,STATUS}.md` |
+| 2026-10-01 | R41 | **v0.4.0 pre-release published** (manual `create_release=true`, tag `v0.4.0`, `prerelease=true`, run 36947395864; publish job green): `FreeCADLauncher-0.4.0-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.0-x86_64.AppImage` + `.sha256` + `.zsync`, both `sha256sum -c` verified after download; tag at `b8e17f7` includes the R-18..R-20 Linux fixes. Version bumped 0.3.0 → 0.4.0 | M8-03 | `lib/core/constants.dart`, `pubspec.yaml`, `README.md`, `docs/spec/{03-ux,07-distribution}.md`, `docs/impl/{VERIFICATION,TASKS,STATUS,PLAN-M8-windows-release}.md` |
 
 ## Standing notes for the next agent
 
