@@ -18,13 +18,13 @@
   sequenced after the B-16 signals upgrade), **D-102** (`signals_lint` deferred from the
   signals group: 7.1.0 caps `analyzer <14`) and **D-103** (Flutter pin 3.41.4 → 3.47.6, required
   by the drift 2.35.1 bump).
-- **Next action**: merge the green B-17 PR
-  [#3](https://github.com/mnesarco/FreeCAD-Launcher/pull/3) on owner approval; then run the B-16
-  Phase 3 packaging smoke (manual `release.yml`, no publish); retest `v0.4.1` on Linux (weekly
-  install + open logs/folder + Python package install from the AppImage); then M8-05 (clean-VM
-  Linux first-run) and M8-04 (macOS machine). Next releases continue the `0.4.x` line. Backlog:
-  `B-01` legacy channel, `B-14` CalVer readiness (before 27.1 branches, 2027-01-31), `B-02`
-  in-place build updates, `R-21` (custom AppImage symlink cleanup), `B-16` dependency upgrades
+- **Next action**: B-16/B-17 are done; the remaining B-16 Phase 3 checks are owner-dependent —
+  the real Linux catalog install with the upgraded app (1.1.3 AppImage, ~780 MiB download) and a
+  Windows-machine install/launch smoke. Then retest `v0.4.1` on Linux (weekly install + open
+  logs/folder + Python package install from the AppImage); then M8-05 (clean-VM Linux first-run)
+  and M8-04 (macOS machine). Next releases continue the `0.4.x` line. Backlog: `B-01` legacy
+  channel, `B-14` CalVer readiness (before 27.1 branches, 2027-01-31), `B-02` in-place build
+  updates, `R-21` (custom AppImage symlink cleanup), `B-16` dependency upgrades
   ([plan](PLAN-dependency-upgrades.md)).
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
@@ -35,27 +35,22 @@
   `_PythonInstallDialog` StatefulWidget; live driver click-through installed `six` cleanly;
   regression test fails on the old code). `v0.4.1` carries R-18..R-22; 614 tests green. `R-19`
   live AppImage check, `R-21` and `B-16` remain.
-- **B-16 dependency upgrades** (branch `deps-upgrade-1`, pushed; draft PR
-  [#2](https://github.com/mnesarco/FreeCAD-Launcher/pull/2)): drift, flutter_svg/xml, signals 7.1
-  and the R-23 fix (`d7cf10b`, `cdbbec2`, `fcc90a7`, `2b2cdf7`, `6a2c08f`) plus the toolchain
-  move to Flutter 3.47.6 (`d0f5c1a`, D-103). CI run 37044201129 failed at `pub get` because the
-  drift bump needs `meta ^1.18.3` while the old pin shipped 1.17.0; the 3.47.6 re-run
-  (37045958881) then failed on third-party-notices drift and on Windows `flutter analyze` exiting
-  1 for the 127 tracked `.watch` infos. Both fixed (notices regenerated; CI uses
-  `flutter analyze --no-fatal-infos` until B-17); run **37046623647 is green on Ubuntu (4m36s)
-  and Windows (9m2s)**, and the draft PR awaits owner merge approval. Local evidence:
-  codegen fresh, 615 tests green, analyze only the 127
-  `.watch` deprecations (B-17), live click-through of every screen + hot reload, zero runtime
-  errors. Crash root cause and migration plan in D-101 /
+- **B-16 dependency upgrades** (done 2026-10-02): drift, flutter_svg/xml and signals 7.1 plus the
+  R-23 fix and the Flutter 3.47.6 pin (D-103) merged to `devel` via PR #2 (`d7cf10b`, `cdbbec2`,
+  `fcc90a7`, `2b2cdf7`, `6a2c08f`, `d0f5c1a`; devel CI green, run 37063237308), followed by the
+  B-17 `.watch()` cleanup (PR #3, below). The no-publish release smoke (run 37063249302) built
+  and verified the AppImage (`sha256` OK, `--version` = 0.4.1, GUI dashboard) and the Windows zip
+  (portable bundle + `7zr.exe` + license/notices); the real Linux catalog install and a
+  Windows-machine smoke remain owner checks. Crash root cause and migration plan in D-101 /
   [PLAN-signals-implicit-migration.md](PLAN-signals-implicit-migration.md).
 - **B-17 signals implicit-tracking migration** (branch `signals-implicit-migration`): all 127
   `.watch(context)` sites across 34 classes migrated in four batches (`6c9f375`, `f2c24ee`,
   `8009cfc`, B-17d commit pending); `flutter analyze` is back to **No issues found** and the
   `--no-fatal-infos` CI bridge is removed. B-17c found that implicit tracking drops unused
   subscriptions (the old `watch()` was sticky) and fixed `BundleDetailView`. 615 tests green;
-  full live click-through incl. a live dark↔light theme switch, zero runtime errors; PR
-  [#3](https://github.com/mnesarco/FreeCAD-Launcher/pull/3) CI **green on Ubuntu + Windows**
-  (run 37058324255) and merges on owner approval.
+  full live click-through incl. a live dark↔light theme switch, zero runtime errors; **merged to
+  `devel`** (PR [#3](https://github.com/mnesarco/FreeCAD-Launcher/pull/3), run 37059277836
+  green).
 - **Recently completed**:
   - M1-01..M1-10 — foundation complete (schema, core, paths/env, process runner, shell,
     diagnostics, CI workflow, test harness).
@@ -681,6 +676,8 @@
 | 2026-10-02 | R49 | PR [#2](https://github.com/mnesarco/FreeCAD-Launcher/pull/2) second CI run (37045958881) reached tests on Flutter 3.47.6 but failed on (a) `THIRD_PARTY_NOTICES.md` drift from the upgraded dependency set and (b) Windows `flutter analyze` exit 1 on the 127 tracked `.watch` infos. Regenerated the notices and set `flutter analyze --no-fatal-infos` in CI until B-17 removes the deprecated calls; third run 37046623647 **green on Ubuntu (4m36s) + Windows (9m2s)** | B-16, B-17 | `.github/workflows/ci.yml`, `THIRD_PARTY_NOTICES.md`, `docs/impl/{PLAN-signals-implicit-migration,TASKS,STATUS}.md` |
 
 | 2026-10-02 | R50 | **B-17 signals migration done locally**: all 127 `.watch()` sites in 34 classes moved to `SignalWidget`/`SignalStatefulWidget` in four batches (`6c9f375`, `f2c24ee`, `8009cfc`, B-17d commit); `flutter analyze` back to 0 issues, `--no-fatal-infos` bridge removed; B-17c found implicit tracking drops unused subscriptions (old sticky `watch()`) and fixed `BundleDetailView`; 615 tests green; full live pass incl. a live dark↔light theme switch, zero runtime errors; PR #3 CI **green on Ubuntu + Windows** (run 37058324255), merge on owner approval | B-17, D-101 | `lib/**`, `.github/workflows/ci.yml`, `docs/impl/{PLAN-signals-implicit-migration,TASKS,STATUS}.md` |
+
+| 2026-10-02 | R51 | B-17 PR #3 merged to `devel` (rebase, branch deleted); **B-16 Phase 3 no-publish release smoke** (run 37063249302) green — appimage 103 s / windows 221 s / publish skipped; artifacts downloaded and verified (`sha256sum -c` OK, AppImage `--version` = 0.4.1 exit 0 + GUI dashboard rendered, Windows zip = portable bundle + `7zr.exe` + license/notices). Remaining B-16 Phase 3: real 1.1.3 catalog install and the Windows-machine smoke (owner-dependent) | B-16, B-17, D-103 | `docs/impl/{PLAN-dependency-upgrades,STATUS,TASKS}.md` |
 
 ## Standing notes for the next agent
 

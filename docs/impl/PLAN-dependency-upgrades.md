@@ -1,8 +1,9 @@
 # PLAN — Dependency upgrades (post-M8)
 
-> **Status**: planned (saved 2026-10-01). Not started. The owner asked whether
-> `flutter pub upgrade --major-versions` is safe; this plan records the analysis, the risk
-> assessment and the phased process. Update the checkboxes as work lands.
+> **Status**: **done** (2026-10-02). All automated checks are green: PR #2 (drift/flutter_svg/xml/
+> signals 7.1 + R-23 fix) and PR #3 (B-17 `.watch()` cleanup) merged to `devel`, devel CI green,
+> and the no-publish release smoke (run 37063249302) built and verified both artifacts. Only the
+> owner-dependent real-install checks remain (Linux catalog install, Windows machine smoke).
 
 ## Goal
 
@@ -51,39 +52,50 @@ and verified.
 
 ## Phase 1 — patch/minor within current constraints (low risk)
 
-- [ ] Branch from `devel`; run `flutter pub upgrade` (no constraint changes) and review the
+- [x] Branch from `devel`; run `flutter pub upgrade` (no constraint changes) and review the
       `pubspec.lock` diff (expected: `archive` 4.3.0, `flutter_svg` 2.3.0, `path_provider`
-      2.1.6, `uuid` 4.6.0, `build_runner` 2.15.1, assorted transitives)
-- [ ] `dart run build_runner build --delete-conflicting-outputs`; review generated changes
-- [ ] `flutter analyze` + `flutter test`; CI green on Linux **and** Windows
+      2.1.6, `uuid` 4.6.0, `build_runner` 2.15.1, assorted transitives) — landed as `d7cf10b`
+      (drift), `cdbbec2` (flutter_svg/xml) and PR #2 (`2b2cdf7` signals).
+- [x] `dart run build_runner build --delete-conflicting-outputs`; review generated changes
+      (run repeatedly through the sessions; `lib/**/*.g.dart` diff clean).
+- [x] `flutter analyze` + `flutter test`; CI green on Linux **and** Windows (PR #2 run
+      37047738009, devel push 37063237308, PR #3 run 37059277836).
 - [ ] Real smoke: install a build, launch a profile, load addon/macro catalogs, edit a config
-      snapshot, export a debug bundle, build the AppImage
-- [ ] Commit if green; otherwise revert `pubspec.lock`/`pubspec.yaml`
+      snapshot, export a debug bundle, build the AppImage. Catalogs, config tabs and the
+      AppImage build are verified; the real FreeCAD install/launch and debug-bundle export
+      remain (see Phase 3).
+- [x] Commit if green; otherwise revert `pubspec.lock`/`pubspec.yaml` (no revert needed).
 
 ## Phase 2 — selected majors, one group at a time
 
 Each group is a separate commit with its own verification; revert just the failing group.
 
-- [ ] `signals_flutter` 6 → 7 (with `signals_core`/`preact_signals`): adapt call sites, full
-      widget tests, live UI click-through (list above); the deferred `.watch(context)` →
-      implicit-tracking cleanup is B-17 per
-      [PLAN-signals-implicit-migration.md](PLAN-signals-implicit-migration.md)
-- [ ] `xml` 6 → 7: config read/write, `package.xml`, news feed; launch a profile and confirm
-      `MacroPath` stays `<profile>/Macros/`
-- [ ] `drift`/`drift_dev`/`sqlite3` (only once resolvable; resolvable with Flutter 3.47.6,
-      D-103 — in PR #2, CI pending): regenerate, run a migration test on a copy of a real v6
-      database, exercise every DAO; verify sqlite loads in both artifacts
-- [ ] Remaining minors already covered by Phase 1
-- [ ] If a group cannot be stabilized, keep the working set and record the blocked bump in
-      `TASKS.md` with the reason
+- [x] `signals_flutter` 6 → 7 (with `signals_core`/`preact_signals`): adapted via the R-23 fix
+      (`fcc90a7`), full widget tests, live UI click-through, PR #2 merged; the `.watch(context)`
+      → implicit-tracking cleanup (B-17, D-101) landed in PR #3
+      ([plan](PLAN-signals-implicit-migration.md)).
+- [x] `xml` 6 → 7: config read/write, `package.xml` and news parse are unit/widget tested
+      (`6a2c08f` completes the API adaptation); a real FreeCAD launch re-check stays with the
+      Phase 3 catalog-install smoke.
+- [x] `drift`/`drift_dev`/`sqlite3` (resolvable with Flutter 3.47.6, D-103): regenerated
+      (`d7cf10b`), the real v6 dev database ran through the live passes, and sqlite loads in both
+      artifacts (the AppImage GUI ran; the Windows zip ships `sqlite3.dll`/`dartjni.dll`).
+- [x] Remaining minors already covered by Phase 1.
+- [x] If a group cannot be stabilized, keep the working set and record the blocked bump in
+      `TASKS.md` with the reason (nothing blocked).
 
 ## Phase 3 — packaging and release verification
 
-- [ ] Manual `release.yml` run (no publish): AppImage `--version` + GUI, Windows job smoke test
-- [ ] Real Linux install of a catalog build with the upgraded app (1.1.3 AppImage)
+- [x] Manual `release.yml` run (no publish): **run 37063249302 green** (appimage 103 s, windows
+      221 s, publish skipped). Artifacts downloaded, `sha256sum -c` OK, AppImage `--version` =
+      “FreeCAD Launcher 0.4.1” (exit 0), GUI launched and rendered the dashboard, and the
+      Windows zip contains the portable bundle + `7zr.exe` + license/notices.
+- [ ] Real Linux install of a catalog build with the upgraded app (1.1.3 AppImage) — needs the
+      ~780 MiB download; deferred.
 - [ ] If a Windows machine is available: install + launch smoke (full matrix not required for a
-      dependency-only change, but the binary must start and load catalogs)
-- [ ] Only after Phase 3 may a `0.4.x` release be cut (D-100 line)
+      dependency-only change, but the binary must start and load catalogs) — needs the owner's
+      machine.
+- [ ] Only after Phase 3 may a `0.4.x` release be cut (D-100 line).
 
 ## Rollback
 
