@@ -165,12 +165,6 @@ void main() {
 
     await pumpHome(tester);
 
-    expect(find.text('Status'), findsOneWidget);
-    expect(find.text('Versions'), findsOneWidget);
-    expect(find.text('Profiles'), findsOneWidget);
-    expect(find.text('Addons'), findsOneWidget);
-    expect(find.text('Macros'), findsOneWidget);
-    expect(find.text('Python packages'), findsOneWidget);
     expect(find.text('Recent profiles'), findsOneWidget);
     expect(find.text('Default'), findsOneWidget);
     expect(find.text('Last used profile'), findsNothing);

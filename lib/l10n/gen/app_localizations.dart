@@ -166,42 +166,6 @@ abstract class AppLocalizations {
   /// **'Install addons'**
   String get homeStepAddons;
 
-  /// No description provided for @homeStatus.
-  ///
-  /// In en, this message translates to:
-  /// **'Status'**
-  String get homeStatus;
-
-  /// No description provided for @homeStatBuilds.
-  ///
-  /// In en, this message translates to:
-  /// **'Versions'**
-  String get homeStatBuilds;
-
-  /// No description provided for @homeStatProfiles.
-  ///
-  /// In en, this message translates to:
-  /// **'Profiles'**
-  String get homeStatProfiles;
-
-  /// No description provided for @homeStatAddons.
-  ///
-  /// In en, this message translates to:
-  /// **'Addons'**
-  String get homeStatAddons;
-
-  /// No description provided for @homeStatMacros.
-  ///
-  /// In en, this message translates to:
-  /// **'Macros'**
-  String get homeStatMacros;
-
-  /// No description provided for @homeStatPackages.
-  ///
-  /// In en, this message translates to:
-  /// **'Python packages'**
-  String get homeStatPackages;
-
   /// No description provided for @homeRecentProfiles.
   ///
   /// In en, this message translates to:

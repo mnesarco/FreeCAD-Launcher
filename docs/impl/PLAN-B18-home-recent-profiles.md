@@ -28,7 +28,7 @@ Home section order becomes:
 
 1. first-run checklist (only when builds/profiles are empty; unchanged);
 2. **Recent profiles** — section title + horizontal card row (new; only when non-empty);
-3. Status tiles, Updates, News (unchanged).
+3. Updates, News (unchanged).
 
 The old `_SectionTitle(homeLastUsed)` + single `Card`/`ListTile` block is removed, including its
 empty branch (“No profiles yet”).
