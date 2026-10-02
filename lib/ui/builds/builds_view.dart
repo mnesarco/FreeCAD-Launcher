@@ -130,7 +130,7 @@ class _InstalledTab extends SignalWidget {
     return ListView.separated(
       padding: const EdgeInsets.all(8),
       itemCount: builds.length,
-      separatorBuilder: (context, index) => const Divider(height: 1),
+      separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) =>
           _InstalledBuildTile(buildInfo: builds[index]),
     );
@@ -163,11 +163,11 @@ class _InstalledBuildTile extends SignalWidget {
       buildInfo.arch,
     ].join('  ·  ');
 
-    return ListTile(
-      leading: const Icon(FreeCADIcons.freecad),
+    final tile = ListTile(
+      leading: Icon(FreeCADIcons.freecad, color: theme.colorScheme.primary),
       title: Row(
         children: [
-          Text(buildInfo.displayLabel),
+          Flexible(child: Text(buildInfo.displayLabel, overflow: TextOverflow.ellipsis)),
           const SizedBox(width: 8),
           CompactBadge(label: buildInfo.channel.name),
           if (buildInfo.status != BuildStatus.installed) ...[
@@ -223,6 +223,7 @@ class _InstalledBuildTile extends SignalWidget {
         ],
       ),
     );
+    return Card(margin: EdgeInsets.zero, child: tile);
   }
 
   Future<void> _verify(
@@ -454,7 +455,7 @@ class _AvailableTabState extends State<_AvailableTab> {
       body = ListView.separated(
         padding: const EdgeInsets.all(8),
         itemCount: candidates.length,
-        separatorBuilder: (context, index) => const Divider(height: 1),
+        separatorBuilder: (context, index) => const SizedBox(height: 8),
         itemBuilder: (context, index) =>
             _AvailableBuildTile(candidate: candidates[index]),
       );
@@ -554,8 +555,8 @@ class _AvailableBuildTile extends SignalWidget {
       );
     }
 
-    return ListTile(
-      leading: const Icon(FreeCADIcons.freecad),
+    final tile = ListTile(
+      leading: Icon(FreeCADIcons.freecad, color: theme.colorScheme.primary),
       title: Row(
         children: [
           Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
@@ -594,6 +595,7 @@ class _AvailableBuildTile extends SignalWidget {
       ),
       trailing: trailing,
     );
+    return Card(margin: EdgeInsets.zero, child: tile);
   }
 
   Future<void> _install(
