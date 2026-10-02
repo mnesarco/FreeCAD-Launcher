@@ -20,7 +20,7 @@ Future<void> showUpdatesSummarySheet(BuildContext context) {
   );
 }
 
-class UpdatesSummarySheet extends StatefulWidget {
+class UpdatesSummarySheet extends SignalStatefulWidget {
   const UpdatesSummarySheet({super.key});
 
   @override
@@ -88,15 +88,15 @@ class _UpdatesSummarySheetState extends State<UpdatesSummarySheet> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final services = AppScope.of(context);
-    final grouped = services.updates.outdatedByProfile.watch(context);
-    final outdated = services.updates.outdated.watch(context);
-    final buildUpdates = services.updates.outdatedBuilds.watch(context);
-    final checking = services.updates.checking.watch(context);
-    final lastChecked = services.updates.lastCheckedAt.watch(context);
-    final applying = services.updates.applying.watch(context);
-    final completed = services.updates.applyCompleted.watch(context);
-    final total = services.updates.applyTotal.watch(context);
-    final profiles = services.profiles.profiles.watch(context);
+    final grouped = services.updates.outdatedByProfile.value;
+    final outdated = services.updates.outdated.value;
+    final buildUpdates = services.updates.outdatedBuilds.value;
+    final checking = services.updates.checking.value;
+    final lastChecked = services.updates.lastCheckedAt.value;
+    final applying = services.updates.applying.value;
+    final completed = services.updates.applyCompleted.value;
+    final total = services.updates.applyTotal.value;
+    final profiles = services.profiles.profiles.value;
     final names = {for (final profile in profiles) profile.id: profile.name};
     final selected = _selected(outdated);
     final summary = _summary;

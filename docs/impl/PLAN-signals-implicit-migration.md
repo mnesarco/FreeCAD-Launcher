@@ -1,9 +1,9 @@
 # PLAN — Signals implicit-tracking migration (post-B-16)
 
-> **Status**: planned (saved 2026-10-02). P0 / R-23 (the write-during-build crash) is applied in
-> the same session; phases P1–P3 are not started. Adopting this plan is **D-101**; it is tracked
-> as **B-17** and belongs to the B-16 dependency-upgrades work.
-> Update the checkboxes as batches land.
+> **Status**: **done** (2026-10-02). P0/R-23, P1 (dependency group merged), P2 (all four
+> batches) and the local P3 checks are complete; only the B-17 PR CI and the packaging smoke
+> (B-16 Phase 3) remain. Adopting this plan is **D-101**; it is tracked as **B-17** and belongs
+> to the B-16 dependency-upgrades work.
 
 ## Goal
 
@@ -116,30 +116,32 @@ hard rule for this migration:
       Config → Backups path, Versions Installed/Available/Custom, Addons
       Catalog/Collections/Custom, Macros Installed/Catalog, Settings) with zero runtime errors
       and a successful hot reload.
-- [ ] Only after P1 is stable (green CI + live pass), start P2. Local stability is proven; the
-      remote CI run happens on push (`devel`/`main`) and is still pending.
+- [x] Only after P1 is stable (green CI + live pass), start P2. PR #2 was green on run
+      37047738009 (Linux + Windows) and merged to `devel` (`393a841`); P2 ran 2026-10-02.
 
 ### P2 — migration batches (one commit each)
 
 | Batch | Files | Sites | Status |
 |---|---|---|---|
-| B-17a small files | `app.dart`, `app_shell`, `jobs_dialog`, `updates_status_chip`, `config_snapshots_view`, `installed_macros`, `custom_addons_view` | 11 | [ ] |
-| B-17b profiles/builds/home | `profiles_view`, `builds_view`, `profile_detail_view`, `home_view` | 42 | [ ] |
-| B-17c addons/macros | `addons_view`, `collections_view`, `macros_view` | 52 | [ ] |
-| B-17d settings/updates + verification | `settings_view`, `updates_summary_sheet` | 22 | [ ] |
+| B-17a small files | `app.dart`, `app_shell`, `jobs_dialog`, `updates_status_chip`, `config_snapshots_view`, `installed_macros`, `custom_addons_view` | 11 | [x] `6c9f375` |
+| B-17b profiles/builds/home | `profiles_view`, `builds_view`, `profile_detail_view`, `home_view` | 42 | [x] `f2c24ee` |
+| B-17c addons/macros | `addons_view`, `collections_view`, `macros_view` | 52 | [x] `8009cfc` |
+| B-17d settings/updates + verification | `settings_view`, `updates_summary_sheet` | 22 | [x] local (`BundleDetailView` sticky-subscription fix included in B-17c) |
 
 ### P3 — verification and cleanup
 
-- [ ] `flutter analyze` has zero `deprecated_member_use`; `grep -rn "\.watch(context\|Watch(" lib`
-      returns only unrelated drift `.watch()` calls.
-- [ ] `flutter test` green (Linux), CI green on Linux + Windows.
-- [ ] Restore `flutter analyze` default strictness (drop `--no-fatal-infos` from `ci.yml`, added
-      while the 127 `.watch` infos existed).
-- [ ] Live click-through per `PLAN-dependency-upgrades.md` risk table: Home, Profiles (all six
-      tabs), Versions (Installed/Custom/Available), Addons (Catalog/Custom/Collections/detail),
-      Macros (Installed/Catalog), Settings, Jobs dialog, status bar.
-- [ ] Packaging smoke: AppImage `--version` + GUI, Windows job smoke.
-- [ ] Update `STATUS.md`/`TASKS.md`; close B-17.
+- [x] `flutter analyze` has zero `deprecated_member_use` and reports **No issues found**;
+      `grep -rn "\.watch(context\|Watch(" lib` returns nothing.
+- [x] `flutter test` green (Linux, 615 tests). CI on Linux + Windows runs via the B-17 PR.
+- [x] `flutter analyze` default strictness restored (the `--no-fatal-infos` bridge is removed
+      from `ci.yml`).
+- [x] Live click-through per `PLAN-dependency-upgrades.md` risk table: Home, Profiles (all six
+      tabs incl. Config → Backups), Versions (Installed/Custom/Available), Addons
+      (Catalog/Custom/Collections + detail + Add-addon dialog), Macros (Installed/Catalog),
+      Settings plus a live dark↔light theme switch; zero runtime errors (Jobs dialog not
+      exercised — no active jobs).
+- [ ] Packaging smoke: AppImage `--version` + GUI, Windows job smoke (deferred to B-16 Phase 3).
+- [x] Update `STATUS.md`/`TASKS.md`; B-17d/B-17 close when the B-17 PR CI is green.
 
 ## Per-batch procedure
 
