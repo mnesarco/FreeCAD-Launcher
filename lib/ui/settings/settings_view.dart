@@ -79,8 +79,36 @@ class _SettingsViewState extends State<SettingsView> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _clearCache(BuildContext context, CacheCategory category) async {
+  Future<void> _clearCache(
+    BuildContext context,
+    CacheCategory category,
+    int size,
+  ) async {
     final l10n = AppLocalizations.of(context);
+    if (category == CacheCategory.downloads) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(l10n.settingsCacheClearDownloadsTitle),
+          content: Text(
+            l10n.settingsCacheClearDownloadsMessage(formatBytes(size)),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.versionsCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.settingsCacheClear),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !context.mounted) {
+        return;
+      }
+    }
     final services = AppScope.of(context);
     final messenger = ScaffoldMessenger.of(context);
     try {
@@ -97,6 +125,34 @@ class _SettingsViewState extends State<SettingsView> {
 
   Future<void> _cleanUpNow(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
+    final days = AppScope.of(context).settings.cacheRetention.value.days;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.settingsCacheCleanUpTitle),
+        content: Text(
+          days == null
+              ? l10n.settingsCacheCleanUpForever
+              : l10n.settingsCacheCleanUpMessage(days),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(
+              days == null ? l10n.settingsCacheClose : l10n.versionsCancel,
+            ),
+          ),
+          if (days != null)
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.settingsCacheCleanUp),
+            ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
     final services = AppScope.of(context);
     final messenger = ScaffoldMessenger.of(context);
     try {
@@ -366,7 +422,11 @@ class _SettingsViewState extends State<SettingsView> {
                     TextButton(
                       onPressed: cacheBusy || jobsActive
                           ? null
-                          : () => _clearCache(context, category),
+                          : () => _clearCache(
+                              context,
+                              category,
+                              cacheSizes[category] ?? 0,
+                            ),
                       child: Text(l10n.settingsCacheClear),
                     ),
                   ],

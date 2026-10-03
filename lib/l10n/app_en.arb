@@ -612,6 +612,22 @@
   "settingsCacheMacros": "Macro catalog",
   "settingsCacheNews": "News feed",
   "settingsCacheClear": "Clear",
+  "settingsCacheClearDownloadsTitle": "Clear build downloads?",
+  "settingsCacheClearDownloadsMessage": "This deletes the cached build archives ({size}). Installed versions and profiles are not affected; cleared archives will be downloaded again when needed.",
+  "@settingsCacheClearDownloadsMessage": {
+    "placeholders": {
+      "size": {"type": "String"}
+    }
+  },
+  "settingsCacheCleanUpTitle": "Clean up downloads?",
+  "settingsCacheCleanUpMessage": "Downloaded archives older than {days} days will be deleted. Installed versions and profiles are not affected.",
+  "@settingsCacheCleanUpMessage": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "settingsCacheCleanUpForever": "Downloads are kept forever, so nothing will be deleted.",
+  "settingsCacheClose": "Close",
   "settingsCacheRefresh": "Refresh sizes",
   "settingsCacheCleanUp": "Clean up now",
   "settingsCacheRetention": "Keep downloads for",

@@ -2848,6 +2848,42 @@ abstract class AppLocalizations {
   /// **'Clear'**
   String get settingsCacheClear;
 
+  /// No description provided for @settingsCacheClearDownloadsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear build downloads?'**
+  String get settingsCacheClearDownloadsTitle;
+
+  /// No description provided for @settingsCacheClearDownloadsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This deletes the cached build archives ({size}). Installed versions and profiles are not affected; cleared archives will be downloaded again when needed.'**
+  String settingsCacheClearDownloadsMessage(String size);
+
+  /// No description provided for @settingsCacheCleanUpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean up downloads?'**
+  String get settingsCacheCleanUpTitle;
+
+  /// No description provided for @settingsCacheCleanUpMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded archives older than {days} days will be deleted. Installed versions and profiles are not affected.'**
+  String settingsCacheCleanUpMessage(int days);
+
+  /// No description provided for @settingsCacheCleanUpForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads are kept forever, so nothing will be deleted.'**
+  String get settingsCacheCleanUpForever;
+
+  /// No description provided for @settingsCacheClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get settingsCacheClose;
+
   /// No description provided for @settingsCacheRefresh.
   ///
   /// In en, this message translates to:

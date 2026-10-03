@@ -14,10 +14,9 @@
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
   `TASKS.md` so work can resume after an interruption.
 - **Decisions this session**: **D-101** (signals 7.1: no signal writes during build, R-23 fixed by
-  a post-frame refresh; deprecated `.watch()` → implicit-tracking migration planned as **B-17**,
-  sequenced after the B-16 signals upgrade), **D-102** (`signals_lint` deferred from the
-  signals group: 7.1.0 caps `analyzer <14`) and **D-103** (Flutter pin 3.41.4 → 3.47.6, required
-  by the drift 2.35.1 bump).
+  a post-frame refresh; deprecated `.watch()` → implicit-tracking migration planned as **B-17**),
+  **D-102** (`signals_lint` deferred), **D-103** (Flutter pin 3.41.4 → 3.47.6), **D-104** (Home
+  recent-profiles row) and **D-105** (cache download/clean-up confirmations).
 - **Next action**: the B-16 Windows-machine smoke is on hold (no machine); proceed with the
   `v0.4.1` Linux retest (weekly install + open logs/folder + Python package install from the
   AppImage); then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine). Next releases
@@ -697,6 +696,8 @@
 | 2026-10-02 | R54 | Planning: **B-18** Home “Recent profiles” row — up to 5 recent-profile cards at the top of Home, whole card launches, chevron opens the profile detail, unhealthy builds hidden, horizontal scroll; owner choices captured in **D-104** (supersedes D-067's last-used-card clause), plan [PLAN-B18-home-recent-profiles.md](PLAN-B18-home-recent-profiles.md) and B-18a..d breakdown recorded; no code | B-18, D-104 | `docs/impl/{PLAN-B18-home-recent-profiles,DECISIONS,TASKS,STATUS}.md` |
 
 | 2026-10-02 | R55 | **B-18 Home “Recent profiles” row implemented** (branch `b18-home-recent-profiles`): `ProfilesController.recentProfiles` computed (used + installed only, newest first, cap 5), top row of compact cards (whole card launches, chevron opens the detail through the new `ProfilesViewState.openProfile`/`AppShell` callback), l10n keys, spec 03 §2.1; 9 new tests (624 green, analyze clean); live pass (order, chevron → detail, narrow-window horizontal scroll, zero runtime errors); follow-ups in the same branch: the Status counters row was removed from Home and the Versions Installed/Available rows were restyled to the Profiles card style (spec 03 §2.1/§2.2 and plan updated; 624 tests green, live-verified); PR/CI pending | B-18, D-104 | `lib/state/profiles_controller.dart`, `lib/ui/{home/home_view,profiles/profiles_view,shell/app_shell,builds/builds_view}.dart`, `lib/l10n/**`, `docs/spec/03-ux.md`, `test/**`, `docs/impl/**` |
+
+| 2026-10-02 | R56 | **R-24/D-105 cache deletion guards**: Settings ▸ Cache “Build downloads” Clear and “Clean up now” now show confirmation dialogs (size/retention, installed versions/profiles unaffected; Forever shows an info-only dialog); other regenerable categories stay one-click. New l10n + 3 widget tests (627 green, analyze clean); the live Cache card was checked, the dialog click-through was deferred to avoid disturbing the user's session on the dev machine | R-24, D-105 | `lib/ui/settings/settings_view.dart`, `lib/l10n/**`, `docs/spec/03-ux.md`, `test/ui/settings_view_test.dart`, `docs/impl/{DECISIONS,TASKS,STATUS}.md` |
 
 ## Standing notes for the next agent
 
