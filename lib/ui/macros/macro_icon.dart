@@ -1,6 +1,5 @@
 // SPDX-FileCopyrightText: 2026 Frank Martínez <mnesarco at gmail>
 // SPDX-License-Identifier: GPL-3.0-or-later
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -8,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:freecad_launcher/domain/macros/macro_catalog_entry.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/ui/widgets/raster_icon.dart';
 
 class MacroIcon extends StatefulWidget {
   const MacroIcon({super.key, this.macro, this.size = 40});
@@ -50,24 +50,11 @@ class _MacroIconState extends State<MacroIcon> {
     if (bytes == null) {
       return _fallback();
     }
-    if (_looksLikeSvg(bytes)) {
+    if (looksLikeSvg(bytes)) {
       return SvgPicture.memory(bytes, width: widget.size, height: widget.size);
     }
-    final ratio = MediaQuery.devicePixelRatioOf(context);
-    return Image.memory(
-      bytes,
-      width: widget.size,
-      height: widget.size,
-      fit: BoxFit.contain,
-      cacheWidth: (widget.size * ratio).round(),
-      errorBuilder: (context, error, stackTrace) => _fallback(),
-    );
+    return RasterIcon(bytes: bytes, size: widget.size, fallback: _fallback());
   }
 
   Widget _fallback() => Icon(Icons.auto_fix_high_outlined, size: widget.size);
-
-  static bool _looksLikeSvg(Uint8List bytes) {
-    final head = utf8.decode(bytes.take(64).toList(), allowMalformed: true).trimLeft();
-    return head.startsWith('<?xml') || head.startsWith('<svg') || head.startsWith('<!');
-  }
 }

@@ -169,6 +169,27 @@ R-13 (2026-10-01, D-090): the profile Overview `Log` row is a clickable link tha
 launch log with the OS default application (`FileActions.open`); failures show a snackbar.
 Covered by `test/ui/profiles_view_test.dart` (asserts `xdg-open <log path>`).
 
+### R-25 visual refresh (2026-10-03)
+
+- [x] `flutter analyze` clean; `flutter test` 634 green (9 platform probes skipped); the suite
+      includes `test/ui/app_theme_test.dart` (brand seed, `AppStatusColors`, card/button shape
+      policy), `test/ui/compact_badge_test.dart` (six tones and the empty-state bubble) and the
+      updated Home hero tests
+- [x] `test/ui/a11y_test.dart` passes the labeled-tap-target, Android tap-target and text-contrast
+      guidelines with the new theme (the dark hero gradient end was lightened so the quick
+      actions keep ≥ 4.5:1 contrast)
+- [x] Live Linux pass (2026-10-03, dev machine, 1280×720): app launched from the branch, all six
+      sections rendered in dark and light with no overflow and zero runtime errors; the theme was
+      switched to Light in Settings and survived a hot restart (persisted `theme_mode`)
+- [x] README screenshots (`docs/images/*.jpg`) recaptured from the refreshed light theme
+
+R-26 (2026-10-03, same branch): addon/macro catalog bitmaps now render through the shared
+`RasterIcon` at native resolution with `FilterQuality.high` and anti-aliasing (the pre-downscale
+`cacheWidth` in `MacroIcon` is gone), while SVG detection is shared and BOM-safe; XPM/missing
+icons still fall back per D-076. `test/ui/raster_icon_test.dart` covers the SVG detection, the
+filter flags and the addon SVG/bitmap dispatch; a live GDK_SCALE=2 pass (DPR ≈ 1.6) on Macros
+and the Addons catalog showed smooth upscaling and crisp vector icons.
+
 
 ### M7 — Linux v0.1 completion
 

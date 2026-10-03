@@ -2232,3 +2232,33 @@ Template:
   tests (confirm clears, cancel keeps, prune respects the retention window). No schema,
   controller or service change.
 - **Refs**: `TASKS.md` R-24, `docs/spec/03-ux.md`, `lib/ui/settings/settings_view.dart`, D-063
+
+### D-106 — Visual identity refresh: brand palette, semantic tones and Home hero (R-25)
+- **Date**: 2026-10-03
+- **Status**: Accepted
+- **Context**: The v2 UI ran on stock Material 3 seeded from `Colors.blueGrey`, with only the
+  D-059 input theme customized, so every surface rendered flat gray. The product owner asked for
+  a more vivid but still professional look; the direction was confirmed in four questions
+  (2026-10-03): launcher brand palette, medium vividness, keep Roboto with a tuned scale, slim
+  Home hero. The icon master (D-070) already documents the brand palette: Tufts Blue `#418FDE`,
+  Light Red `#FF585D`, Dark Red `#CB333B`, Off Black `#212529`.
+- **Decision**:
+  - `ColorScheme.fromSeed(seedColor: #418FDE, dynamicSchemeVariant: fidelity)` for light and dark;
+    the reds stay semantic accents (running/alert/destructive) rather than scheme roles.
+  - New `lib/ui/theme/app_colors.dart`: brand constants plus the `AppStatusColors`
+    `ThemeExtension` (success/warning/info/running container pairs, light and dark values).
+  - `buildAppTheme` moves to `lib/ui/theme/app_theme.dart`; component themes are defined for
+    cards, navigation rail, chips, list tiles, dialogs, snackbars, tabs, buttons, segmented
+    buttons, progress indicators, tooltips and scrollbars, with a tuned text scale (600-weight
+    titles, muted `bodySmall`).
+  - D-059 form style is unchanged: dense outlined inputs, 4 px corners, label-left `FormRow`s.
+  - `CompactBadge` gains semantic tones (`neutral/info/success/warning/danger/running`); raw
+    `Colors.green`/`Colors.orange` are replaced by `AppStatusColors` everywhere.
+  - Home gets a slim rounded gradient hero (brand mark, app title, profile/version/addon summary
+    or tagline, New profile + Check updates) above the existing sections; the B-18 counters stay
+    removed.
+- **Consequences**: The visual tone shifts from gray to brand blue; new UI code must use
+  `AppStatusColors`/badge tones instead of raw colors; `app_theme_test` locks the brand seed,
+  status extension and shape policy; README screenshots are recaptured. No schema/controller
+  change; D-059's input regression test is untouched.
+- **Refs**: `TASKS.md` R-25, `docs/spec/03-ux.md` §1/§2.1, `lib/ui/theme/`, D-059, D-070, D-104

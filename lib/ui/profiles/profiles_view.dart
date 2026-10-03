@@ -195,7 +195,11 @@ class _ProfileCard extends SignalWidget {
             Flexible(child: Text(profile.name, overflow: TextOverflow.ellipsis)),
             if (running) ...[
               const SizedBox(width: 8),
-              CompactBadge(icon: Icons.play_arrow, label: l10n.profilesRunning),
+              CompactBadge(
+                icon: Icons.play_arrow,
+                label: l10n.profilesRunning,
+                tone: CompactBadgeTone.running,
+              ),
             ],
             if (build != null && build.status != BuildStatus.installed) ...[
               const SizedBox(width: 8),
@@ -204,6 +208,7 @@ class _ProfileCard extends SignalWidget {
                 label: build.status == BuildStatus.missing
                     ? l10n.profilesStatusMissing
                     : l10n.profilesStatusBroken,
+                tone: CompactBadgeTone.danger,
               ),
             ],
             if (updatesOutdated > 0) ...[
@@ -211,6 +216,7 @@ class _ProfileCard extends SignalWidget {
               CompactBadge(
                 icon: Icons.system_update_alt,
                 label: l10n.updatesBadge(updatesOutdated),
+                tone: CompactBadgeTone.info,
               ),
             ],
           ],

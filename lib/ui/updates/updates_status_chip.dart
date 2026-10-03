@@ -5,6 +5,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/ui/theme/app_colors.dart';
 import 'package:freecad_launcher/ui/updates/updates_summary_sheet.dart';
 
 class UpdatesStatusChip extends SignalWidget {
@@ -24,6 +25,7 @@ class UpdatesStatusChip extends SignalWidget {
         visualDensity: VisualDensity.compact,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         iconSize: 14,
+        foregroundColor: AppStatusColors.of(context).info,
       ),
       icon: const Icon(Icons.system_update_alt),
       label: Text(l10n.updatesBadge(count), style: theme.textTheme.labelSmall),

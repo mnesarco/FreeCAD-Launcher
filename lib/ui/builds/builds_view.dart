@@ -177,6 +177,7 @@ class _InstalledBuildTile extends SignalWidget {
               label: buildInfo.status == BuildStatus.missing
                   ? l10n.versionsStatusMissing
                   : l10n.versionsStatusBroken,
+              tone: CompactBadgeTone.danger,
             ),
           ],
           if (buildUpdate != null) ...[
@@ -186,6 +187,7 @@ class _InstalledBuildTile extends SignalWidget {
               label:
                   '${buildVersionLabel(buildUpdate.installedVersion, l10n)} → '
                   '${buildVersionLabel(buildUpdate.latestVersion, l10n)}',
+              tone: CompactBadgeTone.info,
             ),
           ],
         ],
@@ -547,7 +549,10 @@ class _AvailableBuildTile extends SignalWidget {
         child: Text(l10n.versionsCancel),
       );
     } else if (installed) {
-      trailing = CompactBadge(label: l10n.versionsTabInstalled);
+      trailing = CompactBadge(
+        label: l10n.versionsTabInstalled,
+        tone: CompactBadgeTone.success,
+      );
     } else {
       trailing = FilledButton(
         onPressed: () => _install(context, controller, candidate),
@@ -562,7 +567,10 @@ class _AvailableBuildTile extends SignalWidget {
           Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
           if (candidate.channel == BuildChannel.weekly) ...[
             const SizedBox(width: 8),
-            CompactBadge(label: l10n.versionsChannelWeekly),
+            CompactBadge(
+              label: l10n.versionsChannelWeekly,
+              tone: CompactBadgeTone.warning,
+            ),
           ],
         ],
       ),

@@ -176,6 +176,7 @@ class _UpdatesSummarySheetState extends State<UpdatesSummarySheet> {
                             ),
                             trailing: CompactBadge(
                               label: l10n.addonsUpdateBadge,
+                              tone: CompactBadgeTone.info,
                             ),
                           ),
                       ],
@@ -251,13 +252,14 @@ class _UpdatesSummarySheetState extends State<UpdatesSummarySheet> {
                         label: l10n.updatesSummaryUpdated(
                           summary.count(AddonUpdateApplyStatus.updated),
                         ),
+                        tone: CompactBadgeTone.success,
                       ),
                     if (summary.count(AddonUpdateApplyStatus.failed) > 0)
                       CompactBadge(
                         label: l10n.updatesSummaryFailed(
                           summary.count(AddonUpdateApplyStatus.failed),
                         ),
-                        backgroundColor: theme.colorScheme.errorContainer,
+                        tone: CompactBadgeTone.danger,
                       ),
                   ],
                 ),

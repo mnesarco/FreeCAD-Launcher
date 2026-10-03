@@ -6,6 +6,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/ui/theme/app_colors.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 
 Future<void> showJobsDialog(BuildContext context) {
@@ -72,7 +73,16 @@ class _JobTile extends StatelessWidget {
               Expanded(
                 child: Text(job.label, style: theme.textTheme.titleSmall),
               ),
-              CompactBadge(label: _stateLabel(l10n, job.state)),
+              CompactBadge(
+                label: _stateLabel(l10n, job.state),
+                tone: switch (job.state) {
+                  JobState.completed => CompactBadgeTone.success,
+                  JobState.running => CompactBadgeTone.info,
+                  JobState.failed => CompactBadgeTone.danger,
+                  JobState.queued || JobState.cancelled =>
+                    CompactBadgeTone.neutral,
+                },
+              ),
             ],
           ),
           if (job.isActive) ...[
@@ -134,11 +144,13 @@ class _JobTile extends StatelessWidget {
   }
 
   Color _stateColor(BuildContext context, JobState state) {
+    final status = AppStatusColors.of(context);
     return switch (state) {
-      JobState.completed => Colors.green,
+      JobState.completed => status.success,
+      JobState.running => status.info,
       JobState.failed => Theme.of(context).colorScheme.error,
       JobState.cancelled => Theme.of(context).colorScheme.outline,
-      _ => Theme.of(context).colorScheme.primary,
+      JobState.queued => Theme.of(context).colorScheme.primary,
     };
   }
 }

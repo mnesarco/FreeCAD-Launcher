@@ -6,6 +6,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:freecad_launcher/ui/widgets/raster_icon.dart';
+
 class AddonIcon extends StatelessWidget {
   const AddonIcon({super.key, this.base64Data, this.size = 40});
 
@@ -19,17 +21,10 @@ class AddonIcon extends StatelessWidget {
     if (bytes == null) {
       return fallback;
     }
-    final head = utf8.decode(bytes.take(64).toList(), allowMalformed: true).trimLeft();
-    if (head.startsWith('<?xml') || head.startsWith('<svg') || head.startsWith('<!')) {
+    if (looksLikeSvg(bytes)) {
       return SvgPicture.memory(bytes, width: size, height: size);
     }
-    return Image.memory(
-      bytes,
-      width: size,
-      height: size,
-      fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) => fallback,
-    );
+    return RasterIcon(bytes: bytes, size: size, fallback: fallback);
   }
 
   static Uint8List? _decode(String? value) {

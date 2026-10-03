@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:freecad_launcher/app.dart';
+import 'package:freecad_launcher/ui/theme/app_theme.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
 
 void main() {

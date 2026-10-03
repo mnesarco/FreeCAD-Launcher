@@ -344,10 +344,13 @@ class _AddonCard extends StatelessWidget {
                     CompactBadge(
                       icon: Icons.system_update_alt,
                       label: l10n.updatesBadge(updateCount),
-                      backgroundColor: theme.colorScheme.tertiaryContainer,
+                      tone: CompactBadgeTone.info,
                     )
                   else if (installedCount > 0)
-                    CompactBadge(label: l10n.addonsInstalledBadge),
+                    CompactBadge(
+                      label: l10n.addonsInstalledBadge,
+                      tone: CompactBadgeTone.success,
+                    ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -466,7 +469,10 @@ class _AddonDetailViewState extends State<AddonDetailView> {
               ),
               if (installedCount > 0) ...[
                 const SizedBox(height: 8),
-                CompactBadge(label: l10n.addonsInstalledIn(installedCount)),
+                CompactBadge(
+                  label: l10n.addonsInstalledIn(installedCount),
+                  tone: CompactBadgeTone.success,
+                ),
               ],
               const SizedBox(height: 16),
               _InfoCard(
@@ -595,7 +601,10 @@ class _AddonDetailViewState extends State<AddonDetailView> {
                                   label: Text(l10n.addonsUpdate),
                                 )
                               else
-                                CompactBadge(label: l10n.addonsInstalledBadge)
+                                CompactBadge(
+                                  label: l10n.addonsInstalledBadge,
+                                  tone: CompactBadgeTone.success,
+                                )
                             else
                               FilledButton.icon(
                                 onPressed: canInstall

@@ -158,7 +158,11 @@ class _DetailHeader extends StatelessWidget {
             child: Text(title, style: Theme.of(context).textTheme.titleLarge),
           ),
           if (running) ...[
-            CompactBadge(icon: Icons.play_arrow, label: l10n.profilesRunning),
+            CompactBadge(
+              icon: Icons.play_arrow,
+              label: l10n.profilesRunning,
+              tone: CompactBadgeTone.running,
+            ),
             const SizedBox(width: 8),
           ],
           if (onShowCommand != null)
@@ -381,7 +385,10 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (outdatedIds.contains(addon.addonId))
-                CompactBadge(label: l10n.addonsUpdateBadge),
+                CompactBadge(
+                  label: l10n.addonsUpdateBadge,
+                  tone: CompactBadgeTone.info,
+                ),
               if (pinned)
                 CompactBadge(icon: Icons.push_pin, label: l10n.addonsPinned),
               if (disabled)

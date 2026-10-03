@@ -25,6 +25,15 @@
   "homeUpdatesNone": "Everything is up to date",
   "homeUpdatesCheck": "Check for updates",
   "homeUpdatesChecking": "Checking…",
+  "homeHeroTagline": "Isolated FreeCAD environments, addons and packages in one place.",
+  "homeHeroSummary": "{profiles} profiles · {versions} versions · {addons} addons",
+  "@homeHeroSummary": {
+    "placeholders": {
+      "profiles": {"type": "int"},
+      "versions": {"type": "int"},
+      "addons": {"type": "int"}
+    }
+  },
   "homeNews": "News",
   "homeNewsEmpty": "No news items.",
   "homeNewsError": "Could not load the news feed.",

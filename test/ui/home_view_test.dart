@@ -173,6 +173,31 @@ void main() {
     expect(find.text('The 1.2 release brings a new sketcher.'), findsOneWidget);
   });
 
+  testWidgets('shows the brand hero with a live summary and quick actions', (tester) async {
+    await seedInstalledBuild();
+    await db.profilesDao.save(sampleProfile());
+    await db.installedAddonsDao.save(sampleAddon(addonId: 'A2plus'));
+    newsSource.streamFactory = () => Stream.fromIterable([utf8.encode(rss)]);
+
+    await pumpHome(tester);
+
+    expect(find.text('FreeCAD Launcher'), findsOneWidget);
+    expect(find.text('1 profiles · 1 versions · 1 addons'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'New profile'), findsOneWidget);
+    expect(find.widgetWithText(OutlinedButton, 'Check for updates'), findsOneWidget);
+  });
+
+  testWidgets('hero shows the tagline on first run', (tester) async {
+    newsSource.streamFactory = () => Stream.fromIterable([utf8.encode(rss)]);
+
+    await pumpHome(tester);
+
+    expect(
+      find.text('Isolated FreeCAD environments, addons and packages in one place.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('hides the recent profiles row when nobody used a profile', (tester) async {
     await seedInstalledBuild();
     await db.profilesDao.save(sampleProfile());

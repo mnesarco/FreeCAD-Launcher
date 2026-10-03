@@ -695,7 +695,10 @@ class _AddAddonDialogState extends State<AddAddonDialog> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           trailing: alreadyAdded
-                              ? CompactBadge(label: l10n.addonsInstalledBadge)
+                              ? CompactBadge(
+                                  label: l10n.addonsInstalledBadge,
+                                  tone: CompactBadgeTone.success,
+                                )
                               : FilledButton.tonal(
                                   onPressed: () =>
                                       Navigator.of(context).pop(addon),
@@ -890,7 +893,15 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
       contentPadding: EdgeInsets.zero,
       title: Text(item.addonName ?? item.addonId),
       subtitle: Text(_subtitle(l10n, item), style: theme.textTheme.bodySmall),
-      trailing: CompactBadge(label: _actionLabel(l10n, item.action)),
+      trailing: CompactBadge(
+        label: _actionLabel(l10n, item.action),
+        tone: switch (item.action) {
+          BundleItemAction.install || BundleItemAction.update =>
+            CompactBadgeTone.info,
+          BundleItemAction.skip => CompactBadgeTone.neutral,
+          BundleItemAction.unavailable => CompactBadgeTone.warning,
+        },
+      ),
     );
   }
 
@@ -907,11 +918,13 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
               label: l10n.bundlesApplyInstalledCount(
                 summary.count(BundleApplyItemStatus.installed),
               ),
+              tone: CompactBadgeTone.success,
             ),
             CompactBadge(
               label: l10n.bundlesApplyUpdatedCount(
                 summary.count(BundleApplyItemStatus.updated),
               ),
+              tone: CompactBadgeTone.info,
             ),
             CompactBadge(
               label: l10n.bundlesApplySkippedCount(
@@ -922,6 +935,7 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
               label: l10n.bundlesApplyFailedCount(
                 summary.count(BundleApplyItemStatus.failed),
               ),
+              tone: CompactBadgeTone.danger,
             ),
           ],
         ),

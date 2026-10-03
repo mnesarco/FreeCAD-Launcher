@@ -72,6 +72,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeUpdatesChecking => 'Checking…';
 
   @override
+  String get homeHeroTagline =>
+      'Isolated FreeCAD environments, addons and packages in one place.';
+
+  @override
+  String homeHeroSummary(int profiles, int versions, int addons) {
+    return '$profiles profiles · $versions versions · $addons addons';
+  }
+
+  @override
   String get homeNews => 'News';
 
   @override

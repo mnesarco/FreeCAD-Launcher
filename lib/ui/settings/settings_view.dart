@@ -16,6 +16,7 @@ import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/platform/diagnostics.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/settings/about_dialog.dart';
+import 'package:freecad_launcher/ui/theme/app_colors.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
 
 class SettingsView extends SignalStatefulWidget {
@@ -650,9 +651,12 @@ IconData _statusIcon(DiagnosticStatus status) => switch (status) {
   DiagnosticStatus.notApplicable => Icons.remove_circle_outline,
 };
 
-Color _statusColor(BuildContext context, DiagnosticStatus status) => switch (status) {
-  DiagnosticStatus.ok => Colors.green,
-  DiagnosticStatus.warning => Colors.orange,
-  DiagnosticStatus.error => Theme.of(context).colorScheme.error,
-  DiagnosticStatus.notApplicable => Theme.of(context).colorScheme.outline,
-};
+Color _statusColor(BuildContext context, DiagnosticStatus status) {
+  final statusColors = AppStatusColors.of(context);
+  return switch (status) {
+    DiagnosticStatus.ok => statusColors.success,
+    DiagnosticStatus.warning => statusColors.warning,
+    DiagnosticStatus.error => Theme.of(context).colorScheme.error,
+    DiagnosticStatus.notApplicable => Theme.of(context).colorScheme.outline,
+  };
+}

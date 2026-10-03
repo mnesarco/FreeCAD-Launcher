@@ -214,6 +214,18 @@ abstract class AppLocalizations {
   /// **'Checking…'**
   String get homeUpdatesChecking;
 
+  /// No description provided for @homeHeroTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Isolated FreeCAD environments, addons and packages in one place.'**
+  String get homeHeroTagline;
+
+  /// No description provided for @homeHeroSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{profiles} profiles · {versions} versions · {addons} addons'**
+  String homeHeroSummary(int profiles, int versions, int addons);
+
   /// No description provided for @homeNews.
   ///
   /// In en, this message translates to:

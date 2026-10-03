@@ -11,6 +11,7 @@ import 'package:freecad_launcher/domain/news/news_item.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/shell_controller.dart';
+import 'package:freecad_launcher/ui/icons.dart';
 import 'package:freecad_launcher/ui/profiles/profile_actions.dart';
 import 'package:freecad_launcher/ui/profiles/profile_dialogs.dart';
 import 'package:freecad_launcher/ui/updates/updates_summary_sheet.dart';
@@ -74,10 +75,20 @@ class HomeViewState extends State<HomeView> {
     final recent = services.profiles.recentProfiles.value;
     final buildsById = services.profiles.buildsById.value;
     final runningProfiles = services.profiles.runningProfiles.value;
+    final installedAddons = services.addons.installedAddons.value.length;
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        _HomeHero(
+          profileCount: profiles.length,
+          versionCount: builds.length,
+          addonCount: installedAddons,
+          checking: checking,
+          onCreateProfile: () =>
+              showProfileFormDialog(context, controller: services.profiles),
+          onCheckUpdates: () => _checkUpdates(context),
+        ),
         if (builds.isEmpty || profiles.isEmpty)
           _FirstRunCard(
             onAddVersion: () => shell.select(AppSection.versions),
@@ -112,12 +123,6 @@ class HomeViewState extends State<HomeView> {
                   ? l10n.homeUpdatesAvailable(outdated)
                   : l10n.homeUpdatesNone,
             ),
-            trailing: FilledButton.tonal(
-              onPressed: checking ? null : () => _checkUpdates(context),
-              child: Text(
-                checking ? l10n.homeUpdatesChecking : l10n.homeUpdatesCheck,
-              ),
-            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -143,6 +148,115 @@ class HomeViewState extends State<HomeView> {
       return;
     }
     await showUpdatesSummarySheet(context);
+  }
+}
+
+class _HomeHero extends StatelessWidget {
+  const _HomeHero({
+    required this.profileCount,
+    required this.versionCount,
+    required this.addonCount,
+    required this.checking,
+    required this.onCreateProfile,
+    required this.onCheckUpdates,
+  });
+
+  final int profileCount;
+  final int versionCount;
+  final int addonCount;
+  final bool checking;
+  final VoidCallback onCreateProfile;
+  final VoidCallback onCheckUpdates;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final onContainer = scheme.onPrimaryContainer;
+    final empty = profileCount == 0 && versionCount == 0;
+    final subtitle = empty
+        ? l10n.homeHeroTagline
+        : l10n.homeHeroSummary(profileCount, versionCount, addonCount);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            scheme.primaryContainer,
+            Color.alphaBlend(
+              (isDark ? Colors.white : Colors.black)
+                  .withValues(alpha: isDark ? 0.08 : 0.18),
+              scheme.primaryContainer,
+            ),
+          ],
+        ),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.4),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: onContainer.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(FreeCADIcons.freecad, size: 26, color: onContainer),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.appTitle,
+                  style: theme.textTheme.titleLarge?.copyWith(color: onContainer),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: onContainer.withValues(alpha: 0.85),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          FilledButton.icon(
+            onPressed: onCreateProfile,
+            style: FilledButton.styleFrom(
+              backgroundColor: scheme.surface,
+              foregroundColor: scheme.primary,
+            ),
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(l10n.profilesNew),
+          ),
+          const SizedBox(width: 8),
+          OutlinedButton(
+            onPressed: checking ? null : onCheckUpdates,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: onContainer,
+              side: BorderSide(color: onContainer.withValues(alpha: 0.5)),
+            ),
+            child: Text(
+              checking ? l10n.homeUpdatesChecking : l10n.homeUpdatesCheck,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -243,6 +357,7 @@ class _RecentProfileCard extends StatelessWidget {
                       CompactBadge(
                         icon: Icons.play_arrow,
                         label: l10n.profilesRunning,
+                        tone: CompactBadgeTone.running,
                       ),
                   ],
                 ),
@@ -295,9 +410,23 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 16,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(title, style: theme.textTheme.titleMedium),
+        ],
+      ),
     );
   }
 }

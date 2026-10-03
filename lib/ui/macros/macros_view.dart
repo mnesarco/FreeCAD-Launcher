@@ -421,7 +421,10 @@ class _CatalogMacroTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (installedCount > 0) ...[
-              CompactBadge(label: l10n.addonsInstalledIn(installedCount)),
+              CompactBadge(
+                label: l10n.addonsInstalledIn(installedCount),
+                tone: CompactBadgeTone.success,
+              ),
               const SizedBox(width: 8),
             ],
             FilledButton.tonal(

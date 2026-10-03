@@ -19,6 +19,7 @@ import 'package:freecad_launcher/ui/settings/settings_view.dart';
 import 'package:freecad_launcher/ui/updates/updates_status_chip.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/shell_controller.dart';
+import 'package:freecad_launcher/ui/theme/app_colors.dart';
 
 class AppShell extends SignalStatefulWidget {
   const AppShell({super.key});
@@ -223,6 +224,7 @@ class _StatusBar extends SignalWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final status = AppStatusColors.of(context);
     final l10n = AppLocalizations.of(context);
     final jobs = AppScope.of(context).jobs.jobs.value;
     final active = jobs.where((job) => job.isActive).toList();
@@ -231,29 +233,42 @@ class _StatusBar extends SignalWidget {
       height: 28,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        border: Border(top: BorderSide(color: theme.dividerColor, width: 0.5)),
+        color: theme.colorScheme.surfaceContainer,
+        border: Border(
+          top: BorderSide(color: theme.colorScheme.outlineVariant, width: 0.5),
+        ),
       ),
       child: Row(
         children: [
-          Text(l10n.appTitle, style: theme.textTheme.labelSmall),
+          Text(
+            l10n.appTitle,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
           if (active.isNotEmpty) ...[
             const SizedBox(width: 12),
-            TextButton(
+            TextButton.icon(
               onPressed: () => showJobsDialog(context),
               style: TextButton.styleFrom(
                 visualDensity: VisualDensity.compact,
                 padding: const EdgeInsets.symmetric(horizontal: 8),
+                foregroundColor: status.info,
+                iconSize: 14,
+                textStyle: theme.textTheme.labelSmall,
               ),
-              child: Text(
-                '${active.length}  ·  ${active.first.label}',
-                style: theme.textTheme.labelSmall,
-              ),
+              icon: const Icon(Icons.sync),
+              label: Text('${active.length}  ·  ${active.first.label}'),
             ),
           ],
           const UpdatesStatusChip(),
           const Spacer(),
-          Text(appVersion, style: theme.textTheme.labelSmall),
+          Text(
+            appVersion,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );

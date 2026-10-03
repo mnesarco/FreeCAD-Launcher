@@ -7,6 +7,7 @@ import 'package:freecad_launcher/domain/settings/app_settings.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/shell/app_shell.dart';
+import 'package:freecad_launcher/ui/theme/app_theme.dart';
 
 class FreeCadLauncherApp extends SignalWidget {
   const FreeCadLauncherApp({super.key, required this.services});
@@ -34,33 +35,4 @@ class FreeCadLauncherApp extends SignalWidget {
       ),
     );
   }
-}
-
-ThemeData buildAppTheme(Brightness brightness) {
-  final scheme = ColorScheme.fromSeed(
-    seedColor: Colors.blueGrey,
-    brightness: brightness,
-  );
-  const radius = BorderRadius.all(Radius.circular(4));
-  const border = OutlineInputBorder(borderRadius: radius);
-
-  return ThemeData(
-    useMaterial3: true,
-    brightness: brightness,
-    colorScheme: scheme,
-    inputDecorationTheme: InputDecorationThemeData(
-      isDense: true,
-      border: border,
-      enabledBorder: border.copyWith(
-        borderSide: BorderSide(color: scheme.outline),
-      ),
-      focusedBorder: border.copyWith(
-        borderSide: BorderSide(color: scheme.primary, width: 1.6),
-      ),
-      errorBorder: border.copyWith(borderSide: BorderSide(color: scheme.error)),
-      focusedErrorBorder: border.copyWith(
-        borderSide: BorderSide(color: scheme.error, width: 1.6),
-      ),
-    ),
-  );
 }
