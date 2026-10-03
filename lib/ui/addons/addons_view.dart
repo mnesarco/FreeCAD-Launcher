@@ -14,6 +14,7 @@ import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/addons/addon_icon.dart';
 import 'package:freecad_launcher/ui/addons/addon_install_flow.dart';
+import 'package:freecad_launcher/ui/addons/addon_remove_flow.dart';
 import 'package:freecad_launcher/ui/addons/collections_view.dart';
 import 'package:freecad_launcher/ui/addons/custom_addons_view.dart';
 import 'package:freecad_launcher/ui/shell/section_shortcuts.dart';
@@ -706,44 +707,12 @@ class _AddonDetailViewState extends State<AddonDetailView> {
     );
   }
 
-  Future<void> _remove(Addon addon, String profileId) async {
-    final l10n = AppLocalizations.of(context);
-    final controller = AppScope.of(context).addons;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.addonsRemoveTitle),
-        content: Text('${addon.displayName}\n\n${l10n.addonsRemoveMessage}'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.versionsCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.addonsRemove),
-          ),
-        ],
-      ),
-    );
-    if (!(confirmed ?? false) || !mounted) {
-      return;
-    }
-    final messenger = ScaffoldMessenger.of(context);
-    final result = await controller.remove(
+  Future<void> _remove(Addon addon, String profileId) {
+    return removeAddonFromProfile(
+      context,
       addonId: addon.id,
+      displayName: addon.displayName,
       profileId: profileId,
-    );
-    if (!mounted) {
-      return;
-    }
-    result.fold(
-      (_) => messenger.showSnackBar(
-        SnackBar(content: Text(l10n.addonsRemovedMessage)),
-      ),
-      (error) => messenger.showSnackBar(
-        SnackBar(content: Text('${l10n.addonsRemoveFailed}: $error')),
-      ),
     );
   }
 

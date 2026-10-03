@@ -15,6 +15,7 @@ import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/addons/addon_icon.dart';
 import 'package:freecad_launcher/ui/addons/addon_install_flow.dart';
 import 'package:freecad_launcher/ui/addons/addon_picker_dialog.dart';
+import 'package:freecad_launcher/ui/addons/addon_remove_flow.dart';
 import 'package:freecad_launcher/ui/macros/installed_macros.dart';
 import 'package:freecad_launcher/ui/profiles/config_snapshots_view.dart';
 import 'package:freecad_launcher/ui/profiles/launch_command_dialog.dart';
@@ -440,6 +441,11 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
                                     _toggleDisabled(context, addon, disabled),
                               ),
                             ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline),
+                              tooltip: l10n.addonsRemove,
+                              onPressed: () => _remove(context, addon),
+                            ),
                           ],
                         ),
                       ),
@@ -517,6 +523,15 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${l10n.addonsPinFailed}: ${result.errorOrNull}')),
+    );
+  }
+
+  Future<void> _remove(BuildContext context, InstalledAddon addon) {
+    return removeAddonFromProfile(
+      context,
+      addonId: addon.addonId,
+      displayName: addon.displayName,
+      profileId: widget.profileId,
     );
   }
 }

@@ -192,6 +192,12 @@ tests. `collections_view_test` and `addons_view_test` prove the shared-picker re
 behavior preserving. Live pass: the dialogs were opened from the real Addons and Macros tabs,
 searched, and the installed/disabled rows verified without installing into the owner's profiles.
 
+R-28 (2026-10-03, same branch): Profile ▸ Addons removal reuses the shared
+`removeAddonFromProfile` dialog (also used by the catalog detail); the widget test in
+`profile_addons_picker_test` covers cancel (no call) and confirm (remove called with the profile
+id + `Addon removed` snackbar). The profile tab now matches the Macros/Python rows (card layout,
+trash action, 8 px header separation) — R-27e.
+
 R-26 (2026-10-03, same branch): addon/macro catalog bitmaps now render through the shared
 `RasterIcon` at native resolution with `FilterQuality.high` and anti-aliasing (the pre-downscale
 `cacheWidth` in `MacroIcon` is gone), while SVG detection is shared and BOM-safe; XPM/missing

@@ -36,7 +36,9 @@
   ▸ Addons and Profile/Macros ▸ Installed get "Add addon"/"Add macro" header and empty-state
   actions opening searchable catalog pickers (installed rows marked and disabled; requirements
   consent preserved). Analyze clean, tests green (6 new widget tests); live pass on the real tabs;
-  PR/CI pending.
+  PR/CI pending. Follow-ups on the same branch: tab list consistency (R-27e: cards + header
+  spacing, Python tab included) and the Profile ▸ Addons remove action (R-28,
+  `removeAddonFromProfile` shared with the catalog detail).
 - **In progress**: **`v0.4.3` pre-release published** (manual `create_release=true`, tag `v0.4.3`,
   `prerelease=true`, run 37148725010; publish job green) with
   `FreeCADLauncher-0.4.3-windows-x86_64.zip` + `.sha256` and
@@ -717,6 +719,8 @@
 | 2026-10-03 | R60 | **v0.4.3 pre-release published** (owner request): visual refresh (R-25/R-26, D-106) squash-merged into `devel` as `1dc65b6` on top of `5954098`; version bumped 0.4.2 → 0.4.3 (`b9bdbed`; `check_version.sh` OK, analyze clean, 637 tests green) and pushed; manual `release.yml` run 37148725010 (`create_release=true`, tag `v0.4.3`, `prerelease=true`) green and published the GitHub pre-release with `FreeCADLauncher-0.4.3-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.3-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after download, AppImage `--version` = 0.4.3 (exit 0), Windows zip checked for `7zr.exe`/license/notices | R-25, R-26, D-106 | `lib/core/constants.dart`, `pubspec.yaml`, `README.md`, `docs/spec/{03-ux,07-distribution}.md`, `docs/impl/{STATUS,VERIFICATION}.md` |
 
 | 2026-10-03 | R61 | **R-27 profile-context catalog pickers** on branch `profile-catalog-pickers` off `devel` (D-107): shared `AddonPickerDialog` (from Collections) + `installAddonIntoProfile` (requirements consent; also used by the Addons catalog tab); Profile ▸ Addons gets header/empty-state `Add addon` (search + `#tag`, installed rows marked/disabled, primary branch, install into that profile); a matching `MacroPickerDialog` + `InstalledMacrosList` header/empty-state `Add macro` covers Profile ▸ Macros and Macros ▸ Installed; R-27a..d one commit each; analyze clean, 6 new widget tests (`profile_addons_picker_test`, `profile_macros_picker_test`, spy controllers) and the test/ui suite green; live pass on the real Addons/Macros tabs (dialogs, search, installed badges) without installing into the owner's profiles; PR/CI pending | R-27, D-107 | `lib/ui/addons/{addon_picker_dialog,addon_install_flow,collections_view,addons_view}.dart`, `lib/ui/profiles/profile_detail_view.dart`, `lib/ui/macros/{macro_picker_dialog,installed_macros}.dart`, `lib/l10n/**`, `test/ui/**`, `docs/spec/03-ux.md`, `docs/impl/**` |
+
+| 2026-10-03 | R62 | **R-27 follow-ups + R-28** on the same branch: profile tab list consistency (installed addons as `Card` rows `74f12bb`; 8 px header/list separation and Python tab card rows `9e0bf21`, live-verified on Demo) and the missing Profile ▸ Addons remove action (`removeAddonFromProfile` confirmation/snackbar flow shared with the catalog detail; row Remove button); `profile_addons_picker_test` now 5 tests green, analyze clean | R-27e, R-28 | `lib/ui/profiles/profile_detail_view.dart`, `lib/ui/macros/installed_macros.dart`, `lib/ui/addons/{addon_remove_flow,addons_view}.dart`, `test/ui/profile_addons_picker_test.dart`, `docs/impl/{TASKS,VERIFICATION,STATUS}.md` |
 
 ## Standing notes for the next agent
 

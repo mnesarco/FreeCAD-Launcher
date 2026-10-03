@@ -61,6 +61,8 @@ typedef _InstallCall = ({
   bool installRequirements,
 });
 
+typedef _RemoveCall = ({String addonId, String profileId});
+
 class _SpyAddonsController extends AddonsController {
   _SpyAddonsController({
     required super.database,
@@ -70,6 +72,7 @@ class _SpyAddonsController extends AddonsController {
   });
 
   final installs = <_InstallCall>[];
+  final removes = <_RemoveCall>[];
 
   @override
   Future<Result<void>> install({
@@ -84,6 +87,15 @@ class _SpyAddonsController extends AddonsController {
       profileId: profileId,
       installRequirements: installRequirements,
     ));
+    return const Ok(null);
+  }
+
+  @override
+  Future<Result<void>> remove({
+    required String addonId,
+    required String profileId,
+  }) async {
+    removes.add((addonId: addonId, profileId: profileId));
     return const Ok(null);
   }
 }
@@ -224,6 +236,35 @@ void main() {
     final row = find.widgetWithText(ListTile, 'A2plus');
     expect(find.descendant(of: row, matching: find.text('Installed')), findsOneWidget);
     expect(find.descendant(of: row, matching: find.text('Install')), findsNothing);
+  });
+
+  testWidgets('removes an installed addon after confirmation', (tester) async {
+    await db.installedAddonsDao.save(
+      sampleAddon(
+        profileId: profile.id,
+        addonId: 'A2plus',
+        displayName: 'A2plus',
+      ),
+    );
+    await openAddonsTab(tester);
+
+    await tester.tap(find.byTooltip('Remove'));
+    await settle(tester);
+    expect(find.text('Remove this addon?'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await settle(tester);
+    expect(addons.removes, isEmpty);
+
+    await tester.tap(find.byTooltip('Remove'));
+    await settle(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Remove'));
+    await settle(tester);
+
+    expect(addons.removes, hasLength(1));
+    expect(addons.removes.single.addonId, 'A2plus');
+    expect(addons.removes.single.profileId, profile.id);
+    expect(find.text('Addon removed'), findsOneWidget);
   });
 
   testWidgets('requirements consent gates the install', (tester) async {
