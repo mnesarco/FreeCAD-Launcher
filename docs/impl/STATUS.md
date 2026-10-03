@@ -5,43 +5,37 @@
 
 - **Updated**: 2026-10-03
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
-  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; **`v0.4.2` is the only available release**
-  (pre-release) with the Linux AppImage and the Windows portable zip; it carries the Home
-  “Recent profiles” work (B-18, D-104), the Versions row style and the cache delete guards
-  (R-24, D-105); releases before 0.4.0 were withdrawn by the owner (D-100) and the `0.4.x` line
-  continues; M8-04 needs macOS; M8-05 clean-VM Linux pass ready)
-- **Active branch**: `visual-refresh` (off `devel`, unmerged) — `devel` is the public line,
-  `main` is reserved for a future release line
+  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; **`v0.4.3` is the current release** (pre-release)
+  with the Linux AppImage and the Windows portable zip; it carries the R-25/R-26 visual refresh
+  (brand theme, Home hero, sharp catalog icons, D-106) on top of the Home “Recent profiles” work
+  (B-18, D-104), the Versions row style and the cache delete guards (R-24, D-105); releases
+  before 0.4.0 were withdrawn by the owner (D-100) and the `0.4.x` line continues; M8-04 needs
+  macOS; M8-05 clean-VM Linux pass ready)
+- **Active branch**: `devel` (public) — `main` is reserved for a future release line
 - **Last session**: 2026-10-03
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
   `TASKS.md` so work can resume after an interruption.
 - **Decisions this session**: **D-106** (visual identity refresh: brand palette seeded from Tufts
   Blue `#418FDE`, `AppStatusColors` semantic tones, component themes, Home hero; R-25a..e).
-- **Next action**: open the `visual-refresh` PR (R-25a..e) and run CI; then the B-16
-  Windows-machine smoke is on hold (no machine); proceed with the `v0.4.2` Linux retest (weekly
-  install + open logs/folder + Python package install from the AppImage); then M8-05 (clean-VM
-  Linux first-run) and M8-04 (macOS machine). Next releases continue the `0.4.x` line. Backlog:
-  `B-01` legacy channel, `B-14` CalVer readiness (before 27.1 branches, 2027-01-31), `B-02`
-  in-place build updates, `R-21` (custom AppImage symlink cleanup), `B-16` dependency upgrades
-  ([plan](PLAN-dependency-upgrades.md)) — B-18/R-24 shipped in `v0.4.2`.
+- **Next action**: the B-16 Windows-machine smoke is on hold (no machine); proceed with the
+  `v0.4.3` Linux retest (weekly install + open logs/folder + Python package install from the
+  AppImage); then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine). Next releases
+  continue the `0.4.x` line. Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1
+  branches, 2027-01-31), `B-02` in-place build updates, `R-21` (custom AppImage symlink cleanup),
+  `B-16` dependency upgrades ([plan](PLAN-dependency-upgrades.md)) — B-18/R-24 shipped in
+  `v0.4.2`, R-25/R-26 in `v0.4.3`.
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
   - The B-16 Phase 3 Windows-machine smoke is **on hold** (no Windows machine available as of
     2026-10-02); B-16 is otherwise complete.
-- **In progress**: **R-25 visual refresh** on `visual-refresh` (R-25a..e): brand `ColorScheme`
-  (fidelity variant) + `AppStatusColors` extension in `lib/ui/theme/`, component themes,
-  semantic badge tones, tinted empty state and Home hero; D-106. Live dark/light pass
-  done (all six sections, theme switch persisted over restart, zero runtime errors); README
-  screenshots recaptured; PR/CI pending. Follow-up **R-26** (same branch): shared `RasterIcon`
-  renders addon/macro bitmaps with `FilterQuality.high` at native resolution; HiDPI live check
-  passed.
-- **In progress**: **`v0.4.2` pre-release published** (manual `create_release=true`, tag `v0.4.2`,
-  `prerelease=true`, run 37080913815; publish job green) with
-  `FreeCADLauncher-0.4.2-windows-x86_64.zip` + `.sha256` and
-  `FreeCADLauncher-0.4.2-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
-  download, AppImage `--version` = 0.4.2 (exit 0). It carries the Home “Recent profiles” row
-  (B-18/D-104), the Versions row style and the cache delete guards (R-24/D-105) merged via PR #4
-  (run 37080374866). `R-19` live AppImage check, `R-21` and `B-16` remain.
+- **In progress**: **`v0.4.3` pre-release published** (manual `create_release=true`, tag `v0.4.3`,
+  `prerelease=true`, run 37148725010; publish job green) with
+  `FreeCADLauncher-0.4.3-windows-x86_64.zip` + `.sha256` and
+  `FreeCADLauncher-0.4.3-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
+  download, AppImage `--version` = 0.4.3 (exit 0) and the zip checked for
+  `7zr.exe`/license/notices. It carries the visual refresh (R-25/R-26, D-106) squash-merged into
+  `devel` (`1dc65b6`) plus the version bump (`b9bdbed`). `R-19` live AppImage check, `R-21` and
+  `B-16` remain.
 - **B-16 dependency upgrades** (done 2026-10-02): drift, flutter_svg/xml and signals 7.1 plus the
   R-23 fix and the Flutter 3.47.6 pin (D-103) merged to `devel` via PR #2 (`d7cf10b`, `cdbbec2`,
   `fcc90a7`, `2b2cdf7`, `6a2c08f`, `d0f5c1a`; devel CI green, run 37063237308), followed by the
@@ -711,6 +705,8 @@
 
 | 2026-10-03 | R59 | **R-26 catalog icon sharpness** (visual-refresh follow-up): shared `RasterIcon` (native decode + `FilterQuality.high` + anti-aliasing, BOM-safe `looksLikeSvg`) replaces the duplicated raster paths in `AddonIcon`/`MacroIcon`; `MacroIcon`'s device-pixel `cacheWidth` pre-downscale removed so HiDPI upscaling is cubic; 3 new tests (637 green), analyze clean; live DPR≈1.6 pass on Macros/Addons shows smooth upscaling; theme persistence re-verified during the pass (Settings wrote `theme_mode` to `config.db`, restored to dark afterwards) | R-26, R-10, R-25 | `lib/ui/{addons/addon_icon,macros/macro_icon,widgets/raster_icon}.dart`, `test/ui/raster_icon_test.dart`, `docs/impl/{TASKS,VERIFICATION,STATUS}.md` |
 
+| 2026-10-03 | R60 | **v0.4.3 pre-release published** (owner request): visual refresh (R-25/R-26, D-106) squash-merged into `devel` as `1dc65b6` on top of `5954098`; version bumped 0.4.2 → 0.4.3 (`b9bdbed`; `check_version.sh` OK, analyze clean, 637 tests green) and pushed; manual `release.yml` run 37148725010 (`create_release=true`, tag `v0.4.3`, `prerelease=true`) green and published the GitHub pre-release with `FreeCADLauncher-0.4.3-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.3-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after download, AppImage `--version` = 0.4.3 (exit 0), Windows zip checked for `7zr.exe`/license/notices | R-25, R-26, D-106 | `lib/core/constants.dart`, `pubspec.yaml`, `README.md`, `docs/spec/{03-ux,07-distribution}.md`, `docs/impl/{STATUS,VERIFICATION}.md` |
+
 ## Standing notes for the next agent
 
 - The prototype is frozen at tag `prototype-final`; do not resurrect its code or schema.
@@ -721,6 +717,6 @@
 - Publishing (D-081): public repo `mnesarco/FreeCAD-Launcher`, branch `devel`, releases only
   from CI (`release.yml`, tag push or manual `workflow_dispatch` with optional `create_release`).
   CI runs Linux + Windows with tests on both; macOS is disabled per D-083 until M8-04.
-  `v0.4.2` is the only available release (D-100); the `0.4.x` line continues.
+  `v0.4.3` is the current release (published as a pre-release; D-100); the `0.4.x` line continues.
 - `AGENTS.md` is tracked again (no longer git-excluded); keep it in sync with `docs/impl/`
   when conventions or the project state change.
