@@ -183,6 +183,15 @@ Covered by `test/ui/profiles_view_test.dart` (asserts `xdg-open <log path>`).
       switched to Light in Settings and survived a hot restart (persisted `theme_mode`)
 - [x] README screenshots (`docs/images/*.jpg`) recaptured from the refreshed light theme
 
+R-27 (2026-10-03, branch `profile-catalog-pickers`): profile-context catalog pickers for addons
+and macros (D-107). `test/ui/profile_addons_picker_test.dart` (4 tests) and
+`test/ui/profile_macros_picker_test.dart` (2 tests) cover the header/empty entry points,
+text/`#tag` filtering, the installed badge/disabled rows, the requirements-consent gate (cancel
+aborts) and the install call arguments; the install side effects stay covered by the controller
+tests. `collections_view_test` and `addons_view_test` prove the shared-picker refactor is
+behavior preserving. Live pass: the dialogs were opened from the real Addons and Macros tabs,
+searched, and the installed/disabled rows verified without installing into the owner's profiles.
+
 R-26 (2026-10-03, same branch): addon/macro catalog bitmaps now render through the shared
 `RasterIcon` at native resolution with `FilterQuality.high` and anti-aliasing (the pre-downscale
 `cacheWidth` in `MacroIcon` is gone), while SVG detection is shared and BOM-safe; XPM/missing

@@ -11,15 +11,18 @@
   (B-18, D-104), the Versions row style and the cache delete guards (R-24, D-105); releases
   before 0.4.0 were withdrawn by the owner (D-100) and the `0.4.x` line continues; M8-04 needs
   macOS; M8-05 clean-VM Linux pass ready)
-- **Active branch**: `devel` (public) — `main` is reserved for a future release line
+- **Active branch**: `profile-catalog-pickers` (off `devel`, unmerged) — `devel` is the public
+  line, `main` is reserved for a future release line
 - **Last session**: 2026-10-03
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
   `TASKS.md` so work can resume after an interruption.
 - **Decisions this session**: **D-106** (visual identity refresh: brand palette seeded from Tufts
-  Blue `#418FDE`, `AppStatusColors` semantic tones, component themes, Home hero; R-25a..e).
-- **Next action**: the B-16 Windows-machine smoke is on hold (no machine); proceed with the
-  `v0.4.3` Linux retest (weekly install + open logs/folder + Python package install from the
-  AppImage); then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine). Next releases
+  Blue `#418FDE`, `AppStatusColors` semantic tones, component themes, Home hero; R-25a..e) and
+  **D-107** (profile-context catalog pickers for addons and macros; R-27).
+- **Next action**: open the `profile-catalog-pickers` PR (R-27) and run CI; then the B-16
+  Windows-machine smoke is on hold (no machine); proceed with the `v0.4.3` Linux retest (weekly
+  install + open logs/folder + Python package install from the AppImage); then M8-05 (clean-VM
+  Linux first-run) and M8-04 (macOS machine). Next releases
   continue the `0.4.x` line. Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1
   branches, 2027-01-31), `B-02` in-place build updates, `R-21` (custom AppImage symlink cleanup),
   `B-16` dependency upgrades ([plan](PLAN-dependency-upgrades.md)) — B-18/R-24 shipped in
@@ -28,6 +31,12 @@
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
   - The B-16 Phase 3 Windows-machine smoke is **on hold** (no Windows machine available as of
     2026-10-02); B-16 is otherwise complete.
+- **In progress**: **R-27 profile-context catalog pickers** on `profile-catalog-pickers` (R-27a..d,
+  D-107): shared `AddonPickerDialog` + `installAddonIntoProfile` extracted from Collections; Profile
+  ▸ Addons and Profile/Macros ▸ Installed get "Add addon"/"Add macro" header and empty-state
+  actions opening searchable catalog pickers (installed rows marked and disabled; requirements
+  consent preserved). Analyze clean, tests green (6 new widget tests); live pass on the real tabs;
+  PR/CI pending.
 - **In progress**: **`v0.4.3` pre-release published** (manual `create_release=true`, tag `v0.4.3`,
   `prerelease=true`, run 37148725010; publish job green) with
   `FreeCADLauncher-0.4.3-windows-x86_64.zip` + `.sha256` and
@@ -706,6 +715,8 @@
 | 2026-10-03 | R59 | **R-26 catalog icon sharpness** (visual-refresh follow-up): shared `RasterIcon` (native decode + `FilterQuality.high` + anti-aliasing, BOM-safe `looksLikeSvg`) replaces the duplicated raster paths in `AddonIcon`/`MacroIcon`; `MacroIcon`'s device-pixel `cacheWidth` pre-downscale removed so HiDPI upscaling is cubic; 3 new tests (637 green), analyze clean; live DPR≈1.6 pass on Macros/Addons shows smooth upscaling; theme persistence re-verified during the pass (Settings wrote `theme_mode` to `config.db`, restored to dark afterwards) | R-26, R-10, R-25 | `lib/ui/{addons/addon_icon,macros/macro_icon,widgets/raster_icon}.dart`, `test/ui/raster_icon_test.dart`, `docs/impl/{TASKS,VERIFICATION,STATUS}.md` |
 
 | 2026-10-03 | R60 | **v0.4.3 pre-release published** (owner request): visual refresh (R-25/R-26, D-106) squash-merged into `devel` as `1dc65b6` on top of `5954098`; version bumped 0.4.2 → 0.4.3 (`b9bdbed`; `check_version.sh` OK, analyze clean, 637 tests green) and pushed; manual `release.yml` run 37148725010 (`create_release=true`, tag `v0.4.3`, `prerelease=true`) green and published the GitHub pre-release with `FreeCADLauncher-0.4.3-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.3-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after download, AppImage `--version` = 0.4.3 (exit 0), Windows zip checked for `7zr.exe`/license/notices | R-25, R-26, D-106 | `lib/core/constants.dart`, `pubspec.yaml`, `README.md`, `docs/spec/{03-ux,07-distribution}.md`, `docs/impl/{STATUS,VERIFICATION}.md` |
+
+| 2026-10-03 | R61 | **R-27 profile-context catalog pickers** on branch `profile-catalog-pickers` off `devel` (D-107): shared `AddonPickerDialog` (from Collections) + `installAddonIntoProfile` (requirements consent; also used by the Addons catalog tab); Profile ▸ Addons gets header/empty-state `Add addon` (search + `#tag`, installed rows marked/disabled, primary branch, install into that profile); a matching `MacroPickerDialog` + `InstalledMacrosList` header/empty-state `Add macro` covers Profile ▸ Macros and Macros ▸ Installed; R-27a..d one commit each; analyze clean, 6 new widget tests (`profile_addons_picker_test`, `profile_macros_picker_test`, spy controllers) and the test/ui suite green; live pass on the real Addons/Macros tabs (dialogs, search, installed badges) without installing into the owner's profiles; PR/CI pending | R-27, D-107 | `lib/ui/addons/{addon_picker_dialog,addon_install_flow,collections_view,addons_view}.dart`, `lib/ui/profiles/profile_detail_view.dart`, `lib/ui/macros/{macro_picker_dialog,installed_macros}.dart`, `lib/l10n/**`, `test/ui/**`, `docs/spec/03-ux.md`, `docs/impl/**` |
 
 ## Standing notes for the next agent
 

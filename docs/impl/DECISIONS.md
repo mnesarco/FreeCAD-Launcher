@@ -2262,3 +2262,33 @@ Template:
   status extension and shape policy; README screenshots are recaptured. No schema/controller
   change; D-059's input regression test is untouched.
 - **Refs**: `TASKS.md` R-25, `docs/spec/03-ux.md` §1/§2.1, `lib/ui/theme/`, D-059, D-070, D-104
+
+### D-107 — Profile-context catalog pickers for addons and macros (R-27)
+- **Date**: 2026-10-03
+- **Status**: Accepted
+- **Context**: Spec 03 §2.3 requires the Profile ▸ Addons tab to add addons and the Profile ▸
+  Macros tab to install from the catalog, but both actions were missing (the catalog could only
+  push into a profile through its own target-profile picker). Collections already had a
+  searchable `AddAddonDialog`; the owner asked for the same affordance inside the profile
+  context. Single-select, primary-branch, no-update-action and header+empty-state-entry choices
+  were confirmed (2026-10-03).
+- **Decision**:
+  - Collections' addon dialog becomes the shared `AddonPickerDialog` (text + `#tag` search,
+    loading/error states, already-present rows show the Installed badge and no action); addon
+    requirements consent is preserved through `installAddonIntoProfile`, which the Addons catalog
+    tab now uses too.
+  - Profile ▸ Addons: header "Add addon" plus an empty-state action; picks install the addon's
+    primary branch into that profile.
+  - Profile ▸ Macros (and Macros ▸ Installed): a matching `MacroPickerDialog` (search over
+    name/comment/description/author, installed-in-profile rows disabled) installs through
+    `MacrosController.install(name, profileId)`.
+  - One item per dialog (matching Collections); no update action in the pickers (updates stay in
+    the profile list and batch flows).
+- **Consequences**: The pickers require the catalog to be loaded; both profile tabs already
+  start/ensure it (`addons.start()/ensureCachedCatalog()`, `macros.start()`). No schema or
+  controller changes; installs reuse the existing jobs and snackbars. Live installs are not
+  exercised against the owner's profiles; UI wiring is covered by widget tests with spy
+  controllers and the install side effects by the existing controller tests.
+- **Refs**: `TASKS.md` R-27, `docs/spec/03-ux.md` §2.3, `lib/ui/addons/addon_picker_dialog.dart`,
+  `lib/ui/addons/addon_install_flow.dart`, `lib/ui/macros/macro_picker_dialog.dart`, D-046,
+  D-104
