@@ -12,6 +12,7 @@ import 'package:freecad_launcher/domain/macros/macro_catalog_entry.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/macros/macro_icon.dart';
+import 'package:freecad_launcher/ui/macros/macro_picker_dialog.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 
 class InstalledMacrosList extends SignalStatefulWidget {
@@ -48,20 +49,69 @@ class _InstalledMacrosListState extends State<InstalledMacrosList> {
     };
     final rows = installed.where((row) => row.profileId == widget.profileId).toList();
 
-    if (rows.isEmpty) {
-      return EmptyState(
-        icon: Icons.auto_fix_high_outlined,
-        title: l10n.macrosEmptyTitle,
-        message: l10n.macrosEmptyMessage,
-      );
-    }
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      itemCount: rows.length,
-      itemBuilder: (context, index) => InstalledMacroTile(
-        macro: rows[index],
+    final addAction = FilledButton.tonalIcon(
+      onPressed: () => _addMacro(context),
+      icon: const Icon(Icons.add),
+      label: Text(l10n.macrosAdd),
+    );
+
+    return Column(
+      children: [
+        if (rows.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            child: Row(children: [const Spacer(), addAction]),
+          ),
+        Expanded(
+          child: rows.isEmpty
+              ? EmptyState(
+                  icon: Icons.auto_fix_high_outlined,
+                  title: l10n.macrosEmptyTitle,
+                  message: l10n.macrosEmptyMessage,
+                  action: addAction,
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  itemCount: rows.length,
+                  itemBuilder: (context, index) => InstalledMacroTile(
+                    macro: rows[index],
+                    profileId: widget.profileId,
+                    catalogEntry: catalogByFileName[rows[index].fileName],
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _addMacro(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final services = AppScope.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final entry = await showDialog<MacroCatalogEntry>(
+      context: context,
+      builder: (context) => MacroPickerDialog(
+        title: l10n.macrosAddTitle,
+        actionLabel: l10n.macrosInstall,
         profileId: widget.profileId,
-        catalogEntry: catalogByFileName[rows[index].fileName],
+      ),
+    );
+    if (entry == null || !context.mounted) {
+      return;
+    }
+    final result = await services.macros.install(
+      name: entry.name,
+      profileId: widget.profileId,
+    );
+    if (!context.mounted) {
+      return;
+    }
+    result.fold(
+      (_) => messenger.showSnackBar(
+        SnackBar(content: Text(l10n.macrosInstalledMessage)),
+      ),
+      (error) => messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.macrosInstallFailed}: $error')),
       ),
     );
   }
