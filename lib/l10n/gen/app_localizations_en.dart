@@ -1200,6 +1200,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addonsInstall => 'Install';
 
   @override
+  String get addonsAdd => 'Add addon';
+
+  @override
+  String get addonsAddTitle => 'Add addon to profile';
+
+  @override
   String get addonsInstallTarget => 'Install into';
 
   @override
@@ -1287,6 +1293,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get macrosInstall => 'Install';
+
+  @override
+  String get macrosAdd => 'Add macro';
+
+  @override
+  String get macrosAddTitle => 'Add macro to profile';
 
   @override
   String get macrosSelectProfile => 'Select the target profile';

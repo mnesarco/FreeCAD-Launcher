@@ -2278,6 +2278,18 @@ abstract class AppLocalizations {
   /// **'Install'**
   String get addonsInstall;
 
+  /// No description provided for @addonsAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add addon'**
+  String get addonsAdd;
+
+  /// No description provided for @addonsAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add addon to profile'**
+  String get addonsAddTitle;
+
   /// No description provided for @addonsInstallTarget.
   ///
   /// In en, this message translates to:
@@ -2445,6 +2457,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Install'**
   String get macrosInstall;
+
+  /// No description provided for @macrosAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add macro'**
+  String get macrosAdd;
+
+  /// No description provided for @macrosAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add macro to profile'**
+  String get macrosAddTitle;
 
   /// No description provided for @macrosSelectProfile.
   ///

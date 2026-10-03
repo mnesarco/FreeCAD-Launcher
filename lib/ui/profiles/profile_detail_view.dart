@@ -8,10 +8,13 @@ import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:freecad_launcher/core/format.dart';
 import 'package:freecad_launcher/data/database.dart';
+import 'package:freecad_launcher/domain/addons/addon.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/addons/addon_icon.dart';
+import 'package:freecad_launcher/ui/addons/addon_install_flow.dart';
+import 'package:freecad_launcher/ui/addons/addon_picker_dialog.dart';
 import 'package:freecad_launcher/ui/macros/installed_macros.dart';
 import 'package:freecad_launcher/ui/profiles/config_snapshots_view.dart';
 import 'package:freecad_launcher/ui/profiles/launch_command_dialog.dart';
@@ -348,71 +351,126 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
         AppScope.of(context).addons.disabledAddons.value[widget.profileId] ??
         const <String>{};
 
-    if (installed.isEmpty) {
-      return EmptyState(
-        icon: Icons.extension_outlined,
-        title: l10n.addonsEmptyTitle,
-        message: l10n.addonsEmptyMessage,
-      );
-    }
+    final addAction = FilledButton.tonalIcon(
+      onPressed: () => _addAddon(context),
+      icon: const Icon(Icons.add),
+      label: Text(l10n.addonsAdd),
+    );
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(8),
-      itemCount: installed.length,
-      separatorBuilder: (context, index) => const Divider(height: 1),
-      itemBuilder: (context, index) {
-        final addon = installed[index];
-        final subtitle = [
-          if ((addon.version ?? '').isNotEmpty) 'v${addon.version}',
-          if ((addon.gitRef ?? '').isNotEmpty) addon.gitRef!,
-          formatProfileDateTime(l10n, addon.installedAt),
-        ].join('  ·  ');
-        final pinned = addon.pinnedAt != null;
-        final disabled = disabledIds.contains(addon.addonId);
-        return ListTile(
-          leading: AddonIcon(
-            base64Data: catalogById[addon.addonId]?.primaryBranch.metadata?.iconBase64,
-            size: 36,
+    return Column(
+      children: [
+        if (installed.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Row(children: [const Spacer(), addAction]),
           ),
-          title: Text(
-            addon.displayName,
-            style: disabled
-                ? TextStyle(color: Theme.of(context).disabledColor)
-                : null,
-          ),
-          subtitle: Text(subtitle),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (outdatedIds.contains(addon.addonId))
-                CompactBadge(
-                  label: l10n.addonsUpdateBadge,
-                  tone: CompactBadgeTone.info,
+        Expanded(
+          child: installed.isEmpty
+              ? EmptyState(
+                  icon: Icons.extension_outlined,
+                  title: l10n.addonsEmptyTitle,
+                  message: l10n.addonsEmptyMessage,
+                  action: addAction,
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.all(8),
+                  itemCount: installed.length,
+                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final addon = installed[index];
+                    final subtitle = [
+                      if ((addon.version ?? '').isNotEmpty) 'v${addon.version}',
+                      if ((addon.gitRef ?? '').isNotEmpty) addon.gitRef!,
+                      formatProfileDateTime(l10n, addon.installedAt),
+                    ].join('  ·  ');
+                    final pinned = addon.pinnedAt != null;
+                    final disabled = disabledIds.contains(addon.addonId);
+                    return ListTile(
+                      leading: AddonIcon(
+                        base64Data: catalogById[addon.addonId]
+                            ?.primaryBranch
+                            .metadata
+                            ?.iconBase64,
+                        size: 36,
+                      ),
+                      title: Text(
+                        addon.displayName,
+                        style: disabled
+                            ? TextStyle(color: Theme.of(context).disabledColor)
+                            : null,
+                      ),
+                      subtitle: Text(subtitle),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (outdatedIds.contains(addon.addonId))
+                            CompactBadge(
+                              label: l10n.addonsUpdateBadge,
+                              tone: CompactBadgeTone.info,
+                            ),
+                          if (pinned)
+                            CompactBadge(
+                              icon: Icons.push_pin,
+                              label: l10n.addonsPinned,
+                            ),
+                          if (disabled)
+                            CompactBadge(
+                              icon: Icons.visibility_off_outlined,
+                              label: l10n.addonsDisabledBadge,
+                            ),
+                          IconButton(
+                            tooltip: pinned ? l10n.addonsUnpin : l10n.addonsPin,
+                            icon: Icon(
+                              pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                            ),
+                            onPressed: () => _togglePin(context, addon),
+                          ),
+                          Tooltip(
+                            message: disabled
+                                ? l10n.addonsEnable
+                                : l10n.addonsDisable,
+                            child: Switch(
+                              value: !disabled,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              onChanged: (_) =>
+                                  _toggleDisabled(context, addon, disabled),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-              if (pinned)
-                CompactBadge(icon: Icons.push_pin, label: l10n.addonsPinned),
-              if (disabled)
-                CompactBadge(
-                  icon: Icons.visibility_off_outlined,
-                  label: l10n.addonsDisabledBadge,
-                ),
-              IconButton(
-                tooltip: pinned ? l10n.addonsUnpin : l10n.addonsPin,
-                icon: Icon(pinned ? Icons.push_pin : Icons.push_pin_outlined),
-                onPressed: () => _togglePin(context, addon),
-              ),
-              Tooltip(
-                message: disabled ? l10n.addonsEnable : l10n.addonsDisable,
-                child: Switch(
-                  value: !disabled,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  onChanged: (_) => _toggleDisabled(context, addon, disabled),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+        ),
+      ],
+    );
+  }
+
+  Future<void> _addAddon(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final services = AppScope.of(context);
+    final presentIds = services.profiles.installedAddons.value
+        .where((addon) => addon.profileId == widget.profileId)
+        .map((addon) => addon.addonId)
+        .toSet();
+    final addon = await showDialog<Addon>(
+      context: context,
+      builder: (context) => AddonPickerDialog(
+        title: l10n.addonsAddTitle,
+        actionLabel: l10n.addonsInstall,
+        searchHint: l10n.addonsSearchHint,
+        presentIds: presentIds,
+      ),
+    );
+    if (addon == null || !context.mounted) {
+      return;
+    }
+    await installAddonIntoProfile(
+      context,
+      addon: addon,
+      branchRef: addon.primaryBranch.gitRef,
+      profileId: widget.profileId,
     );
   }
 
