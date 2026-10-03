@@ -22,7 +22,11 @@ class AddonIcon extends StatelessWidget {
       return fallback;
     }
     if (looksLikeSvg(bytes)) {
-      return SvgPicture.memory(bytes, width: size, height: size);
+      return SizedBox(
+        width: size,
+        height: size,
+        child: SvgPicture.memory(bytes, fit: BoxFit.contain),
+      );
     }
     return RasterIcon(bytes: bytes, size: size, fallback: fallback);
   }

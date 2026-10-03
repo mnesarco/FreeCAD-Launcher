@@ -22,14 +22,16 @@ class RasterIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.memory(
-      bytes,
+    return SizedBox(
       width: size,
       height: size,
-      fit: BoxFit.contain,
-      filterQuality: FilterQuality.high,
-      isAntiAlias: true,
-      errorBuilder: (context, error, stackTrace) => fallback,
+      child: Image.memory(
+        bytes,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.high,
+        isAntiAlias: true,
+        errorBuilder: (context, error, stackTrace) => fallback,
+      ),
     );
   }
 }
