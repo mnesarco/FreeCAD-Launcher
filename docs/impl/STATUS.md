@@ -5,48 +5,40 @@
 
 - **Updated**: 2026-10-03
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
-  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; **`v0.4.3` is the current release** (pre-release)
-  with the Linux AppImage and the Windows portable zip; it carries the R-25/R-26 visual refresh
-  (brand theme, Home hero, sharp catalog icons, D-106) on top of the Home “Recent profiles” work
-  (B-18, D-104), the Versions row style and the cache delete guards (R-24, D-105); releases
-  before 0.4.0 were withdrawn by the owner (D-100) and the `0.4.x` line continues; M8-04 needs
-  macOS; M8-05 clean-VM Linux pass ready)
-- **Active branch**: `profile-catalog-pickers` (off `devel`, unmerged) — `devel` is the public
-  line, `main` is reserved for a future release line
+  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; **`v0.4.4` is the current release** (pre-release)
+  with the Linux AppImage and the Windows portable zip; it carries the R-27 profile-context
+  catalog pickers (D-107), the R-27e tab consistency, the R-28 addon remove action and the R-26
+  icon box-fit on top of the R-25 visual refresh (brand theme, Home hero, sharp catalog icons,
+  D-106) and the Home “Recent profiles”/cache-guard work (B-18, R-24); releases before 0.4.0 were
+  withdrawn by the owner (D-100) and the `0.4.x` line continues; M8-04 needs macOS; M8-05
+  clean-VM Linux pass ready)
+- **Active branch**: `devel` (public) — `main` is reserved for a future release line
 - **Last session**: 2026-10-03
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
   `TASKS.md` so work can resume after an interruption.
 - **Decisions this session**: **D-106** (visual identity refresh: brand palette seeded from Tufts
   Blue `#418FDE`, `AppStatusColors` semantic tones, component themes, Home hero; R-25a..e) and
   **D-107** (profile-context catalog pickers for addons and macros; R-27).
-- **Next action**: open the `profile-catalog-pickers` PR (R-27) and run CI; then the B-16
-  Windows-machine smoke is on hold (no machine); proceed with the `v0.4.3` Linux retest (weekly
-  install + open logs/folder + Python package install from the AppImage); then M8-05 (clean-VM
-  Linux first-run) and M8-04 (macOS machine). Next releases
+- **Next action**: the B-16 Windows-machine smoke is on hold (no machine); proceed with the
+  `v0.4.4` Linux retest (weekly install + open logs/folder + Python package install from the
+  AppImage); then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine). Next releases
   continue the `0.4.x` line. Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1
   branches, 2027-01-31), `B-02` in-place build updates, `R-21` (custom AppImage symlink cleanup),
   `B-16` dependency upgrades ([plan](PLAN-dependency-upgrades.md)) — B-18/R-24 shipped in
-  `v0.4.2`, R-25/R-26 in `v0.4.3`.
+  `v0.4.2`, R-25/R-26 in `v0.4.3`, R-27/R-28 in `v0.4.4`.
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
   - The B-16 Phase 3 Windows-machine smoke is **on hold** (no Windows machine available as of
     2026-10-02); B-16 is otherwise complete.
-- **In progress**: **R-27 profile-context catalog pickers** on `profile-catalog-pickers` (R-27a..d,
-  D-107): shared `AddonPickerDialog` + `installAddonIntoProfile` extracted from Collections; Profile
-  ▸ Addons and Profile/Macros ▸ Installed get "Add addon"/"Add macro" header and empty-state
-  actions opening searchable catalog pickers (installed rows marked and disabled; requirements
-  consent preserved). Analyze clean, tests green (6 new widget tests); live pass on the real tabs;
-  PR/CI pending. Follow-ups on the same branch: tab list consistency (R-27e: cards + header
-  spacing, Python tab included) and the Profile ▸ Addons remove action (R-28,
-  `removeAddonFromProfile` shared with the catalog detail).
-- **In progress**: **`v0.4.3` pre-release published** (manual `create_release=true`, tag `v0.4.3`,
-  `prerelease=true`, run 37148725010; publish job green) with
-  `FreeCADLauncher-0.4.3-windows-x86_64.zip` + `.sha256` and
-  `FreeCADLauncher-0.4.3-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
-  download, AppImage `--version` = 0.4.3 (exit 0) and the zip checked for
-  `7zr.exe`/license/notices. It carries the visual refresh (R-25/R-26, D-106) squash-merged into
-  `devel` (`1dc65b6`) plus the version bump (`b9bdbed`). `R-19` live AppImage check, `R-21` and
-  `B-16` remain.
+- **In progress**: **`v0.4.4` pre-release published** (manual `create_release=true`, tag `v0.4.4`,
+  `prerelease=true`, run 37162641299; publish job green) with
+  `FreeCADLauncher-0.4.4-windows-x86_64.zip` + `.sha256` and
+  `FreeCADLauncher-0.4.4-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
+  download, AppImage `--version` = 0.4.4 (exit 0) and the zip checked for
+  `7zr.exe`/license/notices. It carries the profile-context catalog pickers (R-27/D-107), the tab
+  consistency (R-27e), the profile addon remove action (R-28) and the icon box-fit (R-26),
+  fast-forward-merged into `devel` (`95bc3b7`) plus the version bump (`f3ca5d4`). `R-19` live
+  AppImage check, `R-21` and `B-16` remain.
 - **B-16 dependency upgrades** (done 2026-10-02): drift, flutter_svg/xml and signals 7.1 plus the
   R-23 fix and the Flutter 3.47.6 pin (D-103) merged to `devel` via PR #2 (`d7cf10b`, `cdbbec2`,
   `fcc90a7`, `2b2cdf7`, `6a2c08f`, `d0f5c1a`; devel CI green, run 37063237308), followed by the
@@ -722,6 +714,8 @@
 
 | 2026-10-03 | R62 | **R-27 follow-ups + R-28** on the same branch: profile tab list consistency (installed addons as `Card` rows `74f12bb`; 8 px header/list separation and Python tab card rows `9e0bf21`, live-verified on Demo) and the missing Profile ▸ Addons remove action (`removeAddonFromProfile` confirmation/snackbar flow shared with the catalog detail; row Remove button); `profile_addons_picker_test` now 5 tests green, analyze clean | R-27e, R-28 | `lib/ui/profiles/profile_detail_view.dart`, `lib/ui/macros/installed_macros.dart`, `lib/ui/addons/{addon_remove_flow,addons_view}.dart`, `test/ui/profile_addons_picker_test.dart`, `docs/impl/{TASKS,VERIFICATION,STATUS}.md` |
 
+| 2026-10-03 | R63 | **v0.4.4 pre-release published** (owner request): `profile-catalog-pickers` (R-27a..e, R-28, D-107) fast-forward-merged into `devel` plus the icon box-fit (R-26); version bumped 0.4.3 → 0.4.4 (`check_version.sh` OK, analyze clean, 644 tests green); manual `release.yml` run 37162641299 (`create_release=true`, tag `v0.4.4`, `prerelease=true`) green and published the GitHub pre-release with `FreeCADLauncher-0.4.4-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.4-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after download, AppImage `--version` = 0.4.4 (exit 0), Windows zip checked for `7zr.exe`/license/notices | R-27, R-28, R-26, D-107 | `lib/core/constants.dart`, `pubspec.yaml`, `README.md`, `docs/spec/{03-ux,07-distribution}.md`, `docs/impl/{STATUS,VERIFICATION}.md` |
+
 ## Standing notes for the next agent
 
 - The prototype is frozen at tag `prototype-final`; do not resurrect its code or schema.
@@ -732,6 +726,6 @@
 - Publishing (D-081): public repo `mnesarco/FreeCAD-Launcher`, branch `devel`, releases only
   from CI (`release.yml`, tag push or manual `workflow_dispatch` with optional `create_release`).
   CI runs Linux + Windows with tests on both; macOS is disabled per D-083 until M8-04.
-  `v0.4.3` is the current release (published as a pre-release; D-100); the `0.4.x` line continues.
+  `v0.4.4` is the current release (published as a pre-release; D-100); the `0.4.x` line continues.
 - `AGENTS.md` is tracked again (no longer git-excluded); keep it in sync with `docs/impl/`
   when conventions or the project state change.
