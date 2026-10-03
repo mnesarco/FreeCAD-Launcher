@@ -359,11 +359,13 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
 
     return Column(
       children: [
-        if (installed.isNotEmpty)
+        if (installed.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
             child: Row(children: [const Spacer(), addAction]),
           ),
+          const SizedBox(height: 8),
+        ],
         Expanded(
           child: installed.isEmpty
               ? EmptyState(
@@ -554,7 +556,7 @@ class _ProfilePythonTabState extends State<_ProfilePythonTab> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
           child: Row(
             children: [
               if (error != null)
@@ -590,11 +592,9 @@ class _ProfilePythonTabState extends State<_ProfilePythonTab> {
                   title: l10n.pythonEmptyTitle,
                   message: l10n.pythonEmptyMessage,
                 )
-              : ListView.separated(
-                  padding: const EdgeInsets.all(8),
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   itemCount: installed.length,
-                  separatorBuilder: (context, index) =>
-                      const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final package = installed[index];
                     final subtitle = [
@@ -602,14 +602,17 @@ class _ProfilePythonTabState extends State<_ProfilePythonTab> {
                         'v${package.version}',
                       '${l10n.pythonSource}: ${package.source}',
                     ].join('  ·  ');
-                    return ListTile(
-                      leading: const Icon(Icons.terminal_outlined),
-                      title: Text(package.name),
-                      subtitle: Text(subtitle),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        tooltip: l10n.pythonRemove,
-                        onPressed: () => _uninstall(context, package.name),
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        leading: const Icon(Icons.terminal_outlined),
+                        title: Text(package.name),
+                        subtitle: Text(subtitle),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          tooltip: l10n.pythonRemove,
+                          onPressed: () => _uninstall(context, package.name),
+                        ),
                       ),
                     );
                   },

@@ -57,11 +57,13 @@ class _InstalledMacrosListState extends State<InstalledMacrosList> {
 
     return Column(
       children: [
-        if (rows.isNotEmpty)
+        if (rows.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
             child: Row(children: [const Spacer(), addAction]),
           ),
+          const SizedBox(height: 8),
+        ],
         Expanded(
           child: rows.isEmpty
               ? EmptyState(
