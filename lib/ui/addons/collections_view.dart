@@ -17,6 +17,7 @@ import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/bundle_apply_controller.dart';
 import 'package:freecad_launcher/state/bundles_controller.dart';
 import 'package:freecad_launcher/ui/addons/addon_icon.dart';
+import 'package:freecad_launcher/ui/addons/addon_picker_dialog.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
@@ -405,14 +406,25 @@ class _BundleDetailViewState extends State<BundleDetailView> {
   }
 
   Future<void> _addAddon(BuildContext context, Bundle bundle) async {
+    final l10n = AppLocalizations.of(context);
+    final services = AppScope.of(context);
+    final presentIds = services.bundles
+        .itemsFor(bundle.id)
+        .map((item) => item.addonId)
+        .toSet();
     final addon = await showDialog<Addon>(
       context: context,
-      builder: (context) => AddAddonDialog(bundleId: bundle.id),
+      builder: (context) => AddonPickerDialog(
+        title: l10n.bundlesAddAddonTitle,
+        actionLabel: l10n.bundlesAddAddon,
+        searchHint: l10n.bundlesSearchHint,
+        presentIds: presentIds,
+      ),
     );
     if (addon == null || !context.mounted) {
       return;
     }
-    final controller = AppScope.of(context).bundles;
+    final controller = services.bundles;
     await controller.addItem(
       bundleId: bundle.id,
       addonId: addon.id,
@@ -619,129 +631,6 @@ class _BundleEditDialogState extends State<BundleEditDialog> {
         _error = error.toString();
       }),
     );
-  }
-}
-
-class AddAddonDialog extends SignalStatefulWidget {
-  const AddAddonDialog({super.key, required this.bundleId});
-
-  final String bundleId;
-
-  @override
-  State<AddAddonDialog> createState() => _AddAddonDialogState();
-}
-
-class _AddAddonDialogState extends State<AddAddonDialog> {
-  String _query = '';
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final services = AppScope.of(context);
-    final addons = services.addons.addons.value;
-    final loading = services.addons.loading.value;
-    final error = services.addons.error.value;
-    final items = services.bundles
-        .itemsFor(widget.bundleId)
-        .map((item) => item.addonId)
-        .toSet();
-    final matches = _matches(addons);
-
-    return AlertDialog(
-      title: Text(l10n.bundlesAddAddonTitle),
-      content: SizedBox(
-        width: 520,
-        height: 380,
-        child: Column(
-          children: [
-            TextField(
-              onChanged: (value) => setState(() => _query = value),
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                hintText: l10n.bundlesSearchHint,
-                isDense: true,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: addons.isEmpty && loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : addons.isEmpty
-                  ? Center(
-                      child: Text(
-                        error == null
-                            ? l10n.addonsLoadFailed
-                            : '${l10n.addonsLoadFailed}: $error',
-                        textAlign: TextAlign.center,
-                      ),
-                    )
-                  : matches.isEmpty
-                  ? Center(child: Text(l10n.bundlesNoMatches))
-                  : ListView.builder(
-                      itemCount: matches.length,
-                      itemBuilder: (context, index) {
-                        final addon = matches[index];
-                        final alreadyAdded = items.contains(addon.id);
-                        return ListTile(
-                          leading: AddonIcon(
-                            base64Data:
-                                addon.primaryBranch.metadata?.iconBase64,
-                            size: 32,
-                          ),
-                          title: Text(addon.displayName),
-                          subtitle: Text(
-                            addon.description,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          trailing: alreadyAdded
-                              ? CompactBadge(
-                                  label: l10n.addonsInstalledBadge,
-                                  tone: CompactBadgeTone.success,
-                                )
-                              : FilledButton.tonal(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(addon),
-                                  child: Text(l10n.bundlesAddAddon),
-                                ),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.bundlesCancel),
-        ),
-      ],
-    );
-  }
-
-  List<Addon> _matches(List<Addon> addons) {
-    final query = _query.trim().toLowerCase();
-    if (query.isEmpty) {
-      return addons;
-    }
-    if (query.startsWith('#')) {
-      final tag = query.substring(1);
-      return [
-        for (final addon in addons)
-          if (addon.tags.any(
-            (candidate) => candidate.toLowerCase().contains(tag),
-          ))
-            addon,
-      ];
-    }
-    return [
-      for (final addon in addons)
-        if (addon.id.toLowerCase().contains(query) ||
-            addon.displayName.toLowerCase().contains(query) ||
-            addon.description.toLowerCase().contains(query))
-          addon,
-    ];
   }
 }
 

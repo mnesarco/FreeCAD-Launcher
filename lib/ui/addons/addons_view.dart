@@ -9,14 +9,13 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart'
     show CatalogFreshness;
 import 'package:freecad_launcher/domain/addons/addon.dart';
-import 'package:freecad_launcher/domain/python/requirements_parser.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/addons/addon_icon.dart';
+import 'package:freecad_launcher/ui/addons/addon_install_flow.dart';
 import 'package:freecad_launcher/ui/addons/collections_view.dart';
 import 'package:freecad_launcher/ui/addons/custom_addons_view.dart';
-import 'package:freecad_launcher/ui/addons/requirements_dialog.dart';
 import 'package:freecad_launcher/ui/shell/section_shortcuts.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 import 'package:freecad_launcher/ui/widgets/compact_dropdown.dart';
@@ -676,44 +675,12 @@ class _AddonDetailViewState extends State<AddonDetailView> {
     );
   }
 
-  Future<void> _install(Addon addon, String branchRef, String profileId) async {
-    final l10n = AppLocalizations.of(context);
-    final controller = AppScope.of(context).addons;
-    final messenger = ScaffoldMessenger.of(context);
-
-    final branch = controller.branchOf(addon, branchRef);
-    var installRequirements = false;
-    if (branch.hasRequirements) {
-      final requirements = parseRequirements(
-        branch.metadata?.requirements ?? '',
-      );
-      final choice = await showRequirementsConsentDialog(
-        context,
-        addonName: addon.displayName,
-        requirements: requirements,
-      );
-      if (!mounted || choice == RequirementsChoice.cancel) {
-        return;
-      }
-      installRequirements = choice == RequirementsChoice.installPackages;
-    }
-
-    final result = await controller.install(
-      addonId: addon.id,
+  Future<void> _install(Addon addon, String branchRef, String profileId) {
+    return installAddonIntoProfile(
+      context,
+      addon: addon,
       branchRef: branchRef,
       profileId: profileId,
-      installRequirements: installRequirements,
-    );
-    if (!mounted) {
-      return;
-    }
-    result.fold(
-      (_) => messenger.showSnackBar(
-        SnackBar(content: Text(l10n.addonsInstalledMessage)),
-      ),
-      (error) => messenger.showSnackBar(
-        SnackBar(content: Text('${l10n.addonsInstallFailed}: $error')),
-      ),
     );
   }
 
