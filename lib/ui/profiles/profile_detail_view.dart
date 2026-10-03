@@ -361,7 +361,7 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
       children: [
         if (installed.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
             child: Row(children: [const Spacer(), addAction]),
           ),
         Expanded(
@@ -372,10 +372,9 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
                   message: l10n.addonsEmptyMessage,
                   action: addAction,
                 )
-              : ListView.separated(
-                  padding: const EdgeInsets.all(8),
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   itemCount: installed.length,
-                  separatorBuilder: (context, index) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final addon = installed[index];
                     final subtitle = [
@@ -385,59 +384,62 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
                     ].join('  ·  ');
                     final pinned = addon.pinnedAt != null;
                     final disabled = disabledIds.contains(addon.addonId);
-                    return ListTile(
-                      leading: AddonIcon(
-                        base64Data: catalogById[addon.addonId]
-                            ?.primaryBranch
-                            .metadata
-                            ?.iconBase64,
-                        size: 36,
-                      ),
-                      title: Text(
-                        addon.displayName,
-                        style: disabled
-                            ? TextStyle(color: Theme.of(context).disabledColor)
-                            : null,
-                      ),
-                      subtitle: Text(subtitle),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (outdatedIds.contains(addon.addonId))
-                            CompactBadge(
-                              label: l10n.addonsUpdateBadge,
-                              tone: CompactBadgeTone.info,
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        leading: AddonIcon(
+                          base64Data: catalogById[addon.addonId]
+                              ?.primaryBranch
+                              .metadata
+                              ?.iconBase64,
+                          size: 40,
+                        ),
+                        title: Text(
+                          addon.displayName,
+                          style: disabled
+                              ? TextStyle(color: Theme.of(context).disabledColor)
+                              : null,
+                        ),
+                        subtitle: Text(subtitle),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (outdatedIds.contains(addon.addonId))
+                              CompactBadge(
+                                label: l10n.addonsUpdateBadge,
+                                tone: CompactBadgeTone.info,
+                              ),
+                            if (pinned)
+                              CompactBadge(
+                                icon: Icons.push_pin,
+                                label: l10n.addonsPinned,
+                              ),
+                            if (disabled)
+                              CompactBadge(
+                                icon: Icons.visibility_off_outlined,
+                                label: l10n.addonsDisabledBadge,
+                              ),
+                            IconButton(
+                              tooltip: pinned ? l10n.addonsUnpin : l10n.addonsPin,
+                              icon: Icon(
+                                pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                              ),
+                              onPressed: () => _togglePin(context, addon),
                             ),
-                          if (pinned)
-                            CompactBadge(
-                              icon: Icons.push_pin,
-                              label: l10n.addonsPinned,
+                            Tooltip(
+                              message: disabled
+                                  ? l10n.addonsEnable
+                                  : l10n.addonsDisable,
+                              child: Switch(
+                                value: !disabled,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                onChanged: (_) =>
+                                    _toggleDisabled(context, addon, disabled),
+                              ),
                             ),
-                          if (disabled)
-                            CompactBadge(
-                              icon: Icons.visibility_off_outlined,
-                              label: l10n.addonsDisabledBadge,
-                            ),
-                          IconButton(
-                            tooltip: pinned ? l10n.addonsUnpin : l10n.addonsPin,
-                            icon: Icon(
-                              pinned ? Icons.push_pin : Icons.push_pin_outlined,
-                            ),
-                            onPressed: () => _togglePin(context, addon),
-                          ),
-                          Tooltip(
-                            message: disabled
-                                ? l10n.addonsEnable
-                                : l10n.addonsDisable,
-                            child: Switch(
-                              value: !disabled,
-                              materialTapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                              onChanged: (_) =>
-                                  _toggleDisabled(context, addon, disabled),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     );
                   },
