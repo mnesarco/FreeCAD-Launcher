@@ -5,10 +5,11 @@
 
 - **Updated**: 2026-10-02
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
-  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; **`v0.4.1` is the only available release**
-  (pre-release) with the Linux AppImage and the Windows portable zip; it carries the Linux
-  regression fixes R-18..R-22; releases before 0.4.0 were withdrawn by the owner (D-100) and the
-  `0.4.x` line continues; M8-04 needs macOS; M8-05 clean-VM Linux pass ready)
+  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; **`v0.4.2` is the only available release**
+  (pre-release) with the Linux AppImage and the Windows portable zip; it carries the Home
+  “Recent profiles” work (B-18, D-104), the Versions row style and the cache delete guards
+  (R-24, D-105); releases before 0.4.0 were withdrawn by the owner (D-100) and the `0.4.x` line
+  continues; M8-04 needs macOS; M8-05 clean-VM Linux pass ready)
 - **Active branch**: `devel` (public) — `main` is reserved for a future release line
 - **Last session**: 2026-10-02
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
@@ -18,24 +19,23 @@
   **D-102** (`signals_lint` deferred), **D-103** (Flutter pin 3.41.4 → 3.47.6), **D-104** (Home
   recent-profiles row) and **D-105** (cache download/clean-up confirmations).
 - **Next action**: the B-16 Windows-machine smoke is on hold (no machine); proceed with the
-  `v0.4.1` Linux retest (weekly install + open logs/folder + Python package install from the
+  `v0.4.2` Linux retest (weekly install + open logs/folder + Python package install from the
   AppImage); then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine). Next releases
   continue the `0.4.x` line. Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1
   branches, 2027-01-31), `B-02` in-place build updates, `R-21` (custom AppImage symlink cleanup),
-  `B-18` Home “Recent profiles” row — implemented on `b18-home-recent-profiles`, PR pending
-  ([plan](PLAN-B18-home-recent-profiles.md)), `B-16` dependency upgrades
-  ([plan](PLAN-dependency-upgrades.md)).
+  `B-16` dependency upgrades ([plan](PLAN-dependency-upgrades.md)) — B-18/R-24 shipped in
+  `v0.4.2`.
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
   - The B-16 Phase 3 Windows-machine smoke is **on hold** (no Windows machine available as of
     2026-10-02); B-16 is otherwise complete.
-- **In progress**: **`v0.4.1` pre-release published** (manual `create_release=true`, run
-  36955018205, tag at `0c61e25`) with `FreeCADLauncher-0.4.1-windows-x86_64.zip` + `.sha256` and
-  `FreeCADLauncher-0.4.1-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
-  download. **R-22** fixed and verified (Python-tab install dialog owned its controller in a
-  `_PythonInstallDialog` StatefulWidget; live driver click-through installed `six` cleanly;
-  regression test fails on the old code). `v0.4.1` carries R-18..R-22; 614 tests green. `R-19`
-  live AppImage check, `R-21` and `B-16` remain.
+- **In progress**: **`v0.4.2` pre-release published** (manual `create_release=true`, tag `v0.4.2`,
+  `prerelease=true`, run 37080913815; publish job green) with
+  `FreeCADLauncher-0.4.2-windows-x86_64.zip` + `.sha256` and
+  `FreeCADLauncher-0.4.2-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
+  download, AppImage `--version` = 0.4.2 (exit 0). It carries the Home “Recent profiles” row
+  (B-18/D-104), the Versions row style and the cache delete guards (R-24/D-105) merged via PR #4
+  (run 37080374866). `R-19` live AppImage check, `R-21` and `B-16` remain.
 - **B-16 dependency upgrades** (done 2026-10-02): drift, flutter_svg/xml and signals 7.1 plus the
   R-23 fix and the Flutter 3.47.6 pin (D-103) merged to `devel` via PR #2 (`d7cf10b`, `cdbbec2`,
   `fcc90a7`, `2b2cdf7`, `6a2c08f`, `d0f5c1a`; devel CI green, run 37063237308), followed by the
@@ -699,6 +699,8 @@
 
 | 2026-10-02 | R56 | **R-24/D-105 cache deletion guards**: Settings ▸ Cache “Build downloads” Clear and “Clean up now” now show confirmation dialogs (size/retention, installed versions/profiles unaffected; Forever shows an info-only dialog); other regenerable categories stay one-click. New l10n + 3 widget tests (627 green, analyze clean); the live Cache card was checked, the dialog click-through was deferred to avoid disturbing the user's session on the dev machine | R-24, D-105 | `lib/ui/settings/settings_view.dart`, `lib/l10n/**`, `docs/spec/03-ux.md`, `test/ui/settings_view_test.dart`, `docs/impl/{DECISIONS,TASKS,STATUS}.md` |
 
+| 2026-10-02 | R57 | **v0.4.2 pre-release published**: PR [#4](https://github.com/mnesarco/FreeCAD-Launcher/pull/4) (Home “Recent profiles” row B-18/D-104, Versions row style, cache delete guards R-24/D-105) CI green (run 37080374866) then rebase-merged; version bumped 0.4.1 → 0.4.2 and the manual `release.yml` run 37080913815 published the GitHub pre-release with `FreeCADLauncher-0.4.2-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.2-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after download, AppImage `--version` = 0.4.2 (exit 0), Windows zip complete (`7zr.exe`, license, notices) | B-18, R-24, D-104, D-105 | `lib/core/constants.dart`, `pubspec.yaml`, `README.md`, `docs/spec/{03-ux,07-distribution}.md`, `docs/impl/{VERIFICATION,STATUS,TASKS}.md` |
+
 ## Standing notes for the next agent
 
 - The prototype is frozen at tag `prototype-final`; do not resurrect its code or schema.
@@ -709,6 +711,6 @@
 - Publishing (D-081): public repo `mnesarco/FreeCAD-Launcher`, branch `devel`, releases only
   from CI (`release.yml`, tag push or manual `workflow_dispatch` with optional `create_release`).
   CI runs Linux + Windows with tests on both; macOS is disabled per D-083 until M8-04.
-  `v0.4.1` is the only available release (D-100); the `0.4.x` line continues.
+  `v0.4.2` is the only available release (D-100); the `0.4.x` line continues.
 - `AGENTS.md` is tracked again (no longer git-excluded); keep it in sync with `docs/impl/`
   when conventions or the project state change.
