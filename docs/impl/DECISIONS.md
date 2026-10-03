@@ -2216,3 +2216,19 @@ Template:
   whose build later goes missing disappears from Home but stays reachable in Profiles.
 - **Refs**: `TASKS.md` B-18, `docs/impl/PLAN-B18-home-recent-profiles.md`, `docs/spec/03-ux.md`
   §2.1, D-067, `lib/ui/home/home_view.dart`
+
+### D-105 — Cache deletion guards: Build downloads and Clean up now confirm first
+- **Date**: 2026-10-02
+- **Status**: Accepted
+- **Context**: Settings ▸ Cache cleared any category with a single click, although spec 03 §4
+  already required confirmation for cache clears (implementation gap since D-063). Build
+  downloads can be multiple GB, so an accidental clear forces a full re-download.
+- **Decision**: The **Build downloads** Clear and **Clean up now** actions show a confirmation
+  dialog naming the size (or the retention window), stating that installed versions/profiles are
+  not affected and that cleared archives will be downloaded again when needed. Other categories
+  (GitHub releases, addon/macro catalog, news) are regenerable and stay one click. Clean up now
+  with retention **Forever** shows an informational dialog with only Close.
+- **Consequences**: spec 03 §2.6/§4 wording aligned; six new l10n strings; three new widget
+  tests (confirm clears, cancel keeps, prune respects the retention window). No schema,
+  controller or service change.
+- **Refs**: `TASKS.md` R-24, `docs/spec/03-ux.md`, `lib/ui/settings/settings_view.dart`, D-063

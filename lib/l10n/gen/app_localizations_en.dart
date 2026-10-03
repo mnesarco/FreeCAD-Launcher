@@ -1493,6 +1493,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsCacheClear => 'Clear';
 
   @override
+  String get settingsCacheClearDownloadsTitle => 'Clear build downloads?';
+
+  @override
+  String settingsCacheClearDownloadsMessage(String size) {
+    return 'This deletes the cached build archives ($size). Installed versions and profiles are not affected; cleared archives will be downloaded again when needed.';
+  }
+
+  @override
+  String get settingsCacheCleanUpTitle => 'Clean up downloads?';
+
+  @override
+  String settingsCacheCleanUpMessage(int days) {
+    return 'Downloaded archives older than $days days will be deleted. Installed versions and profiles are not affected.';
+  }
+
+  @override
+  String get settingsCacheCleanUpForever =>
+      'Downloads are kept forever, so nothing will be deleted.';
+
+  @override
+  String get settingsCacheClose => 'Close';
+
+  @override
   String get settingsCacheRefresh => 'Refresh sizes';
 
   @override

@@ -113,8 +113,8 @@ void main() {
     );
   });
 
-  testWidgets('shows cache sizes and clears a category', (tester) async {
-    File('${services.paths.downloadsCacheDir}/build.zip')
+  testWidgets('clears build downloads after confirmation', (tester) async {
+    final archive = File('${services.paths.downloadsCacheDir}/build.zip')
       ..createSync(recursive: true)
       ..writeAsBytesSync(List<int>.filled(1024, 0));
     await services.cache.refresh();
@@ -133,7 +133,103 @@ void main() {
     await tester.tap(clear);
     await tester.pumpAndSettle();
 
+    expect(find.text('Clear build downloads?'), findsOneWidget);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(FilledButton, 'Clear'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
     expect(find.text('1 KiB'), findsNothing);
+    expect(archive.existsSync(), isFalse);
+  });
+
+  testWidgets('cancelling the build downloads clear keeps the cache', (tester) async {
+    final archive = File('${services.paths.downloadsCacheDir}/build.zip')
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(List<int>.filled(1024, 0));
+    await services.cache.refresh();
+    await pumpSettings(tester);
+
+    await tester.scrollUntilVisible(
+      find.text('Cache'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    final clear = find.widgetWithText(TextButton, 'Clear').first;
+    await Scrollable.ensureVisible(tester.element(clear), alignment: 0.5);
+    await tester.pumpAndSettle();
+    await tester.tap(clear);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(archive.existsSync(), isTrue);
+  });
+
+  testWidgets('clean up now asks for confirmation and cancels safely', (tester) async {
+    final archive = File('${services.paths.downloadsCacheDir}/build.zip')
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(List<int>.filled(1024, 0))
+      ..setLastModifiedSync(DateTime.now().subtract(const Duration(days: 60)));
+    await services.cache.refresh();
+    await pumpSettings(tester);
+
+    await tester.scrollUntilVisible(
+      find.text('Cache'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    final cleanUp = find.widgetWithText(TextButton, 'Clean up now');
+    await Scrollable.ensureVisible(tester.element(cleanUp), alignment: 0.5);
+    await tester.pumpAndSettle();
+    await tester.tap(cleanUp);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Clean up downloads?'), findsOneWidget);
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(archive.existsSync(), isTrue);
+  });
+
+  testWidgets('clean up now deletes only downloads older than the retention', (tester) async {
+    final oldArchive = File('${services.paths.downloadsCacheDir}/old.zip')
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(List<int>.filled(1024, 0))
+      ..setLastModifiedSync(DateTime.now().subtract(const Duration(days: 60)));
+    final freshArchive = File('${services.paths.downloadsCacheDir}/fresh.zip')
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(List<int>.filled(1024, 0));
+    await services.cache.refresh();
+    await pumpSettings(tester);
+
+    await tester.scrollUntilVisible(
+      find.text('Cache'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    final cleanUp = find.widgetWithText(TextButton, 'Clean up now');
+    await Scrollable.ensureVisible(tester.element(cleanUp), alignment: 0.5);
+    await tester.pumpAndSettle();
+    await tester.tap(cleanUp);
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(FilledButton, 'Clean up now'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(oldArchive.existsSync(), isFalse);
+    expect(freshArchive.existsSync(), isTrue);
   });
 
   testWidgets('opens the About dialog with the FreeCAD logo and notices', (tester) async {
