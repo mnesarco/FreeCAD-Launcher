@@ -15,9 +15,9 @@
 | Windows | `FreeCADLauncher-<ver>-windows-x86_64.zip` + `.sha256` | Unsigned portable zip (D-091); contains the Flutter bundle, `7zr.exe` + its license, `LICENSE`, `THIRD_PARTY_NOTICES.md` and the README |
 | macOS | none yet | See OQ-1/M8-04; `flutter build macos` returns with the macOS CI job |
 
-`v0.4.2` is the current release (published as a pre-release) and the only one available; it ships
-both the AppImage and the Windows zip. Earlier `v0.1.0`–`v0.3.0` releases were withdrawn by the
-maintainer; the `0.4.x` line continues.
+`v0.4.3` is the current release (published as a pre-release); it ships both the AppImage and the
+Windows zip. Earlier `v0.1.0`–`v0.3.0` releases were withdrawn by the maintainer; the `0.4.x`
+line continues.
 
 The launcher itself never bundles FreeCAD; it downloads builds at runtime. This keeps the
 license surface clean (GPL-3.0-or-later for our code; FreeCAD remains distributed by its authors).
