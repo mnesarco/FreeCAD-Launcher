@@ -13,8 +13,9 @@ settings, addons, macros and Python packages.
 
 ## Status
 
-- **v0.4.6** is the current release (GitHub pre-release) with the Linux AppImage and the Windows
-  portable zip (unsigned; D-091; the zip bundles the Microsoft Visual C++ runtime, D-114).
+- **v0.4.7** is the current release (GitHub pre-release) with the Linux AppImage and the Windows
+  portable zip (unsigned; D-091; the zip bundles the Microsoft Visual C++ runtime, D-114). It
+  fixes the Windows addon-dependency install (`FreeCAD.exe -m pip` error dialog, R-32/D-115).
   Earlier `v0.1.0`–`v0.3.0` releases were withdrawn; the `0.4.x` line continues. macOS packaging
   is planned (see `docs/spec/08-roadmap.md` and `docs/impl/STATUS.md`).
 - Managed catalog builds require **FreeCAD 1.0 or newer**; user-supplied binaries (local files,
