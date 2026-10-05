@@ -1,0 +1,24 @@
+# Set default behavior to automatic text normalization with LF line endings
+* text=auto eol=lf
+
+# Explicitly declare text files that must always use LF
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.h text eol=lf
+*.cc text eol=lf
+*.cmake text eol=lf
+
+# Keep shell scripts strictly LF
+*.sh text eol=lf
+
+# Keep Windows batch files strictly CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Denote binary files (Git will not touch line endings for these)
+*.png binary
+*.jpg binary
+*.pdf binary
