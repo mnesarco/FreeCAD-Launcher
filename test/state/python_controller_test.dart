@@ -62,7 +62,7 @@ void main() {
     expect(result.isOk, isTrue);
     expect(pip.calls.single.appImagePath, '/data/builds/build-1');
     expect(pip.calls.single.pythonPath, isNull);
-  });
+  }, skip: !Platform.isLinux ? 'AppImage execution is Linux-only' : null);
 
   test('installs packages with pip and records them', () async {
     final subject = controller();

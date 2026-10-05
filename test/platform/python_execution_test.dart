@@ -1,5 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Frank Martínez <mnesarco at gmail>
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/platform/process.dart';
@@ -58,7 +60,7 @@ void main() {
       '/data/builds/b1/FreeCAD.AppImage',
     );
     expect(envResolver.calls, 0);
-  });
+  }, skip: !Platform.isLinux ? 'AppImage execution is Linux-only' : null);
 
   test('falls back to the interpreter when FUSE is unavailable', () async {
     final execution = await resolve(fuseAvailable: () async => false);

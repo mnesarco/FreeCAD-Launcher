@@ -1220,37 +1220,41 @@ void main() {
       subject.dispose();
     });
 
-    test('runs pip inside the AppImage when FUSE is available', () async {
-      catalog.result = AddonCatalogResult(
-        addons: [
-          addon('Root', dependencies: const [AddonDependency(name: 'tzlocal')]),
-        ],
-        freshness: CatalogFreshness.fresh,
-      );
-      downloadSource.streamFactory = () => Stream.fromIterable([
-        catalogZip({'Root-master/InitGui.py': 'gui'}),
-      ]);
-      final pip = FakePipRunner();
-      final subject = controller(
-        pipRunner: pip,
-        pythonResolver: FakePythonEnvResolver('/opt/freecad/bin/python'),
-        packageProbe: FakePackageProbe(const {}),
-        fuseAvailable: () async => true,
-      );
-      await subject.load();
+    test(
+      'runs pip inside the AppImage when FUSE is available',
+      skip: !Platform.isLinux ? 'AppImage execution is Linux-only' : null,
+      () async {
+        catalog.result = AddonCatalogResult(
+          addons: [
+            addon('Root', dependencies: const [AddonDependency(name: 'tzlocal')]),
+          ],
+          freshness: CatalogFreshness.fresh,
+        );
+        downloadSource.streamFactory = () => Stream.fromIterable([
+          catalogZip({'Root-master/InitGui.py': 'gui'}),
+        ]);
+        final pip = FakePipRunner();
+        final subject = controller(
+          pipRunner: pip,
+          pythonResolver: FakePythonEnvResolver('/opt/freecad/bin/python'),
+          packageProbe: FakePackageProbe(const {}),
+          fuseAvailable: () async => true,
+        );
+        await subject.load();
 
-      final result = await subject.install(
-        addonId: 'Root',
-        branchRef: 'master',
-        profileId: 'profile-1',
-        selection: AddonDependencySelection.requiredOnly,
-      );
+        final result = await subject.install(
+          addonId: 'Root',
+          branchRef: 'master',
+          profileId: 'profile-1',
+          selection: AddonDependencySelection.requiredOnly,
+        );
 
-      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
-      expect(pip.calls.single.appImagePath, '/data/builds/build-1');
-      expect(pip.calls.single.pythonPath, isNull);
-      subject.dispose();
-    });
+        expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+        expect(pip.calls.single.appImagePath, '/data/builds/build-1');
+        expect(pip.calls.single.pythonPath, isNull);
+        subject.dispose();
+      },
+    );
 
     test('records skipped archive entries as install warnings', () async {
       catalog.result = AddonCatalogResult(

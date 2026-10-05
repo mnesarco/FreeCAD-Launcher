@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Frank Martínez <mnesarco at gmail>
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -113,9 +114,9 @@ void main() {
     final macro = File(spec.arguments.last).readAsStringSync();
     expect(macro, contains("'install'"));
     expect(macro, contains('pyjwt'));
-    expect(macro, contains(target));
+    expect(macro, contains(jsonEncode(target)));
 
-    final logPath = RegExp(r'log_path = "([^"]+)"').firstMatch(macro)!.group(1)!;
+    final logPath = _logPathOf(macro);
     File(logPath).writeAsStringSync('Collecting pyjwt\nSuccessfully installed pyjwt tzlocal\n');
     launcher.handles[0]
       ..emitStdout(
@@ -139,7 +140,7 @@ void main() {
     );
     await waitForHandle(0);
     final macro = File(launcher.specs.single.arguments.last).readAsStringSync();
-    final logPath = RegExp(r'log_path = "([^"]+)"').firstMatch(macro)!.group(1)!;
+    final logPath = _logPathOf(macro);
     File(logPath).writeAsStringSync('ERROR: No matching distribution found\n');
     launcher.handles[0]
       ..emitStdout(
@@ -199,4 +200,9 @@ void main() {
     expect((await second).isSuccess, isTrue);
     expect(launcher.specs, hasLength(2));
   });
+}
+
+String _logPathOf(String macro) {
+  final match = RegExp(r'log_path = ("(?:[^"\\]|\\.)*")').firstMatch(macro);
+  return jsonDecode(match!.group(1)!) as String;
 }
