@@ -175,6 +175,10 @@ The license for original unRAR code has the following restriction:
 --
 ```
 
+## Microsoft Visual C++ runtime
+
+The Windows portable build bundles the Microsoft Visual C++ runtime DLLs app-local (next to `freecad_launcher.exe`), so the launcher starts without a system-wide Visual C++ Redistributable install. The files are copied unmodified from the Microsoft Visual Studio redistributable folder (`Microsoft.VC*.CRT`, x64) of the toolchain used to build the release, including `concrt140.dll`, `msvcp140.dll`, `msvcp140_1.dll`, `msvcp140_2.dll`, `msvcp140_atomic_wait.dll`, `msvcp140_codecvt_ids.dll`, `vccorlib140.dll`, `vcruntime140.dll` and `vcruntime140_1.dll`. Copyright Microsoft Corporation. Redistributed as Distributable Code by app-local deployment under the Microsoft Visual Studio license terms; see <https://learn.microsoft.com/cpp/windows/redistributing-visual-cpp-files>.
+
 ## FreeCAD trademark
 
 FreeCAD and the FreeCAD logo are trademarks of the FreeCAD Project Association AISBL. The launcher bundles the official FreeCAD logo (`assets/images/freecad-logo.svg`, from the official FreeCAD AppImage) unmodified, for attribution in the About dialog only; the FreeCAD application itself is installed by the user from official sources. See <https://www.freecad.org>.

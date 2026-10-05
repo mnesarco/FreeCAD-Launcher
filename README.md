@@ -69,8 +69,9 @@ lacks FUSE, run it with `APPIMAGE_EXTRACT_AND_RUN=1`.
 
 **Windows** — `FreeCADLauncher-<version>-windows-x86_64.zip`: extract it anywhere and run
 `freecad_launcher.exe`. Keep `7zr.exe` next to the executable — it extracts the official FreeCAD
-`.7z` portable builds. The binary is unsigned, so SmartScreen may show a warning (More info →
-Run anyway); verify the `.sha256` sidecar first if you like:
+`.7z` portable builds. The Microsoft Visual C++ runtime DLLs ship inside the zip (D-114), so no
+separate Visual C++ Redistributable install is needed. The binary is unsigned, so SmartScreen may
+show a warning (More info → Run anyway); verify the `.sha256` sidecar first if you like:
 
 ```powershell
 Get-FileHash -Algorithm SHA256 .\FreeCADLauncher-<version>-windows-x86_64.zip

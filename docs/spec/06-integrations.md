@@ -71,8 +71,11 @@ Weekly notes:
   has been unreliable (open issue FreeCAD/FreeCAD#30621: `spctl` can reject with unnotarized
   or invalid-signature errors). Strategy: install `.app` to a user-writable directory, offer
   quarantine removal with explanation, and surface the right-click→Open fallback in diagnostics.
-- Windows builds bundle MSVC/UCRT DLLs; no separate redistributable requirement was found for
-  current conda bundles.
+- FreeCAD Windows builds bundle MSVC/UCRT DLLs; no separate redistributable requirement was found
+  for current conda bundles.
+- The launcher's own Windows portable zip bundles the Microsoft Visual C++ runtime app-local next
+  to `freecad_launcher.exe` (D-114), so the launcher runs without a system-wide Visual C++
+  Redistributable install; the UCRT is in-box on Windows 10+ and is not shipped.
 - Linux AppImages are type-2 (FUSE 2). When FUSE is unavailable, use
   `APPIMAGE_EXTRACT_AND_RUN=1`; diagnostics check `/dev/fuse` and `fusermount` and explain
   `libfuse2`/`libfuse2t64` alternatives.

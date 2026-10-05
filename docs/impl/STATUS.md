@@ -17,11 +17,12 @@
 - **Last session**: 2026-10-05
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
   `TASKS.md` so work can resume after an interruption.
-- **Decisions this session**: **D-108** (package.xml `<depend>` parsing/resolution semantics),
-  **D-109** (unified dependency consent dialog), **D-110** (batched Python availability probe +
-  stdlib fallback), **D-111** (dependency execution order, provenance, lenient failures,
-  reverse-dependency removal warning) — all B-19.
-- **Next action**: `v0.4.5` is published from `devel` (`f6b5ac4`). Finish the remaining B-19 live
+- **Decisions this session**: **D-114** (the Windows portable zip bundles the MSVC C++ runtime
+  DLLs app-local, fetched from the VS toolchain at package time) — R-31.
+- **Next action**: **R-31 is WIP**: bundle the MSVC C++ runtime in the Windows zip so clean
+  machines without the redistributable can start `freecad_launcher.exe`; verify with a no-publish
+  release run, then bump to `0.4.6` and publish. After that: `v0.4.5` is published from `devel`
+  (`f6b5ac4`); finish the remaining B-19 live
   checks (optional checkbox install, dependent addon load in FreeCAD, removal warning UI) and the
   `v0.4.5` Linux AppImage retest (weekly install + open logs/folder + Python package install),
   then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine); the B-16 Windows-machine smoke

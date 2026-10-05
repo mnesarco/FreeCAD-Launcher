@@ -418,6 +418,23 @@ them, and the addon install surfaces a “Some files were skipped” dialog. Evi
 warnings-dialog widget test, and the real `HistoryWorkbench-release.zip` (495 entries) extracting
 with the 3 expected skips and `package.xml` + workbench resources present.
 
+### R-31 (2026-10-05, `devel`)
+
+Windows portable zip self-containment (D-114): the zip bundles the Microsoft Visual C++ runtime
+app-local so a clean machine without the system-wide redistributable can start
+`freecad_launcher.exe`. Evidence:
+
+- `packaging/windows/build_portable.ps1` resolves the VS x64 CRT redist folder via `vswhere`
+  (`$env:VCToolsRedistDir` fallback), copies every `*.dll` from it next to `freecad_launcher.exe`,
+  requires `vcruntime140.dll`/`vcruntime140_1.dll`/`msvcp140.dll` in the staged bundle and in the
+  written zip, and fails the build otherwise (CI exercises the full path).
+- `THIRD_PARTY_NOTICES.md` gained the “Microsoft Visual C++ runtime” section via
+  `tool/generate_third_party_notices.dart` (regenerated, deterministic); the CI drift check runs
+  on the committed file.
+- `flutter analyze` clean; 698 tests green (10 platform probes skipped).
+- Release workflow no-publish run and the `v0.4.6` publish are recorded in the `STATUS.md` session
+  log; the published zip was checked to contain the three runtime DLLs.
+
 ## 5. When something fails
 
 1. Capture the job log tail and app logs from `logs/`.

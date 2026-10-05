@@ -2483,3 +2483,34 @@ Template:
 - **Refs**: `TASKS.md` R-30, `docs/spec/06-integrations.md` §2, `lib/platform/archive_extract.dart`,
   `lib/platform/addon_installer.dart`, `lib/state/addons_controller.dart`,
   `lib/ui/addons/addon_install_warnings_dialog.dart`, D-039
+
+### D-114 — The Windows portable zip bundles the MSVC C++ runtime app-local (R-31)
+- **Date**: 2026-10-05
+- **Status**: Accepted
+- **Context**: Windows users reported that the launcher does not start on machines without the
+  system-wide Microsoft Visual C++ Redistributable ("VCRUNTIME140.dll was not found" /
+  "MSVCP140.dll was not found"). The Flutter Windows release bundle (`freecad_launcher.exe`,
+  the plugin DLLs and the prebuilt `flutter_windows.dll`) links the C++ runtime dynamically, so a
+  portable zip should carry it instead of requiring a separate system prerequisite.
+- **Decision**:
+  - `packaging/windows/build_portable.ps1` locates the Visual Studio x64 CRT redistributable
+    folder on the build machine (`vswhere` →
+    `VC\Redist\MSVC\*\x64\Microsoft.VC*.CRT`, `$env:VCToolsRedistDir` as fallback) and copies
+    every `*.dll` from it next to `freecad_launcher.exe` (documented app-local deployment),
+    unmodified.
+  - The script fails unless `vcruntime140.dll`, `vcruntime140_1.dll` and `msvcp140.dll` are
+    present in the staged bundle and in the written zip.
+  - The DLLs are not committed to the repository (fetched from the toolchain at package time); no
+    `VC_redist*.exe` and no UCRT (in-box since Windows 10, the Flutter platform floor).
+  - `tool/generate_third_party_notices.dart` gains a "Microsoft Visual C++ runtime" section:
+    Microsoft copyright, redistributed unmodified as Distributable Code by app-local deployment
+    under the Microsoft Visual Studio license terms, with the Microsoft documentation link.
+  - Static CRT linking (`/MT`) was considered and rejected: the prebuilt `flutter_windows.dll`
+    still imports the dynamic runtime DLLs.
+- **Consequences**: The zip grows by ~1.6 MB uncompressed (~0.7 MB compressed) and starts on
+  machines without the redistributable. DLL versions follow the runner's Visual Studio install, so
+  zips are not bit-reproducible across runner image upgrades (already true for the Flutter engine).
+  FreeCAD builds managed by the launcher are unaffected (their conda bundles ship their own
+  MSVC/UCRT files; spec 06 §1.4).
+- **Refs**: `TASKS.md` R-31, `docs/spec/07-distribution.md` §2, `docs/spec/06-integrations.md`
+  §1.4, `docs/user-guide.md`, `packaging/windows/build_portable.ps1`, D-091, D-018

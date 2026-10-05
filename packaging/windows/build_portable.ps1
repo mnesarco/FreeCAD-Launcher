@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 # Assembles the unsigned Windows portable zip (D-091) from the Flutter release
-# bundle, with 7zr.exe, LICENSE, THIRD_PARTY_NOTICES.md and README.md inside.
+# bundle, with 7zr.exe, the Microsoft Visual C++ runtime DLLs (D-114), LICENSE,
+# THIRD_PARTY_NOTICES.md and README.md inside.
 # Requires a prior `flutter build windows --release`.
 $ErrorActionPreference = 'Stop'
 
@@ -27,6 +28,52 @@ if ($actualHash -ne $expectedHash) {
   throw "7zr.exe hash mismatch: expected $expectedHash, got $actualHash"
 }
 
+# The Flutter Windows bundle links the Visual C++ runtime dynamically, so the zip
+# carries it app-local (D-114) and runs without the system redistributable.
+function Get-VcRuntimeDir {
+  $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+  if (Test-Path $vswhere) {
+    $vswhereArgs = @(
+      '-latest', '-products', '*',
+      '-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64',
+      '-property', 'installationPath'
+    )
+    $vsPath = & $vswhere @vswhereArgs | Select-Object -First 1
+    if ($vsPath) {
+      $redist = Join-Path $vsPath.Trim() 'VC\Redist\MSVC'
+      if (Test-Path $redist) {
+        $crt = Get-ChildItem $redist -Directory |
+          ForEach-Object {
+            Get-ChildItem (Join-Path $_.FullName 'x64') -Directory -Filter 'Microsoft.VC*.CRT' -ErrorAction SilentlyContinue
+          } |
+          Sort-Object FullName -Descending |
+          Select-Object -First 1
+        if ($crt) {
+          return $crt.FullName
+        }
+      }
+    }
+  }
+  if ($env:VCToolsRedistDir) {
+    $crt = Get-ChildItem (Join-Path $env:VCToolsRedistDir 'x64') -Directory -Filter 'Microsoft.VC*.CRT' -ErrorAction SilentlyContinue |
+      Sort-Object FullName -Descending |
+      Select-Object -First 1
+    if ($crt) {
+      return $crt.FullName
+    }
+  }
+  throw 'Visual C++ x64 redistributable folder not found; install the VS C++ build tools'
+}
+
+$vcRuntime = @('vcruntime140.dll', 'vcruntime140_1.dll', 'msvcp140.dll')
+$vcRuntimeDir = Get-VcRuntimeDir
+$vcRuntimeDlls = Get-ChildItem -Path (Join-Path $vcRuntimeDir '*.dll') -File
+foreach ($required in $vcRuntime) {
+  if (-not ($vcRuntimeDlls.Name -contains $required)) {
+    throw "Missing $required in $vcRuntimeDir"
+  }
+}
+
 $bundleName = "FreeCADLauncher-$version-windows-x86_64"
 $stagingRoot = Join-Path $root 'build\windows\portable'
 $stage = Join-Path $stagingRoot $bundleName
@@ -36,11 +83,13 @@ if (Test-Path $stagingRoot) {
 New-Item -ItemType Directory -Path $stage -Force | Out-Null
 
 Copy-Item -Path (Join-Path $release '*') -Destination $stage -Recurse -Force
+Copy-Item -Path $vcRuntimeDlls.FullName -Destination $stage -Force
 Copy-Item -Path (Join-Path $root 'LICENSE') -Destination $stage -Force
 Copy-Item -Path (Join-Path $root 'README.md') -Destination $stage -Force
 Copy-Item -Path (Join-Path $root 'THIRD_PARTY_NOTICES.md') -Destination $stage -Force
 
-foreach ($required in @('freecad_launcher.exe', '7zr.exe', 'LICENSE', 'THIRD_PARTY_NOTICES.md')) {
+$requiredFiles = @('freecad_launcher.exe', '7zr.exe', 'LICENSE', 'THIRD_PARTY_NOTICES.md') + $vcRuntime
+foreach ($required in $requiredFiles) {
   if (-not (Test-Path (Join-Path $stage $required))) {
     throw "Missing $required in the portable bundle"
   }
@@ -57,6 +106,18 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
   [System.IO.Compression.CompressionLevel]::Optimal,
   $true
 )
+
+$archive = [System.IO.Compression.ZipFile]::OpenRead($zip)
+try {
+  $entries = @($archive.Entries | ForEach-Object { $_.Name })
+} finally {
+  $archive.Dispose()
+}
+foreach ($required in $vcRuntime) {
+  if (-not ($entries -contains $required)) {
+    throw "Missing $required in $zip"
+  }
+}
 
 $zipHash = (Get-FileHash -Path $zip -Algorithm SHA256).Hash.ToLowerInvariant()
 $sidecar = "$zip.sha256"

@@ -60,11 +60,13 @@ chmod +x FreeCADLauncher-<version>-x86_64.AppImage
 
 Download `FreeCADLauncher-<version>-windows-x86_64.zip` from the Releases page, verify its
 `.sha256` sidecar if you like, and extract it anywhere (the folder contains
-`freecad_launcher.exe`, the Flutter runtime, `7zr.exe` and the license/notices). Run
-`freecad_launcher.exe`.
+`freecad_launcher.exe`, the Flutter runtime, the Microsoft Visual C++ runtime DLLs, `7zr.exe` and
+the license/notices). Run `freecad_launcher.exe`.
 
 - Windows 10/11 x86_64.
 - The executable is **unsigned**: SmartScreen may warn on first run (More info → Run anyway).
+- The Microsoft Visual C++ runtime is included next to the executable (D-114); no separate Visual
+  C++ Redistributable install is needed. Do not delete the `*.dll` files shipped in the folder.
 - `7zr.exe` must stay next to `freecad_launcher.exe`; it is what extracts the official FreeCAD
   `.7z` portable builds.
 - Dev-link addons need symlink privileges (enable Developer Mode or run elevated).

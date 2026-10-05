@@ -12,7 +12,7 @@
 | OS | Artifact | Notes |
 |---|---|---|
 | Linux | `FreeCADLauncher-<ver>-x86_64.AppImage` + `.sha256` + `.zsync` | Primary distribution channel (locked decision) |
-| Windows | `FreeCADLauncher-<ver>-windows-x86_64.zip` + `.sha256` | Unsigned portable zip (D-091); contains the Flutter bundle, `7zr.exe` + its license, `LICENSE`, `THIRD_PARTY_NOTICES.md` and the README |
+| Windows | `FreeCADLauncher-<ver>-windows-x86_64.zip` + `.sha256` | Unsigned portable zip (D-091); contains the Flutter bundle, the Microsoft Visual C++ runtime DLLs app-local (D-114), `7zr.exe` + its license, `LICENSE`, `THIRD_PARTY_NOTICES.md` and the README |
 | macOS | none yet | See OQ-1/M8-04; `flutter build macos` returns with the macOS CI job |
 
 `v0.4.5` is the current release (published as a pre-release); it ships both the AppImage and the

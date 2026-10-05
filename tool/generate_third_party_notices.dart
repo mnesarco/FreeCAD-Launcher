@@ -123,6 +123,21 @@ void main() {
     ..writeln(sevenZipLicense)
     ..writeln('```')
     ..writeln()
+    ..writeln('## Microsoft Visual C++ runtime')
+    ..writeln()
+    ..writeln(
+      'The Windows portable build bundles the Microsoft Visual C++ runtime DLLs app-local '
+      '(next to `freecad_launcher.exe`), so the launcher starts without a system-wide Visual C++ '
+      'Redistributable install. The files are copied unmodified from the Microsoft Visual Studio '
+      'redistributable folder (`Microsoft.VC*.CRT`, x64) of the toolchain used to build the '
+      'release, including `concrt140.dll`, `msvcp140.dll`, `msvcp140_1.dll`, `msvcp140_2.dll`, '
+      '`msvcp140_atomic_wait.dll`, `msvcp140_codecvt_ids.dll`, `vccorlib140.dll`, '
+      '`vcruntime140.dll` and `vcruntime140_1.dll`. Copyright Microsoft Corporation. '
+      'Redistributed as Distributable Code by app-local deployment under the Microsoft Visual '
+      'Studio license terms; see '
+      '<https://learn.microsoft.com/cpp/windows/redistributing-visual-cpp-files>.',
+    )
+    ..writeln()
     ..writeln('## FreeCAD trademark')
     ..writeln()
     ..writeln(
