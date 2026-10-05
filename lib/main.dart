@@ -23,9 +23,9 @@ Future<void> main(List<String> arguments) async {
     ],
   );
   effect(() => appLogger.level = services.settings.logLevel.value);
-  final migrationWarning = services.paths.migrationWarning;
-  if (migrationWarning != null) {
-    appLogger.warn(migrationWarning, tag: 'paths');
+  final startupWarning = services.startupWarning;
+  if (startupWarning != null) {
+    appLogger.warn(startupWarning, tag: 'paths');
   }
   appLogger.info(
     'startup: bootstrap at ${startup.elapsedMilliseconds} ms',

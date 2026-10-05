@@ -19,6 +19,8 @@ class PythonPackagesDao extends DatabaseAccessor<AppDatabase> with _$PythonPacka
             ..orderBy([(t) => OrderingTerm.asc(t.name)]))
           .watch();
 
+  Future<List<PythonPackage>> getAll() => select(pythonPackages).get();
+
   Future<List<PythonPackage>> getByProfile(String profileId) =>
       (select(pythonPackages)
             ..where((t) => t.profileId.equals(profileId))

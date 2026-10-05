@@ -11,6 +11,7 @@ import 'package:freecad_launcher/data/catalog/github_releases_client.dart';
 import 'package:freecad_launcher/data/catalog/macro_catalog.dart';
 import 'package:freecad_launcher/data/catalog/news_feed.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart';
+import 'package:freecad_launcher/data/data_root_repair.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/core/errors.dart';
 import 'package:freecad_launcher/core/result.dart';
@@ -58,6 +59,7 @@ class AppServices {
   AppServices({
     required this.paths,
     required this.database,
+    this.startupWarning,
     ProcessRunner? processRunner,
     http.Client? httpClient,
     BuildsController? buildsController,
@@ -78,6 +80,9 @@ class AppServices {
   final AppPaths paths;
   final AppDatabase database;
   final ProcessRunner processRunner;
+
+  /// Warning recorded during bootstrap and logged once the logger is set up.
+  final String? startupWarning;
 
   final http.Client? _httpClient;
   final BuildsController? _buildsControllerOverride;
@@ -320,9 +325,28 @@ class AppServices {
     final paths = await AppPaths.resolve();
     await paths.ensureBaseDirectories();
     final database = AppDatabase(NativeDatabase(File(paths.databaseFile)));
-    final services = AppServices(paths: paths, database: database);
+    final startupWarning = await _repairMovedData(paths, database);
+    final services = AppServices(
+      paths: paths,
+      database: database,
+      startupWarning: startupWarning,
+    );
     await services.settings.load();
     return services;
+  }
+
+  static Future<String?> _repairMovedData(AppPaths paths, AppDatabase database) async {
+    final legacy = paths.legacyRoot;
+    if (legacy == null || legacy == paths.dataRoot) {
+      return null;
+    }
+    final repaired = await DataRootRepair(
+      database,
+    ).rewritePathPrefix(from: legacy, to: paths.dataRoot);
+    if (repaired == 0) {
+      return null;
+    }
+    return 'Repaired $repaired stored path(s) after the Windows data root changed (D-117).';
   }
 
   Future<void> close() async {
