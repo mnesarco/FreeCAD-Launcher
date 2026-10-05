@@ -9,13 +9,6 @@ import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/profiles_controller.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
 
-class ProfileFormResult {
-  const ProfileFormResult({required this.name, required this.buildId});
-
-  final String name;
-  final String buildId;
-}
-
 class DuplicateProfileResult {
   const DuplicateProfileResult({required this.name, required this.copyPayload});
 
@@ -23,15 +16,15 @@ class DuplicateProfileResult {
   final bool copyPayload;
 }
 
-Future<ProfileFormResult?> showProfileFormDialog(
+/// Returns the created (or edited) profile, or `null` when cancelled.
+Future<Profile?> showProfileFormDialog(
   BuildContext context, {
   required ProfilesController controller,
   Profile? profile,
 }) {
-  return showDialog<ProfileFormResult>(
+  return showDialog<Profile>(
     context: context,
-    builder: (context) =>
-        _ProfileFormDialog(controller: controller, profile: profile),
+    builder: (context) => _ProfileFormDialog(controller: controller, profile: profile),
   );
 }
 
@@ -67,10 +60,7 @@ Future<bool> confirmDeleteProfile(BuildContext context, Profile profile) async {
   return confirmed ?? false;
 }
 
-Future<bool> confirmQuarantineRemoval(
-  BuildContext context,
-  String appPath,
-) async {
+Future<bool> confirmQuarantineRemoval(BuildContext context, String appPath) async {
   final l10n = AppLocalizations.of(context);
   final confirmed = await showDialog<bool>(
     context: context,
@@ -155,36 +145,23 @@ class _ProfileFormDialogState extends State<_ProfileFormDialog> {
     }
     setState(() => _saving = false);
 
-    result.fold(
-      (_) => Navigator.of(
-        context,
-      ).pop(ProfileFormResult(name: name, buildId: buildId)),
-      (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${_isEdit ? l10n.profilesEditFailed : l10n.profilesCreateFailed}: $error',
-            ),
-          ),
-        );
-      },
-    );
+    result.fold((profile) => Navigator.of(context).pop(profile), (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${_isEdit ? l10n.profilesEditFailed : l10n.profilesCreateFailed}: $error'),
+        ),
+      );
+    });
   }
 
   Future<Result<Profile>> _edit(String name, String buildId) async {
     final profile = widget.profile!;
-    final renamed = await widget.controller.rename(
-      profileId: profile.id,
-      name: name,
-    );
+    final renamed = await widget.controller.rename(profileId: profile.id, name: name);
     if (renamed.isErr) {
       return renamed;
     }
     if (profile.buildId != buildId) {
-      final rebound = await widget.controller.setBuild(
-        profileId: profile.id,
-        buildId: buildId,
-      );
+      final rebound = await widget.controller.setBuild(profileId: profile.id, buildId: buildId);
       if (rebound.isErr) {
         return Err(rebound.errorOrNull!);
       }
@@ -197,8 +174,7 @@ class _ProfileFormDialogState extends State<_ProfileFormDialog> {
     final l10n = AppLocalizations.of(context);
     final profile = widget.profile;
     final builds = _selectableBuilds(profile);
-    final selected =
-        _buildId == null || !builds.any((build) => build.id == _buildId)
+    final selected = _buildId == null || !builds.any((build) => build.id == _buildId)
         ? null
         : builds.firstWhere((build) => build.id == _buildId);
     final pythonChanged = selected != null && _pythonChanges(profile, selected);
@@ -213,10 +189,7 @@ class _ProfileFormDialogState extends State<_ProfileFormDialog> {
           children: [
             FormRow(
               label: l10n.profilesName,
-              field: FormTextField(
-                controller: _nameController,
-                autofocus: true,
-              ),
+              field: FormTextField(controller: _nameController, autofocus: true),
             ),
             if (builds.isEmpty)
               Text(l10n.profilesNoBuildsMessage)
@@ -236,9 +209,7 @@ class _ProfileFormDialogState extends State<_ProfileFormDialog> {
                         ),
                       ),
                   ],
-                  onChanged: _saving
-                      ? null
-                      : (value) => setState(() => _buildId = value),
+                  onChanged: _saving ? null : (value) => setState(() => _buildId = value),
                 ),
               ),
             if (pythonChanged)
@@ -272,8 +243,7 @@ class _DuplicateProfileDialog extends StatefulWidget {
   final String initialName;
 
   @override
-  State<_DuplicateProfileDialog> createState() =>
-      _DuplicateProfileDialogState();
+  State<_DuplicateProfileDialog> createState() => _DuplicateProfileDialogState();
 }
 
 class _DuplicateProfileDialogState extends State<_DuplicateProfileDialog> {
@@ -283,9 +253,7 @@ class _DuplicateProfileDialogState extends State<_DuplicateProfileDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(
-      text: '${widget.initialName} (copy)',
-    );
+    _nameController = TextEditingController(text: '${widget.initialName} (copy)');
   }
 
   @override
@@ -307,19 +275,14 @@ class _DuplicateProfileDialogState extends State<_DuplicateProfileDialog> {
           children: [
             FormRow(
               label: l10n.profilesName,
-              field: FormTextField(
-                controller: _nameController,
-                autofocus: true,
-              ),
+              field: FormTextField(controller: _nameController, autofocus: true),
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               value: _copyPayload,
               onChanged: (value) => setState(() => _copyPayload = value),
               title: Text(
-                _copyPayload
-                    ? l10n.profilesDuplicatePayload
-                    : l10n.profilesDuplicateConfig,
+                _copyPayload ? l10n.profilesDuplicatePayload : l10n.profilesDuplicateConfig,
               ),
               subtitle: Text(l10n.profilesDuplicatePayloadHint),
             ),
@@ -327,17 +290,11 @@ class _DuplicateProfileDialogState extends State<_DuplicateProfileDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.versionsCancel),
-        ),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.versionsCancel)),
         FilledButton(
-          onPressed: () => Navigator.of(context).pop(
-            DuplicateProfileResult(
-              name: _nameController.text,
-              copyPayload: _copyPayload,
-            ),
-          ),
+          onPressed: () => Navigator.of(
+            context,
+          ).pop(DuplicateProfileResult(name: _nameController.text, copyPayload: _copyPayload)),
           child: Text(l10n.profilesDuplicate),
         ),
       ],

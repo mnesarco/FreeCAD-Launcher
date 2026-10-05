@@ -64,6 +64,29 @@ void main() {
     expect(find.text('New profile'), findsWidgets);
   });
 
+  testWidgets('creating a profile opens its detail view', (tester) async {
+    await services.database.buildsDao.save(sampleBuild());
+    await pumpProfiles(tester);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'New profile').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'Fresh');
+    await tester.pump();
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('1.1.3').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+    for (var frame = 0; frame < 12; frame++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+
+    expect(find.text('Overview'), findsOneWidget);
+    expect(find.text('Backups'), findsOneWidget);
+    expect(find.text('Fresh'), findsWidgets);
+  });
+
   group('with a profile', () {
     setUp(() async {
       await services.database.buildsDao.save(sampleBuild());
@@ -108,9 +131,7 @@ void main() {
       final profile = await services.profilesRepository.getByName('Dev');
       await pumpProfiles(tester);
 
-      tester
-          .state<ProfilesViewState>(find.byType(ProfilesView))
-          .openProfile(profile!.id);
+      tester.state<ProfilesViewState>(find.byType(ProfilesView)).openProfile(profile!.id);
       for (var frame = 0; frame < 12; frame++) {
         await tester.pump(const Duration(milliseconds: 50));
       }
@@ -136,9 +157,7 @@ void main() {
           ? 'explorer.exe'
           : (Platform.isMacOS ? 'open' : 'xdg-open');
       expect(launcher.specs.single.executable, expectedOpener);
-      expect(launcher.specs.single.arguments, [
-        services.paths.profilePaths(profile!.id).root,
-      ]);
+      expect(launcher.specs.single.arguments, [services.paths.profilePaths(profile!.id).root]);
     });
 
     testWidgets('opens the launch log from the profile overview', (tester) async {
@@ -163,9 +182,7 @@ void main() {
       launcher.handles.single.exit(0);
       await tester.pump();
 
-      final expectedOpener = Platform.isWindows
-          ? 'cmd'
-          : (Platform.isMacOS ? 'open' : 'xdg-open');
+      final expectedOpener = Platform.isWindows ? 'cmd' : (Platform.isMacOS ? 'open' : 'xdg-open');
       expect(launcher.specs.single.executable, expectedOpener);
       expect(
         launcher.specs.single.arguments,
@@ -179,11 +196,7 @@ void main() {
         p.join(services.paths.profilePaths(profile!.id).macros, 'MyMacro.FCMacro'),
       ).createSync(recursive: true);
       await services.database.macrosDao.save(
-        sampleMacro(
-          profileId: profile.id,
-          name: 'MyMacro',
-          fileName: 'MyMacro.FCMacro',
-        ),
+        sampleMacro(profileId: profile.id, name: 'MyMacro', fileName: 'MyMacro.FCMacro'),
       );
       await pumpProfiles(tester);
       await tester.tap(find.text('Dev'));
@@ -223,9 +236,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 50));
       }
 
-      await tester.tap(
-        find.descendant(of: find.byType(TabBar), matching: find.text('Python')),
-      );
+      await tester.tap(find.descendant(of: find.byType(TabBar), matching: find.text('Python')));
       for (var frame = 0; frame < 12; frame++) {
         await tester.pump(const Duration(milliseconds: 50));
       }
@@ -243,9 +254,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 50));
       }
 
-      await tester.tap(
-        find.descendant(of: find.byType(TabBar), matching: find.text('Python')),
-      );
+      await tester.tap(find.descendant(of: find.byType(TabBar), matching: find.text('Python')));
       for (var frame = 0; frame < 12; frame++) {
         await tester.pump(const Duration(milliseconds: 50));
       }

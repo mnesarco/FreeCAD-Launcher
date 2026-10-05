@@ -57,6 +57,20 @@ class HomeViewState extends State<HomeView> {
     super.dispose();
   }
 
+  Future<void> _createProfile(BuildContext context) async {
+    final services = AppScope.of(context);
+    final profile = await showProfileFormDialog(context, controller: services.profiles);
+    if (profile == null || !context.mounted) {
+      return;
+    }
+    final onOpenProfile = widget.onOpenProfile;
+    if (onOpenProfile != null) {
+      onOpenProfile(profile.id);
+    } else {
+      services.shell.select(AppSection.profiles);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -85,17 +99,13 @@ class HomeViewState extends State<HomeView> {
           versionCount: builds.length,
           addonCount: installedAddons,
           checking: checking,
-          onCreateProfile: () =>
-              showProfileFormDialog(context, controller: services.profiles),
+          onCreateProfile: () => _createProfile(context),
           onCheckUpdates: () => _checkUpdates(context),
         ),
         if (builds.isEmpty || profiles.isEmpty)
           _FirstRunCard(
             onAddVersion: () => shell.select(AppSection.versions),
-            onCreateProfile: () => showProfileFormDialog(
-              context,
-              controller: services.profiles,
-            ),
+            onCreateProfile: () => _createProfile(context),
             onInstallAddons: () => shell.select(AppSection.addons),
           ),
         if (recent.isNotEmpty) ...[
@@ -113,16 +123,8 @@ class HomeViewState extends State<HomeView> {
         Card(
           margin: EdgeInsets.zero,
           child: ListTile(
-            leading: Icon(
-              outdated > 0
-                  ? Icons.system_update_alt
-                  : Icons.check_circle_outline,
-            ),
-            title: Text(
-              outdated > 0
-                  ? l10n.homeUpdatesAvailable(outdated)
-                  : l10n.homeUpdatesNone,
-            ),
+            leading: Icon(outdated > 0 ? Icons.system_update_alt : Icons.check_circle_outline),
+            title: Text(outdated > 0 ? l10n.homeUpdatesAvailable(outdated) : l10n.homeUpdatesNone),
           ),
         ),
         const SizedBox(height: 16),
@@ -133,9 +135,7 @@ class HomeViewState extends State<HomeView> {
           loaded: newsLoaded,
           stale: newsStale,
           error: newsError?.message,
-          onRetry: () => unawaited(
-            services.news.retry(services.settings.newsFeedUrl.value),
-          ),
+          onRetry: () => unawaited(services.news.retry(services.settings.newsFeedUrl.value)),
         ),
       ],
     );
@@ -191,15 +191,12 @@ class _HomeHero extends StatelessWidget {
           colors: [
             scheme.primaryContainer,
             Color.alphaBlend(
-              (isDark ? Colors.white : Colors.black)
-                  .withValues(alpha: isDark ? 0.08 : 0.18),
+              (isDark ? Colors.white : Colors.black).withValues(alpha: isDark ? 0.08 : 0.18),
               scheme.primaryContainer,
             ),
           ],
         ),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
@@ -250,9 +247,7 @@ class _HomeHero extends StatelessWidget {
               foregroundColor: onContainer,
               side: BorderSide(color: onContainer.withValues(alpha: 0.5)),
             ),
-            child: Text(
-              checking ? l10n.homeUpdatesChecking : l10n.homeUpdatesCheck,
-            ),
+            child: Text(checking ? l10n.homeUpdatesChecking : l10n.homeUpdatesCheck),
           ),
         ],
       ),
@@ -371,11 +366,7 @@ class _RecentProfileCard extends StatelessWidget {
                 const Spacer(),
                 Row(
                   children: [
-                    Icon(
-                      Icons.history,
-                      size: 14,
-                      color: theme.colorScheme.outline,
-                    ),
+                    Icon(Icons.history, size: 14, color: theme.colorScheme.outline),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
@@ -452,28 +443,13 @@ class _FirstRunCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              l10n.homeEmptyTitle,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text(l10n.homeEmptyTitle, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 4),
             Text(l10n.homeEmptyMessage),
             const SizedBox(height: 8),
-            _StepTile(
-              number: 1,
-              label: l10n.homeStepVersion,
-              onPressed: onAddVersion,
-            ),
-            _StepTile(
-              number: 2,
-              label: l10n.homeStepProfile,
-              onPressed: onCreateProfile,
-            ),
-            _StepTile(
-              number: 3,
-              label: l10n.homeStepAddons,
-              onPressed: onInstallAddons,
-            ),
+            _StepTile(number: 1, label: l10n.homeStepVersion, onPressed: onAddVersion),
+            _StepTile(number: 2, label: l10n.homeStepProfile, onPressed: onCreateProfile),
+            _StepTile(number: 3, label: l10n.homeStepAddons, onPressed: onInstallAddons),
           ],
         ),
       ),
@@ -482,11 +458,7 @@ class _FirstRunCard extends StatelessWidget {
 }
 
 class _StepTile extends StatelessWidget {
-  const _StepTile({
-    required this.number,
-    required this.label,
-    required this.onPressed,
-  });
+  const _StepTile({required this.number, required this.label, required this.onPressed});
 
   final int number;
   final String label;
@@ -554,22 +526,13 @@ class _NewsCard extends StatelessWidget {
             ),
           if (items.isEmpty && loaded && error != null)
             ListTile(
-              leading: Icon(
-                Icons.error_outline,
-                color: theme.colorScheme.error,
-              ),
+              leading: Icon(Icons.error_outline, color: theme.colorScheme.error),
               title: Text(l10n.homeNewsError),
               subtitle: Text(error!, maxLines: 2, overflow: TextOverflow.ellipsis),
-              trailing: TextButton(
-                onPressed: onRetry,
-                child: Text(l10n.versionsRetry),
-              ),
+              trailing: TextButton(onPressed: onRetry, child: Text(l10n.versionsRetry)),
             )
           else if (items.isEmpty && loaded)
-            ListTile(
-              leading: const Icon(Icons.newspaper_outlined),
-              title: Text(l10n.homeNewsEmpty),
-            )
+            ListTile(leading: const Icon(Icons.newspaper_outlined), title: Text(l10n.homeNewsEmpty))
           else
             for (final item in items.take(_NewsCard.maxItems))
               ListTile(
@@ -589,24 +552,14 @@ class _NewsCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (item.excerpt != null)
-                            Text(
-                              item.excerpt!,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            Text(item.excerpt!, maxLines: 2, overflow: TextOverflow.ellipsis),
                           if (item.publishedAt != null)
-                            Text(
-                              _date(item.publishedAt!),
-                              style: theme.textTheme.bodySmall,
-                            ),
+                            Text(_date(item.publishedAt!), style: theme.textTheme.bodySmall),
                         ],
                       ),
                 isThreeLine: item.excerpt != null,
                 trailing: const Icon(Icons.open_in_new, size: 16),
-                onTap: () => launchUrl(
-                  Uri.parse(item.link),
-                  mode: LaunchMode.externalApplication,
-                ),
+                onTap: () => launchUrl(Uri.parse(item.link), mode: LaunchMode.externalApplication),
               ),
         ],
       ),

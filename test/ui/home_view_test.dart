@@ -8,8 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/catalog/macro_catalog.dart';
 import 'package:freecad_launcher/data/catalog/news_feed.dart';
-import 'package:freecad_launcher/data/catalog/releases_catalog.dart'
-    show CatalogFreshness;
+import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
@@ -71,10 +70,7 @@ void main() {
           ),
           dao: db.catalogCacheDao,
           cacheDirectory: p.join(tempDirectory.path, 'addons'),
-        )..result = const AddonCatalogResult(
-          addons: [],
-          freshness: CatalogFreshness.fresh,
-        ),
+        )..result = const AddonCatalogResult(addons: [], freshness: CatalogFreshness.fresh),
       ),
       macrosController: MacrosController(
         database: db,
@@ -127,10 +123,7 @@ void main() {
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
-              body: HomeView(
-                onOpenProfile: onOpenProfile,
-                onLaunchProfile: onLaunchProfile,
-              ),
+              body: HomeView(onOpenProfile: onOpenProfile, onLaunchProfile: onLaunchProfile),
             ),
           ),
         ),
@@ -187,6 +180,38 @@ void main() {
     expect(find.widgetWithText(OutlinedButton, 'Check for updates'), findsOneWidget);
   });
 
+  testWidgets('creating a profile opens its detail view', (tester) async {
+    await seedInstalledBuild();
+    String? opened;
+    await tester.pumpWidget(
+      AppScope(
+        services: services,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: HomeView(onOpenProfile: (profileId) => opened = profileId)),
+        ),
+      ),
+    );
+    await settle(tester);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'New profile'));
+    await settle(tester);
+    await tester.enterText(find.byType(TextField).first, 'Fresh');
+    await tester.pump();
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await settle(tester);
+    await tester.tap(find.textContaining('1.1.3').last);
+    await settle(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+    await settle(tester);
+
+    final profile = await services.profilesRepository.getByName('Fresh');
+    expect(profile, isNotNull);
+    expect(opened, profile!.id);
+  });
+
   testWidgets('hero shows the tagline on first run', (tester) async {
     newsSource.streamFactory = () => Stream.fromIterable([utf8.encode(rss)]);
 
@@ -216,10 +241,7 @@ void main() {
     await seedInstalledBuild();
     for (var index = 0; index < 6; index++) {
       await db.profilesDao.save(sampleProfile(id: 'profile-$index', name: 'P$index'));
-      await db.profilesDao.touchLastUsed(
-        'profile-$index',
-        DateTime.utc(2026, 9, 10 + index),
-      );
+      await db.profilesDao.touchLastUsed('profile-$index', DateTime.utc(2026, 9, 10 + index));
     }
     newsSource.streamFactory = () => Stream.fromIterable([utf8.encode(rss)]);
 
@@ -230,10 +252,7 @@ void main() {
     expect(find.text('P4'), findsOneWidget);
     expect(find.text('P1'), findsOneWidget);
     expect(find.text('P0'), findsNothing);
-    expect(
-      tester.getTopLeft(find.text('P5')).dx,
-      lessThan(tester.getTopLeft(find.text('P4')).dx),
-    );
+    expect(tester.getTopLeft(find.text('P5')).dx, lessThan(tester.getTopLeft(find.text('P4')).dx));
   });
 
   testWidgets('hides recent profiles whose build is unhealthy', (tester) async {

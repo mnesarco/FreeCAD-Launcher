@@ -753,3 +753,5 @@
   `v0.4.4` is the current release (published as a pre-release; D-100); the `0.4.x` line continues.
 - `AGENTS.md` is tracked again (no longer git-excluded); keep it in sync with `docs/impl/`
   when conventions or the project state change.
+
+| 2026-10-04 | R-29 | **Create profile → open its detail view** (owner request): `showProfileFormDialog` now returns the created/edited `Profile` (the `ProfileFormResult` wrapper is gone); `ProfilesView._createProfile` selects the new profile and Home's hero/first-run `New profile` routes through `onOpenProfile`, so both entry points (and `Ctrl+N`) land on the detail view. 2 widget tests added (Profiles tabs, Home callback); spec 03 §3.3 and TASKS updated; analyze clean, full suite green | R-29 | `lib/ui/profiles/{profile_dialogs,profiles_view}.dart`, `lib/ui/home/home_view.dart`, `test/ui/{profiles_view,home_view}_test.dart`, `docs/spec/03-ux.md`, `docs/impl/{TASKS,STATUS}.md` |

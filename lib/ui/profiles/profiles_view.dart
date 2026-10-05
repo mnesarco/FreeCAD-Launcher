@@ -122,7 +122,11 @@ class ProfilesViewState extends State<ProfilesView> implements SectionShortcuts 
   }
 
   Future<void> _createProfile(BuildContext context) async {
-    await showProfileFormDialog(context, controller: AppScope.of(context).profiles);
+    final profile = await showProfileFormDialog(context, controller: AppScope.of(context).profiles);
+    if (profile == null || !mounted) {
+      return;
+    }
+    setState(() => _selectedProfileId = profile.id);
   }
 
   @override
@@ -186,10 +190,7 @@ class _ProfileCard extends SignalWidget {
       margin: EdgeInsets.zero,
       child: ListTile(
         onTap: onOpen,
-        leading: Icon(
-          Icons.workspaces,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        leading: Icon(Icons.workspaces, color: Theme.of(context).colorScheme.primary),
         title: Row(
           children: [
             Flexible(child: Text(profile.name, overflow: TextOverflow.ellipsis)),
@@ -239,18 +240,12 @@ class _ProfileCard extends SignalWidget {
             PopupMenuButton<_ProfileAction>(
               onSelected: (action) => _handleAction(context, action),
               itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: _ProfileAction.duplicate,
-                  child: Text(l10n.profilesDuplicate),
-                ),
+                PopupMenuItem(value: _ProfileAction.duplicate, child: Text(l10n.profilesDuplicate)),
                 PopupMenuItem(
                   value: _ProfileAction.export,
                   child: Text(l10n.profilesExportManifest),
                 ),
-                PopupMenuItem(
-                  value: _ProfileAction.delete,
-                  child: Text(l10n.profilesDelete),
-                ),
+                PopupMenuItem(value: _ProfileAction.delete, child: Text(l10n.profilesDelete)),
               ],
             ),
           ],
@@ -264,10 +259,7 @@ class _ProfileCard extends SignalWidget {
     final controller = AppScope.of(context).profiles;
     switch (action) {
       case _ProfileAction.duplicate:
-        final input = await showDuplicateProfileDialog(
-          context,
-          initialName: profile.name,
-        );
+        final input = await showDuplicateProfileDialog(context, initialName: profile.name);
         if (input == null || !context.mounted) {
           return;
         }
@@ -281,16 +273,12 @@ class _ProfileCard extends SignalWidget {
         }
         result.fold(
           (_) {},
-          (error) => ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${l10n.profilesDuplicateFailed}: $error')),
-          ),
+          (error) => ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('${l10n.profilesDuplicateFailed}: $error'))),
         );
       case _ProfileAction.export:
-        await exportProfileManifest(
-          context,
-          profileId: profile.id,
-          profileName: profile.name,
-        );
+        await exportProfileManifest(context, profileId: profile.id, profileName: profile.name);
       case _ProfileAction.delete:
         final confirmed = await confirmDeleteProfile(context, profile);
         if (!confirmed || !context.mounted) {
@@ -302,9 +290,9 @@ class _ProfileCard extends SignalWidget {
         }
         result.fold(
           (_) {},
-          (error) => ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${l10n.profilesDeleteFailed}: $error')),
-          ),
+          (error) => ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('${l10n.profilesDeleteFailed}: $error'))),
         );
     }
   }
