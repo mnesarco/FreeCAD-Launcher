@@ -131,8 +131,10 @@ Full instructions: **[User guide](docs/user-guide.md)**.
 ## Data, privacy and logs
 
 - Data root: Linux `~/.local/share/org.freecad.ext.launcher`, Windows
-  `%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher` (shown in Settings → General).
-  It contains the database, installed builds, profiles, exports, downloads cache and logs.
+  `%APPDATA%\org.freecad.ext.launcher` (shown in Settings → General). It contains the database,
+  installed builds, profiles, exports, downloads cache and logs. Windows installs upgraded from
+  ≤0.4.7 migrate automatically from `%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher`;
+  the legacy directory stays in use if the move could not complete.
 - Logs: `<data>/logs/`. Settings → Logs can export a **debug bundle** (redacted logs +
   environment summary, no database) for bug reports.
 - Network use: GitHub releases API (builds/updates), `addons.freecad.org` (addon/macro catalogs)

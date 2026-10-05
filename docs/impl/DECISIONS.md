@@ -139,7 +139,7 @@ Template:
 
 ### D-016 — Application identity: `org.freecad.ext.launcher`
 - **Date**: 2026-09-18
-- **Status**: Accepted
+- **Status**: Accepted (the Windows data root was made explicit in D-116)
 - **Context**: OQ-2 asked for the reverse-DNS identity; the prototype used `org.freecad.freecad_launcher` in `linux/CMakeLists.txt`.
 - **Decision**: Use `org.freecad.ext.launcher` everywhere an application id is needed: Linux `APPLICATION_ID` and `.desktop` file, macOS `PRODUCT_BUNDLE_IDENTIFIER`, Windows AppUserModelID. The Dart package name stays `freecad_launcher`. The app-support data dir derives from it (via `path_provider`).
 - **Consequences**: Data lives under `<appSupport>/org.freecad.ext.launcher` on Linux; all platform runners must be updated in `M1-02`. The `.ext.` segment deliberately marks this as an extension of the ecosystem, not an official FreeCAD binary.
@@ -2547,3 +2547,42 @@ Template:
   clear “no execution target” error instead of a FreeCAD error dialog.
 - **Refs**: `TASKS.md` R-32, `docs/spec/06-integrations.md` §4.1/§4.2, `lib/platform/python_probe.dart`,
   `lib/platform/python_env.dart`, `lib/platform/pip_runner.dart`, B-19, D-108..D-112
+
+### D-116 — Platform metadata copyright alignment and the Windows data root (M8-07)
+- **Date**: 2026-10-05
+- **Status**: Accepted
+- **Context**: The owner's copyright holder is `Frank Martínez <mnesarco at gmail>` (D-074/D-079),
+  but the Windows `Runner.rc` and macOS `AppInfo.xcconfig` still carried the Flutter-template
+  “FreeCAD Launcher contributors” values. On Windows the exe VERSIONINFO is load-bearing:
+  `path_provider_windows` derives the app-support path from `CompanyName\ProductName`, so the data
+  root was `%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher` — not the
+  `org.freecad.ext.launcher` location D-016 records — and changing `CompanyName` would orphan
+  existing data (`config.db`, builds, profiles, caches). `LegalCopyright` itself has no effect on
+  the path.
+- **Decision**:
+  - `LegalCopyright` (Windows) and `PRODUCT_COPYRIGHT` (macOS) become exactly
+    `Copyright 2026 Frank Martínez <mnesarco at gmail>`; Windows `CompanyName` becomes
+    `Frank Martínez`.
+  - The Windows data root is pinned to `%APPDATA%\org.freecad.ext.launcher` (application id,
+    D-016), computed from `APPDATA` instead of the executable's version resource; if `APPDATA` is
+    missing, `getApplicationSupportDirectory()` is the fallback. Linux/macOS keep
+    `getApplicationSupportDirectory()`.
+  - On first start the legacy `%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher` directory
+    is renamed to the pinned root (same volume, atomic). If the pinned root already holds data it
+    wins and the legacy directory is left untouched. If the move fails (locked files, antivirus),
+    the legacy root stays in use for the session, a warning is logged after the logger is
+    configured, and the move is retried on the next start — never a partial copy, never deletion.
+  - Windows CI (`ci.yml` and `release.yml`) asserts the built exe's
+    `LegalCopyright`/`CompanyName`/`ProductName`/`ProductVersion` via
+    `packaging/windows/check_version_info.ps1`.
+- **Consequences**: exe metadata matches the recorded holder and the data location no longer
+  depends on mutable version metadata, so future `CompanyName`/`ProductName` edits cannot orphan
+  data; D-016 is now accurate on Windows. Upgraded installs keep the legacy path when the move
+  could not complete (Settings shows the actual location); running an old ≤0.4.7 build after a
+  successful migration recreates an empty legacy directory, and the new build prefers the
+  non-empty pinned root. A live Windows upgrade retest remains pending (no machine, B-16 smoke on
+  hold).
+- **Refs**: `TASKS.md` M8-07, D-016, D-074, D-079, `lib/platform/paths.dart`, `lib/main.dart`,
+  `windows/runner/Runner.rc`, `macos/Runner/Configs/AppInfo.xcconfig`,
+  `packaging/windows/check_version_info.ps1`, `docs/spec/05-data-model.md` §3, `README.md`,
+  `docs/user-guide.md`

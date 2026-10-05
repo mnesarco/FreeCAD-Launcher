@@ -346,8 +346,13 @@ the graphical application.
 ## Data locations
 
 Linux: `~/.local/share/org.freecad.ext.launcher/`. Windows:
-`%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher\`. macOS:
+`%APPDATA%\org.freecad.ext.launcher\`. macOS:
 `~/Library/Application Support/`.
+
+Windows installs upgraded from 0.4.7 or older move their data automatically from
+`%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher` on first start. If the move cannot
+complete (files in use), the legacy directory stays in use and Settings → General shows the
+actual location.
 
 ```
 config.db          # index over the filesystem (builds, profiles, addons, packages, bundles, macros)

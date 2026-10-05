@@ -304,6 +304,14 @@ M7-01 (D-071) productionization checks (2026-09-21):
       0.4.5 (exit 0) and the zip contains `7zr.exe`/`LICENSE`/`README.md`/notices; carries B-19
       (`<depend>` dependencies), B-20 (AppImage macro Python execution), R-29 (create profile →
       detail), R-30/D-113 (symlinks skipped with warnings) and the Windows env hardening
+- [x] M8-07 metadata/data-root (D-116): `AppPaths.resolve` unit tests cover the pinned Windows
+      root, the legacy-dir rename, pinned-root precedence, the failed-move fallback (legacy root +
+      warning) and a missing `APPDATA`; `packaging/windows/check_version_info.ps1` asserts the exe
+      `LegalCopyright`/`CompanyName`/`ProductName`/`ProductVersion` and is wired into the CI and
+      release Windows jobs; `flutter analyze` clean, 709 tests green (10 skipped)
+- [ ] M8-07 live Windows upgrade retest over a `v0.4.7` data directory (data visible after the
+      automatic move; locked files keep the legacy root and log the warning) — pending a Windows
+      machine (the B-16 smoke is also on hold)
 - [ ] macOS artifacts built, installed and launched on clean machines (M8-04, OQ-1)
 - [ ] Clean-machine Linux first-run flow completes with the published AppImage (M8-05)
 - Note (D-100): `v0.1.0`–`v0.3.0` releases were withdrawn by the owner; `v0.4.5` is the current
