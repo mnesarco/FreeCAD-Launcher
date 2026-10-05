@@ -308,7 +308,8 @@ M7-01 (D-071) productionization checks (2026-09-21):
       root, the legacy-dir rename, pinned-root precedence, the failed-move fallback (legacy root +
       warning) and a missing `APPDATA`; `packaging/windows/check_version_info.ps1` asserts the exe
       `LegalCopyright`/`CompanyName`/`ProductName`/`ProductVersion` and is wired into the CI and
-      release Windows jobs; `flutter analyze` clean, 709 tests green (10 skipped)
+      release Windows jobs; `flutter analyze` clean, 709 tests green (10 skipped); CI green on
+      `09c4ded` (run 37362656403, `windows-latest` build + metadata guard and `ubuntu-latest`)
 - [ ] M8-07 live Windows upgrade retest over a `v0.4.7` data directory (data visible after the
       automatic move; locked files keep the legacy root and log the warning) — pending a Windows
       machine (the B-16 smoke is also on hold)

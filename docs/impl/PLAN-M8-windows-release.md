@@ -135,9 +135,10 @@ failures until the CI job runs green.
 
 Implemented: platform metadata alignment (`Runner.rc`/`AppInfo.xcconfig`), Windows data root
 pinned to `%APPDATA%\org.freecad.ext.launcher` with a legacy-dir rename + fallback, and the
-`check_version_info.ps1` guard wired into `ci.yml`/`release.yml`. Pending: the first Windows CI
-run of the guard and a live upgrade retest over a `v0.4.7` data directory (no Windows machine;
-the B-16 smoke is also on hold). Details in `TASKS.md` M8-07 and `DECISIONS.md` D-116.
+`check_version_info.ps1` guard wired into `ci.yml`/`release.yml`. The guard ran green on
+`windows-latest` (run 37362656403). Residual: a live upgrade retest over a `v0.4.7` data
+directory (no Windows machine; the B-16 smoke is also on hold). Details in `TASKS.md` M8-07 and
+`DECISIONS.md` D-116.
 
 ## Resume protocol
 
