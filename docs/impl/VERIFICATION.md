@@ -310,9 +310,13 @@ M7-01 (D-071) productionization checks (2026-09-21):
       `LegalCopyright`/`CompanyName`/`ProductName`/`ProductVersion` and is wired into the CI and
       release Windows jobs; `flutter analyze` clean, 709 tests green (10 skipped); CI green on
       `09c4ded` (run 37362656403, `windows-latest` build + metadata guard and `ubuntu-latest`)
-- [ ] M8-07 live Windows upgrade retest over a `v0.4.7` data directory (data visible after the
-      automatic move; locked files keep the legacy root and log the warning) — pending a Windows
-      machine (the B-16 smoke is also on hold)
+- [x] M8-08 data-root regression (D-117): resolver tests (pinned vs legacy `config.db`,
+      precedence, empty legacy dir, missing `APPDATA`) and `DataRootRepair` tests (rewrites only
+      existing mapped targets, case-insensitive prefix, unrelated/identical-root no-ops);
+      analyze clean, 713 tests green (10 skipped)
+- [ ] M8-08 live Windows retest: an install whose data was moved by 0.4.8 recovers (builds show
+      Installed, no Broken) and a legacy-only install keeps its directory untouched — pending a
+      Windows machine (the B-16 smoke is also on hold)
 - [ ] macOS artifacts built, installed and launched on clean machines (M8-04, OQ-1)
 - [ ] Clean-machine Linux first-run flow completes with the published AppImage (M8-05)
 - Note (D-100): `v0.1.0`–`v0.3.0` releases were withdrawn by the owner; `v0.4.5` is the current

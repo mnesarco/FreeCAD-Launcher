@@ -131,14 +131,16 @@ failures until the CI job runs green.
 - Qt registry state is shared across Windows profiles (documented limitation, D-005).
 - `create_release`/tag release path has never run; first Windows release will exercise it.
 
-## M8-07 follow-up (D-116, 2026-10-05)
+## M8-07 follow-up (D-116/D-117, 2026-10-05)
 
 Implemented: platform metadata alignment (`Runner.rc`/`AppInfo.xcconfig`), Windows data root
-pinned to `%APPDATA%\org.freecad.ext.launcher` with a legacy-dir rename + fallback, and the
-`check_version_info.ps1` guard wired into `ci.yml`/`release.yml`. The guard ran green on
-`windows-latest` (run 37362656403). Residual: a live upgrade retest over a `v0.4.7` data
-directory (no Windows machine; the B-16 smoke is also on hold). Details in `TASKS.md` M8-07 and
-`DECISIONS.md` D-116.
+pinned to `%APPDATA%\org.freecad.ext.launcher` for fresh installs, and the
+`check_version_info.ps1` guard wired into `ci.yml`/`release.yml` (green on `windows-latest`, run
+37362656403). The original rename migration broke installed builds (stored absolute paths); per
+D-117 the root is never moved — legacy installs keep their directory and stale paths whose mapped
+target exists are repaired by `DataRootRepair` (M8-08). Residual: live Windows retest of both
+paths (already-moved install recovers; legacy-only install untouched). Details in `TASKS.md`
+M8-07/M8-08 and `DECISIONS.md` D-116/D-117.
 
 ## Resume protocol
 

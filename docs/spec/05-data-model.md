@@ -182,10 +182,11 @@ Rules:
 
 - `builds/<buildId>` and `profiles/<profileId>` are renamed into place atomically from
   `<name>.part` after successful creation.
-- On Windows the root is `%APPDATA%\org.freecad.ext.launcher` (application id). Installs upgraded
-  from ≤0.4.7 rename the legacy `%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher`
-  directory into place on first start; if the move fails the legacy root stays in use and is
-  retried on the next start (D-116).
+- On Windows the root is `%APPDATA%\org.freecad.ext.launcher` for fresh installs (application id,
+  D-016/116). The pre-M8-07 `%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher` directory
+  is never moved: installs that have it keep using it, and stored legacy-prefixed paths whose
+  mapped target exists are repaired into the active root (D-117). Exe metadata changes cannot
+  move the data.
 - A profile directory is fully relocatable only via export/import; absolute paths inside
   `user.cfg` (external tools, macro paths) are detected and reported on import (FR-9.4).
 - Data directory is configurable (Settings) but moving an existing root is v0.2.

@@ -2550,7 +2550,8 @@ Template:
 
 ### D-116 — Platform metadata copyright alignment and the Windows data root (M8-07)
 - **Date**: 2026-10-05
-- **Status**: Accepted
+- **Status**: Accepted (the rename migration was replaced by D-117 after it invalidated stored
+  absolute paths; the metadata alignment and the pinned data root stand)
 - **Context**: The owner's copyright holder is `Frank Martínez <mnesarco at gmail>` (D-074/D-079),
   but the Windows `Runner.rc` and macOS `AppInfo.xcconfig` still carried the Flutter-template
   “FreeCAD Launcher contributors” values. On Windows the exe VERSIONINFO is load-bearing:
@@ -2586,3 +2587,36 @@ Template:
   `windows/runner/Runner.rc`, `macos/Runner/Configs/AppInfo.xcconfig`,
   `packaging/windows/check_version_info.ps1`, `docs/spec/05-data-model.md` §3, `README.md`,
   `docs/user-guide.md`
+
+### D-117 — The data root is never renamed; stale stored paths are repaired (M8-08)
+- **Date**: 2026-10-05
+- **Status**: Accepted
+- **Context**: D-116's one-time rename of `%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher`
+  to the pinned `%APPDATA%\org.freecad.ext.launcher` left every installed build marked **Broken**
+  on Windows (owner report with the 0.4.8 test build). The database is an index over the
+  filesystem and stores absolute paths (`builds.localPath`, `builds.pythonPath`,
+  `catalog_cache.payloadPath`, `installed_addons.sourcePath`, `python_packages.targetDir`), so
+  moving the tree invalidates all of them; FreeCAD's own `user.cfg` inside profiles can also carry
+  absolute macro/tool paths. The fallback design protected against a failed rename but not against
+  a successful one.
+- **Decision**:
+  - The Windows data root is never moved. `AppPaths.resolve` uses the pinned
+    `%APPDATA%\org.freecad.ext.launcher` when it already contains `config.db`, otherwise the
+    pre-M8-07 `%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher` when it contains
+    `config.db`, otherwise the pinned root (fresh installs).
+  - `AppPaths.legacyRoot` exposes the old root when the pinned root is active.
+    `DataRootRepair.rewritePathPrefix` rewrites stored paths under it into the active root, but
+    only when the mapped target exists on disk. It runs once per start in
+    `AppServices.bootstrap` (idempotent, a no-op when nothing matches) and the repaired count is
+    logged after the logger is configured.
+  - Repairs cover `builds.localPath`, `builds.pythonPath`, `catalog_cache.payloadPath`,
+    `installed_addons.sourcePath` and `python_packages.targetDir`. Nothing is deleted, renamed or
+    copied.
+- **Consequences**: installs whose data was moved by an early 0.4.8 build recover on the next
+  start; legacy installs keep their directory and every stored path stays valid; fresh installs
+  use the pinned app-id path, so exe metadata changes remain harmless. Absolute paths inside
+  FreeCAD's own `user.cfg` are not repaired — profiles moved by 0.4.8 can still show stale
+  macro/tool paths inside FreeCAD.
+- **Refs**: `TASKS.md` M8-08, D-016, D-116, `lib/platform/paths.dart`,
+  `lib/data/data_root_repair.dart`, `lib/state/app_services.dart`, `lib/main.dart`, `README.md`,
+  `docs/user-guide.md`, `docs/spec/05-data-model.md` §3

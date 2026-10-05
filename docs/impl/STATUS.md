@@ -5,7 +5,7 @@
 
 - **Updated**: 2026-10-05
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
-  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**/**M8-07 DONE**; **`v0.4.7` is the current release** (pre-release)
+  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**/**M8-07 DONE**/**M8-08 WIP**; **`v0.4.7` is the current release** (pre-release)
   with the Linux AppImage and the Windows portable zip, self-contained (R-31/D-114) and carrying
   the R-32/D-115 addon-dependency pip fix; it also carries the B-19 `package.xml`
   `<depend>` dependency install (D-108..D-111), the B-20 AppImage macro Python execution without
@@ -23,9 +23,12 @@
   fallback) — M8-07; D-115 (the asset-name `pyXY` hint is version metadata only, never an
   interpreter path; legacy stored FreeCAD paths are ignored and FreeCAD is only ever called with
   `-c`) — R-32.
-- **Next action**: **M8-07** is DONE (metadata/data-root change shipped on `devel`, CI green on
-  `09c4ded`, run 37362656403); residual: once a Windows machine is available, retest the in-place
-  upgrade over a `v0.4.7` data dir. Then **R-32** (Windows “unrecognised option '-m'”
+- **Next action**: **M8-08** (data-root regression fix, D-117) is implemented on `devel`: the
+  root is never moved, the resolver prefers the legacy root when it has `config.db`, and
+  `DataRootRepair` fixes the absolute paths stored by 0.4.8 — 713 tests green, analyze clean,
+  version 0.4.9. Next: push, build the Windows artifact and have the owner retest (the
+  already-moved install must show Installed builds again; a legacy-only install must stay
+  untouched). Then **R-32** (Windows “unrecognised option '-m'”
   when installing an addon with dependencies) is fixed, test-verified and shipped in **`v0.4.7`** —
   retest on Windows with the published artifact (install an addon with `<depend>` packages and
   confirm the pip log shows `…\bin\python.exe`; existing builds are healed at install time, no
@@ -68,13 +71,20 @@
   `LegalCopyright` + macOS `PRODUCT_COPYRIGHT` now match the D-074 holder exactly and Windows
   `CompanyName` is `Frank Martínez`; the Windows data root is pinned to
   `%APPDATA%\org.freecad.ext.launcher` (D-016) computed from `APPDATA` instead of the exe
-  VERSIONINFO, with a one-time rename of the legacy
-  `%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher` and a logged fallback to it when the
-  move fails (retried next start, never a partial copy); `check_version_info.ps1` asserts the exe
-  VersionInfo in the CI and release Windows jobs; version bumped 0.4.7 → 0.4.8. `flutter analyze`
-  clean, 709 tests green (10 skipped); five commits pushed to `origin/devel` and CI green on
-  `09c4ded` (run 37362656403: `windows-latest` build + metadata guard, `ubuntu-latest`).
-  Residual: live upgrade retest over a `v0.4.7` data dir (no machine).
+  VERSIONINFO; `check_version_info.ps1` asserts the exe VersionInfo in the CI and release Windows
+  jobs; version bumped 0.4.7 → 0.4.8. `flutter analyze` clean, 709 tests green (10 skipped); five
+  commits pushed to `origin/devel` and CI green on `09c4ded` (run 37362656403: `windows-latest`
+  build + metadata guard, `ubuntu-latest`). The original one-time rename of the legacy
+  `%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher` was **replaced by D-117/M8-08**
+  after owner testing showed it marks all installed builds Broken (stored absolute paths).
+- **M8-08 data-root regression fix** (D-117, WIP): the Windows root is never moved — pinned
+  `%APPDATA%\org.freecad.ext.launcher` is used when it has `config.db`, otherwise the legacy
+  `%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher`, otherwise pinned (fresh installs);
+  `DataRootRepair` rewrites stale legacy-prefixed paths (`builds.localPath`/`pythonPath`,
+  cache `payloadPath`, addon `sourcePath`, python `targetDir`) into the active root only when the
+  mapped target exists, logged once after logger setup; new resolver/repair tests, version bumped
+  0.4.8 → 0.4.9, analyze clean, 713 tests green (10 skipped). Pending: the owner's Windows retest
+  (already-moved install recovers; legacy-only install untouched).
 - **B-16 dependency upgrades** (done 2026-10-02): drift, flutter_svg/xml and signals 7.1 plus the
   R-23 fix and the Flutter 3.47.6 pin (D-103) merged to `devel` via PR #2 (`d7cf10b`, `cdbbec2`,
   `fcc90a7`, `2b2cdf7`, `6a2c08f`, `d0f5c1a`; devel CI green, run 37063237308), followed by the
@@ -781,3 +791,4 @@
 | 2026-10-05 | R67 | **v0.4.7 pre-release published** (owner request): fix commit `33027ca` + version bump `e21ce1d` pushed to `origin/devel`; manual `release.yml` run 37341658955 (`create_release=true`, tag `v0.4.7`, `prerelease=true`) green on appimage/windows/publish and published the GitHub pre-release with `FreeCADLauncher-0.4.7-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.7-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after download, AppImage `--version` = 0.4.7 (exit 0), zip carries `7zr.exe`/license/notices + the app-local MSVC runtime DLLs. `check_version.sh` OK, analyze clean, 703 tests green | R-32, D-115 | `lib/core/constants.dart`, `pubspec.yaml`, `README.md`, `docs/spec/07-distribution.md`, `docs/impl/{DECISIONS,TASKS,VERIFICATION,STATUS}.md` |
 | 2026-10-05 | R68 | **M8-07/D-116: platform metadata + Windows data-root decoupling**: `windows/runner/Runner.rc` `LegalCopyright` and macOS `PRODUCT_COPYRIGHT` now match the D-074 holder exactly (`Copyright 2026 Frank Martínez <mnesarco at gmail>`) and Windows `CompanyName` is `Frank Martínez`; the Windows data root is pinned to `%APPDATA%\org.freecad.ext.launcher` (D-016) computed from `APPDATA` instead of the exe VERSIONINFO, with a one-time rename of the legacy `%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher`, pinned-root precedence, and a logged fallback to the legacy root when the move fails (retried next start, never a partial copy); `AppPaths.migrationWarning` is logged after the logger is configured; new `packaging/windows/check_version_info.ps1` wired into `ci.yml` + `release.yml`; 6 new resolver tests, 709 tests green (10 skipped), analyze clean; D-116 recorded, D-016 amended, spec 05/README/user-guide updated; version 0.4.7 → 0.4.8. Pending: Windows CI run + live upgrade retest (no machine) | M8-07, D-116 | `lib/platform/paths.dart`, `lib/main.dart`, `windows/runner/Runner.rc`, `macos/Runner/Configs/AppInfo.xcconfig`, `packaging/windows/check_version_info.ps1`, `.github/workflows/{ci,release}.yml`, `test/platform/paths_test.dart`, `lib/core/constants.dart`, `pubspec.yaml`, `README.md`, `docs/spec/05-data-model.md`, `docs/user-guide.md`, `docs/impl/**` |
 | 2026-10-05 | R69 | **M8-07 verified on Windows CI and pushed** (owner request): the five M8-07 commits (`34438af`, `df3cf00`, `a2a26a9`, `5767553`, `09c4ded`) pushed to `origin/devel`; CI run 37362656403 green on both jobs — `windows-latest` (build release + `check_version_info.ps1` asserting `LegalCopyright`/`CompanyName`/`ProductName`/`ProductVersion`) and `ubuntu-latest` (version check, codegen/notices freshness, analyze, 709 tests, Linux build). M8-07 marked DONE in `TASKS.md`; residual: live upgrade retest over a `v0.4.7` data dir (no machine) | M8-07, D-116 | `docs/impl/{TASKS,VERIFICATION,STATUS,PLAN-M8-windows-release}.md` |
+| 2026-10-05 | R70 | **M8-08/D-117: data-root regression fixed** (owner report: all installed builds Broken after the M8-07 rename on Windows): the 0.4.8 migration moved `config.db` + `builds/` but the DB is an index storing absolute paths, invalidating every `builds.localPath` (`BuildsController._statusFor` marks Broken when the executable is missing). Fix: `AppPaths.resolve` never moves the root — pinned `%APPDATA%\org.freecad.ext.launcher` when it contains `config.db`, else the legacy `%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher`, else pinned (fresh installs) — and exposes `legacyRoot`; new `DataRootRepair` rewrites legacy-prefixed `builds.localPath`/`pythonPath`, `catalog_cache.payloadPath`, `installed_addons.sourcePath` and `python_packages.targetDir` into the active root only when the mapped target exists (idempotent, logged once via `AppServices.startupWarning` after logger setup); `PythonPackagesDao.getAll` added. 5 resolver + 4 repair tests, analyze clean, 713 tests green (10 skipped); D-117 recorded, D-116 amended, README/user-guide/spec 05/PLAN/TASKS/VERIFICATION updated; version 0.4.8 → 0.4.9. Pending: owner Windows retest + CI artifact | M8-08, D-117 | `lib/platform/paths.dart`, `lib/data/data_root_repair.dart`, `lib/data/daos/python_packages_dao.dart`, `lib/state/app_services.dart`, `lib/main.dart`, `test/platform/paths_test.dart`, `test/data/data_root_repair_test.dart`, `lib/core/constants.dart`, `pubspec.yaml`, `README.md`, `docs/user-guide.md`, `docs/spec/05-data-model.md`, `docs/impl/**` |
