@@ -83,6 +83,10 @@ jobs:
       - name: Build the Windows bundle
         run: flutter build windows --release
 
+      - name: Check Windows version metadata
+        shell: pwsh
+        run: ./packaging/windows/check_version_info.ps1
+
       - name: Assemble the portable zip
         shell: pwsh
         run: ./packaging/windows/build_portable.ps1

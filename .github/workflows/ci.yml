@@ -68,3 +68,8 @@ jobs:
       - name: Build (Windows)
         if: runner.os == 'Windows'
         run: flutter build windows --release
+
+      - name: Check Windows version metadata
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./packaging/windows/check_version_info.ps1
