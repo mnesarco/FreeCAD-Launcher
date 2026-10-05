@@ -89,11 +89,11 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "FreeCAD Launcher contributors" "\0"
+            VALUE "CompanyName", "Frank Martínez" "\0"
             VALUE "FileDescription", "FreeCAD Launcher" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "freecad_launcher" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 FreeCAD Launcher contributors. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright 2026 Frank Martínez <mnesarco at gmail>" "\0"
             VALUE "OriginalFilename", "freecad_launcher.exe" "\0"
             VALUE "ProductName", "FreeCAD Launcher" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"

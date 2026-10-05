@@ -11,4 +11,4 @@ PRODUCT_NAME = FreeCAD Launcher
 PRODUCT_BUNDLE_IDENTIFIER = org.freecad.ext.launcher
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 FreeCAD Launcher contributors. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright 2026 Frank Martínez <mnesarco at gmail>
