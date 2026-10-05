@@ -10,6 +10,21 @@ const Set<String> sanitizedEnvironmentKeys = {
   'PYTHONUSERBASE',
 };
 
+/// Removes every sanitized Python variable from [environment] in place.
+///
+/// Matching is case-insensitive because Windows environment variable names are
+/// case-insensitive (a `PythonPath` inherited from the system must not leak
+/// into pip or the package probe).
+void removeSanitizedEnvironmentKeys(Map<String, String> environment) {
+  final keys = [
+    for (final key in environment.keys)
+      if (sanitizedEnvironmentKeys.contains(key.toUpperCase())) key,
+  ];
+  for (final key in keys) {
+    environment.remove(key);
+  }
+}
+
 abstract final class LaunchEnvironment {
   static Map<String, String> build({
     required BuildPlatform platform,

@@ -1,5 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Frank Martínez <mnesarco at gmail>
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:io';
+
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/platform/python_env.dart';
 
@@ -46,7 +48,11 @@ class PythonExecutionResolver {
     bool allowAppImageMacro = true,
     void Function(String line)? onOutput,
   }) async {
-    if (kind == BuildKind.appimage &&
+    // AppImages are a Linux format; Windows/macOS never execute them in place
+    // even if a custom `.AppImage` was registered (the interpreter/fallback
+    // path keeps its previous behavior there).
+    if (Platform.isLinux &&
+        kind == BuildKind.appimage &&
         allowAppImageMacro &&
         _fuseAvailable != null &&
         await _fuseAvailable()) {

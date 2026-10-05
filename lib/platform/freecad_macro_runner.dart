@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import 'package:freecad_launcher/core/log.dart';
+import 'package:freecad_launcher/domain/profiles/launch_environment.dart';
 import 'package:freecad_launcher/platform/process.dart';
 
 class FreeCadMacroOutcome {
@@ -36,13 +37,6 @@ class FreeCadMacroRunner {
   final ProcessRunner _processRunner;
 
   static const String outputTag = 'freecad-launcher:out';
-
-  static const List<String> _sanitizedEnvironmentKeys = [
-    'PYTHONPATH',
-    'PYTHONHOME',
-    'VIRTUAL_ENV',
-    'PYTHONUSERBASE',
-  ];
 
   /// Runs [macroBody] as a macro. When [extractAndRun] is set, the AppImage
   /// runtime is asked to extract itself to a temporary directory instead of
@@ -153,12 +147,17 @@ class FreeCadMacroRunner {
     required Map<String, String> extra,
   }) {
     final environment = Map<String, String>.from(Platform.environment);
-    for (final key in _sanitizedEnvironmentKeys) {
-      environment.remove(key);
-    }
+    removeSanitizedEnvironmentKeys(environment);
     environment['FREECAD_USER_HOME'] = home;
     environment['FREECAD_USER_TEMP'] = temp;
-    if (!Platform.isWindows) {
+    if (Platform.isWindows) {
+      // Keep a future Windows headless macro from touching the real user
+      // profile (the macro path is Linux-only today).
+      environment['APPDATA'] = home;
+      environment['LOCALAPPDATA'] = home;
+      environment['TEMP'] = temp;
+      environment['TMP'] = temp;
+    } else {
       environment['HOME'] = home;
       environment['TMPDIR'] = temp;
     }

@@ -132,4 +132,20 @@ void main() {
     );
     expect(linuxWithout.containsKey('APPIMAGE_EXTRACT_AND_RUN'), isFalse);
   });
+
+  test('removeSanitizedEnvironmentKeys matches Windows-style key casing', () {
+    final environment = {
+      'Path': r'C:\Windows',
+      'PYTHONPATH': '/legacy',
+      'PythonPath': r'C:\legacy',
+      'PythonHome': r'C:\py',
+      'pythonuserbase': r'C:\user',
+      'VIRTUAL_ENV': r'C:\venv',
+      'KEEP': '1',
+    };
+
+    removeSanitizedEnvironmentKeys(environment);
+
+    expect(environment, {'Path': r'C:\Windows', 'KEEP': '1'});
+  });
 }

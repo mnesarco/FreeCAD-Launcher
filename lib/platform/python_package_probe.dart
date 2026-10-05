@@ -179,9 +179,7 @@ sys.exit(0)
 
   Map<String, String> _environment(String targetDirectory) {
     final environment = Map<String, String>.from(Platform.environment);
-    for (final key in sanitizedEnvironmentKeys) {
-      environment.remove(key);
-    }
+    removeSanitizedEnvironmentKeys(environment);
     if (Directory(targetDirectory).existsSync()) {
       environment['PYTHONPATH'] = targetDirectory;
     }

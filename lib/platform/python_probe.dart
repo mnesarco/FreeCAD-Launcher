@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 
 import 'package:freecad_launcher/core/log.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/profiles/launch_environment.dart';
 import 'package:freecad_launcher/platform/process.dart';
 
 class BundledPython {
@@ -64,21 +65,9 @@ class ProcessPythonProbe implements PythonProbe {
       "'[/$_outputTag]\\n')\n"
       "sys.exit(0)\n";
 
-  static const List<String> _scriptNames = [
-    'python.exe',
-    'python',
-    'python3.exe',
-    'python3',
-  ];
+  static const List<String> _scriptNames = ['python.exe', 'python', 'python3.exe', 'python3'];
 
   static final RegExp _versionedName = RegExp(r'^python3(\.\d+)?(\.exe)?$');
-
-  static const List<String> _sanitizedEnvironmentKeys = [
-    'PYTHONPATH',
-    'PYTHONHOME',
-    'VIRTUAL_ENV',
-    'PYTHONUSERBASE',
-  ];
 
   final ProcessRunner _processRunner;
 
@@ -123,9 +112,7 @@ class ProcessPythonProbe implements PythonProbe {
       executablePath: executablePath,
     );
     if (executable == null) {
-      return PythonDetection(
-        reason: 'No bundled Python interpreter found under $installDirectory',
-      );
+      return PythonDetection(reason: 'No bundled Python interpreter found under $installDirectory');
     }
 
     return _probeInterpreter(executable);
@@ -182,9 +169,7 @@ class ProcessPythonProbe implements PythonProbe {
     }
 
     if (!result.isSuccess) {
-      return PythonDetection(
-        reason: 'Python probe failed with exit code ${result.exitCode}',
-      );
+      return PythonDetection(reason: 'Python probe failed with exit code ${result.exitCode}');
     }
 
     final output = result.stdout.trim().split('\n').last.trim();
@@ -194,10 +179,7 @@ class ProcessPythonProbe implements PythonProbe {
     }
 
     return PythonDetection(
-      python: BundledPython(
-        executablePath: executable,
-        version: '${match[1]}.${match[2]}',
-      ),
+      python: BundledPython(executablePath: executable, version: '${match[1]}.${match[2]}'),
     );
   }
 
@@ -229,7 +211,8 @@ class ProcessPythonProbe implements PythonProbe {
       final version = python is String ? _majorMinor(python) : null;
       if (version == null) {
         return _HeadlessProbeOutcome(
-          error: 'FreeCAD headless probe produced no Python version '
+          error:
+              'FreeCAD headless probe produced no Python version '
               '(exit code ${result.exitCode})',
         );
       }
@@ -264,10 +247,7 @@ class ProcessPythonProbe implements PythonProbe {
   }
 
   Map<String, Object?>? _parseProbePayload(String stdout) {
-    final tag = RegExp(
-      '\\[$_outputTag\\](.*?)\\[/$_outputTag\\]',
-      dotAll: true,
-    );
+    final tag = RegExp('\\[$_outputTag\\](.*?)\\[/$_outputTag\\]', dotAll: true);
     Map<String, Object?>? payload;
     for (final match in tag.allMatches(stdout)) {
       try {
@@ -289,9 +269,7 @@ class ProcessPythonProbe implements PythonProbe {
 
   Map<String, String> _probeEnvironment(String home, String temp) {
     final environment = Map<String, String>.from(Platform.environment);
-    for (final key in _sanitizedEnvironmentKeys) {
-      environment.remove(key);
-    }
+    removeSanitizedEnvironmentKeys(environment);
     environment['FREECAD_USER_HOME'] = home;
     environment['FREECAD_USER_TEMP'] = temp;
     if (!Platform.isWindows) {
@@ -385,11 +363,7 @@ class ProcessPythonProbe implements PythonProbe {
 }
 
 class _HeadlessProbeResult {
-  const _HeadlessProbeResult({
-    required this.version,
-    this.prefix,
-    this.executable,
-  });
+  const _HeadlessProbeResult({required this.version, this.prefix, this.executable});
 
   final String version;
   final String? prefix;

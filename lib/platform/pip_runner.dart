@@ -253,9 +253,7 @@ sys.exit(0)
 
   Map<String, String> _environment({Map<String, String> extra = const {}}) {
     final environment = Map<String, String>.from(Platform.environment);
-    for (final key in sanitizedEnvironmentKeys) {
-      environment.remove(key);
-    }
+    removeSanitizedEnvironmentKeys(environment);
     environment['PIP_DISABLE_PIP_VERSION_CHECK'] = '1';
     environment['PIP_NO_INPUT'] = '1';
     environment['PYTHONNOUSERSITE'] = '1';
