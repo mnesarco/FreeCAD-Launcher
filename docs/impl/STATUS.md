@@ -5,9 +5,9 @@
 
 - **Updated**: 2026-10-05
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
-  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; **`v0.4.6` is the current release** (pre-release)
-  with the Linux AppImage and the Windows portable zip, now self-contained (R-31/D-114: the MSVC
-  C++ runtime ships app-local); it carries the B-19 `package.xml`
+  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; **`v0.4.7` is the current release** (pre-release)
+  with the Linux AppImage and the Windows portable zip, self-contained (R-31/D-114) and carrying
+  the R-32/D-115 addon-dependency pip fix; it also carries the B-19 `package.xml`
   `<depend>` dependency install (D-108..D-111), the B-20 AppImage macro Python execution without
   extraction (D-112), R-29 (create profile → detail) and R-30/D-113 (archive symlinks skipped
   with warnings) on top of the R-25..R-28 work shipped in `v0.4.2`–`v0.4.4`; releases before
@@ -21,41 +21,43 @@
 - **Decisions this session**: **D-115** (the asset-name `pyXY` hint is version metadata only, never
   an interpreter path; legacy stored FreeCAD paths are ignored and FreeCAD is only ever called with
   `-c`) — R-32.
-- **Next action**: R-31 is **DONE** (`v0.4.6` published). **R-32** (Windows “unrecognised option
-  '-m'” when installing an addon with dependencies) is fixed and test-verified — needs a Windows
-  live retest (reinstall/verify a Windows build so the probe re-runs, then install an addon with
-  `<depend>` packages). Continue with the remaining B-19 live checks (optional checkbox install,
+- **Next action**: **R-32** (Windows “unrecognised option '-m'” when installing an addon with
+  dependencies) is fixed, test-verified and shipped in **`v0.4.7`** — retest on Windows with the
+  published artifact (install an addon with `<depend>` packages and confirm the pip log shows
+  `…\bin\python.exe`; existing builds are healed at install time, no reinstall required). Continue
+  with the remaining B-19 live checks (optional checkbox install,
   dependent addon load in FreeCAD, removal warning UI) and the
-  `v0.4.6` Linux AppImage retest (weekly install + open logs/folder + Python package install),
+  `v0.4.7` Linux AppImage retest (weekly install + open logs/folder + Python package install),
   then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine); the B-16 Windows-machine smoke
   is on hold (no machine). Next releases continue the `0.4.x` line. Backlog: `B-01` legacy
   channel, `B-14` CalVer readiness (before 27.1 branches, 2027-01-31), `B-02` in-place build
   updates, `R-21` (custom AppImage symlink cleanup), `B-16` dependency upgrades
   ([plan](PLAN-dependency-upgrades.md)) — B-18/R-24 shipped in `v0.4.2`, R-25/R-26 in `v0.4.3`,
-  R-27/R-28 in `v0.4.4`, B-19/B-20/R-29/R-30 in `v0.4.5`, R-31 in `v0.4.6`.
+  R-27/R-28 in `v0.4.4`, B-19/B-20/R-29/R-30 in `v0.4.5`, R-31 in `v0.4.6`, R-32 in `v0.4.7`.
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
   - The B-16 Phase 3 Windows-machine smoke is **on hold** (no Windows machine available as of
     2026-10-02); B-16 is otherwise complete. The same applies to the R-31 no-redist live check.
-- **Current state**: `devel` is pushed to `origin/devel` at the `v0.4.6` bump (`0793158`) and
-  **v0.4.6 is published** (manual `create_release=true`, tag `v0.4.6`, `prerelease=true`, run
-  37324089592; appimage/windows/publish all green) with
-  `FreeCADLauncher-0.4.6-windows-x86_64.zip` + `.sha256` and
-  `FreeCADLauncher-0.4.6-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
-  download, AppImage `--version` = 0.4.6 (exit 0), the zip carries the app-local MSVC runtime
-  (`vcruntime140.dll`, `vcruntime140_1.dll`, `msvcp140.dll`, …). The no-publish run 37323499192
-  (same commits) verified the artifact before publishing.
-  It ships B-19 (`<depend>` dependencies, D-108..D-111), B-20 (AppImage macro Python execution
-  without extraction, D-112), R-29 (create profile → detail), R-30/D-113 (symlinks skipped
-  with warnings) and R-31/D-114 (self-contained Windows zip). Real E2E evidence: Ondsel-Lens
+- **Current state**: `devel` is pushed to `origin/devel` at the `v0.4.7` bump (`e21ce1d`) and
+  **v0.4.7 is published** (manual `create_release=true`, tag `v0.4.7`, `prerelease=true`, run
+  37341658955; appimage/windows/publish all green) with
+  `FreeCADLauncher-0.4.7-windows-x86_64.zip` + `.sha256` and
+  `FreeCADLauncher-0.4.7-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
+  download, AppImage `--version` = 0.4.7 (exit 0), the zip carries `7zr.exe`, license/notices and
+  the app-local MSVC runtime (`vcruntime140.dll`, `vcruntime140_1.dll`, `msvcp140.dll`, …).
+  `v0.4.7` carries **R-32/D-115** (the `pyXY` asset-name hint no longer stores the FreeCAD
+  executable as `builds.pythonPath`; real interpreter discovery, legacy-path healing and the
+  no-FreeCAD-as-Python guard) plus everything from `v0.4.6` (R-31/D-114 self-contained zip) and
+  `v0.4.5` (B-19 `<depend>` dependencies D-108..D-111, B-20 AppImage macro Python execution
+  D-112, R-29, R-30/D-113). Real E2E evidence: Ondsel-Lens
   installed from the catalog (probe skipped `requests`, pip installed `tzlocal`), real catalog
   check (67 addons with `<depend>`), real
   HistoryWorkbench archive extracted with 3 skipped links. The owner-reported “click install,
   nothing happens” (dialog-phase probe triggering a silent ~800 MB AppImage extraction) was fixed
   and re-verified live; B-20 removed the persistent `builds/<id>/extracted/` tree on FUSE
-  systems. Remaining live checks (test-covered but not yet live): optional checkbox install,
-  dependent addon loaded inside FreeCAD, removal warning UI; bundle/batch flows install required
-  dependencies only. `R-19` live AppImage check, `R-21` and `B-16` remain.
+  systems. Remaining live checks (test-covered but not yet live): R-32 Windows retest, optional
+  checkbox install, dependent addon loaded inside FreeCAD, removal warning UI; bundle/batch flows
+  install required dependencies only. `R-19` live AppImage check, `R-21` and `B-16` remain.
 - **B-16 dependency upgrades** (done 2026-10-02): drift, flutter_svg/xml and signals 7.1 plus the
   R-23 fix and the Flutter 3.47.6 pin (D-103) merged to `devel` via PR #2 (`d7cf10b`, `cdbbec2`,
   `fcc90a7`, `2b2cdf7`, `6a2c08f`, `d0f5c1a`; devel CI green, run 37063237308), followed by the
@@ -759,3 +761,4 @@
 
 | 2026-10-05 | R65 | **R-31/D-114: Windows zip is self-contained**: users on machines without the system-wide Visual C++ Redistributable could not start `freecad_launcher.exe` (`VCRUNTIME140.dll`/`MSVCP140.dll` not found). `packaging/windows/build_portable.ps1` now resolves the VS x64 CRT redist folder via `vswhere` (`$env:VCToolsRedistDir` fallback), stages every `*.dll` next to the executable and fails the build unless `vcruntime140.dll`/`vcruntime140_1.dll`/`msvcp140.dll` are in the bundle and the zip; `THIRD_PARTY_NOTICES.md` gained a Microsoft Visual C++ runtime section (generator + drift check); spec 07 §2, spec 06 §1.4, README and the user guide updated. No-publish release run 37323499192 verified the artifact (sidecar `sha256sum -c` OK, 10 runtime DLLs in the zip, CI smoke `--version` green); version bumped 0.4.5 → 0.4.6 and the manual `release.yml` run 37324089592 (`create_release=true`, tag `v0.4.6`, `prerelease=true`) published the pre-release; both assets re-verified after download, AppImage `--version` = 0.4.6 (exit 0), release zip carries the runtime DLLs. `flutter analyze` clean, 698 tests green (10 skipped); residual: no no-redist Windows machine for a live start check | R-31, D-114 | `packaging/windows/build_portable.ps1`, `tool/generate_third_party_notices.dart`, `THIRD_PARTY_NOTICES.md`, `README.md`, `lib/core/constants.dart`, `pubspec.yaml`, `docs/spec/{06-integrations,07-distribution}.md`, `docs/user-guide.md`, `docs/impl/{DECISIONS,TASKS,VERIFICATION,STATUS}.md` |
 | 2026-10-05 | R66 | **R-32/D-115: Windows addon-dependency pip dialog fixed** (owner report + screenshot): installing an addon with `<depend>` Python packages ran `FreeCAD.exe -m pip …` and FreeCAD popped “unrecognised option '-m'”. Root cause: the catalog asset-name hint (`py311`) short-circuited `ProcessPythonProbe.detect`, which returned `BundledPython(executablePath: FreeCAD.exe, version: hint)`; `PipRunner` then treated the FreeCAD exe as the interpreter. Fix: the hint now only fills the version when no interpreter can be probed (never `pythonPath`); `detect` always discovers/probes the bundled interpreter (Windows `bin\python.exe` per spec 06 §4.1) and probes with a sanitized Python env; `PythonEnvResolver` ignores legacy stored paths equal to the build executable or naming `FreeCAD`/`FreeCADCmd`/`AppRun`; `PipRunner` refuses to run a FreeCAD executable as Python (FreeCAD is only ever called with `-c`). 5 new/updated tests, 703 tests green (10 skipped), `flutter analyze` clean; spec 06 §4.1, D-115, TASKS R-32 and VERIFICATION updated; Windows live retest pending | R-32, D-115 | `lib/platform/{python_probe,python_env,pip_runner}.dart`, `test/platform/{python_probe,python_env,pip_runner}_test.dart`, `docs/spec/06-integrations.md`, `docs/impl/{DECISIONS,TASKS,VERIFICATION,STATUS}.md` |
+| 2026-10-05 | R67 | **v0.4.7 pre-release published** (owner request): fix commit `33027ca` + version bump `e21ce1d` pushed to `origin/devel`; manual `release.yml` run 37341658955 (`create_release=true`, tag `v0.4.7`, `prerelease=true`) green on appimage/windows/publish and published the GitHub pre-release with `FreeCADLauncher-0.4.7-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.7-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after download, AppImage `--version` = 0.4.7 (exit 0), zip carries `7zr.exe`/license/notices + the app-local MSVC runtime DLLs. `check_version.sh` OK, analyze clean, 703 tests green | R-32, D-115 | `lib/core/constants.dart`, `pubspec.yaml`, `README.md`, `docs/spec/07-distribution.md`, `docs/impl/{DECISIONS,TASKS,VERIFICATION,STATUS}.md` |

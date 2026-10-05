@@ -458,8 +458,13 @@ Evidence:
 - `pip_runner_test`: a FreeCAD executable is refused (`ArgumentError`) without spawning a process;
   the interpreter probe now runs with a sanitized Python environment.
 - `flutter analyze` clean; 703 tests green (10 platform probes skipped).
-- Not verified live: no Windows retest yet (reinstall/verify a Windows build so the probe re-runs,
-  then install an addon with `<depend>` packages and confirm the pip log shows `bin\python.exe`).
+- **Release**: `v0.4.7` published as a pre-release (manual `create_release=true`, run
+  37341658955; appimage/windows/publish all green) with the AppImage + sidecars/zsync and the
+  Windows zip + sidecar; both sidecars verified after download, AppImage `--version` = 0.4.7
+  (exit 0), the zip carries `7zr.exe`, license/notices and the app-local MSVC runtime DLLs.
+- Not verified live: no Windows retest yet (install an addon with `<depend>` packages using the
+  published `v0.4.7` and confirm the pip log shows `bin\python.exe`; existing builds are healed at
+  install time).
 
 ## 5. When something fails
 
