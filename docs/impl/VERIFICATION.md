@@ -297,9 +297,16 @@ M7-01 (D-071) productionization checks (2026-09-21):
       `7zr.exe`/license/notices; carries the profile-context catalog pickers (R-27/D-107), tab
       consistency (R-27e), addon remove (R-28) and the icon box-fit (R-26), fast-forward-merged
       into `devel` (`95bc3b7`, bump `f3ca5d4`)
+- [x] Pre-release `v0.4.5` (manual `create_release=true`, tag `v0.4.5`, `prerelease=true`, run
+      37263850706): `FreeCADLauncher-0.4.5-windows-x86_64.zip` + `.sha256` and
+      `FreeCADLauncher-0.4.5-x86_64.AppImage` + `.sha256` + `.zsync`; appimage/windows/publish all
+      green, both sidecars verified after download (`sha256sum -c` OK), AppImage `--version` =
+      0.4.5 (exit 0) and the zip contains `7zr.exe`/`LICENSE`/`README.md`/notices; carries B-19
+      (`<depend>` dependencies), B-20 (AppImage macro Python execution), R-29 (create profile →
+      detail), R-30/D-113 (symlinks skipped with warnings) and the Windows env hardening
 - [ ] macOS artifacts built, installed and launched on clean machines (M8-04, OQ-1)
 - [ ] Clean-machine Linux first-run flow completes with the published AppImage (M8-05)
-- Note (D-100): `v0.1.0`–`v0.3.0` releases were withdrawn by the owner; `v0.4.4` is the current
+- Note (D-100): `v0.1.0`–`v0.3.0` releases were withdrawn by the owner; `v0.4.5` is the current
   release (pre-release) and the `0.4.x` line continues. The entries above document the
   historical verification; the tags still exist.
 

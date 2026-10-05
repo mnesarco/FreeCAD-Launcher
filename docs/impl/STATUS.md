@@ -3,64 +3,53 @@
 > Live file. Every session updates this at start and end. Keep it short — details belong in
 > `TASKS.md` and `DECISIONS.md`.
 
-- **Updated**: 2026-10-04
+- **Updated**: 2026-10-05
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
-  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; **`v0.4.4` is the current release** (pre-release)
-  with the Linux AppImage and the Windows portable zip; it carries the R-27 profile-context
-  catalog pickers (D-107), the R-27e tab consistency, the R-28 addon remove action and the R-26
-  icon box-fit on top of the R-25 visual refresh (brand theme, Home hero, sharp catalog icons,
-  D-106) and the Home “Recent profiles”/cache-guard work (B-18, R-24); releases before 0.4.0 were
-  withdrawn by the owner (D-100) and the `0.4.x` line continues; M8-04 needs macOS; M8-05
-  clean-VM Linux pass ready)
-- **Active branch**: `devel` (public) — `main` is reserved for a future release line
-- **Last session**: 2026-10-04
+  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; **`v0.4.5` is the current release** (pre-release)
+  with the Linux AppImage and the Windows portable zip; it carries the B-19 `package.xml`
+  `<depend>` dependency install (D-108..D-111), the B-20 AppImage macro Python execution without
+  extraction (D-112), R-29 (create profile → detail) and R-30/D-113 (archive symlinks skipped
+  with warnings) on top of the R-25..R-28 work shipped in `v0.4.2`–`v0.4.4`; releases before
+  0.4.0 were withdrawn by the owner (D-100) and the `0.4.x` line continues; M8-04 needs macOS;
+  M8-05 clean-VM Linux pass ready)
+- **Active branch**: `devel` (public, pushed to `origin/devel`) — `main` is reserved for a future
+  release line
+- **Last session**: 2026-10-05
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
   `TASKS.md` so work can resume after an interruption.
 - **Decisions this session**: **D-108** (package.xml `<depend>` parsing/resolution semantics),
   **D-109** (unified dependency consent dialog), **D-110** (batched Python availability probe +
   stdlib fallback), **D-111** (dependency execution order, provenance, lenient failures,
   reverse-dependency removal warning) — all B-19.
-- **Next action**: B-19 is implemented but uncommitted — review/commit the branch, then finish
-  its remaining live checks (optional checkbox install, dependent addon load in FreeCAD, removal
-  warning UI). In parallel, the B-16 Windows-machine smoke is on hold (no machine); proceed with
-  the `v0.4.4` Linux retest (weekly install + open logs/folder + Python package install from the
-  AppImage); then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine). Next releases
-  continue the `0.4.x` line. Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1
-  branches, 2027-01-31), `B-02` in-place build updates, `R-21` (custom AppImage symlink cleanup),
-  `B-16` dependency upgrades ([plan](PLAN-dependency-upgrades.md)) — B-18/R-24 shipped in
-  `v0.4.2`, R-25/R-26 in `v0.4.3`, R-27/R-28 in `v0.4.4`.
+- **Next action**: `v0.4.5` is published from `devel` (`f6b5ac4`). Finish the remaining B-19 live
+  checks (optional checkbox install, dependent addon load in FreeCAD, removal warning UI) and the
+  `v0.4.5` Linux AppImage retest (weekly install + open logs/folder + Python package install),
+  then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine); the B-16 Windows-machine smoke
+  is on hold (no machine). Next releases continue the `0.4.x` line. Backlog: `B-01` legacy
+  channel, `B-14` CalVer readiness (before 27.1 branches, 2027-01-31), `B-02` in-place build
+  updates, `R-21` (custom AppImage symlink cleanup), `B-16` dependency upgrades
+  ([plan](PLAN-dependency-upgrades.md)) — B-18/R-24 shipped in `v0.4.2`, R-25/R-26 in `v0.4.3`,
+  R-27/R-28 in `v0.4.4`, B-19/B-20/R-29/R-30 in `v0.4.5`.
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
   - The B-16 Phase 3 Windows-machine smoke is **on hold** (no Windows machine available as of
     2026-10-02); B-16 is otherwise complete.
-- **In progress**: **B-19 FreeCAD `package.xml` `<depend>` support + B-20 AppImage macro Python
-  execution implemented and fast-forwarded into local `devel`** (`68289a6`..`3dee468`; `devel`
-  is 2 commits ahead of `origin/devel`, not pushed) plus **R-29** (create profile → detail).
-  Plan in [PLAN-B19-addon-dependencies.md](PLAN-B19-addon-dependencies.md), decisions
-  D-108..D-112, tasks B-19a..B-19f and B-20a..B-20e DONE; feature branch
-  `b19-addon-dependencies` kept at `3dee468`. Real E2E passed: Ondsel-Lens installed from the catalog with `<depend>`
-  parsed, the probe skipping system-available `requests`/PyJWT, `tzlocal` pip-installed and
-  recorded as `source=addon:Ondsel-Lens` (`real_addon_dependencies_test`); real catalog check
-  (67 addons with `<depend>`, Beltrami → Curves + numpy/scipy + internals). The owner-reported
-  “click install, nothing happens” was the dialog-phase probe triggering a silent ~800 MB
-  AppImage extraction; fixed in B19-2 (preview never extracts, full probe after consent, job
-  progress, fallback not cached) and re-verified in a live desktop pass (dialog in ~1 s, pip
-  installed pyjwt/tzlocal, `requests` filtered). **B-20 (D-112) removes the persistent
-  `builds/<id>/extracted/` tree**: pip and the availability probe now run inside the mounted
-  AppImage through headless macros when FUSE is available (extraction only as a FUSE-less
-  fallback); live-verified in an isolated pass — no extraction, both catalog-addon and
-  Python-tab installs via macro, data root 7.5 MB. 692 tests green,
-  analyze clean. Remaining live checks (test-covered but not yet live): optional checkbox
-  install, dependent addon loaded inside FreeCAD, removal warning UI; bundle/batch flows install
-  required dependencies only. **`v0.4.4` pre-release published** (manual `create_release=true`, tag `v0.4.4`,
-  `prerelease=true`, run 37162641299; publish job green) with
-  `FreeCADLauncher-0.4.4-windows-x86_64.zip` + `.sha256` and
-  `FreeCADLauncher-0.4.4-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
-  download, AppImage `--version` = 0.4.4 (exit 0) and the zip checked for
-  `7zr.exe`/license/notices. It carries the profile-context catalog pickers (R-27/D-107), the tab
-  consistency (R-27e), the profile addon remove action (R-28) and the icon box-fit (R-26),
-  fast-forward-merged into `devel` (`95bc3b7`) plus the version bump (`f3ca5d4`). `R-19` live
-  AppImage check, `R-21` and `B-16` remain.
+- **Current state**: `devel` is pushed to `origin/devel` at the `v0.4.5` bump (`f6b5ac4`) and
+  **v0.4.5 is published** (manual `create_release=true`, tag `v0.4.5`, `prerelease=true`, run
+  37263850706; appimage/windows/publish all green) with
+  `FreeCADLauncher-0.4.5-windows-x86_64.zip` + `.sha256` and
+  `FreeCADLauncher-0.4.5-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
+  download, AppImage `--version` = 0.4.5 (exit 0), zip checked for `7zr.exe`/license/notices.
+  It ships B-19 (`<depend>` dependencies, D-108..D-111), B-20 (AppImage macro Python execution
+  without extraction, D-112), R-29 (create profile → detail) and R-30/D-113 (symlinks skipped
+  with warnings). Real E2E evidence: Ondsel-Lens installed from the catalog (probe skipped
+  `requests`, pip installed `tzlocal`), real catalog check (67 addons with `<depend>`), real
+  HistoryWorkbench archive extracted with 3 skipped links. The owner-reported “click install,
+  nothing happens” (dialog-phase probe triggering a silent ~800 MB AppImage extraction) was fixed
+  and re-verified live; B-20 removed the persistent `builds/<id>/extracted/` tree on FUSE
+  systems. Remaining live checks (test-covered but not yet live): optional checkbox install,
+  dependent addon loaded inside FreeCAD, removal warning UI; bundle/batch flows install required
+  dependencies only. `R-19` live AppImage check, `R-21` and `B-16` remain.
 - **B-16 dependency upgrades** (done 2026-10-02): drift, flutter_svg/xml and signals 7.1 plus the
   R-23 fix and the Flutter 3.47.6 pin (D-103) merged to `devel` via PR #2 (`d7cf10b`, `cdbbec2`,
   `fcc90a7`, `2b2cdf7`, `6a2c08f`, `d0f5c1a`; devel CI green, run 37063237308), followed by the
@@ -744,6 +733,8 @@
 
 | 2026-10-04 | R-30 | **History Workbench install fixed** (owner report): its GitHub archive carries 3 git symlinks (one absolute to the author's machine), and the D-039 extractor hard-failed on any symlink. **D-113** changes the policy to *skip and report*: `SafeArchiveExtractor` never creates links and emits `SkippedArchiveEntry{path,target}` via `onWarning`; `AddonInstaller` propagates them; `AddonsController.installWarnings` + `appLogger.warn` + job detail; addon installs show a “Some files were skipped” dialog listing each path→target (custom flows and build archives log too). Verified against the real `HistoryWorkbench-release.zip` (3 skips, `package.xml` and workbench resources extracted, no link files). Extractor/installer/controller/widget tests updated (+4); 698 tests green, analyze clean | R-30, D-113 | `lib/platform/{archive_extract,addon_installer,build_installer,seven_zip_extractor}.dart`, `lib/state/addons_controller.dart`, `lib/ui/addons/{addon_install_flow,custom_addons_view,addon_install_warnings_dialog}.dart`, `lib/l10n/**`, `test/**`, `docs/{spec/06-integrations,user-guide}.md`, `docs/impl/{DECISIONS,TASKS,STATUS}.md` |
 
+| 2026-10-05 | R64 | **v0.4.5 pre-release published** (owner request): `devel` pushed to `origin` (`68289a6..f6b5ac4`, 6 commits: B-19/B-20, R-29, Windows hardening b412b76, R-30, version bump); version 0.4.4 → 0.4.5 (`check_version.sh` OK, analyze clean, 698 tests green); manual `release.yml` run 37263850706 (`create_release=true`, tag `v0.4.5`, `prerelease=true`) green on appimage/windows/publish and published the GitHub pre-release with `FreeCADLauncher-0.4.5-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.5-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after download, AppImage `--version` = 0.4.5 (exit 0), zip checked for `7zr.exe`/license/notices | B-19, B-20, R-29, R-30, D-108..D-113 | `lib/core/constants.dart`, `pubspec.yaml`, `README.md`, `docs/spec/{03-ux,07-distribution}.md`, `docs/impl/{STATUS,VERIFICATION}.md` |
+
 ## Standing notes for the next agent
 
 - The prototype is frozen at tag `prototype-final`; do not resurrect its code or schema.
@@ -754,7 +745,7 @@
 - Publishing (D-081): public repo `mnesarco/FreeCAD-Launcher`, branch `devel`, releases only
   from CI (`release.yml`, tag push or manual `workflow_dispatch` with optional `create_release`).
   CI runs Linux + Windows with tests on both; macOS is disabled per D-083 until M8-04.
-  `v0.4.4` is the current release (published as a pre-release; D-100); the `0.4.x` line continues.
+  `v0.4.5` is the current release (published as a pre-release; D-100); the `0.4.x` line continues.
 - `AGENTS.md` is tracked again (no longer git-excluded); keep it in sync with `docs/impl/`
   when conventions or the project state change.
 
