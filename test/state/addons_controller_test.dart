@@ -10,12 +10,17 @@ import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
+import 'package:freecad_launcher/domain/addons/package_xml.dart';
+import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/platform/addon_installer.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/pip_runner.dart';
+import 'package:freecad_launcher/platform/process.dart';
 import 'package:freecad_launcher/platform/python_env.dart';
+import 'package:freecad_launcher/platform/python_package_probe.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:freecad_launcher/state/jobs_controller.dart';
 import 'package:path/path.dart' as p;
@@ -24,6 +29,7 @@ import '../data/test_fixtures.dart';
 import '../helpers/fake_addon_catalog.dart';
 import '../helpers/fake_pip.dart';
 import '../helpers/fake_download.dart';
+import '../helpers/fake_process.dart';
 import '../helpers/test_database.dart';
 
 Addon addon(
@@ -36,6 +42,7 @@ Addon addon(
   String? freecadMax,
   String version = '',
   String requirements = '',
+  List<AddonDependency> dependencies = const [],
 }) {
   return Addon(
     id: id,
@@ -59,6 +66,7 @@ Addon addon(
           people: const [],
           content: content,
           requirements: requirements,
+          dependencies: dependencies,
         ),
       ),
     ],
@@ -95,20 +103,27 @@ void main() {
   AddonsController controller({
     PipRunner? pipRunner,
     PythonEnvResolver? pythonResolver,
+    PythonPackageProbe? packageProbe,
+    Future<bool> Function()? fuseAvailable,
     JobsController? jobs,
+    AddonInstaller? installer,
   }) {
     return AddonsController(
       database: db,
       catalog: catalog,
       pipRunner: pipRunner,
       pythonResolver: pythonResolver,
+      packageProbe: packageProbe,
+      fuseAvailable: fuseAvailable,
       jobs: jobs,
-      installer: AddonInstaller(
-        downloader: Downloader(
-          source: downloadSource,
-          cacheDirectory: p.join(tempDirectory.path, 'downloads'),
-        ),
-      ),
+      installer:
+          installer ??
+          AddonInstaller(
+            downloader: Downloader(
+              source: downloadSource,
+              cacheDirectory: p.join(tempDirectory.path, 'downloads'),
+            ),
+          ),
       paths: AppPaths(dataRoot: tempDirectory.path),
       clock: () => DateTime.utc(2026, 9, 19, 16),
     );
@@ -167,11 +182,7 @@ void main() {
     catalog.result = AddonCatalogResult(
       addons: [
         addon('A2plus', description: 'Assembly workbench', tags: ['assembly']),
-        addon(
-          'MacroTool',
-          content: {AddonContentType.macro},
-          tags: ['utility'],
-        ),
+        addon('MacroTool', content: {AddonContentType.macro}, tags: ['utility']),
       ],
       freshness: CatalogFreshness.fresh,
     );
@@ -277,13 +288,7 @@ void main() {
     );
 
     expect(result.isOk, isTrue);
-    final modDirectory = p.join(
-      tempDirectory.path,
-      'profiles',
-      'profile-1',
-      'Mod',
-      'A2plus',
-    );
+    final modDirectory = p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'A2plus');
     expect(File(p.join(modDirectory, 'InitGui.py')).existsSync(), isTrue);
     expect(File(p.join(modDirectory, 'package.xml')).existsSync(), isTrue);
     final row = await db.installedAddonsDao.getByAddon('profile-1', 'A2plus');
@@ -327,12 +332,12 @@ void main() {
     expect(result.isErr, isTrue);
     expect(jobs.jobs.value.single.state, JobState.cancelled);
     final downloads = Directory(p.join(tempDirectory.path, 'downloads'));
-    final leftovers =
-        downloads.existsSync() ? downloads.listSync().whereType<File>().toList() : <File>[];
+    final leftovers = downloads.existsSync()
+        ? downloads.listSync().whereType<File>().toList()
+        : <File>[];
     expect(leftovers, isEmpty);
     expect(
-      Directory(p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'A2plus'))
-          .existsSync(),
+      Directory(p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'A2plus')).existsSync(),
       isFalse,
     );
     expect(await db.installedAddonsDao.getByAddon('profile-1', 'A2plus'), isNull);
@@ -361,9 +366,7 @@ void main() {
     expect(subject.installErrors.value['Broken'], isNotNull);
     expect(await db.installedAddonsDao.getByAddon('profile-1', 'Broken'), isNull);
     expect(
-      Directory(
-        p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'Broken'),
-      ).existsSync(),
+      Directory(p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'Broken')).existsSync(),
       isFalse,
     );
     subject.dispose();
@@ -377,11 +380,7 @@ void main() {
     final subject = controller();
     await subject.load();
 
-    final result = await subject.install(
-      addonId: 'A2plus',
-      branchRef: 'master',
-      profileId: 'nope',
-    );
+    final result = await subject.install(addonId: 'A2plus', branchRef: 'master', profileId: 'nope');
 
     expect(result.isErr, isTrue);
     expect(result.errorOrNull!.message, contains('Profile not found'));
@@ -390,10 +389,7 @@ void main() {
 
   test('detects updates by catalog timestamp and version', () async {
     final catalogAddon = addon('A2plus', name: 'A2plus', version: '0.4.68');
-    catalog.result = AddonCatalogResult(
-      addons: [catalogAddon],
-      freshness: CatalogFreshness.fresh,
-    );
+    catalog.result = AddonCatalogResult(addons: [catalogAddon], freshness: CatalogFreshness.fresh);
     await db.buildsDao.save(sampleBuild());
     await db.profilesDao.save(sampleProfile());
     final subject = controller();
@@ -432,13 +428,7 @@ void main() {
     );
     await db.buildsDao.save(sampleBuild());
     await db.profilesDao.save(sampleProfile());
-    final modDirectory = p.join(
-      tempDirectory.path,
-      'profiles',
-      'profile-1',
-      'Mod',
-      'A2plus',
-    );
+    final modDirectory = p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'A2plus');
     File(p.join(modDirectory, 'old.txt')).createSync(recursive: true);
     await db.installedAddonsDao.save(
       sampleAddon(profileId: 'profile-1', addonId: 'A2plus', version: '0.4.60'),
@@ -524,10 +514,7 @@ void main() {
     expect((await subject.unpin(addonId: 'A2plus', profileId: 'profile-1')).isOk, isTrue);
     await pumpEventQueue();
     expect(subject.isPinned('profile-1', 'A2plus'), isFalse);
-    expect(
-      (await db.installedAddonsDao.getByAddon('profile-1', 'A2plus'))!.pinnedAt,
-      isNull,
-    );
+    expect((await db.installedAddonsDao.getByAddon('profile-1', 'A2plus'))!.pinnedAt, isNull);
 
     expect((await subject.pin(addonId: 'Nope', profileId: 'profile-1')).isErr, isTrue);
     subject.dispose();
@@ -561,7 +548,7 @@ void main() {
       addonId: 'WithReqs',
       branchRef: 'master',
       profileId: 'profile-1',
-      installRequirements: true,
+      selection: AddonDependencySelection.requiredOnly,
     );
 
     expect(result.isOk, isTrue);
@@ -569,13 +556,7 @@ void main() {
     expect(pip.calls.single.packages, ['numpy>=1.26', 'six']);
     expect(
       pip.calls.single.targetDirectory,
-      p.join(
-        tempDirectory.path,
-        'profiles',
-        'profile-1',
-        'AdditionalPythonPackages',
-        'py311',
-      ),
+      p.join(tempDirectory.path, 'profiles', 'profile-1', 'AdditionalPythonPackages', 'py311'),
     );
     final packages = await db.pythonPackagesDao.getByProfile('profile-1');
     expect(packages.map((package) => package.name).toSet(), {'numpy', 'six'});
@@ -586,12 +567,7 @@ void main() {
 
   test('requirements failures are reported without failing the addon install', () async {
     catalog.result = AddonCatalogResult(
-      addons: [
-        addon(
-          'WithReqs',
-          requirements: 'numpy>=1.26',
-        ),
-      ],
+      addons: [addon('WithReqs', requirements: 'numpy>=1.26')],
       freshness: CatalogFreshness.fresh,
     );
     await db.buildsDao.save(sampleBuild());
@@ -610,7 +586,7 @@ void main() {
       addonId: 'WithReqs',
       branchRef: 'master',
       profileId: 'profile-1',
-      installRequirements: true,
+      selection: AddonDependencySelection.requiredOnly,
     );
 
     expect(result.isOk, isTrue);
@@ -640,7 +616,7 @@ void main() {
       addonId: 'A2plus',
       branchRef: 'master',
       profileId: 'profile-1',
-      installRequirements: true,
+      selection: AddonDependencySelection.requiredOnly,
     );
 
     expect(result.isOk, isTrue);
@@ -655,17 +631,9 @@ void main() {
     );
     await db.buildsDao.save(sampleBuild());
     await db.profilesDao.save(sampleProfile());
-    final modDirectory = p.join(
-      tempDirectory.path,
-      'profiles',
-      'profile-1',
-      'Mod',
-      'A2plus',
-    );
+    final modDirectory = p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'A2plus');
     File(p.join(modDirectory, 'InitGui.py')).createSync(recursive: true);
-    await db.installedAddonsDao.save(
-      sampleAddon(profileId: 'profile-1', addonId: 'A2plus'),
-    );
+    await db.installedAddonsDao.save(sampleAddon(profileId: 'profile-1', addonId: 'A2plus'));
     final subject = controller();
     await subject.load();
     subject.start();
@@ -882,10 +850,10 @@ void main() {
         repositoryUrl: 'https://github.com/owner/MyAddon',
         gitRef: 'main',
         profileId: 'profile-1',
-        onRequirements: (requirements) async {
+        onDependencies: (plan) async {
           asked = true;
-          expect(requirements.single.name, 'six');
-          return CustomRequirementsDecision.cancel;
+          expect(plan.requiredPython.single.requirement.name, 'six');
+          return null;
         },
       );
 
@@ -925,7 +893,7 @@ void main() {
         repositoryUrl: 'https://github.com/owner/MyAddon',
         gitRef: 'main',
         profileId: 'profile-1',
-        onRequirements: (_) async => CustomRequirementsDecision.installPackages,
+        onDependencies: (_) async => AddonDependencySelection.requiredOnly,
       );
 
       expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
@@ -1000,10 +968,7 @@ void main() {
       );
       final row = (await db.installedAddonsDao.getByAddon('profile-1', 'MyAddon'))!;
 
-      final result = await subject.installCustomInProfile(
-        addon: row,
-        profileId: 'profile-2',
-      );
+      final result = await subject.installCustomInProfile(addon: row, profileId: 'profile-2');
 
       expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
       final copied = await db.installedAddonsDao.getByAddon('profile-2', 'MyAddon');
@@ -1056,25 +1021,13 @@ void main() {
         p.join(sourceDirectory, 'package.xml'),
       ).writeAsStringSync(_packageXml('DevAddon', '0.1.0'));
       final subject = controller();
-      await subject.installFromDirectory(
-        sourcePath: sourceDirectory,
-        profileId: 'profile-1',
-      );
+      await subject.installFromDirectory(sourcePath: sourceDirectory, profileId: 'profile-1');
       final row = (await db.installedAddonsDao.getByAddon('profile-1', 'DevAddon'))!;
 
-      final result = await subject.installCustomInProfile(
-        addon: row,
-        profileId: 'profile-2',
-      );
+      final result = await subject.installCustomInProfile(addon: row, profileId: 'profile-2');
 
       expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
-      final linkPath = p.join(
-        tempDirectory.path,
-        'profiles',
-        'profile-2',
-        'Mod',
-        'DevAddon',
-      );
+      final linkPath = p.join(tempDirectory.path, 'profiles', 'profile-2', 'Mod', 'DevAddon');
       expect(isAddonLink(linkPath), isTrue);
       final copied = await db.installedAddonsDao.getByAddon('profile-2', 'DevAddon');
       expect(copied!.source, 'symlink');
@@ -1094,10 +1047,7 @@ void main() {
       );
       final row = (await db.installedAddonsDao.getByAddon('profile-1', 'MyAddon'))!;
 
-      final result = await subject.installCustomInProfile(
-        addon: row,
-        profileId: 'profile-1',
-      );
+      final result = await subject.installCustomInProfile(addon: row, profileId: 'profile-1');
 
       expect(result.isErr, isTrue);
       expect('${result.errorOrNull}', contains('remove it first'));
@@ -1128,10 +1078,7 @@ void main() {
       final row = (await db.installedAddonsDao.getByAddon('profile-1', 'LocalAddon'))!;
       File(archivePath).deleteSync();
 
-      final result = await subject.installCustomInProfile(
-        addon: row,
-        profileId: 'profile-2',
-      );
+      final result = await subject.installCustomInProfile(addon: row, profileId: 'profile-2');
 
       expect(result.isErr, isTrue);
       expect('${result.errorOrNull}', contains('Archive not found'));
@@ -1145,8 +1092,7 @@ void main() {
       await db.profilesDao.save(sampleProfile());
     });
 
-    String modDirectory() =>
-        p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'A2plus');
+    String modDirectory() => p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'A2plus');
 
     test('disables and enables an installed addon with the marker file', () async {
       Directory(modDirectory()).createSync(recursive: true);
@@ -1208,6 +1154,354 @@ void main() {
     });
   });
 
+  group('dependency installs', () {
+    setUp(() async {
+      await db.buildsDao.save(sampleBuild());
+      await db.profilesDao.save(sampleProfile());
+    });
+
+    test('installs dependent addons and Python packages before the addon', () async {
+      catalog.result = AddonCatalogResult(
+        addons: [
+          addon(
+            'Root',
+            dependencies: const [
+              AddonDependency(name: 'Curves'),
+              AddonDependency(name: 'numpy'),
+            ],
+          ),
+          addon('Curves', dependencies: const [AddonDependency(name: 'tzlocal')]),
+        ],
+        freshness: CatalogFreshness.fresh,
+      );
+      final downloader = FakeDownloadSourceWithResponses((uri) async {
+        final bytes = uri.path.contains('Curves')
+            ? catalogZip({
+                'Curves-master/package.xml': _packageXml('Curves', '1.0.0'),
+                'Curves-master/InitGui.py': 'gui',
+              })
+            : catalogZip({'Root-master/InitGui.py': 'gui'});
+        return DownloadStream(bytes: bytesStream(bytes), contentLength: null);
+      });
+      final pip = FakePipRunner();
+      final subject = controller(
+        pipRunner: pip,
+        pythonResolver: FakePythonEnvResolver('/opt/freecad/bin/python'),
+        installer: AddonInstaller(
+          downloader: Downloader(
+            source: downloader,
+            cacheDirectory: p.join(tempDirectory.path, 'dep-downloads'),
+          ),
+        ),
+      );
+      await subject.load();
+
+      final result = await subject.install(
+        addonId: 'Root',
+        branchRef: 'master',
+        profileId: 'profile-1',
+        selection: AddonDependencySelection.requiredOnly,
+      );
+
+      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+      expect(pip.calls.single.packages, unorderedEquals(['tzlocal', 'numpy']));
+      expect(await db.installedAddonsDao.getByAddon('profile-1', 'Curves'), isNotNull);
+      final rootRow = await db.installedAddonsDao.getByAddon('profile-1', 'Root');
+      expect(rootRow, isNotNull);
+      expect(rootRow!.hasRequirements, isTrue);
+      final packages = await db.pythonPackagesDao.getByProfile('profile-1');
+      expect(packages.map((package) => package.name).toSet(), {'numpy', 'tzlocal'});
+      expect(packages.firstWhere((package) => package.name == 'numpy').source, 'addon:Root');
+      expect(packages.firstWhere((package) => package.name == 'tzlocal').source, 'addon:Curves');
+      final mod = p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod');
+      expect(Directory(p.join(mod, 'Root')).existsSync(), isTrue);
+      expect(Directory(p.join(mod, 'Curves')).existsSync(), isTrue);
+      subject.dispose();
+    });
+
+    test('runs pip inside the AppImage when FUSE is available', () async {
+      catalog.result = AddonCatalogResult(
+        addons: [
+          addon('Root', dependencies: const [AddonDependency(name: 'tzlocal')]),
+        ],
+        freshness: CatalogFreshness.fresh,
+      );
+      downloadSource.streamFactory = () => Stream.fromIterable([
+        catalogZip({'Root-master/InitGui.py': 'gui'}),
+      ]);
+      final pip = FakePipRunner();
+      final subject = controller(
+        pipRunner: pip,
+        pythonResolver: FakePythonEnvResolver('/opt/freecad/bin/python'),
+        packageProbe: FakePackageProbe(const {}),
+        fuseAvailable: () async => true,
+      );
+      await subject.load();
+
+      final result = await subject.install(
+        addonId: 'Root',
+        branchRef: 'master',
+        profileId: 'profile-1',
+        selection: AddonDependencySelection.requiredOnly,
+      );
+
+      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+      expect(pip.calls.single.appImagePath, '/data/builds/build-1');
+      expect(pip.calls.single.pythonPath, isNull);
+      subject.dispose();
+    });
+
+    test('a cheap preparation does not cache fallback availability', () async {
+      catalog.result = AddonCatalogResult(
+        addons: [
+          addon(
+            'Root',
+            dependencies: const [
+              AddonDependency(name: 'requests'),
+              AddonDependency(name: 'tzlocal'),
+            ],
+          ),
+        ],
+        freshness: CatalogFreshness.fresh,
+      );
+      downloadSource.streamFactory = () => Stream.fromIterable([
+        catalogZip({'Root-master/InitGui.py': 'gui'}),
+      ]);
+      final pip = FakePipRunner();
+      final resolver = LazyPythonEnvResolver();
+      final subject = controller(
+        pipRunner: pip,
+        pythonResolver: resolver,
+        packageProbe: FakePackageProbe({'requests'}),
+      );
+      await subject.load();
+
+      // No interpreter without extraction: the dialog phase lists every
+      // candidate and must not cache them as unavailable.
+      final plan = await subject.prepareDependencies(
+        addonId: 'Root',
+        branchRef: 'master',
+        profileId: 'profile-1',
+      );
+      expect(
+        plan.requiredPython.map((entry) => entry.requirement.name),
+        containsAll(['requests', 'tzlocal']),
+      );
+      expect(resolver.extractionAllowed, isFalse);
+
+      // The install phase may extract, probes for real and filters `requests`.
+      final result = await subject.install(
+        addonId: 'Root',
+        branchRef: 'master',
+        profileId: 'profile-1',
+        selection: AddonDependencySelection.requiredOnly,
+      );
+      expect(result.isOk, isTrue);
+      expect(resolver.extractionAllowed, isTrue);
+      expect(pip.calls.single.packages, ['tzlocal']);
+      subject.dispose();
+    });
+
+    test('filters Python packages already available through the probe', () async {
+      catalog.result = AddonCatalogResult(
+        addons: [
+          addon(
+            'Root',
+            dependencies: const [
+              AddonDependency(name: 'requests'),
+              AddonDependency(name: 'tzlocal'),
+            ],
+          ),
+        ],
+        freshness: CatalogFreshness.fresh,
+      );
+      downloadSource.streamFactory = () => Stream.fromIterable([
+        catalogZip({'Root-master/InitGui.py': 'gui'}),
+      ]);
+      final pip = FakePipRunner();
+      final subject = controller(
+        pipRunner: pip,
+        pythonResolver: FakePythonEnvResolver('/opt/freecad/bin/python'),
+        packageProbe: FakePackageProbe({'requests'}),
+      );
+      await subject.load();
+
+      final plan = await subject.prepareDependencies(
+        addonId: 'Root',
+        branchRef: 'master',
+        profileId: 'profile-1',
+      );
+      expect(plan.requiredPython.map((entry) => entry.requirement.name), ['tzlocal']);
+
+      final result = await subject.install(
+        addonId: 'Root',
+        branchRef: 'master',
+        profileId: 'profile-1',
+        selection: AddonDependencySelection.requiredOnly,
+      );
+
+      expect(result.isOk, isTrue);
+      expect(pip.calls.single.packages, ['tzlocal']);
+      final packages = await db.pythonPackagesDao.getByProfile('profile-1');
+      expect(packages.single.name, 'tzlocal');
+      subject.dispose();
+    });
+
+    test('keeps installing the addon when a dependent addon fails', () async {
+      catalog.result = AddonCatalogResult(
+        addons: [
+          addon('Root', dependencies: const [AddonDependency(name: 'Broken')]),
+          addon('Broken'),
+        ],
+        freshness: CatalogFreshness.fresh,
+      );
+      final downloader = FakeDownloadSourceWithResponses((uri) async {
+        if (uri.path.contains('Broken')) {
+          throw StateError('no network');
+        }
+        return DownloadStream(
+          bytes: bytesStream(catalogZip({'Root-master/InitGui.py': 'gui'})),
+          contentLength: null,
+        );
+      });
+      final subject = controller(
+        installer: AddonInstaller(
+          downloader: Downloader(
+            source: downloader,
+            cacheDirectory: p.join(tempDirectory.path, 'dep-downloads'),
+          ),
+        ),
+      );
+      await subject.load();
+
+      final result = await subject.install(
+        addonId: 'Root',
+        branchRef: 'master',
+        profileId: 'profile-1',
+        selection: AddonDependencySelection.requiredOnly,
+      );
+
+      expect(result.isOk, isTrue);
+      expect(await db.installedAddonsDao.getByAddon('profile-1', 'Root'), isNotNull);
+      expect(await db.installedAddonsDao.getByAddon('profile-1', 'Broken'), isNull);
+      expect(subject.installErrors.value['Broken'], isNotNull);
+      subject.dispose();
+    });
+
+    test('cancelling the dependency dialog aborts the install', () async {
+      catalog.result = AddonCatalogResult(
+        addons: [
+          addon('Root', dependencies: const [AddonDependency(name: 'numpy')]),
+        ],
+        freshness: CatalogFreshness.fresh,
+      );
+      downloadSource.streamFactory = () => Stream.fromIterable([
+        catalogZip({'Root-master/InitGui.py': 'gui'}),
+      ]);
+      final subject = controller();
+      await subject.load();
+
+      final result = await subject.install(
+        addonId: 'Root',
+        branchRef: 'master',
+        profileId: 'profile-1',
+        onDependencies: (_) async => null,
+      );
+
+      expect(result.isErr, isTrue);
+      expect('${result.errorOrNull}', contains('cancelled'));
+      expect(
+        Directory(p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'Root')).existsSync(),
+        isFalse,
+      );
+      expect(await db.installedAddonsDao.getByAddon('profile-1', 'Root'), isNull);
+      expect(subject.installErrors.value, isEmpty);
+      subject.dispose();
+    });
+
+    test('reports dependents for removal warnings', () async {
+      catalog.result = AddonCatalogResult(
+        addons: [
+          addon('A', dependencies: const [AddonDependency(name: 'B')]),
+          addon('B'),
+        ],
+        freshness: CatalogFreshness.fresh,
+      );
+      await db.installedAddonsDao.save(
+        sampleAddon(id: 'row-a', profileId: 'profile-1', addonId: 'A', displayName: 'A'),
+      );
+      await db.installedAddonsDao.save(
+        sampleAddon(id: 'row-b', profileId: 'profile-1', addonId: 'B', displayName: 'B'),
+      );
+      final subject = controller();
+      await subject.load();
+      subject.start();
+      await pumpEventQueue();
+
+      expect(subject.dependentsOf('profile-1', 'B'), ['A']);
+      expect(subject.dependentsOf('profile-1', 'A'), isEmpty);
+      subject.dispose();
+    });
+
+    test('resolves package.xml depend tags from custom installs', () async {
+      catalog.result = AddonCatalogResult(
+        addons: [addon('Curves')],
+        freshness: CatalogFreshness.fresh,
+      );
+      final downloader = FakeDownloadSourceWithResponses((uri) async {
+        final bytes = uri.path.contains('Curves')
+            ? catalogZip({'Curves-master/InitGui.py': 'gui'})
+            : catalogZip({
+                'MyAddon-main/package.xml': '''
+<package format="1">
+  <name>MyAddon</name>
+  <version>1.0.0</version>
+  <content>
+    <workbench>
+      <depend>Curves</depend>
+      <depend type="python">tzlocal</depend>
+    </workbench>
+  </content>
+</package>
+''',
+                'MyAddon-main/InitGui.py': 'gui',
+              });
+        return DownloadStream(bytes: bytesStream(bytes), contentLength: null);
+      });
+      final pip = FakePipRunner();
+      final subject = controller(
+        pipRunner: pip,
+        pythonResolver: FakePythonEnvResolver('/opt/freecad/bin/python'),
+        installer: AddonInstaller(
+          downloader: Downloader(
+            source: downloader,
+            cacheDirectory: p.join(tempDirectory.path, 'dep-downloads'),
+          ),
+        ),
+      );
+      await subject.load();
+      AddonDependencyPlan? seen;
+
+      final result = await subject.installFromRepository(
+        repositoryUrl: 'https://github.com/owner/MyAddon',
+        gitRef: 'main',
+        profileId: 'profile-1',
+        onDependencies: (plan) async {
+          seen = plan;
+          return AddonDependencySelection.requiredOnly;
+        },
+      );
+
+      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+      expect(seen!.requiredAddons.single.addon!.id, 'Curves');
+      expect(seen!.requiredPython.single.requirement.name, 'tzlocal');
+      expect(pip.calls.single.packages, ['tzlocal']);
+      expect(await db.installedAddonsDao.getByAddon('profile-1', 'Curves'), isNotNull);
+      final row = await db.installedAddonsDao.getByAddon('profile-1', 'MyAddon');
+      expect(row!.hasRequirements, isTrue);
+      subject.dispose();
+    });
+  });
 }
 
 List<int> catalogZip(Map<String, String> files) {
@@ -1229,3 +1523,45 @@ String _packageXml(String name, String version) =>
   <content><workbench/></content>
 </package>
 ''';
+
+class FakePackageProbe extends PythonPackageProbe {
+  FakePackageProbe(this.available)
+    : super(processRunner: ProcessRunner(launcher: FakeProcessLauncher()));
+
+  final Set<String> available;
+
+  @override
+  Future<Set<String>?> availablePackages({
+    required String pythonPath,
+    required String targetDirectory,
+    required Iterable<String> names,
+    Duration timeout = const Duration(seconds: 60),
+  }) async => available;
+
+  @override
+  Future<Set<String>?> availablePackagesInFreeCad({
+    required String executablePath,
+    required String targetDirectory,
+    required Iterable<String> names,
+    Duration timeout = const Duration(seconds: 60),
+  }) async => available;
+}
+
+class LazyPythonEnvResolver extends PythonEnvResolver {
+  LazyPythonEnvResolver() : super(processRunner: ProcessRunner(launcher: FakeProcessLauncher()));
+
+  bool? extractionAllowed;
+
+  @override
+  Future<String?> resolve({
+    required BuildKind kind,
+    required String buildDirectory,
+    required String executablePath,
+    String? storedPythonPath,
+    bool allowExtraction = true,
+    void Function(String line)? onOutput,
+  }) async {
+    extractionAllowed = allowExtraction;
+    return allowExtraction ? '/opt/freecad/bin/python' : null;
+  }
+}

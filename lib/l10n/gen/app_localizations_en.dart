@@ -486,7 +486,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get manifestInstallRequirements =>
-      'Also install declared Python requirements';
+      'Also install declared dependencies';
 
   @override
   String get manifestImport => 'Import';
@@ -1002,7 +1002,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bundlesApplyInstallRequirements =>
-      'Also install declared Python requirements';
+      'Also install declared dependencies';
 
   @override
   String get bundlesApplyNothing => 'Nothing to apply.';
@@ -1188,13 +1188,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addonsBranches => 'Branches';
 
   @override
-  String get addonsRequirements => 'Python requirements';
+  String get addonsDependencies => 'Dependencies';
 
   @override
-  String get addonsRequirementsYes => 'Found';
-
-  @override
-  String get addonsRequirementsNo => 'None';
+  String get addonsDependenciesNone => 'None';
 
   @override
   String get addonsInstall => 'Install';
@@ -1247,17 +1244,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addonsNoProfiles => 'Create a profile first to install addons.';
 
   @override
-  String get addonsRequirementsTitle => 'Python packages required';
+  String get addonsDependenciesTitle => 'Install dependencies';
 
   @override
-  String get addonsRequirementsMessage =>
-      'This addon declares Python dependencies. Install them into the profile with pip? Packages go under the profile\'s AdditionalPythonPackages; system Python is untouched.';
+  String get addonsDependenciesMessage =>
+      'This addon declares dependencies from its package.xml and requirements.txt. Install the dependent addons and Python packages into this profile? Python packages go under the profile\'s AdditionalPythonPackages; system Python is untouched.';
 
   @override
-  String get addonsRequirementsInstall => 'Install packages';
+  String get addonsDependenciesInstall => 'Install dependencies';
 
   @override
-  String get addonsRequirementsAddonOnly => 'Addon only';
+  String get addonsDependenciesAddonOnly => 'Addon only';
+
+  @override
+  String get addonsDependenciesRequiredAddons => 'Required addons';
+
+  @override
+  String get addonsDependenciesOptionalAddons => 'Optional addons';
+
+  @override
+  String get addonsDependenciesRequiredPython => 'Required Python packages';
+
+  @override
+  String get addonsDependenciesOptionalPython => 'Optional Python packages';
+
+  @override
+  String get addonsDependenciesInternal => 'Provided by FreeCAD';
+
+  @override
+  String get addonsDependenciesUnresolved => 'Unresolved dependencies';
+
+  @override
+  String get addonsDependenciesInvalid => 'Invalid requirements';
+
+  @override
+  String addonsDependenciesRequiredBy(String names) {
+    return 'Required by: $names';
+  }
 
   @override
   String get addonsRequirementsInvalid => 'Cannot parse';

@@ -1,5 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Frank Martínez <mnesarco at gmail>
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'package:freecad_launcher/domain/addons/package_xml.dart';
+
 enum AddonContentType { workbench, macro, preferencePack, bundle, other }
 
 class AddonPerson {
@@ -21,6 +23,7 @@ class AddonMetadata {
     required this.people,
     required this.content,
     required this.requirements,
+    this.dependencies = const [],
     this.iconBase64,
   });
 
@@ -33,9 +36,12 @@ class AddonMetadata {
   final List<AddonPerson> people;
   final Set<AddonContentType> content;
   final String requirements;
+  final List<AddonDependency> dependencies;
   final String? iconBase64;
 
   bool get hasRequirements => requirements.trim().isNotEmpty;
+
+  bool get hasDependencies => dependencies.isNotEmpty;
 }
 
 class AddonBranch {
@@ -70,6 +76,8 @@ class AddonBranch {
   final AddonMetadata? metadata;
 
   bool get hasRequirements => metadata?.hasRequirements ?? false;
+
+  bool get hasDependencies => metadata?.hasDependencies ?? false;
 }
 
 class Addon {
@@ -99,9 +107,9 @@ class Addon {
 
   bool get hasRequirements => branches.any((branch) => branch.hasRequirements);
 
-  Set<String> get tags => {
-    for (final branch in branches) ...?branch.metadata?.tags,
-  };
+  bool get hasDependencies => branches.any((branch) => branch.hasDependencies);
+
+  Set<String> get tags => {for (final branch in branches) ...?branch.metadata?.tags};
 
   Set<AddonContentType> get content => {
     for (final branch in branches) ...?branch.metadata?.content,

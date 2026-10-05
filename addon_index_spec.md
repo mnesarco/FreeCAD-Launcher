@@ -78,6 +78,9 @@ The following are not stored directly in JSON but derived from `package_xml` dur
 - **`tags`** — all `<tag>` values within `<content>`, lowercased, sanitized, deduplicated.
 - **`people`** — list of `{name, contact, roles}` from `<author>`, `<maintainer>`, `<contributor>` elements.
 - **`declaredContent`** — list of content types detected by element presence: `workbench`, `macro`, `preferencePack`, `bundle`, `other`.
+- **`dependencies`** — every `<depend>` element anywhere under `<package>` (including nested
+  `<content>` items) as `{name, type (automatic|addon|internal|python), optional, version
+  attributes}`; version attributes are parsed but not used for installation (D-108).
 
 ---
 

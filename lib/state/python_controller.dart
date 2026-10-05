@@ -14,6 +14,7 @@ import 'package:freecad_launcher/domain/python/requirements_parser.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/pip_runner.dart';
 import 'package:freecad_launcher/platform/python_env.dart';
+import 'package:freecad_launcher/platform/python_execution.dart';
 import 'package:freecad_launcher/platform/python_uninstaller.dart';
 import 'package:freecad_launcher/state/jobs_controller.dart';
 
@@ -23,13 +24,17 @@ class PythonController {
     required AppPaths paths,
     required PipRunner pipRunner,
     required PythonEnvResolver pythonResolver,
+    Future<bool> Function()? fuseAvailable,
     PythonUninstaller uninstaller = const PythonUninstaller(),
     JobsController? jobs,
     DateTime Function()? clock,
   }) : _database = database,
        _paths = paths,
        _pipRunner = pipRunner,
-       _pythonResolver = pythonResolver,
+       _pythonExecution = PythonExecutionResolver(
+         envResolver: pythonResolver,
+         fuseAvailable: fuseAvailable,
+       ),
        _uninstaller = uninstaller,
        _jobs = jobs,
        _clock = clock ?? DateTime.now;
@@ -37,7 +42,7 @@ class PythonController {
   final AppDatabase _database;
   final AppPaths _paths;
   final PipRunner _pipRunner;
-  final PythonEnvResolver _pythonResolver;
+  final PythonExecutionResolver _pythonExecution;
   final PythonUninstaller _uninstaller;
   final JobsController? _jobs;
   final DateTime Function() _clock;
@@ -94,9 +99,9 @@ class PythonController {
     String source = 'manual',
     JobContext? context,
   }) async {
-    final requirements = parseRequirements(specText)
-        .where((requirement) => requirement.valid)
-        .toList();
+    final requirements = parseRequirements(
+      specText,
+    ).where((requirement) => requirement.valid).toList();
     if (requirements.isEmpty) {
       return const Err(AppError(message: 'Enter at least one package'));
     }
@@ -113,21 +118,20 @@ class PythonController {
     installing.value = {...installing.value, profileId};
     errors.value = {...errors.value}..remove(profileId);
     try {
-      final interpreter = await _pythonResolver.resolve(
+      final execution = await _pythonExecution.resolve(
         kind: build.kind,
         buildDirectory: _paths.existingBuildDir(build.id) ?? _paths.buildDir(build.id),
         executablePath: build.localPath,
         storedPythonPath: build.pythonPath,
       );
-      if (interpreter == null) {
-        throw const PythonUninstallException(
-          'No Python interpreter found for this build',
-        );
+      if (execution == null) {
+        throw const PythonUninstallException('No Python execution target found for this build');
       }
       final targetDirectory = _targetDirectory(profile);
       context?.report(detail: 'Running pip');
       final result = await _pipRunner.install(
-        pythonPath: interpreter,
+        pythonPath: execution is PythonInterpreterExecution ? execution.pythonPath : null,
+        appImagePath: execution is PythonAppImageExecution ? execution.appImagePath : null,
         targetDirectory: targetDirectory,
         packages: requirements.map(requirementSpec).toList(),
         label: _safeLabel(profile.name),
@@ -159,10 +163,7 @@ class PythonController {
     }
   }
 
-  Future<Result<void>> uninstall({
-    required String profileId,
-    required String packageName,
-  }) async {
+  Future<Result<void>> uninstall({required String profileId, required String packageName}) async {
     PythonPackage? package;
     for (final candidate in forProfile(profileId)) {
       if (candidate.name.toLowerCase() == packageName.toLowerCase()) {
@@ -177,10 +178,7 @@ class PythonController {
     uninstalling.value = {...uninstalling.value, profileId};
     errors.value = {...errors.value}..remove(profileId);
     try {
-      await _uninstaller.uninstall(
-        targetDirectory: package.targetDir,
-        packageName: package.name,
-      );
+      await _uninstaller.uninstall(targetDirectory: package.targetDir, packageName: package.name);
       await _database.pythonPackagesDao.deletePackage(profileId, package.name);
       return const Ok(null);
     } on Object catch (error) {

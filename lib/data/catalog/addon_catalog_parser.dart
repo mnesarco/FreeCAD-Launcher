@@ -119,6 +119,7 @@ AddonMetadata? _parseMetadata(Object? value, String addonId) {
     people: info.people,
     content: info.content,
     requirements: _string(value['requirements_txt']) ?? '',
+    dependencies: info.dependencies,
     iconBase64: _string(value['icon_data']),
   );
 }

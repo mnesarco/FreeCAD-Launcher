@@ -323,6 +323,8 @@ Record results in the `STATUS.md` session log (date, OS, FreeCAD version, result
 | Launch via CLI wrapper | ✅ 2026-09-19 — wrapper ran the built CLI (M3-09) | ✅ 2026-10-01 (same pass) | |
 | Install addon from catalog | ✅ 2026-09-19 — real A2plus install (M4-03); catalog renders live 2026-09-24 | ✅ 2026-10-01 (same pass) | |
 | Install addon requirement via pip | ✅ 2026-09-19 — real `six` install/uninstall (M4-06/M4-07) | ✅ 2026-10-01 (same pass) | |
+| Install addon `<depend>` dependencies | ✅ 2026-10-04 — real Ondsel-Lens from the catalog: `<depend>` parsed (pyjwt/requests/tzlocal), probe skipped system-available `requests`/PyJWT, pip installed `tzlocal` into the profile, `python_packages` rows recorded with `source=addon:Ondsel-Lens`, `import tzlocal` verified (B-19, `real_addon_dependencies_test`); real catalog parse check: 67 addons with `<depend>`, Beltrami → Curves + numpy/scipy + part/sketcher/spreadsheet (`real_addon_catalog_test`) | | |
+| Install dependent addons / optional checkboxes | ⚠ controller + widget tests (dependent addon ordering, optional addon/Python selection, failure leniency, removal warning); no live multi-addon install | | |
 | Update an outdated addon | ✅ 2026-09-19 — real A2plus install → update (backup) → remove (M4-04) | | |
 | Install addon from repository URL + ref | ✅ 2026-10-01 — real `https://github.com/obelisk79/FreeCAD-Nxt` @ `main` installed via Addons → Custom (`Mod/FreeCAD-Nxt`, package.xml 0.3.1, DB `source=repo`, stored URL); removed afterwards (B-10b) | ✅ 2026-10-01 (same pass) | |
 | Install addon from a local archive | ✅ 2026-10-01 — real `nxt.zip` installed (`Mod/nxt`, DB `source=zip` + `sourcePath`); removed afterwards (B-10c) | ✅ 2026-10-01 (same pass) | |
@@ -349,6 +351,57 @@ passed**. Windows rows not covered by that pass: weekly build install, addon upd
 outdated addon), custom-addon copy into another profile, and bundle apply (tests-only on every
 OS). Known Windows caveats stay documented: unsigned zip/SmartScreen, dev links need Developer
 Mode, Qt registry state is shared across profiles.
+
+### B-19 (2026-10-04, branch `b19-addon-dependencies`)
+
+FreeCAD `package.xml` `<depend>` support: parser + pure resolver (D-108), batched
+`PythonPackageProbe` with stdlib fallback (D-110), unified install pipeline with dependency
+ordering/provenance/leniency (D-111) and one consent dialog (D-109). Evidence:
+
+- Unit/domain: `addon_dependencies_test` (14 cases: types, optional casing, internal
+  normalization, automatic fallback, installed-addon recursion, cycles, ordering, dedupe,
+  availability filter, merge), catalog parser wiring, stdlib list sanity.
+- Platform: `python_package_probe_test` (parsing, PYTHONPATH, failure→null, no launch without
+  candidates).
+- Controller: `addons_controller_test` dependency group (dependent addon + pip ordering, probe
+  skip, lenient dependent failure, cancel discard, `dependentsOf`, custom staged `<depend>`);
+  `bundle_apply_controller_test`, `profile_manifest_controller_test` updated to selections.
+- Widget: `addon_dependencies_dialog_test` (sections, optional checkboxes, addon-only/cancel,
+  invalid/unresolved), `profile_addons_picker_test` (consent gating, “Required by” removal
+  warning).
+- Manual (gated): `real_addon_dependencies_test` (`FCL_REAL_DEPS=1`) — real Ondsel-Lens install
+  from GitHub with probe skip + pip + import check, 3 s; `real_addon_catalog_test`
+  (`FCL_REAL_CATALOG=1`) — real catalog dependency resolution (Ondsel-Lens, Beltrami).
+- **Live desktop pass (2026-10-04, isolated `XDG_DATA_HOME`)**: real UI, profile `Tes2` on the
+  stable 1.1.3 AppImage with no extracted tree — Profile ▸ Addons → Add addon → Ondsel-Lens →
+  Install showed the dependency dialog in ~1 s (pyjwt/requests/tzlocal, no extraction); “Install
+  dependencies” ran the AppImage extraction with `Preparing Python (N files)` job progress, the
+  full probe filtered bundled `requests`, pip installed pyjwt+tzlocal (`source=addon:Ondsel-Lens`)
+  and the addon appeared in the profile. This pass caught and verified the fix for the original
+  owner report (silent extraction before consent, B19-2).
+- Not yet live-checked: optional checkbox installs, dependent-addon load inside FreeCAD,
+  bundle/batch optional selection.
+
+### B-20 (2026-10-04, branch `b19-addon-dependencies`)
+
+AppImage Python execution via headless macros (D-112), removing the persistent
+`builds/<id>/extracted/` tree on FUSE systems. Evidence:
+
+- Platform: `freecad_macro_runner_test` (headless args, isolated env, tagged payload, cleanup,
+  FUSE fallback retry), `pip_runner_test` (in-image pip macro, log + result, failure, exactly-one
+  target), `python_package_probe_test` (in-image availability, no payload → null),
+  `python_execution_test` (FUSE/interpreter/legacy selection).
+- Controller: `addons_controller_test` and `python_controller_test` assert the AppImage path is
+  passed to pip (no interpreter resolution/extraction) when FUSE is available and the legacy
+  interpreter path otherwise.
+- Manual prototype on the real 1.1.3 AppImage: in-process pip installed `tzlocal` to `--target`;
+  availability macro (`requests`, `math`) ran in **0.96 s**.
+- **Live desktop pass** on an isolated `XDG_DATA_HOME` with a symlinked AppImage and no
+  `extracted/`: catalog Ondsel-Lens install (dialog instant; macro pip installed pyjwt+tzlocal,
+  bundled `requests` filtered; row `source=addon:Ondsel-Lens`, `has_requirements=1`) and Python
+  tab `six` install (macro pip). The data root stayed at **7.5 MB** (no extraction; only
+  `cache/pip` + logs) and no FreeCAD mount processes remained.
+- Not verified live: FUSE-less fallback (unit-tested only).
 
 ## 5. When something fails
 

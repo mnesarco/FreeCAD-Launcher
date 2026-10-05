@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
+import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/profiles/profile_manifest.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
@@ -47,7 +48,7 @@ void main() {
               required String addonId,
               required String? branchRef,
               required String profileId,
-              required bool installRequirements,
+              required AddonDependencySelection? selection,
             }) async => const Ok(null),
         installPackages:
             ({required String profileId, required String specText, required String source}) async =>

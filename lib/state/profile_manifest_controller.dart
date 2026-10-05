@@ -8,6 +8,7 @@ import 'package:freecad_launcher/core/errors.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
+import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
 import 'package:freecad_launcher/domain/addons/addon_source.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/profiles/profile_manifest.dart';
@@ -22,7 +23,7 @@ typedef ManifestAddonInstall =
       required String addonId,
       required String? branchRef,
       required String profileId,
-      required bool installRequirements,
+      required AddonDependencySelection? selection,
     });
 
 typedef ManifestPackageInstall =
@@ -238,7 +239,9 @@ class ProfileManifestController {
           addonId: addon.id,
           branchRef: addon.gitRef,
           profileId: profile.id,
-          installRequirements: installRequirements,
+          selection: installRequirements
+              ? AddonDependencySelection.requiredOnly
+              : AddonDependencySelection.none,
         );
         if (result.isOk) {
           addonsInstalled.add(addon.id);

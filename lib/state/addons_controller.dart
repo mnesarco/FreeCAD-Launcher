@@ -16,26 +16,27 @@ import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
 import 'package:freecad_launcher/domain/addons/addon_id_rules.dart';
 import 'package:freecad_launcher/domain/addons/addon_source.dart';
 import 'package:freecad_launcher/domain/addons/addon_update_rules.dart';
+import 'package:freecad_launcher/domain/addons/package_xml.dart';
 import 'package:freecad_launcher/domain/addons/repository_archive.dart';
 import 'package:freecad_launcher/domain/builds/freecad_version.dart';
 import 'package:freecad_launcher/domain/jobs/job_types.dart';
+import 'package:freecad_launcher/domain/python/python_names.dart';
+import 'package:freecad_launcher/domain/python/python_stdlib_names.dart';
 import 'package:freecad_launcher/domain/python/requirements_parser.dart';
 import 'package:freecad_launcher/platform/addon_installer.dart';
 import 'package:freecad_launcher/platform/addon_manifest_reader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/pip_runner.dart';
 import 'package:freecad_launcher/platform/python_env.dart';
+import 'package:freecad_launcher/platform/python_execution.dart';
+import 'package:freecad_launcher/platform/python_package_probe.dart';
 import 'package:freecad_launcher/state/jobs_controller.dart';
 
 enum AddonInstalledFilter { installed, notInstalled }
-
-enum CustomRequirementsDecision { installPackages, addonOnly, cancel }
-
-typedef CustomRequirementsHandler =
-    Future<CustomRequirementsDecision> Function(List<PythonRequirement> requirements);
 
 class AddonsController {
   AddonsController({
@@ -45,6 +46,8 @@ class AddonsController {
     required AppPaths paths,
     PipRunner? pipRunner,
     PythonEnvResolver? pythonResolver,
+    PythonPackageProbe? packageProbe,
+    Future<bool> Function()? fuseAvailable,
     JobsController? jobs,
     DateTime Function()? clock,
   }) : _database = database,
@@ -52,7 +55,10 @@ class AddonsController {
        _installer = installer,
        _paths = paths,
        _pipRunner = pipRunner,
-       _pythonResolver = pythonResolver,
+       _pythonExecution = pythonResolver == null
+           ? null
+           : PythonExecutionResolver(envResolver: pythonResolver, fuseAvailable: fuseAvailable),
+       _packageProbe = packageProbe,
        _jobs = jobs,
        _clock = clock ?? DateTime.now;
 
@@ -61,9 +67,12 @@ class AddonsController {
   final AddonInstaller _installer;
   final AppPaths _paths;
   final PipRunner? _pipRunner;
-  final PythonEnvResolver? _pythonResolver;
+  final PythonExecutionResolver? _pythonExecution;
+  final PythonPackageProbe? _packageProbe;
   final JobsController? _jobs;
   final DateTime Function() _clock;
+
+  final Map<String, Map<String, bool>> _probeCache = {};
 
   final addons = signal<List<Addon>>([]);
   final loading = signal(false);
@@ -231,8 +240,7 @@ class AddonsController {
     installedFilter.value = current;
   }
 
-  int get activeFilterCount =>
-      contentFilter.value.length + installedFilter.value.length;
+  int get activeFilterCount => contentFilter.value.length + installedFilter.value.length;
 
   void clearFilters() {
     contentFilter.value = {};
@@ -269,9 +277,7 @@ class AddonsController {
   }
 
   bool isInstalledIn(String profileId, String addonId) {
-    return installedAddons.value.any(
-      (row) => row.profileId == profileId && row.addonId == addonId,
-    );
+    return installedAddons.value.any((row) => row.profileId == profileId && row.addonId == addonId);
   }
 
   InstalledAddon? installedFor(String profileId, String addonId) {
@@ -325,9 +331,7 @@ class AddonsController {
     final current = rows ?? installedAddons.value;
     final result = <String, Set<String>>{};
     for (final row in current) {
-      final marker = File(
-        p.join(_modPath(row.profileId, row.addonId), disabledMarkerName),
-      );
+      final marker = File(p.join(_modPath(row.profileId, row.addonId), disabledMarkerName));
       if (marker.existsSync()) {
         (result[row.profileId] ??= <String>{}).add(row.addonId);
       }
@@ -412,6 +416,8 @@ class AddonsController {
     required String addonId,
     required String branchRef,
     required String profileId,
+    AddonDependencySelection? selection,
+    AddonDependencyHandler? onDependencies,
   }) async {
     final jobs = _jobs;
     if (jobs == null) {
@@ -419,18 +425,28 @@ class AddonsController {
         addonId: addonId,
         branchRef: branchRef,
         profileId: profileId,
+        selection: selection,
+        onDependencies: onDependencies,
       );
     }
     final result = await jobs.run<Result<void>>(
       kind: JobKind.install,
       label: 'Update ${byId(addonId)?.displayName ?? addonId}',
       onRetry: () async {
-        await update(addonId: addonId, branchRef: branchRef, profileId: profileId);
+        await update(
+          addonId: addonId,
+          branchRef: branchRef,
+          profileId: profileId,
+          selection: selection,
+          onDependencies: onDependencies,
+        );
       },
       task: (context) => _updateInternal(
         addonId: addonId,
         branchRef: branchRef,
         profileId: profileId,
+        selection: selection,
+        onDependencies: onDependencies,
         context: context,
       ),
     );
@@ -441,6 +457,8 @@ class AddonsController {
     required String addonId,
     required String branchRef,
     required String profileId,
+    AddonDependencySelection? selection,
+    AddonDependencyHandler? onDependencies,
     JobContext? context,
   }) async {
     if (installedFor(profileId, addonId) == null) {
@@ -461,6 +479,8 @@ class AddonsController {
       addonId: addonId,
       branchRef: branchRef,
       profileId: profileId,
+      selection: selection,
+      onDependencies: onDependencies,
       context: context,
     );
     if (result.isErr) {
@@ -469,10 +489,7 @@ class AddonsController {
     return const Ok(null);
   }
 
-  Future<Result<void>> remove({
-    required String addonId,
-    required String profileId,
-  }) async {
+  Future<Result<void>> remove({required String addonId, required String profileId}) async {
     final installed = await _database.installedAddonsDao.getByAddon(profileId, addonId);
     if (installed == null) {
       return const Err(AppError(message: 'Addon is not installed in this profile'));
@@ -517,7 +534,8 @@ class AddonsController {
     required String addonId,
     required String branchRef,
     required String profileId,
-    bool installRequirements = false,
+    AddonDependencySelection? selection,
+    AddonDependencyHandler? onDependencies,
   }) async {
     final jobs = _jobs;
     if (jobs == null) {
@@ -525,7 +543,8 @@ class AddonsController {
         addonId: addonId,
         branchRef: branchRef,
         profileId: profileId,
-        installRequirements: installRequirements,
+        selection: selection,
+        onDependencies: onDependencies,
       );
     }
     final result = await jobs.run<Result<void>>(
@@ -536,14 +555,16 @@ class AddonsController {
           addonId: addonId,
           branchRef: branchRef,
           profileId: profileId,
-          installRequirements: installRequirements,
+          selection: selection,
+          onDependencies: onDependencies,
         );
       },
       task: (context) => _installInternal(
         addonId: addonId,
         branchRef: branchRef,
         profileId: profileId,
-        installRequirements: installRequirements,
+        selection: selection,
+        onDependencies: onDependencies,
         context: context,
       ),
     );
@@ -554,8 +575,11 @@ class AddonsController {
     required String addonId,
     required String branchRef,
     required String profileId,
-    bool installRequirements = false,
+    AddonDependencySelection? selection,
+    AddonDependencyHandler? onDependencies,
     JobContext? context,
+    bool asDependency = false,
+    Set<String> chain = const {},
   }) async {
     final addon = byId(addonId);
     if (addon == null) {
@@ -569,12 +593,12 @@ class AddonsController {
 
     installing.value = {...installing.value, addonId};
     installErrors.value = {...installErrors.value}..remove(addonId);
+    PreparedAddonInstall? prepared;
     try {
       context?.report(detail: 'Downloading addon');
-      await _installer.install(
-        zipUri: Uri.parse(branch.zipUrl),
-        destinationDirectory: p.join(_paths.profilePaths(profileId).mod, addon.id),
-        downloadDirectory: _paths.downloadsCacheDir,
+      final archivePath = await _installer.downloadArchive(
+        uri: Uri.parse(branch.zipUrl),
+        directory: _paths.downloadsCacheDir,
         assetName: '${addon.id}-${branch.gitRef}.zip',
         cancellationToken: context?.token,
         onProgress: (progress) => context?.report(
@@ -584,7 +608,57 @@ class AddonsController {
           detail: 'Downloading addon',
         ),
       );
+      if (context?.token.isCancelled ?? false) {
+        throw const AddonInstallException('Addon installation cancelled');
+      }
+      context?.report(detail: 'Extracting addon');
+      prepared = await _installer.prepareFromArchive(
+        archivePath: archivePath,
+        destinationDirectory: p.join(_paths.profilePaths(profileId).mod, addon.id),
+        cancellationToken: context?.token,
+      );
+      final requirementsText =
+          readRequirementsFromDirectory(prepared.contentRoot) ?? branch.metadata?.requirements;
+      var hasPythonDependencies = false;
+      if (!asDependency) {
+        final dependencies = _stagedDependencies(prepared.contentRoot, branch);
+        // Never extract a bundled AppImage just to build the consent preview;
+        // the full probe runs once the user has accepted the dependencies.
+        var plan = await _dependencyPlan(
+          addonId: addon.id,
+          dependencies: dependencies,
+          requirementsText: requirementsText,
+          profileId: profileId,
+          allowExtraction: false,
+        );
+        selection ??= await _decideDependencies(plan: plan, onDependencies: onDependencies);
+        if (selection == null) {
+          return const Err(AppError(message: 'Install cancelled'));
+        }
+        if (selection.installRequired) {
+          plan = await _dependencyPlan(
+            addonId: addon.id,
+            dependencies: dependencies,
+            requirementsText: requirementsText,
+            profileId: profileId,
+            context: context,
+          );
+        }
+        hasPythonDependencies = plan.requiredPython.isNotEmpty || plan.optionalPython.isNotEmpty;
+        await _runDependencies(
+          plan: plan,
+          selection: selection,
+          profile: profile,
+          errorKey: addon.id,
+          chain: {...chain, addon.id},
+          context: context,
+        );
+      } else {
+        hasPythonDependencies = _declaresPythonDependencies(branch, requirementsText);
+      }
       context?.report(detail: 'Installing files');
+      await _installer.commitPrepared(prepared, cancellationToken: context?.token);
+      prepared = null;
       final now = _clock();
       await _database.installedAddonsDao.save(
         InstalledAddon(
@@ -599,21 +673,19 @@ class AddonsController {
           catalogLastUpdate: branch.lastUpdateTime,
           sourceUrl: branch.zipUrl,
           source: AddonSource.catalog.name,
-          hasRequirements: branch.hasRequirements,
+          hasRequirements: hasPythonDependencies,
         ),
       );
-      if (installRequirements && branch.hasRequirements) {
-        context?.report(detail: 'Installing Python packages');
-        await _installRequirements(
-          profile: profile,
-          addonId: addon.id,
-          requirementsText: branch.metadata?.requirements ?? '',
-          installedAt: now,
-          context: context,
-        );
-      }
       return const Ok(null);
     } on Object catch (error) {
+      try {
+        if (prepared != null) {
+          _installer.discardPrepared(prepared);
+        }
+      } on Object {
+        // Staging cleanup is best-effort.
+      }
+      prepared = null;
       final appError = error is AppError ? error : AppError.from(error, retryable: true);
       installErrors.value = {...installErrors.value, addonId: appError};
       context?.fail(appError.message);
@@ -623,85 +695,406 @@ class AddonsController {
     }
   }
 
-  Future<void> _installRequirements({
-    required Profile profile,
+  bool _declaresPythonDependencies(AddonBranch branch, String? requirementsText) {
+    if (requirementsText != null && requirementsText.trim().isNotEmpty) {
+      return true;
+    }
+    if (branch.hasRequirements) {
+      return true;
+    }
+    return branch.metadata?.dependencies.any(
+          (dependency) => dependency.type == AddonDependencyType.python,
+        ) ??
+        false;
+  }
+
+  /// Resolves the dependency closure for one catalog branch, filtered by what
+  /// the profile already has (installed addons and importable Python packages).
+  /// Used by the UI to build the pre-install consent dialog.
+  Future<AddonDependencyPlan> prepareDependencies({
     required String addonId,
-    required String requirementsText,
-    required DateTime installedAt,
+    required String branchRef,
+    required String profileId,
+    String? requirementsText,
+  }) async {
+    final addon = byId(addonId);
+    final branch = addon == null ? null : branchOf(addon, branchRef);
+    return _dependencyPlan(
+      addonId: addonId,
+      dependencies: branch?.metadata?.dependencies ?? const [],
+      requirementsText: requirementsText ?? branch?.metadata?.requirements,
+      profileId: profileId,
+      allowExtraction: false,
+      allowAppImageMacro: false,
+    );
+  }
+
+  /// Display names of installed addons in [profileId] whose dependency closure
+  /// includes [addonId] (removal warning, D-111).
+  List<String> dependentsOf(String profileId, String addonId) {
+    final dependents = <String>[];
+    for (final row in installedAddons.value) {
+      if (row.profileId != profileId || row.addonId == addonId) {
+        continue;
+      }
+      final addon = byId(row.addonId);
+      if (addon == null) {
+        continue;
+      }
+      final branch = branchOf(addon, row.gitRef ?? addon.primaryBranch.gitRef);
+      final plan = resolveAddonDependencies(
+        addonId: addon.id,
+        dependencies: branch.metadata?.dependencies ?? const [],
+        catalog: addons.value,
+      );
+      final dependsOnAddon = [
+        ...plan.requiredAddons,
+        ...plan.optionalAddons,
+      ].any((dependency) => dependency.addon?.id == addonId);
+      if (dependsOnAddon) {
+        dependents.add(row.displayName);
+      }
+    }
+    return dependents;
+  }
+
+  Future<AddonDependencyPlan> _dependencyPlan({
+    required String addonId,
+    required List<AddonDependency> dependencies,
+    required String? requirementsText,
+    required String profileId,
+    bool allowExtraction = true,
+    bool allowAppImageMacro = true,
     JobContext? context,
   }) async {
-    final requirements = parseRequirements(
-      requirementsText,
-    ).where((requirement) => requirement.valid).toList();
+    final profile = await _database.profilesDao.getById(profileId);
+    if (profile == null) {
+      return const AddonDependencyPlan();
+    }
+    final build = await _database.buildsDao.getById(profile.buildId);
+    final freecadVersion = build?.version;
+    final installed = await _database.installedAddonsDao.getByProfile(profileId);
+    final installedIds = {for (final row in installed) row.addonId};
+
+    AddonBranch selectBranch(Addon candidate) => _dependencyBranch(candidate, freecadVersion);
+
+    final candidates = resolveAddonDependencies(
+      addonId: addonId,
+      dependencies: dependencies,
+      catalog: addons.value,
+      requirementsText: requirementsText,
+      installedAddonIds: installedIds,
+      branchOf: selectBranch,
+    );
+    final pythonCandidates = [...candidates.requiredPython, ...candidates.optionalPython];
+    if (pythonCandidates.isEmpty) {
+      return candidates;
+    }
+    final available = await _availablePythonPackages(
+      profile,
+      pythonCandidates,
+      allowExtraction: allowExtraction,
+      allowAppImageMacro: allowAppImageMacro,
+      context: context,
+    );
+    if (available.isEmpty) {
+      return candidates;
+    }
+    return resolveAddonDependencies(
+      addonId: addonId,
+      dependencies: dependencies,
+      catalog: addons.value,
+      requirementsText: requirementsText,
+      installedAddonIds: installedIds,
+      availablePythonPackages: available,
+      branchOf: selectBranch,
+    );
+  }
+
+  Future<AddonDependencySelection?> _decideDependencies({
+    required AddonDependencyPlan plan,
+    required AddonDependencyHandler? onDependencies,
+  }) async {
+    if (!plan.hasInstallable && plan.invalidRequirements.isEmpty) {
+      return AddonDependencySelection.none;
+    }
+    if (onDependencies == null) {
+      return AddonDependencySelection.requiredOnly;
+    }
+    return onDependencies(plan);
+  }
+
+  Future<void> _runDependencies({
+    required AddonDependencyPlan plan,
+    required AddonDependencySelection selection,
+    required Profile profile,
+    required String errorKey,
+    required Set<String> chain,
+    JobContext? context,
+  }) async {
+    if (!selection.installRequired) {
+      return;
+    }
+    final python = <ResolvedPythonRequirement>[
+      ...plan.requiredPython,
+      for (final entry in plan.optionalPython)
+        if (selection.optionalPackageNames.contains(
+          normalizePythonPackageName(entry.requirement.name),
+        ))
+          entry,
+    ];
+    if (python.isNotEmpty) {
+      context?.report(detail: 'Installing Python packages');
+      await _installPythonRequirements(
+        profile: profile,
+        requirements: python,
+        errorKey: errorKey,
+        context: context,
+      );
+    }
+
+    final dependentAddons = <ResolvedAddonDependency>[
+      ...plan.requiredAddons,
+      for (final entry in plan.optionalAddons)
+        if (selection.optionalAddonIds.contains(entry.addon!.id)) entry,
+    ];
+    for (final dependency in dependentAddons) {
+      final addon = dependency.addon!;
+      final branchRef = dependency.branchRef ?? addon.primaryBranch.gitRef;
+      if (chain.contains(addon.id) || installedFor(profile.id, addon.id) != null) {
+        continue;
+      }
+      context?.report(detail: 'Installing dependency ${addon.displayName}');
+      await _installInternal(
+        addonId: addon.id,
+        branchRef: branchRef,
+        profileId: profile.id,
+        asDependency: true,
+        chain: {...chain, addon.id},
+        context: context,
+      );
+    }
+  }
+
+  Future<void> _installPythonRequirements({
+    required Profile profile,
+    required List<ResolvedPythonRequirement> requirements,
+    required String errorKey,
+    JobContext? context,
+  }) async {
     if (requirements.isEmpty) {
       return;
     }
     final runner = _pipRunner;
-    final resolver = _pythonResolver;
-    if (runner == null || resolver == null) {
+    if (runner == null) {
       return;
     }
 
-    requirementsInstalling.value = {...requirementsInstalling.value, addonId};
-    requirementsErrors.value = {...requirementsErrors.value}..remove(addonId);
+    requirementsInstalling.value = {...requirementsInstalling.value, errorKey};
+    requirementsErrors.value = {...requirementsErrors.value}..remove(errorKey);
     try {
-      final build = await _database.buildsDao.getById(profile.buildId);
-      if (build == null) {
-        throw const AddonInstallException('Build not found');
+      final execution = await _resolveExecution(profile, context: context);
+      if (execution == null) {
+        throw const AddonInstallException('No Python execution target found for this build');
       }
-      final interpreter = await resolver.resolve(
-        kind: build.kind,
-        buildDirectory: _paths.existingBuildDir(build.id) ?? _paths.buildDir(build.id),
-        executablePath: build.localPath,
-        storedPythonPath: build.pythonPath,
+      Future<PipResult> runPip(List<String> specs) => runner.install(
+        pythonPath: execution is PythonInterpreterExecution ? execution.pythonPath : null,
+        appImagePath: execution is PythonAppImageExecution ? execution.appImagePath : null,
+        targetDirectory: _pythonTargetDirectory(profile),
+        packages: specs,
+        label: errorKey,
       );
-      if (interpreter == null) {
-        throw const AddonInstallException(
-          'No bundled Python interpreter found for this build',
-        );
+      final targetDirectory = _pythonTargetDirectory(profile);
+      final installedEntries = <ResolvedPythonRequirement>[];
+      var pending = requirements;
+
+      if (pending.length > 1) {
+        final batch = await runPip([
+          for (final entry in pending) requirementSpec(entry.requirement),
+        ]);
+        context?.setLogPath(batch.logPath);
+        if (batch.isSuccess) {
+          installedEntries.addAll(pending);
+          pending = const [];
+        }
       }
-      final targetDirectory = p.join(
-        _paths.profilePaths(profile.id).additionalPythonPackages,
-        'py${profile.pythonVersion.replaceAll('.', '')}',
-      );
-      final result = await runner.install(
-        pythonPath: interpreter,
-        targetDirectory: targetDirectory,
-        packages: requirements.map(requirementSpec).toList(),
-        label: addonId,
-      );
-      context?.setLogPath(result.logPath);
-      if (!result.isSuccess) {
-        throw AddonInstallException('pip failed: ${result.outputTail}');
+
+      final failures = <String>[];
+      for (final entry in pending) {
+        final result = await runPip([requirementSpec(entry.requirement)]);
+        context?.setLogPath(result.logPath);
+        if (result.isSuccess) {
+          installedEntries.add(entry);
+        } else {
+          failures.add('${entry.requirement.name}: ${result.outputTail}');
+        }
       }
-      for (final requirement in requirements) {
+
+      final now = _clock();
+      for (final entry in installedEntries) {
         await _database.pythonPackagesDao.save(
           PythonPackage(
             id: const Uuid().v4(),
             profileId: profile.id,
-            name: requirement.name,
+            name: entry.requirement.name,
             targetDir: targetDirectory,
-            source: 'addon:$addonId',
-            installedAt: installedAt,
+            source: 'addon:${entry.declaredByAddonId}',
+            installedAt: now,
           ),
         );
+      }
+      if (failures.isNotEmpty) {
+        throw AddonInstallException('pip failed: ${failures.join('; ')}');
       }
     } on Object catch (error) {
       requirementsErrors.value = {
         ...requirementsErrors.value,
-        addonId: error is AppError ? error : AppError.from(error, retryable: true),
+        errorKey: error is AppError ? error : AppError.from(error, retryable: true),
       };
     } finally {
-      requirementsInstalling.value = {...requirementsInstalling.value}..remove(addonId);
+      requirementsInstalling.value = {...requirementsInstalling.value}..remove(errorKey);
     }
   }
 
+  Future<PythonExecution?> _resolveExecution(
+    Profile profile, {
+    bool allowExtraction = true,
+    bool allowAppImageMacro = true,
+    JobContext? context,
+  }) async {
+    final resolver = _pythonExecution;
+    if (resolver == null) {
+      return null;
+    }
+    final build = await _database.buildsDao.getById(profile.buildId);
+    if (build == null) {
+      return null;
+    }
+    var extractedFiles = 0;
+    return resolver.resolve(
+      kind: build.kind,
+      buildDirectory: _paths.existingBuildDir(build.id) ?? _paths.buildDir(build.id),
+      executablePath: build.localPath,
+      storedPythonPath: build.pythonPath,
+      allowExtraction: allowExtraction,
+      allowAppImageMacro: allowAppImageMacro,
+      onOutput: context == null
+          ? null
+          : (_) {
+              extractedFiles++;
+              if (extractedFiles % 25 == 0) {
+                context.report(detail: 'Preparing Python ($extractedFiles files)');
+              }
+            },
+    );
+  }
+
+  String _pythonTargetDirectory(Profile profile) => p.join(
+    _paths.profilePaths(profile.id).additionalPythonPackages,
+    'py${profile.pythonVersion.replaceAll('.', '')}',
+  );
+
+  Future<Set<String>> _availablePythonPackages(
+    Profile profile,
+    Iterable<ResolvedPythonRequirement> candidates, {
+    bool allowExtraction = true,
+    bool allowAppImageMacro = true,
+    JobContext? context,
+  }) async {
+    final names = <String>{
+      for (final entry in candidates)
+        if (normalizePythonPackageName(entry.requirement.name).isNotEmpty)
+          normalizePythonPackageName(entry.requirement.name),
+    };
+    if (names.isEmpty) {
+      return const {};
+    }
+    // Only successful probe results are cached: a fallback answer (no
+    // execution target yet) must not prevent a real probe once one exists.
+    final cacheKey = '${profile.buildId}:${profile.id}';
+    final cache = _probeCache[cacheKey] ??= {};
+    final available = {
+      for (final entry in cache.entries)
+        if (entry.value) entry.key,
+    };
+    final missing = names.where((name) => !cache.containsKey(name)).toList();
+    if (missing.isEmpty) {
+      return available;
+    }
+
+    Set<String>? probed;
+    final probe = _packageProbe;
+    if (probe != null) {
+      final execution = await _resolveExecution(
+        profile,
+        allowExtraction: allowExtraction,
+        allowAppImageMacro: allowAppImageMacro,
+        context: context,
+      );
+      final targetDirectory = _pythonTargetDirectory(profile);
+      if (execution is PythonInterpreterExecution) {
+        probed = await probe.availablePackages(
+          pythonPath: execution.pythonPath,
+          targetDirectory: targetDirectory,
+          names: missing,
+        );
+      } else if (execution is PythonAppImageExecution) {
+        probed = await probe.availablePackagesInFreeCad(
+          executablePath: execution.appImagePath,
+          targetDirectory: targetDirectory,
+          names: missing,
+        );
+      }
+    }
+    if (probed != null) {
+      for (final name in missing) {
+        cache[name] = probed.contains(name);
+      }
+      available.addAll(probed);
+      return available;
+    }
+
+    final recorded = await _database.pythonPackagesDao.getByProfile(profile.id);
+    final recordedNames = {for (final row in recorded) normalizePythonPackageName(row.name)};
+    for (final name in missing) {
+      if (recordedNames.contains(name) || pythonStdlibModuleNames.contains(name)) {
+        available.add(name);
+      }
+    }
+    return available;
+  }
+
+  AddonBranch _dependencyBranch(Addon addon, String? freecadVersion) {
+    final target = freecadVersion == null ? null : FreeCadVersion.tryParse(freecadVersion);
+    if (target != null) {
+      for (final branch in addon.branches) {
+        final min = branch.freecadMin == null ? null : FreeCadVersion.tryParse(branch.freecadMin!);
+        final max = branch.freecadMax == null ? null : FreeCadVersion.tryParse(branch.freecadMax!);
+        if (min != null && target.compareTo(min) < 0) {
+          continue;
+        }
+        if (max != null && target.compareTo(max) > 0) {
+          continue;
+        }
+        return branch;
+      }
+    }
+    return addon.primaryBranch;
+  }
+
+  List<AddonDependency> _stagedDependencies(String root, AddonBranch branch) {
+    try {
+      return readPackageXmlInfo(root).dependencies;
+    } on Object {
+      return branch.metadata?.dependencies ?? const [];
+    }
+  }
 
   Future<Result<void>> installFromRepository({
     required String repositoryUrl,
     required String gitRef,
     required String profileId,
-    CustomRequirementsHandler? onRequirements,
+    AddonDependencyHandler? onDependencies,
   }) {
     final resolution = resolveRepositoryArchive(repositoryUrl, gitRef);
     final uri = resolution.uri;
@@ -722,7 +1115,7 @@ class AddonsController {
       profileId: profileId,
       sourceUrl: repositoryUrl.trim(),
       gitRef: ref.isEmpty ? null : ref,
-      onRequirements: onRequirements,
+      onDependencies: onDependencies,
       prepare: (token, context) => _prepareRepositoryArchive(
         addonId: addonId,
         uri: uri,
@@ -738,7 +1131,7 @@ class AddonsController {
   Future<Result<void>> updateFromRepository({
     required String addonId,
     required String profileId,
-    CustomRequirementsHandler? onRequirements,
+    AddonDependencyHandler? onDependencies,
   }) async {
     final existing = await _database.installedAddonsDao.getByAddon(profileId, addonId);
     if (existing == null) {
@@ -775,7 +1168,7 @@ class AddonsController {
       sourceUrl: repositoryUrl.trim(),
       gitRef: ref.isEmpty ? null : ref,
       replaceExisting: true,
-      onRequirements: onRequirements,
+      onDependencies: onDependencies,
       prepare: (token, context) => _prepareRepositoryArchive(
         addonId: addonId,
         uri: uri,
@@ -792,7 +1185,7 @@ class AddonsController {
     required String archivePath,
     required String profileId,
     String? addonId,
-    CustomRequirementsHandler? onRequirements,
+    AddonDependencyHandler? onDependencies,
   }) {
     final file = File(archivePath);
     if (!file.existsSync()) {
@@ -811,7 +1204,7 @@ class AddonsController {
       source: AddonSource.zip,
       profileId: profileId,
       sourcePath: absolute,
-      onRequirements: onRequirements,
+      onDependencies: onDependencies,
       prepare: (token, context) => _prepareLocalArchive(
         addonId: id,
         archivePath: absolute,
@@ -825,7 +1218,7 @@ class AddonsController {
     required String addonId,
     required String profileId,
     required String archivePath,
-    CustomRequirementsHandler? onRequirements,
+    AddonDependencyHandler? onDependencies,
   }) async {
     final existing = await _database.installedAddonsDao.getByAddon(profileId, addonId);
     if (existing == null) {
@@ -848,7 +1241,7 @@ class AddonsController {
       profileId: profileId,
       sourcePath: absolute,
       replaceExisting: true,
-      onRequirements: onRequirements,
+      onDependencies: onDependencies,
       prepare: (token, context) => _prepareLocalArchive(
         addonId: addonId,
         archivePath: absolute,
@@ -862,7 +1255,7 @@ class AddonsController {
     required String sourcePath,
     required String profileId,
     String? addonId,
-    CustomRequirementsHandler? onRequirements,
+    AddonDependencyHandler? onDependencies,
   }) {
     final source = Directory(sourcePath);
     if (!source.existsSync()) {
@@ -882,7 +1275,7 @@ class AddonsController {
       source: AddonSource.symlink,
       profileId: profileId,
       sourcePath: normalized,
-      onRequirements: onRequirements,
+      onDependencies: onDependencies,
       prepare: (token, context) async => _CustomPreparedContent(
         root: normalized,
         commit: () => _installer.linkDirectory(
@@ -898,7 +1291,7 @@ class AddonsController {
     required InstalledAddon addon,
     required String profileId,
     String? archivePath,
-    CustomRequirementsHandler? onRequirements,
+    AddonDependencyHandler? onDependencies,
   }) {
     final source = addonSourceFromStorage(addon.source);
     switch (source) {
@@ -915,7 +1308,7 @@ class AddonsController {
           repositoryUrl: repositoryUrl,
           gitRef: addon.gitRef ?? '',
           profileId: profileId,
-          onRequirements: onRequirements,
+          onDependencies: onDependencies,
         );
       case AddonSource.zip:
         final path = archivePath ?? addon.sourcePath;
@@ -926,7 +1319,7 @@ class AddonsController {
           archivePath: path,
           profileId: profileId,
           addonId: addon.addonId,
-          onRequirements: onRequirements,
+          onDependencies: onDependencies,
         );
       case AddonSource.symlink:
         final path = addon.sourcePath;
@@ -937,7 +1330,7 @@ class AddonsController {
           sourcePath: path,
           profileId: profileId,
           addonId: addon.addonId,
-          onRequirements: onRequirements,
+          onDependencies: onDependencies,
         );
     }
   }
@@ -1003,7 +1396,8 @@ class AddonsController {
     String? sourcePath,
     String? gitRef,
     bool replaceExisting = false,
-    CustomRequirementsHandler? onRequirements,
+    AddonDependencySelection? selection,
+    AddonDependencyHandler? onDependencies,
     required Future<_CustomPreparedContent> Function(CancellationToken? token, JobContext? context)
     prepare,
   }) async {
@@ -1017,7 +1411,8 @@ class AddonsController {
         sourcePath: sourcePath,
         gitRef: gitRef,
         replaceExisting: replaceExisting,
-        onRequirements: onRequirements,
+        selection: selection,
+        onDependencies: onDependencies,
         prepare: prepare,
       );
     }
@@ -1034,7 +1429,8 @@ class AddonsController {
           sourcePath: sourcePath,
           gitRef: gitRef,
           replaceExisting: replaceExisting,
-          onRequirements: onRequirements,
+          selection: selection,
+          onDependencies: onDependencies,
           prepare: prepare,
         );
       },
@@ -1046,7 +1442,8 @@ class AddonsController {
         sourcePath: sourcePath,
         gitRef: gitRef,
         replaceExisting: replaceExisting,
-        onRequirements: onRequirements,
+        selection: selection,
+        onDependencies: onDependencies,
         prepare: prepare,
         context: context,
       ),
@@ -1062,7 +1459,8 @@ class AddonsController {
     String? sourcePath,
     String? gitRef,
     required bool replaceExisting,
-    CustomRequirementsHandler? onRequirements,
+    AddonDependencySelection? selection,
+    AddonDependencyHandler? onDependencies,
     required Future<_CustomPreparedContent> Function(CancellationToken? token, JobContext? context)
     prepare,
     JobContext? context,
@@ -1114,21 +1512,40 @@ class AddonsController {
       context?.report(detail: 'Reading addon metadata');
       final info = readPackageXmlInfo(prepared.root);
       final requirementsText = readRequirementsFromDirectory(prepared.root);
-      var installPackages = false;
-      if (requirementsText != null) {
-        final requirements = parseRequirements(
-          requirementsText,
-        ).where((requirement) => requirement.valid).toList();
-        if (requirements.isNotEmpty && onRequirements != null) {
-          final decision = await onRequirements(requirements);
-          if (decision == CustomRequirementsDecision.cancel) {
-            prepared.discard();
-            prepared = null;
-            return const Err(AppError(message: 'Install cancelled'));
-          }
-          installPackages = decision == CustomRequirementsDecision.installPackages;
-        }
+      // The consent preview must not trigger a silent AppImage extraction.
+      var plan = await _dependencyPlan(
+        addonId: addonId,
+        dependencies: info.dependencies,
+        requirementsText: requirementsText,
+        profileId: profileId,
+        allowExtraction: false,
+      );
+      final resolvedSelection =
+          selection ?? await _decideDependencies(plan: plan, onDependencies: onDependencies);
+      if (resolvedSelection == null) {
+        prepared.discard();
+        prepared = null;
+        return const Err(AppError(message: 'Install cancelled'));
       }
+      if (resolvedSelection.installRequired) {
+        plan = await _dependencyPlan(
+          addonId: addonId,
+          dependencies: info.dependencies,
+          requirementsText: requirementsText,
+          profileId: profileId,
+          context: context,
+        );
+      }
+      final hasPythonDependencies =
+          plan.requiredPython.isNotEmpty || plan.optionalPython.isNotEmpty;
+      await _runDependencies(
+        plan: plan,
+        selection: resolvedSelection,
+        profile: profile,
+        errorKey: addonId,
+        chain: {addonId},
+        context: context,
+      );
       context?.report(detail: 'Installing files');
       await prepared.commit();
       prepared = null;
@@ -1150,19 +1567,9 @@ class AddonsController {
           sourceUrl: sourceUrl,
           source: source.name,
           sourcePath: sourcePath,
-          hasRequirements: requirementsText != null,
+          hasRequirements: hasPythonDependencies,
         ),
       );
-      if (installPackages && requirementsText != null) {
-        context?.report(detail: 'Installing Python packages');
-        await _installRequirements(
-          profile: profile,
-          addonId: addonId,
-          requirementsText: requirementsText,
-          installedAt: now,
-          context: context,
-        );
-      }
       return const Ok(null);
     } on Object catch (error) {
       try {

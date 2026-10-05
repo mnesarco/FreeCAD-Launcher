@@ -3,11 +3,12 @@
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
+import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
 import 'package:freecad_launcher/domain/addons/addon_update.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
-import 'package:freecad_launcher/ui/profiles/profile_actions.dart'
-    show formatProfileDateTime;
+import 'package:freecad_launcher/ui/addons/addon_dependencies_dialog.dart';
+import 'package:freecad_launcher/ui/profiles/profile_actions.dart' show formatProfileDateTime;
 import 'package:freecad_launcher/ui/widgets/build_version_label.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 
@@ -61,17 +62,42 @@ class _UpdatesSummarySheetState extends State<UpdatesSummarySheet> {
       0 => l10n.updatesNone,
       final found => l10n.updatesBadge(found),
     };
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _apply(List<AddonUpdate> updates) async {
     if (updates.isEmpty) {
       return;
     }
+    final services = AppScope.of(context);
+    final plans = <AddonDependencyPlan>[];
+    for (final update in updates) {
+      plans.add(
+        await services.addons.prepareDependencies(
+          addonId: update.addonId,
+          branchRef: update.branchRef,
+          profileId: update.profileId,
+        ),
+      );
+    }
+    if (!mounted) {
+      return;
+    }
+    final merged = mergeDependencyPlans(plans);
+    AddonDependencySelection? selection;
+    if (merged.hasInstallable || merged.invalidRequirements.isNotEmpty) {
+      final l10n = AppLocalizations.of(context);
+      selection = await showAddonDependenciesDialog(
+        context,
+        addonName: l10n.updatesBadge(updates.length),
+        plan: merged,
+      );
+      if (!mounted || selection == null) {
+        return;
+      }
+    }
     setState(() => _summary = null);
-    final summary = await AppScope.of(context).updates.applyUpdates(updates);
+    final summary = await services.updates.applyUpdates(updates, selection: selection);
     if (!mounted) {
       return;
     }
@@ -103,9 +129,7 @@ class _UpdatesSummarySheetState extends State<UpdatesSummarySheet> {
 
     return SafeArea(
       child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
-        ),
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           child: Column(
@@ -114,17 +138,9 @@ class _UpdatesSummarySheetState extends State<UpdatesSummarySheet> {
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.system_update_alt,
-                    color: theme.colorScheme.primary,
-                  ),
+                  Icon(Icons.system_update_alt, color: theme.colorScheme.primary),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      l10n.updatesTitle,
-                      style: theme.textTheme.titleMedium,
-                    ),
-                  ),
+                  Expanded(child: Text(l10n.updatesTitle, style: theme.textTheme.titleMedium)),
                   TextButton.icon(
                     onPressed: checking || applying ? null : _check,
                     icon: checking
@@ -140,9 +156,7 @@ class _UpdatesSummarySheetState extends State<UpdatesSummarySheet> {
               ),
               if (lastChecked != null)
                 Text(
-                  l10n.updatesLastChecked(
-                    formatProfileDateTime(l10n, lastChecked),
-                  ),
+                  l10n.updatesLastChecked(formatProfileDateTime(l10n, lastChecked)),
                   style: theme.textTheme.labelSmall,
                 ),
               const SizedBox(height: 8),
@@ -159,10 +173,7 @@ class _UpdatesSummarySheetState extends State<UpdatesSummarySheet> {
                       if (buildUpdates.isNotEmpty) ...[
                         Padding(
                           padding: const EdgeInsets.only(top: 8, bottom: 4),
-                          child: Text(
-                            l10n.updatesBuildsSection,
-                            style: theme.textTheme.titleSmall,
-                          ),
+                          child: Text(l10n.updatesBuildsSection, style: theme.textTheme.titleSmall),
                         ),
                         for (final update in buildUpdates)
                           ListTile(
@@ -212,9 +223,7 @@ class _UpdatesSummarySheetState extends State<UpdatesSummarySheet> {
                 ),
               if (applying) ...[
                 const SizedBox(height: 12),
-                LinearProgressIndicator(
-                  value: total == 0 ? null : completed / total,
-                ),
+                LinearProgressIndicator(value: total == 0 ? null : completed / total),
                 const SizedBox(height: 4),
                 Text(
                   l10n.updatesApplyingCount(completed, total),
@@ -225,9 +234,7 @@ class _UpdatesSummarySheetState extends State<UpdatesSummarySheet> {
                 Row(
                   children: [
                     FilledButton.tonalIcon(
-                      onPressed: selected.isEmpty
-                          ? null
-                          : () => _apply(selected),
+                      onPressed: selected.isEmpty ? null : () => _apply(selected),
                       icon: const Icon(Icons.system_update_alt, size: 18),
                       label: Text(l10n.updatesUpdateSelected(selected.length)),
                     ),
@@ -279,13 +286,10 @@ class _UpdatesSummarySheetState extends State<UpdatesSummarySheet> {
 
   String _versionLine(AppLocalizations l10n, AddonUpdate update) {
     final versions = <String>[
-      if ((update.installedVersion ?? '').isNotEmpty)
-        'v${update.installedVersion}',
+      if ((update.installedVersion ?? '').isNotEmpty) 'v${update.installedVersion}',
       if ((update.catalogVersion ?? '').isNotEmpty) 'v${update.catalogVersion}',
     ];
-    final line = versions.isEmpty
-        ? l10n.addonsUpdateBadge
-        : versions.join('  →  ');
+    final line = versions.isEmpty ? l10n.addonsUpdateBadge : versions.join('  →  ');
     return update.branchRef.isEmpty ? line : '$line  ·  ${update.branchRef}';
   }
 }

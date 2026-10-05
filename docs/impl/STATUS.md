@@ -3,7 +3,7 @@
 > Live file. Every session updates this at start and end. Keep it short — details belong in
 > `TASKS.md` and `DECISIONS.md`.
 
-- **Updated**: 2026-10-03
+- **Updated**: 2026-10-04
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
   (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; **`v0.4.4` is the current release** (pre-release)
   with the Linux AppImage and the Windows portable zip; it carries the R-27 profile-context
@@ -13,14 +13,17 @@
   withdrawn by the owner (D-100) and the `0.4.x` line continues; M8-04 needs macOS; M8-05
   clean-VM Linux pass ready)
 - **Active branch**: `devel` (public) — `main` is reserved for a future release line
-- **Last session**: 2026-10-03
+- **Last session**: 2026-10-04
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
   `TASKS.md` so work can resume after an interruption.
-- **Decisions this session**: **D-106** (visual identity refresh: brand palette seeded from Tufts
-  Blue `#418FDE`, `AppStatusColors` semantic tones, component themes, Home hero; R-25a..e) and
-  **D-107** (profile-context catalog pickers for addons and macros; R-27).
-- **Next action**: the B-16 Windows-machine smoke is on hold (no machine); proceed with the
-  `v0.4.4` Linux retest (weekly install + open logs/folder + Python package install from the
+- **Decisions this session**: **D-108** (package.xml `<depend>` parsing/resolution semantics),
+  **D-109** (unified dependency consent dialog), **D-110** (batched Python availability probe +
+  stdlib fallback), **D-111** (dependency execution order, provenance, lenient failures,
+  reverse-dependency removal warning) — all B-19.
+- **Next action**: B-19 is implemented but uncommitted — review/commit the branch, then finish
+  its remaining live checks (optional checkbox install, dependent addon load in FreeCAD, removal
+  warning UI). In parallel, the B-16 Windows-machine smoke is on hold (no machine); proceed with
+  the `v0.4.4` Linux retest (weekly install + open logs/folder + Python package install from the
   AppImage); then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine). Next releases
   continue the `0.4.x` line. Backlog: `B-01` legacy channel, `B-14` CalVer readiness (before 27.1
   branches, 2027-01-31), `B-02` in-place build updates, `R-21` (custom AppImage symlink cleanup),
@@ -30,7 +33,24 @@
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
   - The B-16 Phase 3 Windows-machine smoke is **on hold** (no Windows machine available as of
     2026-10-02); B-16 is otherwise complete.
-- **In progress**: **`v0.4.4` pre-release published** (manual `create_release=true`, tag `v0.4.4`,
+- **In progress**: **B-19 FreeCAD `package.xml` `<depend>` support + B-20 AppImage macro Python
+  execution implemented** (branch `b19-addon-dependencies`, off `devel`, not committed/merged):
+  plan in [PLAN-B19-addon-dependencies.md](PLAN-B19-addon-dependencies.md), decisions
+  D-108..D-112, tasks B-19a..B-19f and B-20a..B-20e DONE. Real E2E passed: Ondsel-Lens installed from the catalog with `<depend>`
+  parsed, the probe skipping system-available `requests`/PyJWT, `tzlocal` pip-installed and
+  recorded as `source=addon:Ondsel-Lens` (`real_addon_dependencies_test`); real catalog check
+  (67 addons with `<depend>`, Beltrami → Curves + numpy/scipy + internals). The owner-reported
+  “click install, nothing happens” was the dialog-phase probe triggering a silent ~800 MB
+  AppImage extraction; fixed in B19-2 (preview never extracts, full probe after consent, job
+  progress, fallback not cached) and re-verified in a live desktop pass (dialog in ~1 s, pip
+  installed pyjwt/tzlocal, `requests` filtered). **B-20 (D-112) removes the persistent
+  `builds/<id>/extracted/` tree**: pip and the availability probe now run inside the mounted
+  AppImage through headless macros when FUSE is available (extraction only as a FUSE-less
+  fallback); live-verified in an isolated pass — no extraction, both catalog-addon and
+  Python-tab installs via macro, data root 7.5 MB. 692 tests green,
+  analyze clean. Remaining live checks (test-covered but not yet live): optional checkbox
+  install, dependent addon loaded inside FreeCAD, removal warning UI; bundle/batch flows install
+  required dependencies only. **`v0.4.4` pre-release published** (manual `create_release=true`, tag `v0.4.4`,
   `prerelease=true`, run 37162641299; publish job green) with
   `FreeCADLauncher-0.4.4-windows-x86_64.zip` + `.sha256` and
   `FreeCADLauncher-0.4.4-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
@@ -715,6 +735,10 @@
 | 2026-10-03 | R62 | **R-27 follow-ups + R-28** on the same branch: profile tab list consistency (installed addons as `Card` rows `74f12bb`; 8 px header/list separation and Python tab card rows `9e0bf21`, live-verified on Demo) and the missing Profile ▸ Addons remove action (`removeAddonFromProfile` confirmation/snackbar flow shared with the catalog detail; row Remove button); `profile_addons_picker_test` now 5 tests green, analyze clean | R-27e, R-28 | `lib/ui/profiles/profile_detail_view.dart`, `lib/ui/macros/installed_macros.dart`, `lib/ui/addons/{addon_remove_flow,addons_view}.dart`, `test/ui/profile_addons_picker_test.dart`, `docs/impl/{TASKS,VERIFICATION,STATUS}.md` |
 
 | 2026-10-03 | R63 | **v0.4.4 pre-release published** (owner request): `profile-catalog-pickers` (R-27a..e, R-28, D-107) fast-forward-merged into `devel` plus the icon box-fit (R-26); version bumped 0.4.3 → 0.4.4 (`check_version.sh` OK, analyze clean, 644 tests green); manual `release.yml` run 37162641299 (`create_release=true`, tag `v0.4.4`, `prerelease=true`) green and published the GitHub pre-release with `FreeCADLauncher-0.4.4-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.4-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after download, AppImage `--version` = 0.4.4 (exit 0), Windows zip checked for `7zr.exe`/license/notices | R-27, R-28, R-26, D-107 | `lib/core/constants.dart`, `pubspec.yaml`, `README.md`, `docs/spec/{03-ux,07-distribution}.md`, `docs/impl/{STATUS,VERIFICATION}.md` |
+
+| 2026-10-04 | B19-1 | **B-19 FreeCAD `<depend>` support implemented** on branch `b19-addon-dependencies` off `devel` (not committed): owner Q&A (unified deps dialog with optional checkboxes, version attributes parsed but ignored, batched Python availability probe, lenient failures, all install paths, reverse-dep removal warning, missing-only on update), plan + **D-108..D-111** + tasks **B-19a..B-19f** (all DONE). Domain: `AddonDependency` parsing, pure resolver (automatic→addon/internal/python, installed-addon recursion, PEP 503 dedupe, post-order), `mergeDependencyPlans`; platform: `PythonPackageProbe` + generated stdlib fallback; controller: staged `package.xml` union, `prepareDependencies`/selection API, ordered dependency installs in one job, `source=addon:<declarer>`, per-package pip retry, `dependentsOf`; UI: unified dialog (required/optional/internal/invalid), detail row, “Required by” removal warning; bundle/batch/manifest wiring. 672 tests green, analyze clean; real Ondsel-Lens E2E (probe skipped requests/PyJWT, pip installed tzlocal, import verified) + real catalog check (67 addons with `<depend>`, Beltrami → Curves + numpy/scipy). Remaining live checks: optional checkbox install, dependent addon load in FreeCAD, removal warning UI | B-19, D-108..D-111 | `lib/domain/addons/{package_xml,addon,addon_dependencies}.dart`, `lib/domain/python/{python_names,python_stdlib_names}.dart`, `lib/platform/{python_package_probe,addon_manifest_reader}.dart`, `lib/state/{addons,bundle_apply,updates,profile_manifest,app_services}_controller.dart`/`app_services.dart`, `lib/ui/addons/**`, `lib/ui/updates/updates_summary_sheet.dart`, `lib/l10n/**`, `test/**`, `docs/**` |
+| 2026-10-04 | B20-1 | **B-20 AppImage macro Python execution implemented** (D-112) on the same branch: `FreeCadMacroRunner` (generated `.FCMacro`, isolated home/temp, tagged JSON, `runAppImage` FUSE retry), `PipRunner.install({pythonPath?\|appImagePath?})` running pip in-process inside the mounted image (log + `PIP_CACHE_DIR`), `PythonPackageProbe.availablePackagesInFreeCad`, `PythonExecutionResolver` (AppImage-in-place when `diagnostics.fuseAvailable`, one-time extraction fallback otherwise); `AddonsController`/`PythonController`/`AppServices` wired, dependency consent preview stays instant. **Live pass** on an isolated data root with a symlinked stable AppImage and no extraction: catalog Ondsel-Lens install (pyjwt+tzlocal via macro pip, bundled requests filtered, `source=addon:Ondsel-Lens`) and Python-tab `six`; no `extracted/` dir created, data root 7.5 MB, no leftover mounts. 692 tests green (17 new), analyze clean; spec 06 §4.1/§4.2 + D-112 + VERIFICATION updated; FUSE-less fallback unit-tested only | B-20, D-112 | `lib/platform/{freecad_macro_runner,pip_runner,python_package_probe,python_execution}.dart`, `lib/state/{addons,python,app_services}_controller.dart`/`app_services.dart`, `test/platform/**`, `test/state/**`, `docs/**` |
+| 2026-10-04 | B19-2 | **Owner-reported live bug fixed** (new profile → Profile ▸ Addons → Add addon → Ondsel-Lens → Install “did nothing”): the dialog-phase availability probe resolved the AppImage interpreter with extraction allowed, so the first click silently ran an ~800 MB `--appimage-extract`. Fix: `PythonEnvResolver.resolve(allowExtraction: false)` for consent previews (fast fallback list), full probe re-resolved **after** consent with `Preparing Python (N files)` job progress, only successful probe results cached (fallback no longer blocks the real probe), UI `try/catch` + error snackbar and `appLogger` before the job starts, and `installed_addons.hasRequirements` now derives from the resolved plan (covers `automatic` Python deps). Live desktop pass on an isolated data root (real UI, stable 1.1.3, empty extraction): dialog appeared in ~1 s with pyjwt/requests/tzlocal and no extraction; after “Install dependencies” the job extracted, filtered bundled `requests`, pip-installed pyjwt+tzlocal (`source=addon:Ondsel-Lens`) and the addon appeared in Tes2; no runtime errors. 675 tests green, analyze clean | B-19, D-110, D-111 | `lib/platform/python_env.dart`, `lib/state/addons_controller.dart`, `lib/ui/addons/addon_install_flow.dart`, `test/platform/python_env_test.dart`, `test/state/addons_controller_test.dart`, `test/helpers/fake_pip.dart`, `docs/impl/**` |
 
 ## Standing notes for the next agent
 

@@ -33,8 +33,9 @@ settings, addons, macros and Python packages.
   and remove per profile, pin/freeze versions, or manage reusable collections (bundles) with
   apply, JSON export and import.
 - **Python packages** — the build's bundled interpreter installs into the profile only
-  (`pip --target`, never the system Python); `requirements.txt` from addons is detected with an
-  explicit consent dialog.
+  (`pip --target`, never the system Python); addon dependencies declared in `requirements.txt`
+  or `package.xml` (`<depend>`: other addons, required/optional Python packages) are detected
+  and installed with an explicit consent dialog.
 - **Macros** — install from the official macro catalog, list, open, reveal and delete per profile.
 - **Config** — timestamped `user.cfg`/`system.cfg` snapshots with restore, plus portable
   profile manifest export/import.

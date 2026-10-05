@@ -2292,3 +2292,163 @@ Template:
 - **Refs**: `TASKS.md` R-27, `docs/spec/03-ux.md` §2.3, `lib/ui/addons/addon_picker_dialog.dart`,
   `lib/ui/addons/addon_install_flow.dart`, `lib/ui/macros/macro_picker_dialog.dart`, D-046,
   D-104
+
+### D-108 — package.xml `<depend>` parsing and resolution semantics (B-19)
+- **Date**: 2026-10-04
+- **Status**: Accepted
+- **Context**: 79 of 191 real catalog branch entries declare `<depend>` tags and 73 of them have
+  no `requirements.txt`; the launcher ignored them, installing addons whose Python packages or
+  companion addons were missing (e.g. `Ondsel-Lens` → `pyjwt`, `requests`, `tzlocal`). The
+  AddonManager parses the tag with `type` (`automatic|addon|internal|python`), `optional` and
+  version attributes (`version_lt/lte/eq/gte/gt`), then resolves `automatic` entries against the
+  known addons first, then internal workbenches, then treats them as Python packages.
+- **Decision**:
+  - `parsePackageXml` parses every `<depend>` found anywhere in the document (including nested
+    `<content>` items, matching the AddonManager recursion) into `AddonDependency { name, type,
+    optional, versionLt/Lte/Eq/Gte/Gt }`; unknown `type` values fall back to `automatic`;
+    `optional` is case-insensitive.
+  - Version attributes are parsed and retained but **ignored** for matching and installation
+    (AddonManager parity): Python packages are passed to pip by bare name and addons match by
+    name only.
+  - Resolution (pure `resolveAddonDependencies`): a `<depend>` matches a catalog addon by exact
+    `id` or package display name (case-insensitive fallback), then an internal workbench
+    (`name`/`nameWB`/`nameWorkbench` against the 20 standard names), otherwise it is a Python
+    requirement — including explicitly missing `addon` entries (AddonManager parity).
+  - The dependency closure recurses through dependent addons even when they are already
+    installed (their missing transitive dependencies must still install) and filters the install
+    list by the profile's installed addons; a visited set breaks cycles.
+  - `requirements.txt` entries are merged first (their specifiers win), `<depend>` Python entries
+    fill gaps; entries are deduped by PEP 503 name with required beating optional, and the first
+    declaring addon is recorded for provenance.
+  - The plan exposes `orderedAddons` (post-order DFS, deepest dependency first).
+- **Consequences**: The resolver is pure and catalog-driven; no schema change. Internal
+  workbenches are informational (standard builds provide them; the launcher does not probe the
+  build). Version constraints are a future extension.
+- **Refs**: `docs/impl/PLAN-B19-addon-dependencies.md`, `TASKS.md` B-19a,
+  `lib/domain/addons/package_xml.dart`, `lib/domain/addons/addon_dependencies.dart`,
+  `addon_index_spec.md`, <https://wiki.freecad.org/Package_Metadata>
+
+### D-109 — Unified dependency consent dialog (B-19)
+- **Date**: 2026-10-04
+- **Status**: Accepted
+- **Context**: The existing consent dialog only covered `requirements.txt` (Install packages /
+  Addon only / Cancel). Dependencies introduce dependent addons and optional entries, and the
+  owner chose one unified dialog with checkboxes for optional addons and Python packages.
+- **Decision**:
+  - `showAddonDependenciesDialog` replaces `showRequirementsConsentDialog`: sections for required
+    addons, optional addons (unchecked checkboxes), required Python, optional Python (unchecked
+    checkboxes) and internal workbenches (“provided by FreeCAD”); invalid `requirements.txt`
+    lines keep the red monospace style. Actions: **Install dependencies** /
+    **Addon only** / **Cancel**.
+  - The dialog appears when there is anything installable or invalid, including when only
+    optional entries exist; internal-only plans do not prompt.
+  - Consent is per addon install: catalog installs ask before download using the embedded
+    `package_xml` when available; custom installs ask after staging from the real `package.xml`.
+    If staging reveals required entries the pre-download prompt could not know (catalog entry
+    without metadata), the same dialog is shown once more through the install handler. Optional
+    entries discovered late are skipped (they were not selected).
+  - A selection object (`AddonDependencySelection`) carries the decision into the controller;
+    optional selections are per addon install and never auto-applied on updates.
+- **Consequences**: The addon detail page lists declared dependencies (with `*` for optional)
+  instead of the old yes/no requirements row; bundle apply and manifest import reuse the same
+  selection type; the old `requirements_dialog.dart` is removed and l10n keys are renamed.
+- **Refs**: `docs/impl/PLAN-B19-addon-dependencies.md`, `TASKS.md` B-19d/B-19e,
+  `lib/ui/addons/addon_dependencies_dialog.dart`, D-041, D-046, D-055
+
+### D-110 — Already-available Python detection via a batched interpreter probe (B-19)
+- **Date**: 2026-10-04
+- **Status**: Accepted
+- **Context**: `<depend>` Python entries include stdlib names (`math`, `inspect`, `getpass`,
+  `tkinter`) and packages already bundled with FreeCAD (e.g. `requests`); pip-installing them
+  fails (poisoning a batch) or shadows the bundled version. The AddonManager checks importability
+  inside FreeCAD; the launcher runs outside and must reproduce that check.
+- **Decision**:
+  - `PythonPackageProbe.availablePackages` runs the build's interpreter once with all candidate
+    names as argv, checks `importlib.util.find_spec(name)` or `importlib.metadata.distribution`
+    per name and returns PEP 503-normalized results; `PYTHONPATH` points at the profile
+    `AdditionalPythonPackages/pyXY` so profile-local packages count; stdin is closed and the
+    environment is sanitized.
+  - Candidates already available are removed from the dialog and from the pip install set.
+  - Probe failure returns `null` and the controller falls back to recorded `python_packages`
+    rows plus a generated `sys.stdlib_module_names` snapshot so stdlib names are never handed to
+    pip; the probe result is memoized per (build, profile) for the session.
+- **Consequences**: The first dependency install may pay one interpreter start (cached AppImage
+  extraction is reused); no probe runs when there are no Python candidates. The stdlib snapshot
+  is regenerable data (`lib/domain/python/python_stdlib_names.dart`).
+- **Refs**: `docs/impl/PLAN-B19-addon-dependencies.md`, `TASKS.md` B-19b,
+  `lib/platform/python_package_probe.dart`, D-006, D-041
+
+### D-111 — Dependency execution order, provenance and lenient failures (B-19)
+- **Date**: 2026-10-04
+- **Status**: Accepted
+- **Context**: Dependent addons and Python packages must install before/around the main addon
+  without deadlocking the single-install job queue, without losing provenance, and without
+  turning a failed optional dependency into a failed addon install (D-041/D-008).
+- **Decision**:
+  - Execution order per addon install: required Python pip → dependent addons in
+    `orderedAddons` order → main addon placement. Dependencies run inside the same job through
+    internal recursion (never through the public `install`), so the queue cannot deadlock;
+    progress is reported as `detail` strings.
+  - Catalog installs switch from the atomic `AddonInstaller.install` to
+    `downloadArchive` + `prepareFromArchive` so the staged `package.xml` can be read before the
+    commit; `commitPrepared` keeps the atomic replace/rollback semantics.
+  - Each installed Python package is recorded in `python_packages` with
+    `source = addon:<declaringAddonId>`; dependent addons are ordinary `installed_addons` rows
+    with `source = catalog`.
+  - Failures are lenient: a required Python failure lands in `requirementsErrors[mainAddonId]`
+    and a dependent addon failure in `installErrors[dependencyId]`; the main addon still
+    installs. A failed pip batch is retried package-by-package to isolate bad names.
+  - Updates resolve the new branch's dependencies and install only what is missing; already
+    installed dependencies are never auto-updated (notify-only updates stay, D-008). A one-shot
+    consent is shown when new installable dependencies appear.
+  - Removing an addon that other installed addons depend on shows a “Required by: …” warning
+    but is still allowed; `dependentsOf` derives this from catalog metadata at runtime.
+  - No schema change (schema stays v6); `installed_addons.hasRequirements` is set when any
+    Python dependency (requirements.txt or `<depend>`) is declared.
+- **Consequences**: Dependency installs are visible inside the parent job; the Python tab shows
+  packages attributed to the addon that declared them; reverse dependencies are advisory only.
+  Pinning remains per addon row and is unaffected.
+- **Refs**: `docs/impl/PLAN-B19-addon-dependencies.md`, `TASKS.md` B-19c..B-19f, D-008, D-039,
+  D-041, D-043, D-057
+
+### D-112 — AppImage Python execution via headless macros (no extraction)
+- **Date**: 2026-10-04
+- **Status**: Accepted
+- **Context**: Catalog AppImages are single-file SquashFS bundles; the bundled Python only
+  exists while the image is mounted, so pip (and the availability probe) required a persistent
+  `--appimage-extract` copy under `builds/<id>/extracted/` — several GB per AppImage and a slow
+  first run. The launcher already runs headless macros inside the very same binary for Python
+  detection (D-022): `<appimage> -c -M <dir> <macro>`, and FreeCAD's AddonManager itself runs
+  pip inside FreeCAD. Verified manually on the real 1.1.3 AppImage: `pip` 25.3 is importable in
+  the mounted environment, `pip._internal.cli.main.main(['install','--target',…])` installs
+  into the profile target, and an import-availability check completes in ~1 s.
+- **Decision**:
+  - New `FreeCadMacroRunner` runs a generated `.FCMacro` headless with the same isolated
+    environment used by the Python probe (`FREECAD_USER_HOME`/`FREECAD_USER_TEMP`, sanitized
+    Python env, closed stdin) and parses a tagged JSON payload from stdout. `runAppImage`
+    retries once with `APPIMAGE_EXTRACT_AND_RUN=1` when the first run produced no payload (no
+    FUSE).
+  - `PipRunner.install` accepts either an interpreter path (archive/dmg/custom) or an AppImage
+    path; the AppImage path writes the pip log and prints the tagged result from inside the
+    macro, keeping the global pip queue and log naming unchanged.
+  - `PythonPackageProbe.availablePackagesInFreeCad` runs the same `find_spec` +
+    `importlib.metadata` check inside the AppImage with the profile target appended to
+    `sys.path` (matching FreeCAD's runtime order).
+  - `PythonExecutionResolver` picks the strategy: AppImage + FUSE → macro execution (never
+    extract); AppImage without FUSE → one-time persistent extraction as before (chosen over
+    per-run temp extraction); other kinds → bundled interpreter.
+  - `AddonsController` and `PythonController` branch on the resolved execution; the dependency
+    consent preview deliberately skips the macro probe to stay instant and lists all declared
+    candidates, while the install-time probe filters packages already available (bundled,
+    stdlib, profile target).
+  - Macro runs use a persistent `cache/pip` `PIP_CACHE_DIR` so wheels are not re-downloaded
+    with the isolated home.
+- **Consequences**: AppImage profiles no longer create or need `builds/<id>/extracted/` on
+  FUSE-capable systems; disk use drops by GBs and first pip install no longer extracts. FUSE-
+  less systems keep the old one-time extraction. Macro execution adds one short FreeCAD start
+  (~1 s) per probe/pip batch. The `pip` internal API is used with a `runpy.run_module('pip')`
+  fallback.
+- **Refs**: `docs/impl/PLAN-B19-addon-dependencies.md`, `TASKS.md` B-20,
+  `lib/platform/freecad_macro_runner.dart`, `lib/platform/pip_runner.dart`,
+  `lib/platform/python_package_probe.dart`, `lib/platform/python_execution.dart`, D-006,
+  D-022, D-041, D-110

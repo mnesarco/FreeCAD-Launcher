@@ -8,21 +8,33 @@ import 'package:freecad_launcher/platform/python_env.dart';
 
 class FakePipRunner extends PipRunner {
   FakePipRunner()
-    : super(processRunner: ProcessRunner(), paths: AppPaths(dataRoot: '/tmp'));
+    : super(
+        processRunner: ProcessRunner(),
+        paths: AppPaths(dataRoot: '/tmp'),
+      );
 
   bool success = true;
-  final List<({String pythonPath, String targetDirectory, List<String> packages})> calls = [];
+  final List<
+    ({String? pythonPath, String? appImagePath, String targetDirectory, List<String> packages})
+  >
+  calls = [];
 
   @override
   Future<PipResult> install({
-    required String pythonPath,
+    String? pythonPath,
+    String? appImagePath,
     required String targetDirectory,
     required List<String> packages,
     required String label,
     void Function(String line)? onOutput,
     Duration timeout = const Duration(minutes: 30),
   }) async {
-    calls.add((pythonPath: pythonPath, targetDirectory: targetDirectory, packages: packages));
+    calls.add((
+      pythonPath: pythonPath,
+      appImagePath: appImagePath,
+      targetDirectory: targetDirectory,
+      packages: packages,
+    ));
     return PipResult(
       exitCode: success ? 0 : 1,
       logPath: '/tmp/pip.log',
@@ -42,9 +54,9 @@ class FakePythonEnvResolver extends PythonEnvResolver {
     required String buildDirectory,
     required String executablePath,
     String? storedPythonPath,
+    bool allowExtraction = true,
     void Function(String line)? onOutput,
   }) async {
     return pythonPath;
   }
 }
-

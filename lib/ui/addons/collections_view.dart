@@ -9,6 +9,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
 import 'package:freecad_launcher/domain/bundles/bundle_json.dart';
 import 'package:freecad_launcher/domain/bundles/bundle_planner.dart';
 import 'package:freecad_launcher/domain/bundles/bundle_rules.dart';
@@ -81,9 +82,7 @@ class _CollectionsTabState extends State<CollectionsTab> {
         itemCount: bundles.length,
         itemBuilder: (context, index) {
           final bundle = bundles[index];
-          final count = items
-              .where((item) => item.bundleId == bundle.id)
-              .length;
+          final count = items.where((item) => item.bundleId == bundle.id).length;
           return Card(
             margin: const EdgeInsets.only(bottom: 8),
             child: ListTile(
@@ -91,8 +90,7 @@ class _CollectionsTabState extends State<CollectionsTab> {
               title: Text(bundle.name),
               subtitle: Text(
                 [
-                  if ((bundle.description ?? '').isNotEmpty)
-                    bundle.description!,
+                  if ((bundle.description ?? '').isNotEmpty) bundle.description!,
                   l10n.bundlesItemCount(count),
                 ].join('\n'),
               ),
@@ -164,9 +162,7 @@ class _CollectionsTabState extends State<CollectionsTab> {
         content: Text(
           result.unresolvedAddonIds.isEmpty
               ? l10n.bundlesImported
-              : l10n.bundlesImportedUnresolved(
-                  result.unresolvedAddonIds.length,
-                ),
+              : l10n.bundlesImportedUnresolved(result.unresolvedAddonIds.length),
         ),
       ),
     );
@@ -189,11 +185,7 @@ class _CollectionsTabState extends State<CollectionsTab> {
 }
 
 class BundleDetailView extends SignalStatefulWidget {
-  const BundleDetailView({
-    super.key,
-    required this.bundleId,
-    required this.onBack,
-  });
+  const BundleDetailView({super.key, required this.bundleId, required this.onBack});
 
   final String bundleId;
   final VoidCallback onBack;
@@ -253,10 +245,7 @@ class _BundleDetailViewState extends State<BundleDetailView> {
             padding: const EdgeInsets.all(16),
             children: [
               if ((bundle.description ?? '').isNotEmpty) ...[
-                Text(
-                  bundle.description!,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+                Text(bundle.description!, style: Theme.of(context).textTheme.bodyMedium),
                 const SizedBox(height: 12),
               ],
               Card(
@@ -275,9 +264,7 @@ class _BundleDetailViewState extends State<BundleDetailView> {
                             ),
                           ),
                           FilledButton.tonalIcon(
-                            onPressed: items.isEmpty
-                                ? null
-                                : () => _apply(context, bundle),
+                            onPressed: items.isEmpty ? null : () => _apply(context, bundle),
                             icon: const Icon(Icons.playlist_add_check),
                             label: Text(l10n.bundlesApply),
                           ),
@@ -299,8 +286,7 @@ class _BundleDetailViewState extends State<BundleDetailView> {
                           ),
                         )
                       else
-                        for (final item in items)
-                          _BundleItemTile(bundleId: bundle.id, item: item),
+                        for (final item in items) _BundleItemTile(bundleId: bundle.id, item: item),
                     ],
                   ),
                 ),
@@ -319,16 +305,14 @@ class _BundleDetailViewState extends State<BundleDetailView> {
     final encoded = controller.exportJson(bundle.id);
     encoded.fold(
       (json) => null,
-      (error) => messenger.showSnackBar(
-        SnackBar(content: Text('${l10n.bundlesExportFailed}: $error')),
-      ),
+      (error) =>
+          messenger.showSnackBar(SnackBar(content: Text('${l10n.bundlesExportFailed}: $error'))),
     );
     final json = encoded.valueOrNull;
     if (json == null) {
       return;
     }
-    final fileName =
-        '${bundle.name.replaceAll(RegExp(r'[^A-Za-z0-9._ -]'), '_')}.json';
+    final fileName = '${bundle.name.replaceAll(RegExp(r'[^A-Za-z0-9._ -]'), '_')}.json';
     final location = await getSaveLocation(suggestedName: fileName);
     if (location == null || !mounted) {
       return;
@@ -340,9 +324,7 @@ class _BundleDetailViewState extends State<BundleDetailView> {
       }
       messenger.showSnackBar(SnackBar(content: Text(l10n.bundlesExported)));
     } on Object catch (error) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('${l10n.bundlesExportFailed}: $error')),
-      );
+      messenger.showSnackBar(SnackBar(content: Text('${l10n.bundlesExportFailed}: $error')));
     }
   }
 
@@ -392,9 +374,8 @@ class _BundleDetailViewState extends State<BundleDetailView> {
         messenger.showSnackBar(SnackBar(content: Text(l10n.bundlesDeleted)));
         widget.onBack();
       },
-      (error) => messenger.showSnackBar(
-        SnackBar(content: Text('${l10n.bundlesDeleteFailed}: $error')),
-      ),
+      (error) =>
+          messenger.showSnackBar(SnackBar(content: Text('${l10n.bundlesDeleteFailed}: $error'))),
     );
   }
 
@@ -408,10 +389,7 @@ class _BundleDetailViewState extends State<BundleDetailView> {
   Future<void> _addAddon(BuildContext context, Bundle bundle) async {
     final l10n = AppLocalizations.of(context);
     final services = AppScope.of(context);
-    final presentIds = services.bundles
-        .itemsFor(bundle.id)
-        .map((item) => item.addonId)
-        .toSet();
+    final presentIds = services.bundles.itemsFor(bundle.id).map((item) => item.addonId).toSet();
     final addon = await showDialog<Addon>(
       context: context,
       builder: (context) => AddonPickerDialog(
@@ -462,12 +440,8 @@ class _BundleItemTile extends StatelessWidget {
                   isDense: true,
                   items: [
                     for (final branch in addon.branches)
-                      DropdownMenuItem(
-                        value: branch.gitRef,
-                        child: Text(branch.gitRef),
-                      ),
-                    if (value != null &&
-                        !addon.branches.any((branch) => branch.gitRef == value))
+                      DropdownMenuItem(value: branch.gitRef, child: Text(branch.gitRef)),
+                    if (value != null && !addon.branches.any((branch) => branch.gitRef == value))
                       DropdownMenuItem(value: value, child: Text(value)),
                   ],
                   onChanged: (ref) => services.bundles.setItemBranch(
@@ -481,10 +455,7 @@ class _BundleItemTile extends StatelessWidget {
       trailing: IconButton(
         icon: const Icon(Icons.close),
         tooltip: l10n.bundlesRemoveItem,
-        onPressed: () => services.bundles.removeItem(
-          bundleId: bundleId,
-          addonId: item.addonId,
-        ),
+        onPressed: () => services.bundles.removeItem(bundleId: bundleId, addonId: item.addonId),
       ),
     );
   }
@@ -500,9 +471,7 @@ class BundleEditDialog extends SignalStatefulWidget {
 }
 
 class _BundleEditDialogState extends State<BundleEditDialog> {
-  late final TextEditingController _name = TextEditingController(
-    text: widget.bundle?.name,
-  );
+  late final TextEditingController _name = TextEditingController(text: widget.bundle?.name);
   late final TextEditingController _description = TextEditingController(
     text: widget.bundle?.description,
   );
@@ -549,10 +518,7 @@ class _BundleEditDialogState extends State<BundleEditDialog> {
                   hint: Text(l10n.bundlesFromProfileNone),
                   items: [
                     for (final profile in profiles)
-                      DropdownMenuItem(
-                        value: profile.id,
-                        child: Text(profile.name),
-                      ),
+                      DropdownMenuItem(value: profile.id, child: Text(profile.name)),
                   ],
                   onChanged: (value) => setState(() => _profileId = value),
                 ),
@@ -561,9 +527,9 @@ class _BundleEditDialogState extends State<BundleEditDialog> {
               const SizedBox(height: 8),
               Text(
                 _error!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.error),
               ),
             ],
           ],
@@ -585,10 +551,7 @@ class _BundleEditDialogState extends State<BundleEditDialog> {
   Future<void> _save(BuildContext context, BundlesController controller) async {
     final l10n = AppLocalizations.of(context);
     final currentId = widget.bundle?.id;
-    final issue = await controller.checkName(
-      _name.text,
-      currentBundleId: currentId,
-    );
+    final issue = await controller.checkName(_name.text, currentBundleId: currentId);
     if (issue != null) {
       setState(
         () => _error = switch (issue) {
@@ -607,10 +570,7 @@ class _BundleEditDialogState extends State<BundleEditDialog> {
     final profileId = _profileId;
     final result = widget.bundle == null
         ? (profileId == null
-              ? await controller.create(
-                  name: _name.text,
-                  description: _description.text,
-                )
+              ? await controller.create(name: _name.text, description: _description.text)
               : await controller.createFromProfile(
                   profileId: profileId,
                   name: _name.text,
@@ -658,15 +618,14 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
     final profiles = services.profiles.profiles.value;
     final catalog = services.addons.addons.value;
     final installedRows = services.addons.installedAddons.value;
-    final bundleItems = services.bundles.items.value
-        .where((item) => item.bundleId == widget.bundleId);
+    final bundleItems = services.bundles.items.value.where(
+      (item) => item.bundleId == widget.bundleId,
+    );
 
-    final profileId =
-        _profileId ?? (profiles.isEmpty ? null : profiles.first.id);
+    final profileId = _profileId ?? (profiles.isEmpty ? null : profiles.first.id);
     final plan = planBundleApply(
       entries: [
-        for (final item in bundleItems)
-          BundlePlanEntry(addonId: item.addonId, gitRef: item.gitRef),
+        for (final item in bundleItems) BundlePlanEntry(addonId: item.addonId, gitRef: item.gitRef),
       ],
       catalog: catalog,
       installed: [
@@ -714,8 +673,7 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
             child: Text(l10n.bundlesCancel),
           ),
           FilledButton(
-            onPressed:
-                !applying && profileId != null && plan.actionable.isNotEmpty
+            onPressed: !applying && profileId != null && plan.actionable.isNotEmpty
                 ? () => _run(services, profileId, plan)
                 : null,
             child: Text(l10n.bundlesApply),
@@ -744,10 +702,7 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
               value: profileId,
               items: [
                 for (final profile in profiles)
-                  DropdownMenuItem(
-                    value: profile.id,
-                    child: Text(profile.name),
-                  ),
+                  DropdownMenuItem(value: profile.id, child: Text(profile.name)),
               ],
               onChanged: (value) => setState(() => _profileId = value),
             ),
@@ -757,15 +712,12 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
           Text(l10n.bundlesApplyNothing)
         else
           Expanded(
-            child: ListView(
-              children: [for (final item in plan.items) _planRow(l10n, item)],
-            ),
+            child: ListView(children: [for (final item in plan.items) _planRow(l10n, item)]),
           ),
         if (plan.hasRequirements)
           CheckboxListTile(
             value: _installRequirements,
-            onChanged: (value) =>
-                setState(() => _installRequirements = value ?? false),
+            onChanged: (value) => setState(() => _installRequirements = value ?? false),
             title: Text(l10n.bundlesApplyInstallRequirements),
             dense: true,
             contentPadding: EdgeInsets.zero,
@@ -785,8 +737,7 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
       trailing: CompactBadge(
         label: _actionLabel(l10n, item.action),
         tone: switch (item.action) {
-          BundleItemAction.install || BundleItemAction.update =>
-            CompactBadgeTone.info,
+          BundleItemAction.install || BundleItemAction.update => CompactBadgeTone.info,
           BundleItemAction.skip => CompactBadgeTone.neutral,
           BundleItemAction.unavailable => CompactBadgeTone.warning,
         },
@@ -810,20 +761,14 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
               tone: CompactBadgeTone.success,
             ),
             CompactBadge(
-              label: l10n.bundlesApplyUpdatedCount(
-                summary.count(BundleApplyItemStatus.updated),
-              ),
+              label: l10n.bundlesApplyUpdatedCount(summary.count(BundleApplyItemStatus.updated)),
               tone: CompactBadgeTone.info,
             ),
             CompactBadge(
-              label: l10n.bundlesApplySkippedCount(
-                summary.count(BundleApplyItemStatus.skipped),
-              ),
+              label: l10n.bundlesApplySkippedCount(summary.count(BundleApplyItemStatus.skipped)),
             ),
             CompactBadge(
-              label: l10n.bundlesApplyFailedCount(
-                summary.count(BundleApplyItemStatus.failed),
-              ),
+              label: l10n.bundlesApplyFailedCount(summary.count(BundleApplyItemStatus.failed)),
               tone: CompactBadgeTone.danger,
             ),
           ],
@@ -837,10 +782,7 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
                   ListTile(
                     dense: true,
                     contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      Icons.error_outline,
-                      color: theme.colorScheme.error,
-                    ),
+                    leading: Icon(Icons.error_outline, color: theme.colorScheme.error),
                     title: Text(failure.item.addonName ?? failure.item.addonId),
                     subtitle: Text(failure.error ?? ''),
                   ),
@@ -876,15 +818,13 @@ class _BundleApplyDialogState extends State<BundleApplyDialog> {
     };
   }
 
-  Future<void> _run(
-    AppServices services,
-    String profileId,
-    BundleApplyPlan plan,
-  ) async {
+  Future<void> _run(AppServices services, String profileId, BundleApplyPlan plan) async {
     final summary = await services.bundleApply.apply(
       profileId: profileId,
       items: plan.actionable,
-      installRequirements: _installRequirements,
+      selection: _installRequirements
+          ? AddonDependencySelection.requiredOnly
+          : AddonDependencySelection.none,
     );
     if (!mounted) {
       return;
@@ -944,9 +884,9 @@ class _BundleImportDialogState extends State<BundleImportDialog> {
                   if (_unresolved(decoded).isNotEmpty)
                     Text(
                       l10n.bundlesImportUnresolved(_unresolved(decoded).length),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.error),
                     ),
                   if ((decoded.description ?? '').isNotEmpty) ...[
                     const SizedBox(height: 8),
@@ -956,9 +896,9 @@ class _BundleImportDialogState extends State<BundleImportDialog> {
                     const SizedBox(height: 8),
                     Text(
                       _error!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.error),
                     ),
                   ],
                 ],
@@ -1027,11 +967,7 @@ class _BundleImportDialogState extends State<BundleImportDialog> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({
-    required this.title,
-    required this.onBack,
-    this.actions = const [],
-  });
+  const _Header({required this.title, required this.onBack, this.actions = const []});
 
   final String title;
   final VoidCallback onBack;
@@ -1049,9 +985,7 @@ class _Header extends StatelessWidget {
             tooltip: l10n.addonsBack,
             onPressed: onBack,
           ),
-          Expanded(
-            child: Text(title, style: Theme.of(context).textTheme.titleLarge),
-          ),
+          Expanded(child: Text(title, style: Theme.of(context).textTheme.titleLarge)),
           ...actions,
         ],
       ),

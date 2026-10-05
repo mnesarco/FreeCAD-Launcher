@@ -8,14 +8,13 @@ import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/database.dart';
+import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
 import 'package:freecad_launcher/domain/addons/addon_id_rules.dart';
 import 'package:freecad_launcher/domain/addons/addon_source.dart';
 import 'package:freecad_launcher/domain/addons/repository_archive.dart';
-import 'package:freecad_launcher/domain/python/requirements_parser.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
-import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:freecad_launcher/state/app_services.dart';
-import 'package:freecad_launcher/ui/addons/requirements_dialog.dart';
+import 'package:freecad_launcher/ui/addons/addon_dependencies_dialog.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
 
@@ -67,10 +66,11 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
     if (profileId == null || !profiles.any((profile) => profile.id == profileId)) {
       profileId = profiles.isEmpty ? null : profiles.first.id;
     }
-    final installed = services.addons.installedAddons.value
-        .where((row) => addonSourceFromStorage(row.source).isCustom)
-        .toList()
-      ..sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
+    final installed =
+        services.addons.installedAddons.value
+            .where((row) => addonSourceFromStorage(row.source).isCustom)
+            .toList()
+          ..sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
     final profileNames = {for (final profile in profiles) profile.id: profile.name};
 
     return ListView(
@@ -173,7 +173,7 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
         repositoryUrl: url,
         gitRef: _refController.text,
         profileId: profileId,
-        onRequirements: (requirements) => _askRequirements(requirements, name),
+        onDependencies: (plan) => _askDependencies(plan, name),
       ),
       l10n.addonsInstalledMessage,
     );
@@ -190,7 +190,7 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
       () => AppScope.of(context).addons.installFromArchive(
         archivePath: archive.path,
         profileId: profileId,
-        onRequirements: (requirements) => _askRequirements(requirements, name),
+        onDependencies: (plan) => _askDependencies(plan, name),
       ),
       l10n.addonsInstalledMessage,
     );
@@ -207,7 +207,7 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
       () => AppScope.of(context).addons.installFromDirectory(
         sourcePath: directoryPath,
         profileId: profileId,
-        onRequirements: (requirements) => _askRequirements(requirements, name),
+        onDependencies: (plan) => _askDependencies(plan, name),
       ),
       l10n.addonsInstalledMessage,
     );
@@ -218,7 +218,7 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
       () => AppScope.of(context).addons.updateFromRepository(
         addonId: row.addonId,
         profileId: row.profileId,
-        onRequirements: (requirements) => _askRequirements(requirements, row.displayName),
+        onDependencies: (plan) => _askDependencies(plan, row.displayName),
       ),
       l10n.addonsUpdatedMessage,
     );
@@ -238,7 +238,7 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
         addonId: row.addonId,
         profileId: row.profileId,
         archivePath: file.path,
-        onRequirements: (requirements) => _askRequirements(requirements, row.displayName),
+        onDependencies: (plan) => _askDependencies(plan, row.displayName),
       ),
       l10n.addonsUpdatedMessage,
     );
@@ -286,18 +286,22 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
         addon: row,
         profileId: target.id,
         archivePath: archivePath,
-        onRequirements: (requirements) => _askRequirements(requirements, row.displayName),
+        onDependencies: (plan) => _askDependencies(plan, row.displayName),
       ),
       l10n.addonsInstalledMessage,
     );
   }
 
   Future<void> _remove(InstalledAddon row, AppLocalizations l10n) async {
+    final dependents = AppScope.of(context).addons.dependentsOf(row.profileId, row.addonId);
+    final warning = dependents.isEmpty
+        ? ''
+        : '\n\n${l10n.addonsDependenciesRequiredBy(dependents.join(', '))}';
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.addonsRemoveTitle),
-        content: Text('${row.displayName}\n\n${l10n.addonsRemoveMessage}'),
+        content: Text('${row.displayName}\n\n${l10n.addonsRemoveMessage}$warning'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -337,20 +341,11 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
     }
   }
 
-  Future<CustomRequirementsDecision> _askRequirements(
-    List<PythonRequirement> requirements,
-    String addonName,
-  ) async {
-    final choice = await showRequirementsConsentDialog(
-      context,
-      addonName: addonName,
-      requirements: requirements,
-    );
-    return switch (choice) {
-      RequirementsChoice.installPackages => CustomRequirementsDecision.installPackages,
-      RequirementsChoice.addonOnly => CustomRequirementsDecision.addonOnly,
-      RequirementsChoice.cancel => CustomRequirementsDecision.cancel,
-    };
+  Future<AddonDependencySelection?> _askDependencies(AddonDependencyPlan plan, String addonName) {
+    if (!mounted) {
+      return Future.value();
+    }
+    return showAddonDependenciesDialog(context, addonName: addonName, plan: plan);
   }
 
   Future<void> _run(Future<Result<void>> Function() action, String successMessage) async {
@@ -694,10 +689,7 @@ class _ProfilePickerDialogState extends State<_ProfilePickerDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.versionsCancel),
-        ),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.versionsCancel)),
         FilledButton(
           onPressed: () {
             final target = widget.profiles.firstWhere(

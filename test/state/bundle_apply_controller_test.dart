@@ -5,16 +5,17 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/core/errors.dart';
 import 'package:freecad_launcher/core/result.dart';
+import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
 import 'package:freecad_launcher/domain/bundles/bundle_planner.dart';
 import 'package:freecad_launcher/state/bundle_apply_controller.dart';
 
 class _Call {
-  const _Call(this.kind, this.addonId, this.branchRef, {this.installRequirements});
+  const _Call(this.kind, this.addonId, this.branchRef, {this.selection});
 
   final String kind;
   final String addonId;
   final String branchRef;
-  final bool? installRequirements;
+  final AddonDependencySelection? selection;
 }
 
 void main() {
@@ -44,24 +45,13 @@ void main() {
             required String addonId,
             required String branchRef,
             required String profileId,
-            required bool installRequirements,
+            AddonDependencySelection? selection,
           }) async {
-            calls.add(
-              _Call(
-                'install',
-                addonId,
-                branchRef,
-                installRequirements: installRequirements,
-              ),
-            );
+            calls.add(_Call('install', addonId, branchRef, selection: selection));
             return const Ok(null);
           },
       update:
-          ({
-            required String addonId,
-            required String branchRef,
-            required String profileId,
-          }) async {
+          ({required String addonId, required String branchRef, required String profileId}) async {
             calls.add(_Call('update', addonId, branchRef));
             return const Ok(null);
           },
@@ -78,7 +68,7 @@ void main() {
         item('WithReqs', BundleItemAction.install, hasRequirements: true),
         item('Old', BundleItemAction.update),
       ],
-      installRequirements: true,
+      selection: AddonDependencySelection.requiredOnly,
     );
 
     expect(calls.map((call) => '${call.kind}:${call.addonId}'), [
@@ -86,8 +76,8 @@ void main() {
       'install:WithReqs',
       'update:Old',
     ]);
-    expect(calls.first.installRequirements, isFalse);
-    expect(calls[1].installRequirements, isTrue);
+    expect(calls.first.selection?.installRequired, isTrue);
+    expect(calls[1].selection?.installRequired, isTrue);
     expect(summary.count(BundleApplyItemStatus.installed), 2);
     expect(summary.count(BundleApplyItemStatus.updated), 1);
     expect(summary.count(BundleApplyItemStatus.skipped), 2);
@@ -103,7 +93,7 @@ void main() {
       items: [item('WithReqs', BundleItemAction.install, hasRequirements: true)],
     );
 
-    expect(calls.single.installRequirements, isFalse);
+    expect(calls.single.selection, isNull);
   });
 
   test('collects failures and keeps going', () async {
@@ -113,7 +103,7 @@ void main() {
             required String addonId,
             required String branchRef,
             required String profileId,
-            required bool installRequirements,
+            AddonDependencySelection? selection,
           }) async {
             calls.add(_Call('install', addonId, branchRef));
             if (addonId == 'Broken') {
@@ -122,19 +112,13 @@ void main() {
             return const Ok(null);
           },
       update:
-          ({
-            required String addonId,
-            required String branchRef,
-            required String profileId,
-          }) async => const Ok(null),
+          ({required String addonId, required String branchRef, required String profileId}) async =>
+              const Ok(null),
     );
 
     final summary = await controller.apply(
       profileId: 'profile-1',
-      items: [
-        item('Broken', BundleItemAction.install),
-        item('A2plus', BundleItemAction.install),
-      ],
+      items: [item('Broken', BundleItemAction.install), item('A2plus', BundleItemAction.install)],
     );
 
     expect(summary.count(BundleApplyItemStatus.failed), 1);
@@ -152,17 +136,14 @@ void main() {
             required String addonId,
             required String branchRef,
             required String profileId,
-            required bool installRequirements,
+            AddonDependencySelection? selection,
           }) async {
             await gate.future;
             return const Ok(null);
           },
       update:
-          ({
-            required String addonId,
-            required String branchRef,
-            required String profileId,
-          }) async => const Ok(null),
+          ({required String addonId, required String branchRef, required String profileId}) async =>
+              const Ok(null),
     );
 
     final run = controller.apply(

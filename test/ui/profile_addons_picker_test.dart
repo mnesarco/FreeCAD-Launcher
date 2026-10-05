@@ -9,6 +9,7 @@ import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/platform/addon_installer.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
@@ -58,7 +59,7 @@ typedef _InstallCall = ({
   String addonId,
   String branchRef,
   String profileId,
-  bool installRequirements,
+  AddonDependencySelection? selection,
 });
 
 typedef _RemoveCall = ({String addonId, String profileId});
@@ -73,28 +74,30 @@ class _SpyAddonsController extends AddonsController {
 
   final installs = <_InstallCall>[];
   final removes = <_RemoveCall>[];
+  List<String> dependents = const [];
+
+  @override
+  List<String> dependentsOf(String profileId, String addonId) => dependents;
 
   @override
   Future<Result<void>> install({
     required String addonId,
     required String branchRef,
     required String profileId,
-    bool installRequirements = false,
+    AddonDependencySelection? selection,
+    AddonDependencyHandler? onDependencies,
   }) async {
     installs.add((
       addonId: addonId,
       branchRef: branchRef,
       profileId: profileId,
-      installRequirements: installRequirements,
+      selection: selection,
     ));
     return const Ok(null);
   }
 
   @override
-  Future<Result<void>> remove({
-    required String addonId,
-    required String profileId,
-  }) async {
+  Future<Result<void>> remove({required String addonId, required String profileId}) async {
     removes.add((addonId: addonId, profileId: profileId));
     return const Ok(null);
   }
@@ -206,7 +209,7 @@ void main() {
     expect(addons.installs.single.addonId, 'A2plus');
     expect(addons.installs.single.branchRef, 'master');
     expect(addons.installs.single.profileId, profile.id);
-    expect(addons.installs.single.installRequirements, isFalse);
+    expect(addons.installs.single.selection, isNull);
     expect(find.text('Addon installed'), findsOneWidget);
   });
 
@@ -240,11 +243,7 @@ void main() {
 
   testWidgets('removes an installed addon after confirmation', (tester) async {
     await db.installedAddonsDao.save(
-      sampleAddon(
-        profileId: profile.id,
-        addonId: 'A2plus',
-        displayName: 'A2plus',
-      ),
+      sampleAddon(profileId: profile.id, addonId: 'A2plus', displayName: 'A2plus'),
     );
     await openAddonsTab(tester);
 
@@ -267,12 +266,28 @@ void main() {
     expect(find.text('Addon removed'), findsOneWidget);
   });
 
+  testWidgets('warns when other installed addons depend on the removed addon', (tester) async {
+    await db.installedAddonsDao.save(
+      sampleAddon(profileId: profile.id, addonId: 'A2plus', displayName: 'A2plus'),
+    );
+    addons.dependents = ['Beltrami'];
+    await openAddonsTab(tester);
+
+    await tester.tap(find.byTooltip('Remove'));
+    await settle(tester);
+
+    expect(find.textContaining('Required by: Beltrami'), findsOneWidget);
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await settle(tester);
+    expect(addons.removes, isEmpty);
+  });
+
   testWidgets('requirements consent gates the install', (tester) async {
     await openAddonsTab(tester);
     await openPicker(tester);
     await tapInstall(tester, 'RequiresPy');
 
-    expect(find.text('Python packages required'), findsOneWidget);
+    expect(find.text('Required Python packages'), findsOneWidget);
     await tester.tap(find.widgetWithText(TextButton, 'Cancel').last);
     await settle(tester);
     expect(addons.installs, isEmpty);
@@ -283,6 +298,6 @@ void main() {
     await settle(tester);
 
     expect(addons.installs, hasLength(1));
-    expect(addons.installs.single.installRequirements, isFalse);
+    expect(addons.installs.single.selection?.installRequired, isFalse);
   });
 }

@@ -205,7 +205,7 @@
   },
   "manifestAbsolutePaths": "These absolute paths in the exported config will not be valid here:",
   "manifestReinstall": "Reinstall addons and Python packages",
-  "manifestInstallRequirements": "Also install declared Python requirements",
+  "manifestInstallRequirements": "Also install declared dependencies",
   "manifestImport": "Import",
   "manifestImporting": "Importing…",
   "manifestImportingStep": "Installing {name}…",
@@ -419,7 +419,7 @@
       "branch": {"type": "String"}
     }
   },
-  "bundlesApplyInstallRequirements": "Also install declared Python requirements",
+  "bundlesApplyInstallRequirements": "Also install declared dependencies",
   "bundlesApplyNothing": "Nothing to apply.",
   "bundlesApplyRunning": "Applying…",
   "bundlesApplySummary": "Result",
@@ -515,9 +515,8 @@
   "addonsContent": "Content",
   "addonsTags": "Tags",
   "addonsBranches": "Branches",
-  "addonsRequirements": "Python requirements",
-  "addonsRequirementsYes": "Found",
-  "addonsRequirementsNo": "None",
+  "addonsDependencies": "Dependencies",
+  "addonsDependenciesNone": "None",
   "addonsInstall": "Install",
   "addonsAdd": "Add addon",
   "addonsAddTitle": "Add addon to profile",
@@ -535,10 +534,25 @@
   "addonsRemovedMessage": "Addon removed",
   "addonsRemoveFailed": "Could not remove the addon",
   "addonsNoProfiles": "Create a profile first to install addons.",
-  "addonsRequirementsTitle": "Python packages required",
-  "addonsRequirementsMessage": "This addon declares Python dependencies. Install them into the profile with pip? Packages go under the profile's AdditionalPythonPackages; system Python is untouched.",
-  "addonsRequirementsInstall": "Install packages",
-  "addonsRequirementsAddonOnly": "Addon only",
+  "addonsDependenciesTitle": "Install dependencies",
+  "addonsDependenciesMessage": "This addon declares dependencies from its package.xml and requirements.txt. Install the dependent addons and Python packages into this profile? Python packages go under the profile's AdditionalPythonPackages; system Python is untouched.",
+  "addonsDependenciesInstall": "Install dependencies",
+  "addonsDependenciesAddonOnly": "Addon only",
+  "addonsDependenciesRequiredAddons": "Required addons",
+  "addonsDependenciesOptionalAddons": "Optional addons",
+  "addonsDependenciesRequiredPython": "Required Python packages",
+  "addonsDependenciesOptionalPython": "Optional Python packages",
+  "addonsDependenciesInternal": "Provided by FreeCAD",
+  "addonsDependenciesUnresolved": "Unresolved dependencies",
+  "addonsDependenciesInvalid": "Invalid requirements",
+  "addonsDependenciesRequiredBy": "Required by: {names}",
+  "@addonsDependenciesRequiredBy": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "addonsRequirementsInvalid": "Cannot parse",
   "addonsRequirementsFailed": "Python packages failed",
   "addonsInstallSoon": "The install engine arrives in the next milestone.",

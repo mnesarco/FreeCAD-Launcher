@@ -5,6 +5,40 @@ import 'package:xml/xml.dart';
 
 import 'package:freecad_launcher/domain/addons/addon.dart';
 
+enum AddonDependencyType { automatic, addon, internal, python }
+
+class AddonDependency {
+  const AddonDependency({
+    required this.name,
+    this.type = AddonDependencyType.automatic,
+    this.optional = false,
+    this.versionLt = '',
+    this.versionLte = '',
+    this.versionEq = '',
+    this.versionGte = '',
+    this.versionGt = '',
+  });
+
+  final String name;
+  final AddonDependencyType type;
+  final bool optional;
+
+  /// Version constraints are parsed for completeness but intentionally not used
+  /// when resolving or installing dependencies (D-108, AddonManager parity).
+  final String versionLt;
+  final String versionLte;
+  final String versionEq;
+  final String versionGte;
+  final String versionGt;
+
+  bool get hasVersionConstraint =>
+      versionLt.isNotEmpty ||
+      versionLte.isNotEmpty ||
+      versionEq.isNotEmpty ||
+      versionGte.isNotEmpty ||
+      versionGt.isNotEmpty;
+}
+
 class PackageXmlInfo {
   const PackageXmlInfo({
     required this.name,
@@ -15,6 +49,7 @@ class PackageXmlInfo {
     required this.tags,
     required this.people,
     required this.content,
+    this.dependencies = const [],
   });
 
   final String name;
@@ -25,6 +60,7 @@ class PackageXmlInfo {
   final List<String> tags;
   final List<AddonPerson> people;
   final Set<AddonContentType> content;
+  final List<AddonDependency> dependencies;
 }
 
 PackageXmlInfo? parsePackageXml(String xmlText) {
@@ -93,5 +129,38 @@ PackageXmlInfo? parsePackageXml(String xmlText) {
     tags: tags,
     people: people,
     content: content,
+    dependencies: _parseDependencies(root),
   );
+}
+
+List<AddonDependency> _parseDependencies(XmlElement root) {
+  final dependencies = <AddonDependency>[];
+  for (final element in root.findAllElements('depend')) {
+    final name = element.innerText.trim();
+    if (name.isEmpty) {
+      continue;
+    }
+    dependencies.add(
+      AddonDependency(
+        name: name,
+        type: _dependencyType(element.getAttribute('type')),
+        optional: (element.getAttribute('optional') ?? '').toLowerCase() == 'true',
+        versionLt: element.getAttribute('version_lt')?.trim() ?? '',
+        versionLte: element.getAttribute('version_lte')?.trim() ?? '',
+        versionEq: element.getAttribute('version_eq')?.trim() ?? '',
+        versionGte: element.getAttribute('version_gte')?.trim() ?? '',
+        versionGt: element.getAttribute('version_gt')?.trim() ?? '',
+      ),
+    );
+  }
+  return dependencies;
+}
+
+AddonDependencyType _dependencyType(String? raw) {
+  return switch (raw?.trim().toLowerCase()) {
+    'addon' => AddonDependencyType.addon,
+    'internal' => AddonDependencyType.internal,
+    'python' => AddonDependencyType.python,
+    _ => AddonDependencyType.automatic,
+  };
 }

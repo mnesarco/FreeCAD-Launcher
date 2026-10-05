@@ -973,7 +973,7 @@ abstract class AppLocalizations {
   /// No description provided for @manifestInstallRequirements.
   ///
   /// In en, this message translates to:
-  /// **'Also install declared Python requirements'**
+  /// **'Also install declared dependencies'**
   String get manifestInstallRequirements;
 
   /// No description provided for @manifestImport.
@@ -1921,7 +1921,7 @@ abstract class AppLocalizations {
   /// No description provided for @bundlesApplyInstallRequirements.
   ///
   /// In en, this message translates to:
-  /// **'Also install declared Python requirements'**
+  /// **'Also install declared dependencies'**
   String get bundlesApplyInstallRequirements;
 
   /// No description provided for @bundlesApplyNothing.
@@ -2254,23 +2254,17 @@ abstract class AppLocalizations {
   /// **'Branches'**
   String get addonsBranches;
 
-  /// No description provided for @addonsRequirements.
+  /// No description provided for @addonsDependencies.
   ///
   /// In en, this message translates to:
-  /// **'Python requirements'**
-  String get addonsRequirements;
+  /// **'Dependencies'**
+  String get addonsDependencies;
 
-  /// No description provided for @addonsRequirementsYes.
-  ///
-  /// In en, this message translates to:
-  /// **'Found'**
-  String get addonsRequirementsYes;
-
-  /// No description provided for @addonsRequirementsNo.
+  /// No description provided for @addonsDependenciesNone.
   ///
   /// In en, this message translates to:
   /// **'None'**
-  String get addonsRequirementsNo;
+  String get addonsDependenciesNone;
 
   /// No description provided for @addonsInstall.
   ///
@@ -2368,29 +2362,77 @@ abstract class AppLocalizations {
   /// **'Create a profile first to install addons.'**
   String get addonsNoProfiles;
 
-  /// No description provided for @addonsRequirementsTitle.
+  /// No description provided for @addonsDependenciesTitle.
   ///
   /// In en, this message translates to:
-  /// **'Python packages required'**
-  String get addonsRequirementsTitle;
+  /// **'Install dependencies'**
+  String get addonsDependenciesTitle;
 
-  /// No description provided for @addonsRequirementsMessage.
+  /// No description provided for @addonsDependenciesMessage.
   ///
   /// In en, this message translates to:
-  /// **'This addon declares Python dependencies. Install them into the profile with pip? Packages go under the profile\'s AdditionalPythonPackages; system Python is untouched.'**
-  String get addonsRequirementsMessage;
+  /// **'This addon declares dependencies from its package.xml and requirements.txt. Install the dependent addons and Python packages into this profile? Python packages go under the profile\'s AdditionalPythonPackages; system Python is untouched.'**
+  String get addonsDependenciesMessage;
 
-  /// No description provided for @addonsRequirementsInstall.
+  /// No description provided for @addonsDependenciesInstall.
   ///
   /// In en, this message translates to:
-  /// **'Install packages'**
-  String get addonsRequirementsInstall;
+  /// **'Install dependencies'**
+  String get addonsDependenciesInstall;
 
-  /// No description provided for @addonsRequirementsAddonOnly.
+  /// No description provided for @addonsDependenciesAddonOnly.
   ///
   /// In en, this message translates to:
   /// **'Addon only'**
-  String get addonsRequirementsAddonOnly;
+  String get addonsDependenciesAddonOnly;
+
+  /// No description provided for @addonsDependenciesRequiredAddons.
+  ///
+  /// In en, this message translates to:
+  /// **'Required addons'**
+  String get addonsDependenciesRequiredAddons;
+
+  /// No description provided for @addonsDependenciesOptionalAddons.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional addons'**
+  String get addonsDependenciesOptionalAddons;
+
+  /// No description provided for @addonsDependenciesRequiredPython.
+  ///
+  /// In en, this message translates to:
+  /// **'Required Python packages'**
+  String get addonsDependenciesRequiredPython;
+
+  /// No description provided for @addonsDependenciesOptionalPython.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional Python packages'**
+  String get addonsDependenciesOptionalPython;
+
+  /// No description provided for @addonsDependenciesInternal.
+  ///
+  /// In en, this message translates to:
+  /// **'Provided by FreeCAD'**
+  String get addonsDependenciesInternal;
+
+  /// No description provided for @addonsDependenciesUnresolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Unresolved dependencies'**
+  String get addonsDependenciesUnresolved;
+
+  /// No description provided for @addonsDependenciesInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid requirements'**
+  String get addonsDependenciesInvalid;
+
+  /// No description provided for @addonsDependenciesRequiredBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Required by: {names}'**
+  String addonsDependenciesRequiredBy(String names);
 
   /// No description provided for @addonsRequirementsInvalid.
   ///

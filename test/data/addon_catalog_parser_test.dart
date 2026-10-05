@@ -3,6 +3,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/data/catalog/addon_catalog_parser.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/addons/package_xml.dart';
 
 void main() {
   const packageXml = '''
@@ -19,6 +20,8 @@ void main() {
       <classname>A2plusWorkbench</classname>
       <tag>Assembly</tag>
       <tag>  constraints  </tag>
+      <depend>numpy</depend>
+      <depend type="addon" optional="true">Curves</depend>
     </workbench>
     <preferencepack>
       <name>Custom</name>
@@ -28,7 +31,8 @@ void main() {
 </package>
 ''';
 
-  final catalogJson = '''
+  final catalogJson =
+      '''
 {
   "_meta": {"schema": 2},
   "\$schema": "https://example.invalid/schema",
@@ -114,6 +118,11 @@ void main() {
     expect(master.metadata!.people, hasLength(2));
     expect(master.metadata!.people.first.roles, ['author']);
     expect(master.metadata!.iconBase64, 'PD94bWw=');
+    expect(a2plus.hasDependencies, isTrue);
+    expect(master.metadata!.dependencies, hasLength(2));
+    expect(master.metadata!.dependencies.first.name, 'numpy');
+    expect(master.metadata!.dependencies.last.type, AddonDependencyType.addon);
+    expect(master.metadata!.dependencies.last.optional, isTrue);
 
     final dev = a2plus.branches.last;
     expect(dev.gitRef, 'dev');
@@ -200,8 +209,5 @@ void main() {
 }
 
 String _jsonString(String value) {
-  return value
-      .replaceAll(r'\', r'\\')
-      .replaceAll('"', r'\"')
-      .replaceAll('\n', r'\n');
+  return value.replaceAll(r'\', r'\\').replaceAll('"', r'\"').replaceAll('\n', r'\n');
 }

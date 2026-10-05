@@ -18,9 +18,7 @@ void main() {
   setUp(() {
     tempDirectory = Directory.systemTemp.createTempSync('fcl_python_env');
     launcher = FakeProcessLauncher();
-    resolver = PythonEnvResolver(
-      processRunner: ProcessRunner(launcher: launcher),
-    );
+    resolver = PythonEnvResolver(processRunner: ProcessRunner(launcher: launcher));
   });
 
   tearDown(() {
@@ -36,8 +34,7 @@ void main() {
   }
 
   test('prefers the stored interpreter path', () async {
-    final stored = File(p.join(tempDirectory.path, 'bin', 'python3'))
-      ..createSync(recursive: true);
+    final stored = File(p.join(tempDirectory.path, 'bin', 'python3'))..createSync(recursive: true);
 
     final result = await resolver.resolve(
       kind: BuildKind.custom,
@@ -51,8 +48,7 @@ void main() {
   });
 
   test('finds a nearby interpreter for custom builds', () async {
-    final python = File(p.join(tempDirectory.path, 'bin', 'python3'))
-      ..createSync(recursive: true);
+    final python = File(p.join(tempDirectory.path, 'bin', 'python3'))..createSync(recursive: true);
 
     final result = await resolver.resolve(
       kind: BuildKind.custom,
@@ -66,8 +62,7 @@ void main() {
   test('extracts an AppImage once and finds its interpreter', () async {
     final buildDirectory = p.join(tempDirectory.path, 'builds', 'b1');
     Directory(buildDirectory).createSync(recursive: true);
-    final appImage = File(p.join(tempDirectory.path, 'FreeCAD.AppImage'))
-      ..createSync();
+    final appImage = File(p.join(tempDirectory.path, 'FreeCAD.AppImage'))..createSync();
 
     final future = resolver.resolve(
       kind: BuildKind.appimage,
@@ -76,10 +71,7 @@ void main() {
     );
     await waitForHandle(0);
     expect(launcher.specs.single.arguments, ['--appimage-extract']);
-    expect(
-      launcher.specs.single.workingDirectory,
-      p.join(buildDirectory, 'extracted'),
-    );
+    expect(launcher.specs.single.workingDirectory, p.join(buildDirectory, 'extracted'));
 
     final python = File(
       p.join(buildDirectory, 'extracted', 'squashfs-root', 'usr', 'bin', 'python3'),
@@ -97,11 +89,44 @@ void main() {
     expect(launcher.specs, hasLength(1));
   });
 
+  test('does not extract when extraction is disabled (dialog phase)', () async {
+    final buildDirectory = p.join(tempDirectory.path, 'builds', 'b1');
+    Directory(buildDirectory).createSync(recursive: true);
+    final appImage = File(p.join(tempDirectory.path, 'FreeCAD.AppImage'))..createSync();
+
+    final result = await resolver.resolve(
+      kind: BuildKind.appimage,
+      buildDirectory: buildDirectory,
+      executablePath: appImage.path,
+      allowExtraction: false,
+    );
+
+    expect(result, isNull);
+    expect(launcher.specs, isEmpty);
+    expect(Directory(p.join(buildDirectory, 'extracted')).existsSync(), isFalse);
+  });
+
+  test('uses an existing extraction when extraction is disabled', () async {
+    final buildDirectory = p.join(tempDirectory.path, 'builds', 'b1');
+    final python = File(
+      p.join(buildDirectory, 'extracted', 'squashfs-root', 'usr', 'bin', 'python3'),
+    )..createSync(recursive: true);
+
+    final result = await resolver.resolve(
+      kind: BuildKind.appimage,
+      buildDirectory: buildDirectory,
+      executablePath: p.join(tempDirectory.path, 'FreeCAD.AppImage'),
+      allowExtraction: false,
+    );
+
+    expect(result, python.path);
+    expect(launcher.specs, isEmpty);
+  });
+
   test('returns null when extraction fails', () async {
     final buildDirectory = p.join(tempDirectory.path, 'builds', 'b1');
     Directory(buildDirectory).createSync(recursive: true);
-    final appImage = File(p.join(tempDirectory.path, 'FreeCAD.AppImage'))
-      ..createSync();
+    final appImage = File(p.join(tempDirectory.path, 'FreeCAD.AppImage'))..createSync();
 
     final future = resolver.resolve(
       kind: BuildKind.appimage,

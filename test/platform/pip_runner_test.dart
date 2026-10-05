@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:freecad_launcher/platform/freecad_macro_runner.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/pip_runner.dart';
 import 'package:freecad_launcher/platform/process.dart';
@@ -92,6 +93,85 @@ void main() {
     expect(result.isSuccess, isFalse);
     expect(result.exitCode, 1);
     expect(result.outputTail, contains('No matching distribution'));
+  });
+
+  test('installs inside the AppImage through a macro without extracting', () async {
+    final target = p.join(tempDirectory.path, 'appimage-target');
+    final future = runner.install(
+      appImagePath: '/opt/FreeCAD.AppImage',
+      targetDirectory: target,
+      packages: const ['pyjwt', 'tzlocal'],
+      label: 'Ondsel-Lens',
+    );
+    await waitForHandle(0);
+
+    final spec = launcher.specs.single;
+    expect(spec.executable, '/opt/FreeCAD.AppImage');
+    expect(spec.arguments[0], '-c');
+    expect(spec.arguments[1], '-M');
+    expect(spec.environment['PIP_CACHE_DIR'], p.join(paths.cacheDir, 'pip'));
+    final macro = File(spec.arguments.last).readAsStringSync();
+    expect(macro, contains("'install'"));
+    expect(macro, contains('pyjwt'));
+    expect(macro, contains(target));
+
+    final logPath = RegExp(r'log_path = "([^"]+)"').firstMatch(macro)!.group(1)!;
+    File(logPath).writeAsStringSync('Collecting pyjwt\nSuccessfully installed pyjwt tzlocal\n');
+    launcher.handles[0]
+      ..emitStdout(
+        '[${FreeCadMacroRunner.outputTag}]{"ok": true, "code": 0}'
+        '[/${FreeCadMacroRunner.outputTag}]\n',
+      )
+      ..exit(0);
+    final result = await future;
+
+    expect(result.isSuccess, isTrue);
+    expect(result.logPath, logPath);
+    expect(result.outputTail, contains('Successfully installed'));
+  });
+
+  test('reports failures from the in-AppImage pip macro', () async {
+    final future = runner.install(
+      appImagePath: '/opt/FreeCAD.AppImage',
+      targetDirectory: p.join(tempDirectory.path, 'appimage-fail'),
+      packages: const ['missing-package'],
+      label: 'Broken',
+    );
+    await waitForHandle(0);
+    final macro = File(launcher.specs.single.arguments.last).readAsStringSync();
+    final logPath = RegExp(r'log_path = "([^"]+)"').firstMatch(macro)!.group(1)!;
+    File(logPath).writeAsStringSync('ERROR: No matching distribution found\n');
+    launcher.handles[0]
+      ..emitStdout(
+        '[${FreeCadMacroRunner.outputTag}]{"ok": false, "code": 1}'
+        '[/${FreeCadMacroRunner.outputTag}]\n',
+      )
+      ..exit(0);
+    final result = await future;
+
+    expect(result.isSuccess, isFalse);
+    expect(result.outputTail, contains('No matching distribution'));
+  });
+
+  test('requires exactly one pip execution target', () {
+    expect(
+      () => runner.install(
+        targetDirectory: p.join(tempDirectory.path, 'none'),
+        packages: const ['six'],
+        label: 'None',
+      ),
+      throwsArgumentError,
+    );
+    expect(
+      () => runner.install(
+        pythonPath: '/usr/bin/python3',
+        appImagePath: '/opt/FreeCAD.AppImage',
+        targetDirectory: p.join(tempDirectory.path, 'both'),
+        packages: const ['six'],
+        label: 'Both',
+      ),
+      throwsArgumentError,
+    );
   });
 
   test('serializes pip jobs', () async {

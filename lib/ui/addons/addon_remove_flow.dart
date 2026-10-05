@@ -14,11 +14,15 @@ Future<void> removeAddonFromProfile(
   final l10n = AppLocalizations.of(context);
   final controller = AppScope.of(context).addons;
   final messenger = ScaffoldMessenger.of(context);
+  final dependents = controller.dependentsOf(profileId, addonId);
+  final warning = dependents.isEmpty
+      ? ''
+      : '\n\n${l10n.addonsDependenciesRequiredBy(dependents.join(', '))}';
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
       title: Text(l10n.addonsRemoveTitle),
-      content: Text('$displayName\n\n${l10n.addonsRemoveMessage}'),
+      content: Text('$displayName\n\n${l10n.addonsRemoveMessage}$warning'),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),

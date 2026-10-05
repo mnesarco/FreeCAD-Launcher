@@ -6,12 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:freecad_launcher/data/catalog/releases_catalog.dart'
-    show CatalogFreshness;
+import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/addons/package_xml.dart';
+import 'package:freecad_launcher/domain/python/requirements_parser.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/ui/addons/addon_dependencies_dialog.dart';
 import 'package:freecad_launcher/ui/addons/addon_icon.dart';
 import 'package:freecad_launcher/ui/addons/addon_install_flow.dart';
 import 'package:freecad_launcher/ui/addons/addon_remove_flow.dart';
@@ -133,9 +135,7 @@ class _CatalogTab extends SignalWidget {
       0 => l10n.updatesNone,
       final found => l10n.updatesBadge(found),
     };
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -156,8 +156,7 @@ class _CatalogTab extends SignalWidget {
     final checking = updates.checking.value;
     final outdatedByAddon = <String, int>{};
     for (final update in updates.outdated.value) {
-      outdatedByAddon[update.addonId] =
-          (outdatedByAddon[update.addonId] ?? 0) + 1;
+      outdatedByAddon[update.addonId] = (outdatedByAddon[update.addonId] ?? 0) + 1;
     }
 
     Widget body;
@@ -253,10 +252,7 @@ class _CatalogTab extends SignalWidget {
                     value: freecadFilter,
                     hint: Text(l10n.addonsFilterFreecad),
                     items: [
-                      DropdownMenuItem(
-                        value: null,
-                        child: Text(l10n.addonsFilterAnyVersion),
-                      ),
+                      DropdownMenuItem(value: null, child: Text(l10n.addonsFilterAnyVersion)),
                       for (final version in versions)
                         DropdownMenuItem(value: version, child: Text(version)),
                     ],
@@ -275,9 +271,7 @@ class _CatalogTab extends SignalWidget {
               IconButton(
                 icon: const Icon(Icons.refresh),
                 tooltip: l10n.addonsRefresh,
-                onPressed: loading
-                    ? null
-                    : () => controller.load(forceRefresh: true),
+                onPressed: loading ? null : () => controller.load(forceRefresh: true),
               ),
             ],
           ),
@@ -317,10 +311,7 @@ class _AddonCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  AddonIcon(
-                    base64Data: addon.primaryBranch.metadata?.iconBase64,
-                    size: 36,
-                  ),
+                  AddonIcon(base64Data: addon.primaryBranch.metadata?.iconBase64, size: 36),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -333,10 +324,7 @@ class _AddonCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         if (addon.version.isNotEmpty)
-                          Text(
-                            'v${addon.version}',
-                            style: theme.textTheme.bodySmall,
-                          ),
+                          Text('v${addon.version}', style: theme.textTheme.bodySmall),
                       ],
                     ),
                   ),
@@ -347,10 +335,7 @@ class _AddonCard extends StatelessWidget {
                       tone: CompactBadgeTone.info,
                     )
                   else if (installedCount > 0)
-                    CompactBadge(
-                      label: l10n.addonsInstalledBadge,
-                      tone: CompactBadgeTone.success,
-                    ),
+                    CompactBadge(label: l10n.addonsInstalledBadge, tone: CompactBadgeTone.success),
                 ],
               ),
               const SizedBox(height: 8),
@@ -365,10 +350,7 @@ class _AddonCard extends StatelessWidget {
               if (addon.tags.isNotEmpty)
                 Wrap(
                   spacing: 4,
-                  children: [
-                    for (final tag in addon.tags.take(3))
-                      CompactBadge(label: tag),
-                  ],
+                  children: [for (final tag in addon.tags.take(3)) CompactBadge(label: tag)],
                 ),
             ],
           ),
@@ -379,11 +361,7 @@ class _AddonCard extends StatelessWidget {
 }
 
 class AddonDetailView extends SignalStatefulWidget {
-  const AddonDetailView({
-    super.key,
-    required this.addonId,
-    required this.onBack,
-  });
+  const AddonDetailView({super.key, required this.addonId, required this.onBack});
 
   final String addonId;
   final VoidCallback onBack;
@@ -424,30 +402,22 @@ class _AddonDetailViewState extends State<AddonDetailView> {
 
     final profiles = AppScope.of(context).profiles.profiles.value;
     var profileId = _profileId;
-    if (profileId == null ||
-        !profiles.any((profile) => profile.id == profileId)) {
+    if (profileId == null || !profiles.any((profile) => profile.id == profileId)) {
       profileId = profiles.isEmpty ? null : profiles.first.id;
     }
     final currentAddon = addon;
     final selectedBranches = controller.selectedBranches.value;
-    final selectedRef =
-        selectedBranches[currentAddon.id] ?? currentAddon.primaryBranch.gitRef;
+    final selectedRef = selectedBranches[currentAddon.id] ?? currentAddon.primaryBranch.gitRef;
     final metadata = currentAddon.primaryBranch.metadata;
     final installedRows = controller.installedAddons.value;
-    final installedCount =
-        controller.installedCounts.value[currentAddon.id] ?? 0;
+    final installedCount = controller.installedCounts.value[currentAddon.id] ?? 0;
     final installing = controller.installing.value.contains(currentAddon.id);
     final installedInSelected =
         profileId != null &&
-        installedRows.any(
-          (row) => row.profileId == profileId && row.addonId == currentAddon.id,
-        );
-    final pinned =
-        profileId != null && controller.isPinned(profileId, currentAddon.id);
+        installedRows.any((row) => row.profileId == profileId && row.addonId == currentAddon.id);
+    final pinned = profileId != null && controller.isPinned(profileId, currentAddon.id);
     final updateAvailable =
-        !pinned &&
-        profileId != null &&
-        controller.isUpdateAvailable(profileId, currentAddon.id);
+        !pinned && profileId != null && controller.isUpdateAvailable(profileId, currentAddon.id);
     final installError = controller.installErrors.value[currentAddon.id];
     final requirementsError = controller.requirementsErrors.value[currentAddon.id];
     final canInstall = profileId != null && !installing && !installedInSelected;
@@ -479,42 +449,25 @@ class _AddonDetailViewState extends State<AddonDetailView> {
                 title: l10n.addonsVersion,
                 rows: [
                   _InfoRow(l10n.addonsVersion, currentAddon.version),
-                  _InfoRow(
-                    l10n.addonsLicense,
-                    currentAddon.license ?? l10n.addonsNone,
-                  ),
+                  _InfoRow(l10n.addonsLicense, currentAddon.license ?? l10n.addonsNone),
                   _InfoRow(l10n.addonsAuthors, _authors(metadata)),
                   _InfoRow(l10n.addonsFreecadRange, _range(addon)),
                   _InfoRow(l10n.addonsLastUpdate, _lastUpdate(addon)),
                   _InfoRow(
                     l10n.addonsContent,
-                    currentAddon.content
-                        .map((content) => _contentLabel(l10n, content))
-                        .join(', '),
+                    currentAddon.content.map((content) => _contentLabel(l10n, content)).join(', '),
                   ),
                   _InfoRow(
                     l10n.addonsTags,
-                    currentAddon.tags.isEmpty
-                        ? l10n.addonsNone
-                        : currentAddon.tags.join(', '),
+                    currentAddon.tags.isEmpty ? l10n.addonsNone : currentAddon.tags.join(', '),
                   ),
-                  _InfoRow(
-                    l10n.addonsRequirements,
-                    currentAddon.hasRequirements
-                        ? l10n.addonsRequirementsYes
-                        : l10n.addonsRequirementsNo,
-                  ),
+                  _InfoRow(l10n.addonsDependencies, _dependenciesLabel(l10n, currentAddon)),
                 ],
               ),
               const SizedBox(height: 12),
               _InfoCard(
                 title: l10n.addonsRepository,
-                rows: [
-                  _InfoRow(
-                    l10n.addonsRepository,
-                    currentAddon.primaryBranch.repositoryUrl,
-                  ),
-                ],
+                rows: [_InfoRow(l10n.addonsRepository, currentAddon.primaryBranch.repositoryUrl)],
                 trailing: TextButton.icon(
                   onPressed: () => launchUrl(
                     Uri.parse(currentAddon.primaryBranch.repositoryUrl),
@@ -532,10 +485,7 @@ class _AddonDetailViewState extends State<AddonDetailView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        l10n.addonsBranches,
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
+                      Text(l10n.addonsBranches, style: Theme.of(context).textTheme.titleSmall),
                       const SizedBox(height: 4),
                       RadioGroup<String>(
                         groupValue: selectedRef,
@@ -559,10 +509,7 @@ class _AddonDetailViewState extends State<AddonDetailView> {
                       ),
                       const SizedBox(height: 8),
                       if (profiles.isEmpty)
-                        Text(
-                          l10n.addonsNoProfiles,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        )
+                        Text(l10n.addonsNoProfiles, style: Theme.of(context).textTheme.bodySmall)
                       else ...[
                         FormRow(
                           label: l10n.addonsInstallTarget,
@@ -570,10 +517,7 @@ class _AddonDetailViewState extends State<AddonDetailView> {
                             value: profileId,
                             items: [
                               for (final profile in profiles)
-                                DropdownMenuItem(
-                                  value: profile.id,
-                                  child: Text(profile.name),
-                                ),
+                                DropdownMenuItem(value: profile.id, child: Text(profile.name)),
                             ],
                             onChanged: installing
                                 ? null
@@ -584,19 +528,12 @@ class _AddonDetailViewState extends State<AddonDetailView> {
                           children: [
                             if (installedInSelected)
                               if (pinned)
-                                CompactBadge(
-                                  icon: Icons.push_pin,
-                                  label: l10n.addonsPinned,
-                                )
+                                CompactBadge(icon: Icons.push_pin, label: l10n.addonsPinned)
                               else if (updateAvailable)
                                 FilledButton.icon(
                                   onPressed: installing
                                       ? null
-                                      : () => _update(
-                                          currentAddon,
-                                          selectedRef,
-                                          profileId!,
-                                        ),
+                                      : () => _update(currentAddon, selectedRef, profileId!),
                                   icon: const Icon(Icons.upgrade_outlined),
                                   label: Text(l10n.addonsUpdate),
                                 )
@@ -608,19 +545,13 @@ class _AddonDetailViewState extends State<AddonDetailView> {
                             else
                               FilledButton.icon(
                                 onPressed: canInstall
-                                    ? () => _install(
-                                        currentAddon,
-                                        selectedRef,
-                                        profileId!,
-                                      )
+                                    ? () => _install(currentAddon, selectedRef, profileId!)
                                     : null,
                                 icon: installing
                                     ? const SizedBox(
                                         width: 16,
                                         height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
+                                        child: CircularProgressIndicator(strokeWidth: 2),
                                       )
                                     : const Icon(Icons.download_outlined),
                                 label: Text(l10n.addonsInstall),
@@ -648,20 +579,18 @@ class _AddonDetailViewState extends State<AddonDetailView> {
                           const SizedBox(height: 4),
                           Text(
                             '${l10n.addonsInstallFailed}: $installError',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.error,
-                                ),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
                           ),
                         ],
                         if (requirementsError != null) ...[
                           const SizedBox(height: 4),
                           Text(
                             '${l10n.addonsRequirementsFailed}: $requirementsError',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.error,
-                                ),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
                           ),
                         ],
                       ],
@@ -693,17 +622,16 @@ class _AddonDetailViewState extends State<AddonDetailView> {
       addonId: addon.id,
       branchRef: branchRef,
       profileId: profileId,
+      onDependencies: (plan) =>
+          showAddonDependenciesDialog(context, addonName: addon.displayName, plan: plan),
     );
     if (!mounted) {
       return;
     }
     result.fold(
-      (_) => messenger.showSnackBar(
-        SnackBar(content: Text(l10n.addonsUpdatedMessage)),
-      ),
-      (error) => messenger.showSnackBar(
-        SnackBar(content: Text('${l10n.addonsUpdateFailed}: $error')),
-      ),
+      (_) => messenger.showSnackBar(SnackBar(content: Text(l10n.addonsUpdatedMessage))),
+      (error) =>
+          messenger.showSnackBar(SnackBar(content: Text('${l10n.addonsUpdateFailed}: $error'))),
     );
   }
 
@@ -722,9 +650,8 @@ class _AddonDetailViewState extends State<AddonDetailView> {
     }
     return metadata.people
         .map(
-          (person) => person.roles.isEmpty
-              ? person.name
-              : '${person.name} (${person.roles.join(', ')})',
+          (person) =>
+              person.roles.isEmpty ? person.name : '${person.name} (${person.roles.join(', ')})',
         )
         .join(', ');
   }
@@ -767,9 +694,7 @@ class _DetailHeader extends StatelessWidget {
             tooltip: l10n.addonsBack,
             onPressed: onBack,
           ),
-          Expanded(
-            child: Text(title, style: Theme.of(context).textTheme.titleLarge),
-          ),
+          Expanded(child: Text(title, style: Theme.of(context).textTheme.titleLarge)),
         ],
       ),
     );
@@ -821,9 +746,7 @@ class _InfoRow extends StatelessWidget {
             width: 140,
             child: Text(
               label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
           ),
           Expanded(
@@ -835,6 +758,24 @@ class _InfoRow extends StatelessWidget {
       ),
     );
   }
+}
+
+String _dependenciesLabel(AppLocalizations l10n, Addon addon) {
+  final metadata = addon.primaryBranch.metadata;
+  final entries = <String>[
+    for (final dependency in metadata?.dependencies ?? const <AddonDependency>[])
+      dependency.optional ? '${dependency.name} *' : dependency.name,
+  ];
+  final requirements = parseRequirements(metadata?.requirements ?? '');
+  for (final requirement in requirements) {
+    if (requirement.valid) {
+      entries.add(requirement.display);
+    }
+  }
+  if (entries.isEmpty) {
+    return l10n.addonsDependenciesNone;
+  }
+  return entries.join(', ');
 }
 
 String _contentLabel(AppLocalizations l10n, AddonContentType content) {
@@ -866,17 +807,12 @@ class _FilterMenu extends SignalWidget {
           label: Text('$activeCount'),
           child: const Icon(Icons.filter_list),
         ),
-        onPressed: () => menuController.isOpen
-            ? menuController.close()
-            : menuController.open(),
+        onPressed: () => menuController.isOpen ? menuController.close() : menuController.open(),
       ),
       menuChildren: [
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-          child: Text(
-            l10n.addonsFilterContent,
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
+          child: Text(l10n.addonsFilterContent, style: Theme.of(context).textTheme.labelLarge),
         ),
         for (final content in AddonContentType.values)
           MenuItemButton(

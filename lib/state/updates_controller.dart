@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:freecad_launcher/data/daos/settings_dao.dart';
+import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
 import 'package:freecad_launcher/domain/addons/addon_source.dart';
 import 'package:freecad_launcher/domain/addons/addon_update.dart';
 import 'package:freecad_launcher/domain/addons/addon_update_rules.dart';
@@ -70,10 +71,7 @@ class UpdatesController {
       if (addon == null) {
         continue;
       }
-      final branch = _addons.branchOf(
-        addon,
-        installed.gitRef ?? addon.primaryBranch.gitRef,
-      );
+      final branch = _addons.branchOf(addon, installed.gitRef ?? addon.primaryBranch.gitRef);
       final changed = addonContentChanged(
         catalogLastUpdate: branch.lastUpdateTime,
         catalogVersion: branch.metadata?.version,
@@ -95,9 +93,7 @@ class UpdatesController {
       );
     }
     result.sort((a, b) {
-      final byName = a.displayName.toLowerCase().compareTo(
-        b.displayName.toLowerCase(),
-      );
+      final byName = a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase());
       if (byName != 0) {
         return byName;
       }
@@ -180,9 +176,7 @@ class UpdatesController {
     return result;
   });
 
-  late final outdatedCount = computed(
-    () => outdated.value.length + outdatedBuilds.value.length,
-  );
+  late final outdatedCount = computed(() => outdated.value.length + outdatedBuilds.value.length);
 
   bool isOutdated(String profileId, String addonId) {
     return outdated.value.any(
@@ -190,12 +184,13 @@ class UpdatesController {
     );
   }
 
-  List<AddonUpdate> forProfile(String profileId) =>
-      outdatedByProfile.value[profileId] ?? const [];
+  List<AddonUpdate> forProfile(String profileId) => outdatedByProfile.value[profileId] ?? const [];
 
   Future<AddonUpdateApplySummary> applyUpdates(
-    List<AddonUpdate> updates,
-  ) async {
+    List<AddonUpdate> updates, {
+    AddonDependencySelection? selection,
+    AddonDependencyHandler? onDependencies,
+  }) async {
     applying.value = true;
     applyTotal.value = updates.length;
     applyCompleted.value = 0;
@@ -208,13 +203,13 @@ class UpdatesController {
           addonId: update.addonId,
           branchRef: update.branchRef,
           profileId: update.profileId,
+          selection: selection,
+          onDependencies: onDependencies,
         );
         results.add(
           AddonUpdateApplyResult(
             update: update,
-            status: result.isOk
-                ? AddonUpdateApplyStatus.updated
-                : AddonUpdateApplyStatus.failed,
+            status: result.isOk ? AddonUpdateApplyStatus.updated : AddonUpdateApplyStatus.failed,
             error: result.isErr ? '${result.errorOrNull}' : null,
           ),
         );
@@ -265,29 +260,20 @@ class UpdatesController {
       if (!_addons.loaded.value && !_addons.loading.value) {
         await _addons.load();
       }
-      if (_builds.availableBuilds.value.isEmpty &&
-          !_builds.loadingCatalog.value) {
+      if (_builds.availableBuilds.value.isEmpty && !_builds.loadingCatalog.value) {
         await _builds.loadCatalog();
       }
-      final addonsReachable =
-          _addons.addons.value.isNotEmpty || _addons.error.value == null;
+      final addonsReachable = _addons.addons.value.isNotEmpty || _addons.error.value == null;
       final buildsReachable =
-          _builds.availableBuilds.value.isNotEmpty ||
-          _builds.catalogError.value == null;
+          _builds.availableBuilds.value.isNotEmpty || _builds.catalogError.value == null;
       if (!addonsReachable && !buildsReachable) {
         return null;
       }
       final now = _clock();
       addonLastCheckedAt.value = now;
       buildLastCheckedAt.value = now;
-      await _settingsDao.setValue(
-        addonUpdateLastCheckedKey,
-        now.toIso8601String(),
-      );
-      await _settingsDao.setValue(
-        buildUpdateLastCheckedKey,
-        now.toIso8601String(),
-      );
+      await _settingsDao.setValue(addonUpdateLastCheckedKey, now.toIso8601String());
+      await _settingsDao.setValue(buildUpdateLastCheckedKey, now.toIso8601String());
       return outdatedCount.value;
     } finally {
       checking.value = false;

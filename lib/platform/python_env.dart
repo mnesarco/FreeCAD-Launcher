@@ -9,16 +9,23 @@ import 'package:freecad_launcher/platform/process.dart';
 import 'package:freecad_launcher/platform/python_probe.dart';
 
 class PythonEnvResolver {
-  PythonEnvResolver({required ProcessRunner processRunner})
-    : _processRunner = processRunner;
+  PythonEnvResolver({required ProcessRunner processRunner}) : _processRunner = processRunner;
 
   final ProcessRunner _processRunner;
 
+  /// Resolves the build's Python interpreter.
+  ///
+  /// For AppImages, [allowExtraction] controls whether `--appimage-extract`
+  /// may run when no extracted tree exists yet. Callers that only need a cheap
+  /// availability check (e.g. the dependency consent dialog) pass `false` so a
+  /// multi-hundred-MB extraction is never triggered without user consent;
+  /// pip installs use the default `true`.
   Future<String?> resolve({
     required BuildKind kind,
     required String buildDirectory,
     required String executablePath,
     String? storedPythonPath,
+    bool allowExtraction = true,
     void Function(String line)? onOutput,
   }) async {
     if (storedPythonPath != null && File(storedPythonPath).existsSync()) {
@@ -40,27 +47,34 @@ class PythonEnvResolver {
           executablePath: executablePath,
         );
       case BuildKind.appimage:
-        return _ensureAppImageExtraction(buildDirectory, executablePath, onOutput);
+        final pythonDirectory = _appImagePythonDirectory(buildDirectory);
+        final existing = locateInterpreterIn(pythonDirectory);
+        if (existing != null || !allowExtraction) {
+          return existing;
+        }
+        return _extractAppImage(buildDirectory, executablePath, onOutput);
     }
   }
 
-  Future<String?> _ensureAppImageExtraction(
+  String _appImagePythonDirectory(String buildDirectory) =>
+      p.join(buildDirectory, 'extracted', 'squashfs-root', 'usr', 'bin');
+
+  Future<String?> _extractAppImage(
     String buildDirectory,
     String executablePath,
     void Function(String line)? onOutput,
   ) async {
     final extractionRoot = p.join(buildDirectory, 'extracted');
-    final pythonDirectory = p.join(extractionRoot, 'squashfs-root', 'usr', 'bin');
-    final existing = locateInterpreterIn(pythonDirectory);
-    if (existing != null) {
-      return existing;
-    }
-
+    final pythonDirectory = _appImagePythonDirectory(buildDirectory);
     final root = Directory(extractionRoot);
-    if (root.existsSync()) {
-      root.deleteSync(recursive: true);
+    try {
+      if (root.existsSync()) {
+        root.deleteSync(recursive: true);
+      }
+      root.createSync(recursive: true);
+    } on Object {
+      return null;
     }
-    root.createSync(recursive: true);
 
     final ProcessResult result;
     try {

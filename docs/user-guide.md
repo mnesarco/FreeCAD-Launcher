@@ -179,8 +179,13 @@ with a notice).
   installed, required FreeCAD version. The filter button applies multiple filters at once.
 - The detail page shows description, authors, version, license, tags and branches. Pick a branch
   and **Install**, then choose the target profile in the dialog.
-- If the addon ships a `requirements.txt`, a consent dialog offers to install its Python
-  packages, install the addon only, or cancel.
+- If the addon declares dependencies (`package.xml` `<depend>` and/or `requirements.txt`), a
+  consent dialog lists the dependent addons, the required Python packages and the optional ones
+  (unchecked by default; `package.xml` internal workbenches are informational): choose install
+  dependencies, install the addon only, or cancel. Packages already bundled with the build, in
+  the standard library, or installed in the profile are detected with a probe and skipped.
+- Removing an addon that other installed addons depend on shows a “Required by” warning but is
+  still allowed.
 - Installed addons are listed per profile (Addons tab) with **Update** and **Remove**; updates
   keep a backup under `<profile>/backups/addon-<id>-<timestamp>/`.
 - **Pin** an addon per profile to freeze it: pinned addons are skipped by update checks, batch
@@ -225,14 +230,15 @@ Collections are named lists of addons with optional branch pins, used to reprodu
   catalog picker.
 - **Apply** to a profile: a preview shows install/update/skip/unavailable actions (pinned
   addons and up-to-date ones are skipped), then runs sequentially through the job queue with a
-  summary; requirements consent is requested once.
+  summary; dependency consent is requested once (dependent addons and required Python packages;
+  optional dependencies are not offered in the batch flow).
 - **Export/import** as JSON. Imports validate the format, skip malformed entries, deduplicate
   and report addon ids that are not in the current catalog.
 
 ## Python packages
 
 - The profile **Python** tab lists packages installed into that profile
-  (`AdditionalPythonPackages/pyXY`) with their source (manual/requirements).
+  (`AdditionalPythonPackages/pyXY`) with their source (manual or `addon:<id>`).
 - **Install** takes a requirements string (e.g. `six>=1.16`); the launcher resolves the
   interpreter (detected `pythonPath`, nearby, bundled or AppImage extraction), runs pip with a
   sanitized environment and records the result. Per-run logs are kept.

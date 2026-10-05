@@ -15,6 +15,7 @@ import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/core/errors.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
+import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/platform/addon_installer.dart';
 import 'package:freecad_launcher/platform/build_installer.dart';
@@ -34,6 +35,7 @@ import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/pip_runner.dart';
 import 'package:freecad_launcher/platform/process.dart';
 import 'package:freecad_launcher/platform/python_env.dart';
+import 'package:freecad_launcher/platform/python_package_probe.dart';
 import 'package:freecad_launcher/platform/python_probe.dart';
 import 'package:freecad_launcher/platform/seven_zip_extractor.dart';
 import 'package:freecad_launcher/state/addons_controller.dart';
@@ -121,9 +123,7 @@ class AppServices {
     cacheDirectory: paths.macrosCacheDir,
   );
 
-  late final MacroIconCache macroIcons = MacroIconCache(
-    directory: paths.macroIconsCacheDir,
-  );
+  late final MacroIconCache macroIcons = MacroIconCache(directory: paths.macroIconsCacheDir);
 
   late final PythonProbe pythonProbe = ProcessPythonProbe(processRunner: processRunner);
 
@@ -163,12 +163,11 @@ class AppServices {
 
   late final AddonInstaller addonInstaller = AddonInstaller(downloader: downloader);
 
-  late final PipRunner pipRunner = PipRunner(
-    processRunner: processRunner,
-    paths: paths,
-  );
+  late final PipRunner pipRunner = PipRunner(processRunner: processRunner, paths: paths);
 
-  late final PythonEnvResolver pythonEnvResolver = PythonEnvResolver(
+  late final PythonEnvResolver pythonEnvResolver = PythonEnvResolver(processRunner: processRunner);
+
+  late final PythonPackageProbe pythonPackageProbe = PythonPackageProbe(
     processRunner: processRunner,
   );
 
@@ -181,6 +180,8 @@ class AppServices {
         paths: paths,
         pipRunner: pipRunner,
         pythonResolver: pythonEnvResolver,
+        packageProbe: pythonPackageProbe,
+        fuseAvailable: diagnostics.fuseAvailable,
         jobs: jobs,
       );
 
@@ -223,8 +224,7 @@ class AppServices {
     cacheDirectory: paths.newsCacheDir,
   );
 
-  late final NewsController news =
-      _newsControllerOverride ?? NewsController(feed: newsFeed);
+  late final NewsController news = _newsControllerOverride ?? NewsController(feed: newsFeed);
 
   late final DebugBundleService debugBundleService = DebugBundleService(paths: paths);
 
@@ -255,22 +255,20 @@ class AppServices {
       );
 
   late final BundleApplyController bundleApply = BundleApplyController(
-    install: ({
-      required String addonId,
-      required String branchRef,
-      required String profileId,
-      required bool installRequirements,
-    }) => addons.install(
-      addonId: addonId,
-      branchRef: branchRef,
-      profileId: profileId,
-      installRequirements: installRequirements,
-    ),
-    update: ({
-      required String addonId,
-      required String branchRef,
-      required String profileId,
-    }) => addons.update(addonId: addonId, branchRef: branchRef, profileId: profileId),
+    install:
+        ({
+          required String addonId,
+          required String branchRef,
+          required String profileId,
+          AddonDependencySelection? selection,
+        }) => addons.install(
+          addonId: addonId,
+          branchRef: branchRef,
+          profileId: profileId,
+          selection: selection,
+        ),
+    update: ({required String addonId, required String branchRef, required String profileId}) =>
+        addons.update(addonId: addonId, branchRef: branchRef, profileId: profileId),
   );
 
   late final PythonController python = PythonController(
@@ -278,16 +276,13 @@ class AppServices {
     paths: paths,
     pipRunner: pipRunner,
     pythonResolver: pythonEnvResolver,
+    fuseAvailable: diagnostics.fuseAvailable,
     jobs: jobs,
   );
 
   late final UpdatesController updates =
       _updatesControllerOverride ??
-      UpdatesController(
-        addons: addons,
-        builds: builds,
-        settingsDao: database.settingsDao,
-      );
+      UpdatesController(addons: addons, builds: builds, settingsDao: database.settingsDao);
 
   late final ProfileManifestController manifests =
       _manifestsControllerOverride ??
@@ -296,30 +291,29 @@ class AppServices {
         repository: profilesRepository,
         paths: paths,
         platform: hostPlatform,
-        installAddon: ({
-          required String addonId,
-          required String? branchRef,
-          required String profileId,
-          required bool installRequirements,
-        }) async {
-          if (addons.addons.value.isEmpty) {
-            await addons.load();
-          }
-          if (addons.byId(addonId) == null) {
-            return Err(AppError(message: 'Addon "$addonId" is not in the catalog'));
-          }
-          return addons.install(
-            addonId: addonId,
-            branchRef: branchRef ?? '',
-            profileId: profileId,
-            installRequirements: installRequirements,
-          );
-        },
-        installPackages: ({
-          required String profileId,
-          required String specText,
-          required String source,
-        }) => python.install(profileId: profileId, specText: specText, source: source),
+        installAddon:
+            ({
+              required String addonId,
+              required String? branchRef,
+              required String profileId,
+              required AddonDependencySelection? selection,
+            }) async {
+              if (addons.addons.value.isEmpty) {
+                await addons.load();
+              }
+              if (addons.byId(addonId) == null) {
+                return Err(AppError(message: 'Addon "$addonId" is not in the catalog'));
+              }
+              return addons.install(
+                addonId: addonId,
+                branchRef: branchRef ?? '',
+                profileId: profileId,
+                selection: selection,
+              );
+            },
+        installPackages:
+            ({required String profileId, required String specText, required String source}) =>
+                python.install(profileId: profileId, specText: specText, source: source),
       );
 
   static Future<AppServices> bootstrap() async {

@@ -3,6 +3,7 @@
 import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:freecad_launcher/core/result.dart';
+import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
 import 'package:freecad_launcher/domain/bundles/bundle_planner.dart';
 
 enum BundleApplyItemStatus { installed, updated, skipped, failed }
@@ -34,7 +35,7 @@ typedef BundleAddonInstall =
       required String addonId,
       required String branchRef,
       required String profileId,
-      required bool installRequirements,
+      AddonDependencySelection? selection,
     });
 
 typedef BundleAddonUpdate =
@@ -60,7 +61,7 @@ class BundleApplyController {
   Future<BundleApplySummary> apply({
     required String profileId,
     required List<BundleApplyPlanItem> items,
-    bool installRequirements = false,
+    AddonDependencySelection? selection,
   }) async {
     applying.value = true;
     total.value = items.length;
@@ -77,13 +78,10 @@ class BundleApplyController {
               addonId: item.addonId,
               branchRef: item.branchRef!,
               profileId: profileId,
-              installRequirements: installRequirements && item.hasRequirements,
+              selection: selection,
             );
             result = install.fold(
-              (_) => BundleApplyItemResult(
-                item: item,
-                status: BundleApplyItemStatus.installed,
-              ),
+              (_) => BundleApplyItemResult(item: item, status: BundleApplyItemStatus.installed),
               (error) => BundleApplyItemResult(
                 item: item,
                 status: BundleApplyItemStatus.failed,
@@ -97,10 +95,7 @@ class BundleApplyController {
               profileId: profileId,
             );
             result = update.fold(
-              (_) => BundleApplyItemResult(
-                item: item,
-                status: BundleApplyItemStatus.updated,
-              ),
+              (_) => BundleApplyItemResult(item: item, status: BundleApplyItemStatus.updated),
               (error) => BundleApplyItemResult(
                 item: item,
                 status: BundleApplyItemStatus.failed,
@@ -108,15 +103,9 @@ class BundleApplyController {
               ),
             );
           case BundleItemAction.skip:
-            result = BundleApplyItemResult(
-              item: item,
-              status: BundleApplyItemStatus.skipped,
-            );
+            result = BundleApplyItemResult(item: item, status: BundleApplyItemStatus.skipped);
           case BundleItemAction.unavailable:
-            result = BundleApplyItemResult(
-              item: item,
-              status: BundleApplyItemStatus.skipped,
-            );
+            result = BundleApplyItemResult(item: item, status: BundleApplyItemStatus.skipped);
         }
         results.add(result);
         completed.value = results.length;

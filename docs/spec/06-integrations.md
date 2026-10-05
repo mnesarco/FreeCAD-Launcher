@@ -108,7 +108,15 @@ cache format. Integration rules for v2:
 - **Placement**: extract to `<profile>/Mod/<AddonId>` (matches FreeCAD's AddonManager).
 - **Update detection**: compare installed `catalogLastUpdate`/package version against the
   catalog entry; show update, never auto-apply.
-- **Requirements**: if the archive has `requirements.txt`, offer the pip flow (FR-4.7/FR-6).
+- **Dependencies**: `package.xml` `<depend>` tags (root and nested `<content>` items) and
+  `requirements.txt` are resolved on install into dependent addons (catalog match by id/display
+  name), internal workbenches (informational, provided by FreeCAD) and Python packages.
+  `automatic` entries resolve addons first, then internal workbenches, then Python (AddonManager
+  parity); version attributes are parsed but ignored; optional addons/packages are opt-in in one
+  consent dialog per install (D-109). Already importable Python packages and installed addons
+  are skipped (D-110); dependent addons and pip packages install before the addon with lenient
+  failure handling (D-111). The same flow applies to custom sources, updates (missing deps only),
+  bundle apply and manifest import.
 - **Safety**: safe-extract with zip-slip and symlink guards; reject entries with absolute paths;
   cap uncompressed size and file count to avoid zip bombs. Installs are atomic: extract into
   `<Mod>/<id>.part`, then rename into place with a `.old` backup when replacing (D-039).
@@ -140,7 +148,8 @@ cache format. Integration rules for v2:
 
 | Kind | Interpreter |
 |---|---|
-| Linux AppImage | `<build>/FreeCAD_*.AppImage` mounts read-only; extract once to `builds/<id>/extracted/squashfs-root/usr/bin/python` on first pip need |
+| Linux AppImage (FUSE) | no extraction: pip and availability checks run **inside the mounted image** through generated headless `.FCMacro`s (`<appimage> -c -M <dir> <macro>`), D-112 |
+| Linux AppImage (no FUSE) | fallback: extract once to `builds/<id>/extracted/squashfs-root/usr/bin/python` and use it as an interpreter |
 | Windows archive | `<build>\bin\python.exe` (always invoke via `-m pip`, never `Scripts\pip.exe`) |
 | macOS dmg | `<build>/FreeCAD.app/Contents/Resources/bin/python` |
 | Custom | probe `<exeDir>/bin/python*`, `Contents/Resources/bin/python`; pip UI disabled with explanation if absent |
@@ -155,6 +164,16 @@ launcher when one exists, e.g. macOS `Contents/MacOS/FreeCAD` sets its own env).
 <python> -m pip install --upgrade --target <targetDir> <spec...>
     --disable-pip-version-check --no-warn-script-location
 ```
+
+AppImages use the same arguments, but executed in-process inside the image:
+
+```python
+from pip._internal.cli.main import main as pip_main   # runpy fallback
+pip_main(['install', '--upgrade', '--target', target, *packages, …])
+```
+
+The macro writes pip's output to the job log and prints a tagged JSON result; wheel downloads
+use a persistent `<data>/cache/pip` (`PIP_CACHE_DIR`) despite the isolated macro home.
 
 - `targetDir`: `<profile>/AdditionalPythonPackages/py<major><minor>` (FreeCAD 1.0+ always uses
   the versioned dir; pre-1.0 is unsupported, D-021). The Python version is reported by the
@@ -173,10 +192,19 @@ launcher when one exists, e.g. macOS `Contents/MacOS/FreeCAD` sets its own env).
 - Concurrency: never allow two pip jobs in the same profile; packaging installs are serialized
   globally as well (package DB locks).
 
-### 4.3 Addon requirements
+### 4.3 Addon dependencies
 
-- Parse `requirements.txt` (comments, extras, markers) with a small parser; show a preview.
-- Install after explicit consent, then record each package with `source = addon:<id>`.
+- Parse `requirements.txt` (comments, extras, markers) and `package.xml` `<depend>` tags with a
+  small parser; show one preview grouped by required/optional addons and Python packages.
+- Install after explicit consent, then record each package with
+  `source = addon:<declaringAddonId>`.
+- Packages already importable (bundled with FreeCAD, installed in the profile target, or
+  standard library) are detected with one batched probe (`importlib.util.find_spec` +
+  `importlib.metadata`) — inside the AppImage for AppImage builds (D-112); a failed probe falls
+  back to recorded
+  packages plus a stdlib-name guard so stdlib names are never handed to pip (D-110).
+- Dependent addons install recursively inside the same job before the addon; a failed dependency
+  is reported without aborting the main install (D-111).
 - Do not vendor wheels; use the bundled pip's default index (PyPI) and respect system proxy.
 
 ## 5. Network and privacy

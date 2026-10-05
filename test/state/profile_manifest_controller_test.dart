@@ -7,6 +7,7 @@ import 'package:freecad_launcher/core/errors.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
+import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/profiles/profile_manifest.dart';
 import 'package:freecad_launcher/platform/paths.dart';
@@ -20,13 +21,13 @@ class RecordedAddonInstall {
     required this.addonId,
     required this.branchRef,
     required this.profileId,
-    required this.installRequirements,
+    required this.selection,
   });
 
   final String addonId;
   final String? branchRef;
   final String profileId;
-  final bool installRequirements;
+  final AddonDependencySelection? selection;
 }
 
 class RecordedPackageInstall {
@@ -125,11 +126,7 @@ void main() {
       await db.installedAddonsDao.save(
         sampleAddon(profileId: profile.id, addonId: 'A2plus', version: '0.4.60'),
       );
-      await db.installedAddonsDao.setPinnedAt(
-        profile.id,
-        'A2plus',
-        DateTime.utc(2026, 9, 20, 9),
-      );
+      await db.installedAddonsDao.setPinnedAt(profile.id, 'A2plus', DateTime.utc(2026, 9, 20, 9));
       await db.pythonPackagesDao.save(
         samplePackage(profileId: profile.id, name: 'numpy', source: 'requirements'),
       );
@@ -228,14 +225,14 @@ void main() {
               required String addonId,
               required String? branchRef,
               required String profileId,
-              required bool installRequirements,
+              required AddonDependencySelection? selection,
             }) async {
               addonCalls.add(
                 RecordedAddonInstall(
                   addonId: addonId,
                   branchRef: branchRef,
                   profileId: profileId,
-                  installRequirements: installRequirements,
+                  selection: selection,
                 ),
               );
               await db.installedAddonsDao.save(
@@ -294,7 +291,7 @@ void main() {
       expect(addonCalls.first.addonId, 'A2plus');
       expect(addonCalls.first.branchRef, 'master');
       expect(addonCalls.first.profileId, outcome.profile.id);
-      expect(addonCalls.first.installRequirements, isTrue);
+      expect(addonCalls.first.selection?.installRequired, isTrue);
       expect(addonCalls.last.addonId, 'Fasteners');
       expect(addonCalls.last.branchRef, isNull);
       expect(steps, ['A2plus', 'Fasteners', 'Python packages']);
@@ -307,19 +304,13 @@ void main() {
 
       final pinnedRow = await db.installedAddonsDao.getByAddon(outcome.profile.id, 'A2plus');
       expect(pinnedRow!.pinnedAt, isNotNull);
-      final unpinnedRow = await db.installedAddonsDao.getByAddon(
-        outcome.profile.id,
-        'Fasteners',
-      );
+      final unpinnedRow = await db.installedAddonsDao.getByAddon(outcome.profile.id, 'Fasteners');
       expect(unpinnedRow!.pinnedAt, isNull);
 
       final configFile = File(paths.profilePaths(outcome.profile.id).userCfg);
       final config = configFile.readAsStringSync();
       expect(config, contains('/home/ana/tools'));
-      expect(
-        config,
-        contains(paths.profilePaths(outcome.profile.id).macros.replaceAll('\\', '/')),
-      );
+      expect(config, contains(paths.profilePaths(outcome.profile.id).macros.replaceAll('\\', '/')));
     });
 
     test('skips custom-source addons instead of reinstalling them', () async {
@@ -332,14 +323,14 @@ void main() {
               required String addonId,
               required String? branchRef,
               required String profileId,
-              required bool installRequirements,
+              required AddonDependencySelection? selection,
             }) async {
               addonCalls.add(
                 RecordedAddonInstall(
                   addonId: addonId,
                   branchRef: branchRef,
                   profileId: profileId,
-                  installRequirements: installRequirements,
+                  selection: selection,
                 ),
               );
               return const Ok(null);
@@ -407,7 +398,7 @@ void main() {
               required String addonId,
               required String? branchRef,
               required String profileId,
-              required bool installRequirements,
+              required AddonDependencySelection? selection,
             }) async => Err(AppError(message: 'boom')),
         installPackages:
             ({required String profileId, required String specText, required String source}) async =>

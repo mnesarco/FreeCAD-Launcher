@@ -47,6 +47,23 @@ void main() {
     );
   }
 
+  test('runs pip inside the AppImage when FUSE is available', () async {
+    final subject = PythonController(
+      database: db,
+      paths: paths,
+      pipRunner: pip,
+      pythonResolver: resolver,
+      fuseAvailable: () async => true,
+      clock: () => DateTime.utc(2026, 9, 19, 17),
+    );
+
+    final result = await subject.install(profileId: 'profile-1', specText: 'six');
+
+    expect(result.isOk, isTrue);
+    expect(pip.calls.single.appImagePath, '/data/builds/build-1');
+    expect(pip.calls.single.pythonPath, isNull);
+  });
+
   test('installs packages with pip and records them', () async {
     final subject = controller();
 
@@ -59,13 +76,7 @@ void main() {
     expect(pip.calls.single.packages, ['numpy==1.26.4', 'six']);
     expect(
       pip.calls.single.targetDirectory,
-      p.join(
-        tempDirectory.path,
-        'profiles',
-        'profile-1',
-        'AdditionalPythonPackages',
-        'py311',
-      ),
+      p.join(tempDirectory.path, 'profiles', 'profile-1', 'AdditionalPythonPackages', 'py311'),
     );
     final packages = await db.pythonPackagesDao.getByProfile('profile-1');
     expect(packages.map((package) => package.name).toSet(), {'numpy', 'six'});
@@ -89,10 +100,7 @@ void main() {
     final subject = controller();
 
     expect((await subject.install(profileId: 'profile-1', specText: '')).isErr, isTrue);
-    expect(
-      (await subject.install(profileId: 'profile-1', specText: '-e git+x')).isErr,
-      isTrue,
-    );
+    expect((await subject.install(profileId: 'profile-1', specText: '-e git+x')).isErr, isTrue);
     expect(pip.calls, isEmpty);
     subject.dispose();
   });
@@ -110,20 +118,13 @@ void main() {
       ..createSync(recursive: true)
       ..writeAsStringSync('numpy/__init__.py,,\n');
     await db.pythonPackagesDao.save(
-      samplePackage(
-        profileId: 'profile-1',
-        name: 'numpy',
-        targetDir: target,
-      ),
+      samplePackage(profileId: 'profile-1', name: 'numpy', targetDir: target),
     );
     final subject = controller();
     subject.start();
     await pumpEventQueue();
 
-    final result = await subject.uninstall(
-      profileId: 'profile-1',
-      packageName: 'numpy',
-    );
+    final result = await subject.uninstall(profileId: 'profile-1', packageName: 'numpy');
 
     expect(result.isOk, isTrue);
     expect(Directory(p.join(target, 'numpy')).existsSync(), isFalse);
@@ -135,10 +136,7 @@ void main() {
     final subject = controller();
     subject.start();
 
-    final result = await subject.uninstall(
-      profileId: 'profile-1',
-      packageName: 'nope',
-    );
+    final result = await subject.uninstall(profileId: 'profile-1', packageName: 'nope');
 
     expect(result.isErr, isTrue);
     subject.dispose();
