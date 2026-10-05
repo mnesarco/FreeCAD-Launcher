@@ -442,6 +442,25 @@ app-local so a clean machine without the system-wide redistributable can start
 - Residual: no Windows machine without the redistributable was available for a live no-redist
   start; the app-local load path is Microsoft-documented and the DLLs are inside the zip.
 
+### R-32 (2026-10-05, `devel`)
+
+Windows addon-dependency install popped FreeCAD's “unrecognised option '-m'” dialog because the
+asset-name `pyXY` hint stored `FreeCAD.exe` as `builds.pythonPath` and pip executed it (D-115).
+Evidence:
+
+- `python_probe_test`: a known version alone yields version-only detection (no `python`, no
+  process); with `bin\python.exe` present the probe is executed and the real path is returned;
+  probe failure keeps the hint version without fabricating an interpreter; the AppImage hint
+  fallback is version-only.
+- `python_env_test`: a stored path equal to the build executable, or naming `FreeCADCmd`, is
+  ignored and discovery returns `bin\python.exe`; the custom stored-interpreter preference is
+  unchanged.
+- `pip_runner_test`: a FreeCAD executable is refused (`ArgumentError`) without spawning a process;
+  the interpreter probe now runs with a sanitized Python environment.
+- `flutter analyze` clean; 703 tests green (10 platform probes skipped).
+- Not verified live: no Windows retest yet (reinstall/verify a Windows build so the probe re-runs,
+  then install an addon with `<depend>` packages and confirm the pip log shows `bin\python.exe`).
+
 ## 5. When something fails
 
 1. Capture the job log tail and app logs from `logs/`.

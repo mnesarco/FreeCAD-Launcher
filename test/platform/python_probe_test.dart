@@ -168,18 +168,58 @@ void main() {
       expect(detection.reason, contains('Unexpected Python version output'));
     });
 
-    test('short-circuits when a known version is provided', () async {
+    test('keeps the known version but never as the interpreter path', () async {
       final detection = await probe.detect(
         kind: BuildKind.archive,
         installDirectory: tempDirectory.path,
-        executablePath: '/data/FreeCAD.exe',
+        executablePath: p.join(tempDirectory.path, 'bin', 'FreeCAD.exe'),
         knownVersion: '3.11',
       );
 
-      expect(detection.found, isTrue);
-      expect(detection.python!.version, '3.11');
-      expect(detection.python!.executablePath, '/data/FreeCAD.exe');
+      expect(detection.found, isFalse);
+      expect(detection.detectedVersion, '3.11');
+      expect(detection.python, isNull);
       expect(launcher.specs, isEmpty);
+    });
+
+    test('probes the bundled interpreter when a known version is provided', () async {
+      final python = File(p.join(tempDirectory.path, 'bin', 'python.exe'))
+        ..createSync(recursive: true);
+
+      final future = probe.detect(
+        kind: BuildKind.archive,
+        installDirectory: tempDirectory.path,
+        executablePath: p.join(tempDirectory.path, 'bin', 'FreeCAD.exe'),
+        knownVersion: '3.11',
+      );
+      await waitForHandle(0);
+      launcher.handles.first
+        ..emitStdout('3.12\n')
+        ..exit(0);
+      final detection = await future;
+
+      expect(detection.found, isTrue);
+      expect(detection.python!.executablePath, python.path);
+      expect(detection.python!.version, '3.12');
+      expect(launcher.specs.single.executable, python.path);
+    });
+
+    test('falls back to the hint version when the interpreter probe fails', () async {
+      File(p.join(tempDirectory.path, 'bin', 'python.exe')).createSync(recursive: true);
+
+      final future = probe.detect(
+        kind: BuildKind.archive,
+        installDirectory: tempDirectory.path,
+        executablePath: p.join(tempDirectory.path, 'bin', 'FreeCAD.exe'),
+        knownVersion: '3.11',
+      );
+      await waitForHandle(0);
+      launcher.handles.first.exit(1);
+      final detection = await future;
+
+      expect(detection.found, isFalse);
+      expect(detection.detectedVersion, '3.11');
+      expect(detection.python, isNull);
     });
   });
 
@@ -359,7 +399,7 @@ void main() {
       expect(launcher.specs.single.executable, appImage.path);
     });
 
-    test('falls back to the asset-name hint when the probe fails', () async {
+    test('falls back to the asset-name hint as version only when the probe fails', () async {
       final appImage = File(p.join(tempDirectory.path, 'FreeCAD.AppImage'))
         ..createSync(recursive: true);
 
@@ -374,9 +414,9 @@ void main() {
 
       final detection = await future;
 
-      expect(detection.found, isTrue);
-      expect(detection.python!.version, '3.12');
-      expect(detection.python!.executablePath, appImage.path);
+      expect(detection.found, isFalse);
+      expect(detection.detectedVersion, '3.12');
+      expect(detection.python, isNull);
     });
   });
 }

@@ -10,6 +10,7 @@ import 'package:freecad_launcher/domain/profiles/launch_environment.dart';
 import 'package:freecad_launcher/platform/freecad_macro_runner.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/process.dart';
+import 'package:freecad_launcher/platform/python_probe.dart';
 
 class PipResult {
   const PipResult({required this.exitCode, required this.logPath, required this.outputTail});
@@ -109,6 +110,13 @@ class PipRunner {
     void Function(String line)? onOutput,
     required Duration timeout,
   }) async {
+    if (isFreeCadExecutable(pythonPath)) {
+      throw ArgumentError(
+        'Refusing to run the FreeCAD executable as Python: $pythonPath '
+        '(D-115; FreeCAD is only ever invoked with -c)',
+      );
+    }
+
     final sink = logFile.openWrite();
 
     void write(String line) {

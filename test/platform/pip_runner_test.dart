@@ -175,6 +175,18 @@ void main() {
     );
   });
 
+  test('refuses to run a FreeCAD executable as the Python interpreter', () async {
+    final future = runner.install(
+      pythonPath: '/opt/FreeCAD/bin/FreeCAD.exe',
+      targetDirectory: p.join(tempDirectory.path, 'guard'),
+      packages: const ['six'],
+      label: 'Guard',
+    );
+
+    await expectLater(future, throwsArgumentError);
+    expect(launcher.specs, isEmpty);
+  });
+
   test('serializes pip jobs', () async {
     final first = runner.install(
       pythonPath: '/opt/freecad/bin/python',

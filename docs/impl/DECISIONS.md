@@ -2514,3 +2514,36 @@ Template:
   MSVC/UCRT files; spec 06 §1.4).
 - **Refs**: `TASKS.md` R-31, `docs/spec/07-distribution.md` §2, `docs/spec/06-integrations.md`
   §1.4, `docs/user-guide.md`, `packaging/windows/build_portable.ps1`, D-091, D-018
+
+### D-115 — The asset-name Python hint is version metadata, never an interpreter path (R-32)
+- **Date**: 2026-10-05
+- **Status**: Accepted
+- **Context**: Installing an addon with `<depend>` Python packages on Windows opened FreeCAD's
+  “Initialization of FreeCAD failed — unrecognised option '-m'” dialog. Catalog assets encode the
+  bundled Python version in the name (`FreeCAD_1.1.3-Windows-x86_64-py311.7z` →
+  `pythonVersionHint: '3.11'`). `ProcessPythonProbe.detect` short-circuited on that hint and
+  returned `BundledPython(executablePath: <FreeCAD.exe>, version: hint)`; the installer persisted
+  it as `builds.pythonPath`, so `PipRunner` later executed `FreeCAD.exe -m pip install …`.
+  FreeCAD's CLI parser does not know `-m` and shows a GUI error dialog (the interpreter was never
+  looked for). The same shortcut could store the AppImage path as the interpreter on FUSE-less
+  Linux. Spec 06 §4.1 already defines the real interpreters (Windows `<build>\bin\python.exe`,
+  macOS `Contents/Resources/bin/python`, AppImage extraction fallback) and §4.2 states the version
+  is reported by the interpreter, never guessed.
+- **Decision**:
+  - `ProcessPythonProbe.detect` always attempts real interpreter discovery/probing; the
+    asset-name hint only fills `PythonDetection.version` when no interpreter can be probed (and
+    never populates `pythonPath`). `python_probe` also sanitizes `PYTHONPATH`/`PYTHONHOME`/
+    `VIRTUAL_ENV`/`PYTHONUSERBASE` for the interpreter probe (case-insensitive, Windows).
+  - `PythonEnvResolver.resolve` ignores a stored `builds.pythonPath` that equals the build
+    executable or names a FreeCAD launcher (`FreeCAD`/`FreeCADCmd`/`AppRun`), falling back to
+    discovery, so pre-fix build rows are healed without a migration.
+  - `PipRunner` refuses (`ArgumentError`) to run a FreeCAD executable as Python. FreeCAD binaries
+    are only ever spawned with `-c` (console) via `FreeCadMacroRunner`/the headless probe; no
+    Python arguments are ever passed to them.
+- **Consequences**: Windows/macOS catalog builds store the probed bundled interpreter path; the
+  Python version may still come from the asset-name hint when the interpreter cannot be probed, and
+  profiles remain creatable. Older rows with `pythonPath == FreeCAD.exe` work again: the resolver
+  finds `bin\python.exe`. If a build genuinely ships no Python, dependency installs fail with a
+  clear “no execution target” error instead of a FreeCAD error dialog.
+- **Refs**: `TASKS.md` R-32, `docs/spec/06-integrations.md` §4.1/§4.2, `lib/platform/python_probe.dart`,
+  `lib/platform/python_env.dart`, `lib/platform/pip_runner.dart`, B-19, D-108..D-112

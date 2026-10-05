@@ -28,7 +28,13 @@ class PythonEnvResolver {
     bool allowExtraction = true,
     void Function(String line)? onOutput,
   }) async {
-    if (storedPythonPath != null && File(storedPythonPath).existsSync()) {
+    // A legacy hint-based build stored the FreeCAD executable itself as
+    // `pythonPath` (D-115); never reuse it as an interpreter, fall back to
+    // locating the real bundled Python instead.
+    if (storedPythonPath != null &&
+        File(storedPythonPath).existsSync() &&
+        !isFreeCadExecutable(storedPythonPath) &&
+        !p.equals(storedPythonPath, executablePath)) {
       return storedPythonPath;
     }
 

@@ -78,6 +78,12 @@ class ProcessPythonProbe implements PythonProbe {
     required String executablePath,
     String? knownVersion,
   }) async {
+    // The asset-name hint is metadata only: it may fill the version when no
+    // interpreter can be probed, but it must never masquerade as a Python path
+    // (D-115). Persisting the FreeCAD executable as `pythonPath` made pip run
+    // `<FreeCAD.exe> -m pip …`, and FreeCAD's parser rejects `-m`.
+    final hint = (knownVersion != null && knownVersion.isNotEmpty) ? knownVersion : null;
+
     if (kind == BuildKind.appimage) {
       final extracted = _locateInterpreter(
         kind: kind,
@@ -92,18 +98,10 @@ class ProcessPythonProbe implements PythonProbe {
       if (detection.detectedVersion != null) {
         return detection;
       }
-      if (knownVersion != null && knownVersion.isNotEmpty) {
-        return PythonDetection(
-          python: BundledPython(executablePath: executablePath, version: knownVersion),
-        );
+      if (hint != null) {
+        return PythonDetection(version: hint, reason: detection.reason);
       }
       return detection;
-    }
-
-    if (knownVersion != null && knownVersion.isNotEmpty) {
-      return PythonDetection(
-        python: BundledPython(executablePath: executablePath, version: knownVersion),
-      );
     }
 
     final executable = _locateInterpreter(
@@ -112,10 +110,17 @@ class ProcessPythonProbe implements PythonProbe {
       executablePath: executablePath,
     );
     if (executable == null) {
-      return PythonDetection(reason: 'No bundled Python interpreter found under $installDirectory');
+      return PythonDetection(
+        version: hint,
+        reason: 'No bundled Python interpreter found under $installDirectory',
+      );
     }
 
-    return _probeInterpreter(executable);
+    final detection = await _probeInterpreter(executable);
+    if (!detection.found && hint != null) {
+      return PythonDetection(version: hint, reason: detection.reason);
+    }
+    return detection;
   }
 
   @override
@@ -159,7 +164,11 @@ class ProcessPythonProbe implements PythonProbe {
     final ProcessResult result;
     try {
       result = await _processRunner.run(
-        ProcessSpec(executable: executable, arguments: ['-c', _probeScript]),
+        ProcessSpec(
+          executable: executable,
+          arguments: ['-c', _probeScript],
+          environment: _interpreterEnvironment(),
+        ),
         timeout: _interpreterTimeout,
       );
     } on ProcessTimeoutException {
@@ -265,6 +274,12 @@ class ProcessPythonProbe implements PythonProbe {
   String? _majorMinor(String version) {
     final match = RegExp(r'^(\d+)\.(\d+)').firstMatch(version.trim());
     return match == null ? null : '${match[1]}.${match[2]}';
+  }
+
+  Map<String, String> _interpreterEnvironment() {
+    final environment = Map<String, String>.from(Platform.environment);
+    removeSanitizedEnvironmentKeys(environment);
+    return environment;
   }
 
   Map<String, String> _probeEnvironment(String home, String temp) {
@@ -375,6 +390,23 @@ class _HeadlessProbeOutcome {
 
   final _HeadlessProbeResult? result;
   final String? error;
+}
+
+const Set<String> freeCadExecutableNames = {
+  'freecad',
+  'freecad.exe',
+  'freecadcmd',
+  'freecadcmd.exe',
+  'apprun',
+};
+
+/// Whether [path] names a FreeCAD launcher instead of a Python interpreter.
+///
+/// FreeCAD executables are only ever run with `-c` (console) through
+/// `FreeCadMacroRunner`; they must never receive Python arguments like `-m`
+/// (D-115).
+bool isFreeCadExecutable(String path) {
+  return freeCadExecutableNames.contains(p.basename(path).toLowerCase());
 }
 
 String? locateBundledInterpreter({

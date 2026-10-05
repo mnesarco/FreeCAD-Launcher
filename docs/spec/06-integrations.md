@@ -158,6 +158,12 @@ cache format. Integration rules for v2:
 | macOS dmg | `<build>/FreeCAD.app/Contents/Resources/bin/python` |
 | Custom | probe `<exeDir>/bin/python*`, `Contents/Resources/bin/python`; pip UI disabled with explanation if absent |
 
+The asset-name `pyXY` hint (e.g. `…-Windows-x86_64-py311.7z`) is **metadata only**: it may fill
+the displayed Python version when no interpreter can be probed, but the interpreter path is always
+discovered and probed on disk (D-115). FreeCAD executables (`FreeCAD`, `FreeCADCmd`, `AppRun`)
+are never invoked as Python — `-m pip` is invalid for them; they are only ever spawned with `-c`
+(console) through the headless macro runner.
+
 Bash/zsh must never be involved: run the interpreter directly with an argument array and the
 profile env (plus `PYTHONHOME`/`PREFIX` only if the platform shim needs it; prefer the shim
 launcher when one exists, e.g. macOS `Contents/MacOS/FreeCAD` sets its own env).

@@ -47,6 +47,42 @@ void main() {
     expect(launcher.specs, isEmpty);
   });
 
+  test('ignores a stored path that points at the build executable', () async {
+    final buildDirectory = p.join(tempDirectory.path, 'builds', 'b1');
+    final executable = File(p.join(buildDirectory, 'bin', 'FreeCAD.exe'))
+      ..createSync(recursive: true);
+    final python = File(p.join(buildDirectory, 'bin', 'python.exe'))
+      ..createSync(recursive: true);
+
+    final result = await resolver.resolve(
+      kind: BuildKind.archive,
+      buildDirectory: buildDirectory,
+      executablePath: executable.path,
+      storedPythonPath: executable.path,
+    );
+
+    expect(result, python.path);
+    expect(launcher.specs, isEmpty);
+  });
+
+  test('ignores a stored FreeCAD binary even at another path', () async {
+    final buildDirectory = p.join(tempDirectory.path, 'builds', 'b1');
+    final stored = File(p.join(buildDirectory, 'bin', 'FreeCADCmd.exe'))
+      ..createSync(recursive: true);
+    final python = File(p.join(buildDirectory, 'bin', 'python.exe'))
+      ..createSync(recursive: true);
+
+    final result = await resolver.resolve(
+      kind: BuildKind.archive,
+      buildDirectory: buildDirectory,
+      executablePath: p.join(buildDirectory, 'bin', 'FreeCAD.exe'),
+      storedPythonPath: stored.path,
+    );
+
+    expect(result, python.path);
+    expect(launcher.specs, isEmpty);
+  });
+
   test('finds a nearby interpreter for custom builds', () async {
     final python = File(p.join(tempDirectory.path, 'bin', 'python3'))..createSync(recursive: true);
 
