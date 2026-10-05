@@ -26,6 +26,14 @@ class FakeProcessHandle implements ProcessHandle {
     _closeStreams();
   }
 
+  /// Exits while the stdio pipes stay open, as Windows can do when a child
+  /// process inherits the write handles.
+  void exitWithoutClosingStreams(int code) {
+    if (!_exitCompleter.isCompleted) {
+      _exitCompleter.complete(code);
+    }
+  }
+
   void _closeStreams() {
     if (!_stdoutController.isClosed) {
       _stdoutController.close();

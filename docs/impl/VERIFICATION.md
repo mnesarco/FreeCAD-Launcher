@@ -485,6 +485,24 @@ Evidence:
   published `v0.4.7` and confirm the pip log shows `bin\python.exe`; existing builds are healed at
   install time).
 
+### R-33 (2026-10-05, `devel`)
+
+Windows-only `Unhandled Exception: Bad state: StreamSink is closed` console spam during launches
+(the app kept working): `ProfilesController._trackLaunch` closed the launch log `IOSink` after the
+5 s stdout/stderr drain timeout, but `Future.timeout` does not cancel the `listen(logSink.add)`
+subscriptions, so a late pipe chunk from a process whose stdio outlives it (inherited write handles
+on Windows) hit the closed sink (`_Socket._onData` → `_StreamSinkImpl.add`). Evidence:
+
+- `profiles_controller_test` “ignores pipe output that arrives after the process exit”: the fake
+  process exits while its stdout/stderr controllers stay open (new
+  `FakeProcessHandle.exitWithoutClosingStreams`), a short injected `logDrainTimeout` forces the
+  drain timeout, and afterwards the test writes a late chunk and asserts the log keeps the
+  pre-exit content with no unhandled `StateError`. The test was verified to **fail on the old
+  code** (cancel calls removed) and pass with the fix.
+- `flutter analyze` clean; 714 tests green (10 platform probes skipped).
+- Not verified live: no Windows retest yet (launch a profile and confirm the console stays clean
+  after the process exits and a lingering child pipe closes).
+
 ## 5. When something fails
 
 1. Capture the job log tail and app logs from `logs/`.

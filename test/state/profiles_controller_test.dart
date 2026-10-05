@@ -63,6 +63,7 @@ void main() {
   ProfilesController buildController({
     BuildPlatform platform = BuildPlatform.linux,
     bool fuseAvailable = true,
+    Duration logDrainTimeout = const Duration(seconds: 5),
   }) {
     if (fuseAvailable) {
       File('${tempDirectory.path}/fusermount').createSync();
@@ -73,6 +74,7 @@ void main() {
       repository: repository,
       paths: paths,
       platform: platform,
+      logDrainTimeout: logDrainTimeout,
       runtime: FreeCadRuntime(
         processRunner: runner,
         diagnostics: DiagnosticsService(
@@ -210,6 +212,27 @@ void main() {
     final content = log.readAsStringSync();
     expect(content, contains('hello'));
     expect(content, contains('warn'));
+    controller.dispose();
+  });
+
+  test('ignores pipe output that arrives after the process exit', () async {
+    final created = await repository.create(name: 'Dev', buildId: 'build-1');
+    final profile = created.valueOrNull!;
+    final controller = buildController(logDrainTimeout: const Duration(milliseconds: 20));
+
+    final result = await controller.launch(profileId: profile.id);
+    final handle = launcher.handles.single
+      ..emitStdout('before\n')
+      ..exitWithoutClosingStreams(0);
+
+    expect(await result.launch!.exitCode, 0);
+
+    handle.emitStdout('late\n');
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    final content = File(result.launch!.logPath).readAsStringSync();
+    expect(content, contains('before'));
+    expect(content, isNot(contains('late')));
     controller.dispose();
   });
 

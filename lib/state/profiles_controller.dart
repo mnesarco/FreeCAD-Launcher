@@ -71,6 +71,7 @@ class ProfilesController {
     ConfigSnapshotService configSnapshots = const ConfigSnapshotService(),
     FreeCadPreferences freecadPreferences = const FreeCadPreferences(),
     DateTime Function()? clock,
+    Duration logDrainTimeout = const Duration(seconds: 5),
   }) : _database = database,
        _repository = repository,
        _paths = paths,
@@ -78,7 +79,8 @@ class ProfilesController {
        _runtime = runtime,
        _configSnapshots = configSnapshots,
        _freecadPreferences = freecadPreferences,
-       _clock = clock ?? DateTime.now;
+       _clock = clock ?? DateTime.now,
+       _logDrainTimeout = logDrainTimeout;
 
   final AppDatabase _database;
   final ProfilesRepository _repository;
@@ -88,6 +90,7 @@ class ProfilesController {
   final ConfigSnapshotService _configSnapshots;
   final FreeCadPreferences _freecadPreferences;
   final DateTime Function() _clock;
+  final Duration _logDrainTimeout;
 
   final configSnapshots = signal<Map<String, List<ConfigSnapshot>>>({});
 
@@ -334,16 +337,20 @@ class ProfilesController {
       ..writeln('# args: ${plan.arguments.join(' ')}')
       ..writeln('---');
 
-    final stdoutDone = handle.stdout.listen(logSink.add).asFuture<void>();
-    final stderrDone = handle.stderr.listen(logSink.add).asFuture<void>();
+    final stdoutSubscription = handle.stdout.listen(logSink.add);
+    final stderrSubscription = handle.stderr.listen(logSink.add);
 
     unawaited(() async {
       final code = await handle.exitCode;
       _finishLaunch(profile.id, code);
       await Future.wait([
-        stdoutDone.timeout(const Duration(seconds: 5), onTimeout: () {}),
-        stderrDone.timeout(const Duration(seconds: 5), onTimeout: () {}),
+        stdoutSubscription.asFuture<void>().timeout(_logDrainTimeout, onTimeout: () {}),
+        stderrSubscription.asFuture<void>().timeout(_logDrainTimeout, onTimeout: () {}),
       ]);
+      // Cancel before closing: pipes can outlive the process (inherited
+      // handles on Windows), and a late chunk would hit the closed sink.
+      await stdoutSubscription.cancel();
+      await stderrSubscription.cancel();
       try {
         await logSink.flush();
       } on Object {
