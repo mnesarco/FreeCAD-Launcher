@@ -403,6 +403,14 @@ AppImage Python execution via headless macros (D-112), removing the persistent
   `cache/pip` + logs) and no FreeCAD mount processes remained.
 - Not verified live: FUSE-less fallback (unit-tested only).
 
+### R-30 (2026-10-04, `devel`)
+
+Archive symlink policy (D-113): the extractor skips symlink entries instead of failing, reports
+them, and the addon install surfaces a “Some files were skipped” dialog. Evidence: unit tests
+(extractor skip + report + rest extracted, installer propagation, controller `installWarnings`),
+warnings-dialog widget test, and the real `HistoryWorkbench-release.zip` (495 entries) extracting
+with the 3 expected skips and `package.xml` + workbench resources present.
+
 ## 5. When something fails
 
 1. Capture the job log tail and app logs from `logs/`.

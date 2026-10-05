@@ -117,7 +117,8 @@ cache format. Integration rules for v2:
   are skipped (D-110); dependent addons and pip packages install before the addon with lenient
   failure handling (D-111). The same flow applies to custom sources, updates (missing deps only),
   bundle apply and manifest import.
-- **Safety**: safe-extract with zip-slip and symlink guards; reject entries with absolute paths;
+- **Safety**: safe-extract with zip-slip guards; reject entries with absolute/escaping paths;
+  symlink entries are **never created** — they are skipped and reported to the user (D-113);
   cap uncompressed size and file count to avoid zip bombs. Installs are atomic: extract into
   `<Mod>/<id>.part`, then rename into place with a `.old` backup when replacing (D-039).
 - **Custom sources** (v0.2, D-085..D-088): repository URL + ref resolves to the host archive

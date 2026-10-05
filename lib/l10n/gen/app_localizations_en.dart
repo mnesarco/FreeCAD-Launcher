@@ -1212,6 +1212,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addonsInstalledMessage => 'Addon installed';
 
   @override
+  String get addonsInstallSkippedTitle => 'Some files were skipped';
+
+  @override
+  String get addonsInstallSkippedMessage =>
+      'The addon archive contains symbolic links. For security the launcher never creates links, so these entries were skipped:';
+
+  @override
+  String get addonsInstallSkippedClose => 'Close';
+
+  @override
   String get addonsUpdate => 'Update';
 
   @override

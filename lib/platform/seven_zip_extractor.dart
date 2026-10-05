@@ -26,7 +26,11 @@ class SevenZipExtractor implements ArchiveExtractor {
   String get executablePath => _executablePath;
 
   @override
-  Future<void> extract(String archivePath, String destination) async {
+  Future<void> extract(
+    String archivePath,
+    String destination, {
+    ArchiveWarningCallback? onWarning,
+  }) async {
     if (!File(_executablePath).existsSync()) {
       throw ArchiveExtractionException('7-Zip helper not found at $_executablePath');
     }

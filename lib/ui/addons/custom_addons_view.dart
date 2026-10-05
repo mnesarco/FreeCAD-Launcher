@@ -15,6 +15,7 @@ import 'package:freecad_launcher/domain/addons/repository_archive.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/addons/addon_dependencies_dialog.dart';
+import 'package:freecad_launcher/ui/addons/addon_install_warnings_dialog.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
 
@@ -167,7 +168,8 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
 
   Future<void> _installRepository(String profileId, AppLocalizations l10n) {
     final url = _repositoryController.text;
-    final name = addonIdFromRepositoryUrl(url) ?? l10n.addonsTabCustom;
+    final addonId = addonIdFromRepositoryUrl(url);
+    final name = addonId ?? l10n.addonsTabCustom;
     return _run(
       () => AppScope.of(context).addons.installFromRepository(
         repositoryUrl: url,
@@ -176,6 +178,8 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
         onDependencies: (plan) => _askDependencies(plan, name),
       ),
       l10n.addonsInstalledMessage,
+      warningsAddonId: addonId,
+      warningsAddonName: name,
     );
   }
 
@@ -185,7 +189,8 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
       setState(() => _error = l10n.addonsCustomArchiveRequired);
       return Future.value();
     }
-    final name = addonIdFromArchivePath(archive.path) ?? l10n.addonsTabCustom;
+    final addonId = addonIdFromArchivePath(archive.path);
+    final name = addonId ?? l10n.addonsTabCustom;
     return _run(
       () => AppScope.of(context).addons.installFromArchive(
         archivePath: archive.path,
@@ -193,6 +198,8 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
         onDependencies: (plan) => _askDependencies(plan, name),
       ),
       l10n.addonsInstalledMessage,
+      warningsAddonId: addonId,
+      warningsAddonName: name,
     );
   }
 
@@ -202,14 +209,16 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
       setState(() => _error = l10n.addonsCustomDirectoryRequired);
       return Future.value();
     }
-    final name = addonIdFromDirectory(directoryPath);
+    final addonId = addonIdFromDirectory(directoryPath);
     return _run(
       () => AppScope.of(context).addons.installFromDirectory(
         sourcePath: directoryPath,
         profileId: profileId,
-        onDependencies: (plan) => _askDependencies(plan, name),
+        onDependencies: (plan) => _askDependencies(plan, addonId),
       ),
       l10n.addonsInstalledMessage,
+      warningsAddonId: addonId,
+      warningsAddonName: addonId,
     );
   }
 
@@ -221,6 +230,8 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
         onDependencies: (plan) => _askDependencies(plan, row.displayName),
       ),
       l10n.addonsUpdatedMessage,
+      warningsAddonId: row.addonId,
+      warningsAddonName: row.displayName,
     );
   }
 
@@ -241,6 +252,8 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
         onDependencies: (plan) => _askDependencies(plan, row.displayName),
       ),
       l10n.addonsUpdatedMessage,
+      warningsAddonId: row.addonId,
+      warningsAddonName: row.displayName,
     );
   }
 
@@ -289,6 +302,8 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
         onDependencies: (plan) => _askDependencies(plan, row.displayName),
       ),
       l10n.addonsInstalledMessage,
+      warningsAddonId: row.addonId,
+      warningsAddonName: row.displayName,
     );
   }
 
@@ -348,7 +363,12 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
     return showAddonDependenciesDialog(context, addonName: addonName, plan: plan);
   }
 
-  Future<void> _run(Future<Result<void>> Function() action, String successMessage) async {
+  Future<void> _run(
+    Future<Result<void>> Function() action,
+    String successMessage, {
+    String? warningsAddonId,
+    String? warningsAddonName,
+  }) async {
     setState(() {
       _busy = true;
       _error = null;
@@ -358,10 +378,15 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
       return;
     }
     setState(() => _busy = false);
-    result.fold(
-      (_) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(successMessage))),
-      (error) => setState(() => _error = error.message),
-    );
+    result.fold((_) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(successMessage)));
+      final warnings = warningsAddonId == null
+          ? const <String>[]
+          : AppScope.of(context).addons.installWarnings.value[warningsAddonId] ?? const <String>[];
+      if (warnings.isNotEmpty && warningsAddonName != null && mounted) {
+        showAddonInstallWarningsDialog(context, addonName: warningsAddonName, warnings: warnings);
+      }
+    }, (error) => setState(() => _error = error.message));
   }
 }
 

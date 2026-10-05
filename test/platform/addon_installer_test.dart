@@ -110,6 +110,25 @@ void main() {
     expect(Directory('$destination.part').existsSync(), isFalse);
   });
 
+  test('reports entries skipped by the extractor', () async {
+    final warningInstaller = AddonInstaller(
+      downloader: Downloader(source: source, cacheDirectory: downloadDirectory),
+      extractor: const _WarningExtractor(),
+    );
+    final archive = p.join(tempDirectory.path, 'addon.zip');
+    File(archive).writeAsBytesSync(_zip({'ignored': 'x'}));
+
+    final prepared = await warningInstaller.prepareFromArchive(
+      archivePath: archive,
+      destinationDirectory: destination,
+    );
+
+    expect(prepared.skippedEntries, hasLength(1));
+    expect(prepared.skippedEntries.single.path, 'docs/link');
+    expect(prepared.skippedEntries.single.symlinkTarget, '../x');
+    warningInstaller.discardPrepared(prepared);
+  });
+
   test('installFromArchive installs a local file without downloading', () async {
     final archive = p.join(tempDirectory.path, 'A2plus.zip');
     File(archive).writeAsBytesSync(
@@ -204,4 +223,19 @@ void main() {
       );
     });
   }, skip: Platform.isWindows);
+}
+
+class _WarningExtractor implements ArchiveExtractor {
+  const _WarningExtractor();
+
+  @override
+  Future<void> extract(
+    String archivePath,
+    String destination, {
+    ArchiveWarningCallback? onWarning,
+  }) async {
+    final root = Directory(p.join(destination, 'Addon'))..createSync(recursive: true);
+    File(p.join(root.path, 'InitGui.py')).writeAsStringSync('gui');
+    onWarning?.call(const SkippedArchiveEntry(path: 'docs/link', symlinkTarget: '../x'));
+  }
 }

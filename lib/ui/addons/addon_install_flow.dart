@@ -8,6 +8,7 @@ import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/addons/addon_dependencies_dialog.dart';
+import 'package:freecad_launcher/ui/addons/addon_install_warnings_dialog.dart';
 
 Future<void> installAddonIntoProfile(
   BuildContext context, {
@@ -56,7 +57,13 @@ Future<void> installAddonIntoProfile(
       return;
     }
     result.fold(
-      (_) => messenger.showSnackBar(SnackBar(content: Text(l10n.addonsInstalledMessage))),
+      (_) {
+        messenger.showSnackBar(SnackBar(content: Text(l10n.addonsInstalledMessage)));
+        final warnings = controller.installWarnings.value[addon.id] ?? const <String>[];
+        if (warnings.isNotEmpty && context.mounted) {
+          showAddonInstallWarningsDialog(context, addonName: addon.displayName, warnings: warnings);
+        }
+      },
       (error) =>
           messenger.showSnackBar(SnackBar(content: Text('${l10n.addonsInstallFailed}: $error'))),
     );

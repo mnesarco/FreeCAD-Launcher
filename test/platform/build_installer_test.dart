@@ -46,7 +46,11 @@ class FakeArchiveExtractor implements ArchiveExtractor {
   Object? error;
 
   @override
-  Future<void> extract(String archivePath, String destination) async {
+  Future<void> extract(
+    String archivePath,
+    String destination, {
+    ArchiveWarningCallback? onWarning,
+  }) async {
     calls.add((archive: archivePath, destination: destination));
     if (error != null) {
       throw error!;
@@ -249,11 +253,7 @@ void main() {
     expect(regular.calls, isEmpty);
     expect(
       installed.executablePath,
-      p.join(
-        paths.buildDir('b1'),
-        'FreeCAD_1.1.3-Windows-x86_64-py311',
-        'FreeCAD.exe',
-      ),
+      p.join(paths.buildDir('b1'), 'FreeCAD_1.1.3-Windows-x86_64-py311', 'FreeCAD.exe'),
     );
   });
 
@@ -280,7 +280,9 @@ void main() {
   test('installs a dmg using the configured extractor', () async {
     final dmg = FakeDmgExtractor()
       ..onCreate = (destination) {
-        Directory(p.join(destination, 'FreeCAD.app', 'Contents', 'MacOS')).createSync(recursive: true);
+        Directory(
+          p.join(destination, 'FreeCAD.app', 'Contents', 'MacOS'),
+        ).createSync(recursive: true);
       };
     final archive = await writeArchive('FreeCAD.dmg', [0]);
     final installer = BuildInstaller(

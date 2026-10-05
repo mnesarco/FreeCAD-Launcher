@@ -30,11 +30,13 @@ class PreparedAddonInstall {
     required this.contentRoot,
     required this.stagingDirectory,
     required this.destinationDirectory,
+    this.skippedEntries = const [],
   });
 
   final String contentRoot;
   final String stagingDirectory;
   final String destinationDirectory;
+  final List<SkippedArchiveEntry> skippedEntries;
 }
 
 bool isAddonLink(String path) =>
@@ -118,8 +120,9 @@ class AddonInstaller {
     final staging = '$destinationDirectory.part';
     Directory(p.dirname(destinationDirectory)).createSync(recursive: true);
     deleteAddonEntry(staging);
+    final skippedEntries = <SkippedArchiveEntry>[];
     try {
-      await _extractor.extract(archivePath, staging);
+      await _extractor.extract(archivePath, staging, onWarning: skippedEntries.add);
       final root = _contentRoot(staging);
       if (await _countFiles(root) == 0) {
         throw const AddonInstallException('Archive contains no files');
@@ -131,6 +134,7 @@ class AddonInstaller {
         contentRoot: root,
         stagingDirectory: staging,
         destinationDirectory: destinationDirectory,
+        skippedEntries: skippedEntries,
       );
     } on Object {
       deleteAddonEntry(staging);
@@ -149,8 +153,7 @@ class AddonInstaller {
     final backup = '$destination.old';
     deleteAddonEntry(backup);
     final hadDestination =
-        FileSystemEntity.typeSync(destination, followLinks: false) !=
-        FileSystemEntityType.notFound;
+        FileSystemEntity.typeSync(destination, followLinks: false) != FileSystemEntityType.notFound;
     if (hadDestination) {
       _renameEntry(destination, backup);
     }
@@ -158,8 +161,7 @@ class AddonInstaller {
       await Directory(prepared.contentRoot).rename(destination);
     } on Object {
       if (hadDestination &&
-          FileSystemEntity.typeSync(backup, followLinks: false) !=
-              FileSystemEntityType.notFound) {
+          FileSystemEntity.typeSync(backup, followLinks: false) != FileSystemEntityType.notFound) {
         deleteAddonEntry(destination);
         _renameEntry(backup, destination);
       }
@@ -167,10 +169,7 @@ class AddonInstaller {
     }
     deleteAddonEntry(backup);
     deleteAddonEntry(prepared.stagingDirectory);
-    return AddonInstallResult(
-      directory: destination,
-      sizeBytes: await _directorySize(destination),
-    );
+    return AddonInstallResult(directory: destination, sizeBytes: await _directorySize(destination));
   }
 
   void discardPrepared(PreparedAddonInstall prepared) {
@@ -233,8 +232,7 @@ class AddonInstaller {
     }
     final roots = directories
         .where(
-          (directory) =>
-              !_ignoredRootEntries.contains(p.basename(directory.path).toLowerCase()),
+          (directory) => !_ignoredRootEntries.contains(p.basename(directory.path).toLowerCase()),
         )
         .toList();
     if (roots.length == 1 && directories.length <= 2 && files.isEmpty) {

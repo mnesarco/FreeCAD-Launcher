@@ -80,14 +80,22 @@ void main() {
     );
   });
 
-  test('rejects symlink entries', () async {
+  test('skips symlink entries, reports them and extracts the rest', () async {
     final archive = Archive()
-      ..addFile(ArchiveFile('link', 0, [])..symbolicLink = '/etc/passwd');
+      ..addFile(ArchiveFile('link', 0, [])..symbolicLink = '/etc/passwd')
+      ..addFile(ArchiveFile('real.txt', 1, [65]))
+      ..addFile(ArchiveFile('nested/other', 0, [])..symbolicLink = '../escape');
+    final skipped = <SkippedArchiveEntry>[];
 
-    await expectLater(
-      extractor.extractEntries(archive.files, destination.path),
-      throwsA(isA<ArchiveExtractionException>()),
-    );
+    await extractor.extractEntries(archive.files, destination.path, onWarning: skipped.add);
+
+    expect(skipped.map((entry) => (entry.path, entry.symlinkTarget)), [
+      ('link', '/etc/passwd'),
+      ('nested/other', '../escape'),
+    ]);
+    expect(File(p.join(destination.path, 'link')).existsSync(), isFalse);
+    expect(File(p.join(destination.path, 'nested', 'other')).existsSync(), isFalse);
+    expect(File(p.join(destination.path, 'real.txt')).existsSync(), isTrue);
   });
 
   test('enforces the entry count limit', () async {
@@ -105,12 +113,9 @@ void main() {
   });
 
   test('enforces the uncompressed size limit', () async {
-    final archive = Archive()
-      ..addFile(ArchiveFile('big.txt', 20, List.filled(20, 65)));
+    final archive = Archive()..addFile(ArchiveFile('big.txt', 20, List.filled(20, 65)));
     final file = await writeZip('big.zip', archive);
-    const limited = SafeArchiveExtractor(
-      limits: ExtractionLimits(maxUncompressedBytes: 10),
-    );
+    const limited = SafeArchiveExtractor(limits: ExtractionLimits(maxUncompressedBytes: 10));
 
     await expectLater(
       limited.extract(file.path, destination.path),

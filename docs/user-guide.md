@@ -186,6 +186,8 @@ with a notice).
   the standard library, or installed in the profile are detected with a probe and skipped.
 - Removing an addon that other installed addons depend on shows a “Required by” warning but is
   still allowed.
+- Archives that contain symbolic links install with the links skipped (links are never created);
+  a “Some files were skipped” dialog lists every skipped path and its target.
 - Installed addons are listed per profile (Addons tab) with **Update** and **Remove**; updates
   keep a backup under `<profile>/backups/addon-<id>-<timestamp>/`.
 - **Pin** an addon per profile to freeze it: pinned addons are skipped by update checks, batch

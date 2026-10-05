@@ -15,6 +15,7 @@ import 'package:freecad_launcher/domain/addons/package_xml.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/platform/addon_installer.dart';
+import 'package:freecad_launcher/platform/archive_extract.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/pip_runner.dart';
@@ -1251,6 +1252,36 @@ void main() {
       subject.dispose();
     });
 
+    test('records skipped archive entries as install warnings', () async {
+      catalog.result = AddonCatalogResult(
+        addons: [addon('Root')],
+        freshness: CatalogFreshness.fresh,
+      );
+      downloadSource.streamFactory = () => Stream.fromIterable([
+        catalogZip({'Root-master/InitGui.py': 'gui'}),
+      ]);
+      final installer = AddonInstaller(
+        downloader: Downloader(
+          source: downloadSource,
+          cacheDirectory: p.join(tempDirectory.path, 'warning-downloads'),
+        ),
+        extractor: const SkippedLinkExtractor(),
+      );
+      final subject = controller(installer: installer);
+      await subject.load();
+
+      final result = await subject.install(
+        addonId: 'Root',
+        branchRef: 'master',
+        profileId: 'profile-1',
+        selection: AddonDependencySelection.none,
+      );
+
+      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+      expect(subject.installWarnings.value['Root'], ['docs/link -> ../x']);
+      subject.dispose();
+    });
+
     test('a cheap preparation does not cache fallback availability', () async {
       catalog.result = AddonCatalogResult(
         addons: [
@@ -1563,5 +1594,20 @@ class LazyPythonEnvResolver extends PythonEnvResolver {
   }) async {
     extractionAllowed = allowExtraction;
     return allowExtraction ? '/opt/freecad/bin/python' : null;
+  }
+}
+
+class SkippedLinkExtractor implements ArchiveExtractor {
+  const SkippedLinkExtractor();
+
+  @override
+  Future<void> extract(
+    String archivePath,
+    String destination, {
+    ArchiveWarningCallback? onWarning,
+  }) async {
+    final root = Directory(p.join(destination, 'Root'))..createSync(recursive: true);
+    File(p.join(root.path, 'InitGui.py')).writeAsStringSync('gui');
+    onWarning?.call(const SkippedArchiveEntry(path: 'docs/link', symlinkTarget: '../x'));
   }
 }

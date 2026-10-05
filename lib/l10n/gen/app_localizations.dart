@@ -2302,6 +2302,24 @@ abstract class AppLocalizations {
   /// **'Addon installed'**
   String get addonsInstalledMessage;
 
+  /// No description provided for @addonsInstallSkippedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Some files were skipped'**
+  String get addonsInstallSkippedTitle;
+
+  /// No description provided for @addonsInstallSkippedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The addon archive contains symbolic links. For security the launcher never creates links, so these entries were skipped:'**
+  String get addonsInstallSkippedMessage;
+
+  /// No description provided for @addonsInstallSkippedClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get addonsInstallSkippedClose;
+
   /// No description provided for @addonsUpdate.
   ///
   /// In en, this message translates to:

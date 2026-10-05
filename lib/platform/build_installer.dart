@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import 'package:freecad_launcher/core/log.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/platform/archive_extract.dart';
 import 'package:freecad_launcher/platform/directory_size.dart';
@@ -150,22 +151,27 @@ class BuildInstaller {
 
   Future<String> _installArchive(InstallRequest request, String directory) async {
     final fileName = request.assetName ?? p.basename(request.archivePath);
+    void warnSkipped(SkippedArchiveEntry entry) {
+      appLogger.warn(
+        'Skipped symbolic link in ${request.assetName ?? request.archivePath}: '
+        '${entry.path} -> ${entry.symlinkTarget ?? '(unknown)'}',
+        tag: 'install',
+      );
+    }
 
     if (fileName.toLowerCase().endsWith('.7z')) {
       final extractor = _sevenZipExtractor;
       if (extractor == null) {
         throw const ArchiveExtractionException('7-Zip extraction is not configured');
       }
-      await extractor.extract(request.archivePath, directory);
+      await extractor.extract(request.archivePath, directory, onWarning: warnSkipped);
     } else {
-      await _archiveExtractor.extract(request.archivePath, directory);
+      await _archiveExtractor.extract(request.archivePath, directory, onWarning: warnSkipped);
     }
 
     final executable = await _findExecutable(directory);
     if (executable == null) {
-      throw ArchiveExtractionException(
-        'No FreeCAD executable found after extracting $fileName',
-      );
+      throw ArchiveExtractionException('No FreeCAD executable found after extracting $fileName');
     }
     return executable;
   }

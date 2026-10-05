@@ -28,6 +28,7 @@ import 'package:freecad_launcher/domain/python/python_names.dart';
 import 'package:freecad_launcher/domain/python/python_stdlib_names.dart';
 import 'package:freecad_launcher/domain/python/requirements_parser.dart';
 import 'package:freecad_launcher/platform/addon_installer.dart';
+import 'package:freecad_launcher/platform/archive_extract.dart';
 import 'package:freecad_launcher/platform/addon_manifest_reader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/pip_runner.dart';
@@ -88,6 +89,7 @@ class AddonsController {
   final disabledAddons = signal<Map<String, Set<String>>>({});
   final installing = signal<Set<String>>({});
   final installErrors = signal<Map<String, AppError>>({});
+  final installWarnings = signal<Map<String, List<String>>>({});
   final requirementsInstalling = signal<Set<String>>({});
   final requirementsErrors = signal<Map<String, AppError>>({});
   final freecadVersions = signal<List<String>>([]);
@@ -593,6 +595,7 @@ class AddonsController {
 
     installing.value = {...installing.value, addonId};
     installErrors.value = {...installErrors.value}..remove(addonId);
+    installWarnings.value = {...installWarnings.value}..remove(addonId);
     PreparedAddonInstall? prepared;
     try {
       context?.report(detail: 'Downloading addon');
@@ -617,6 +620,7 @@ class AddonsController {
         destinationDirectory: p.join(_paths.profilePaths(profileId).mod, addon.id),
         cancellationToken: context?.token,
       );
+      _recordInstallWarnings(addon.id, prepared.skippedEntries, context: context);
       final requirementsText =
           readRequirementsFromDirectory(prepared.contentRoot) ?? branch.metadata?.requirements;
       var hasPythonDependencies = false;
@@ -1366,6 +1370,7 @@ class AddonsController {
       root: prepared.contentRoot,
       commit: () => _installer.commitPrepared(prepared, cancellationToken: token),
       discard: () async => _installer.discardPrepared(prepared),
+      skippedEntries: prepared.skippedEntries,
     );
   }
 
@@ -1384,6 +1389,7 @@ class AddonsController {
       root: prepared.contentRoot,
       commit: () => _installer.commitPrepared(prepared, cancellationToken: token),
       discard: () async => _installer.discardPrepared(prepared),
+      skippedEntries: prepared.skippedEntries,
     );
   }
 
@@ -1502,6 +1508,7 @@ class AddonsController {
 
     installing.value = {...installing.value, addonId};
     installErrors.value = {...installErrors.value}..remove(addonId);
+    installWarnings.value = {...installWarnings.value}..remove(addonId);
     _CustomPreparedContent? prepared;
     try {
       if (replaceExisting) {
@@ -1509,6 +1516,7 @@ class AddonsController {
         await _backupAddon(profileId, addonId);
       }
       prepared = await prepare(context?.token, context);
+      _recordInstallWarnings(addonId, prepared.skippedEntries, context: context);
       context?.report(detail: 'Reading addon metadata');
       final info = readPackageXmlInfo(prepared.root);
       final requirementsText = readRequirementsFromDirectory(prepared.root);
@@ -1620,8 +1628,30 @@ class AddonsController {
     return AppError(message: message);
   }
 
+  void _recordInstallWarnings(
+    String addonId,
+    List<SkippedArchiveEntry> entries, {
+    JobContext? context,
+  }) {
+    if (entries.isEmpty) {
+      return;
+    }
+    final messages = [
+      for (final entry in entries)
+        entry.symlinkTarget == null || entry.symlinkTarget!.isEmpty
+            ? '${entry.path} (symbolic link)'
+            : '${entry.path} -> ${entry.symlinkTarget}',
+    ];
+    installWarnings.value = {...installWarnings.value, addonId: messages};
+    for (final message in messages) {
+      appLogger.warn('Skipped symbolic link in addon "$addonId": $message', tag: 'addons');
+    }
+    context?.report(detail: 'Skipped ${messages.length} symbolic link(s)');
+  }
+
   void clearInstallError(String addonId) {
     installErrors.value = {...installErrors.value}..remove(addonId);
+    installWarnings.value = {...installWarnings.value}..remove(addonId);
   }
 
   void dispose() {
@@ -1633,9 +1663,15 @@ class AddonsController {
 }
 
 class _CustomPreparedContent {
-  const _CustomPreparedContent({required this.root, required this.commit, required this.discard});
+  const _CustomPreparedContent({
+    required this.root,
+    required this.commit,
+    required this.discard,
+    this.skippedEntries = const [],
+  });
 
   final String root;
   final Future<AddonInstallResult> Function() commit;
   final Future<void> Function() discard;
+  final List<SkippedArchiveEntry> skippedEntries;
 }

@@ -2452,3 +2452,34 @@ Template:
   `lib/platform/freecad_macro_runner.dart`, `lib/platform/pip_runner.dart`,
   `lib/platform/python_package_probe.dart`, `lib/platform/python_execution.dart`, D-006,
   D-022, D-041, D-110
+
+### D-113 — Archive symlinks are skipped with a warning, never created (R-30)
+- **Date**: 2026-10-04
+- **Status**: Accepted
+- **Context**: Installing the catalog **History Workbench** failed with
+  `ArchiveExtractionException: Symlink entries are not allowed` because its GitHub archive carries
+  three git symlinks (two relative, one absolute pointing at the author's machine:
+  `/home/flyer/Repositories/...`). The D-039 extractor rejected every symlink outright, so any
+  addon repo using links for docs/assets was uninstallable. Blindly creating links is unsafe:
+  a link plus a later entry can write outside the destination (zip-slip via symlink), absolute
+  links can expose host paths, and resolving/copying link targets during extraction would read
+  arbitrary host files.
+- **Decision**:
+  - `SafeArchiveExtractor` **skips** symlink entries (both zip and tar) instead of throwing; it
+    never creates a link and never reads the link target from the host.
+  - Skipped entries are reported through an optional `ArchiveWarningCallback`
+    (`SkippedArchiveEntry { path, symlinkTarget }`) and surfaced per addon:
+    `AddonsController.installWarnings` (path → target messages) plus `appLogger.warn` and a job
+    detail line; `AddonInstaller.prepareFromArchive` returns them in `PreparedAddonInstall`.
+  - Catalog installs, custom repo/archive installs and FreeCAD build archive installs all skip
+    and log; addon installs additionally show a “Some files were skipped” dialog listing every
+    skipped link with its target.
+  - Path-name validation still rejects absolute/escaping entry names before the skip decision.
+- **Consequences**: History Workbench installs; only its docs-site links are missing (the
+  workbench content itself is regular files). Addons that genuinely rely on symlinked content
+  install incomplete, but the user is told exactly which entries were skipped. Security posture
+  is unchanged from D-039: no link is ever materialized. The former unit test that expected a
+  throw now expects a skip + report.
+- **Refs**: `TASKS.md` R-30, `docs/spec/06-integrations.md` §2, `lib/platform/archive_extract.dart`,
+  `lib/platform/addon_installer.dart`, `lib/state/addons_controller.dart`,
+  `lib/ui/addons/addon_install_warnings_dialog.dart`, D-039

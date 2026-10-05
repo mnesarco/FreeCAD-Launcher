@@ -14,18 +14,25 @@ class ArchiveExtractionException implements Exception {
   String toString() => 'ArchiveExtractionException: $message';
 }
 
+/// An archive entry that was intentionally not written to disk.
+class SkippedArchiveEntry {
+  const SkippedArchiveEntry({required this.path, this.symlinkTarget});
+
+  final String path;
+  final String? symlinkTarget;
+}
+
+typedef ArchiveWarningCallback = void Function(SkippedArchiveEntry entry);
+
 class ExtractionLimits {
-  const ExtractionLimits({
-    this.maxUncompressedBytes = 4 << 30,
-    this.maxEntries = 200000,
-  });
+  const ExtractionLimits({this.maxUncompressedBytes = 4 << 30, this.maxEntries = 200000});
 
   final int maxUncompressedBytes;
   final int maxEntries;
 }
 
 abstract interface class ArchiveExtractor {
-  Future<void> extract(String archivePath, String destination);
+  Future<void> extract(String archivePath, String destination, {ArchiveWarningCallback? onWarning});
 }
 
 class SafeArchiveExtractor implements ArchiveExtractor {
@@ -34,20 +41,33 @@ class SafeArchiveExtractor implements ArchiveExtractor {
   final ExtractionLimits limits;
 
   @override
-  Future<void> extract(String archivePath, String destination) async {
+  Future<void> extract(
+    String archivePath,
+    String destination, {
+    ArchiveWarningCallback? onWarning,
+  }) async {
     final name = archivePath.toLowerCase();
     if (name.endsWith('.zip')) {
-      await _extractZip(archivePath, destination);
+      await _extractZip(archivePath, destination, onWarning: onWarning);
       return;
     }
     if (name.endsWith('.tar.gz') || name.endsWith('.tgz') || name.endsWith('.tar')) {
-      await _extractTar(archivePath, destination, gzipped: !name.endsWith('.tar'));
+      await _extractTar(
+        archivePath,
+        destination,
+        gzipped: !name.endsWith('.tar'),
+        onWarning: onWarning,
+      );
       return;
     }
     throw ArchiveExtractionException('Unsupported archive type: $archivePath');
   }
 
-  Future<void> _extractZip(String archivePath, String destination) async {
+  Future<void> _extractZip(
+    String archivePath,
+    String destination, {
+    ArchiveWarningCallback? onWarning,
+  }) async {
     final bytes = await File(archivePath).readAsBytes();
     final Archive archive;
     try {
@@ -55,13 +75,14 @@ class SafeArchiveExtractor implements ArchiveExtractor {
     } on Object catch (error) {
       throw ArchiveExtractionException('Invalid ZIP archive: $error');
     }
-    await extractEntries(archive.files, destination);
+    await extractEntries(archive.files, destination, onWarning: onWarning);
   }
 
   Future<void> _extractTar(
     String archivePath,
     String destination, {
     required bool gzipped,
+    ArchiveWarningCallback? onWarning,
   }) async {
     var bytes = await File(archivePath).readAsBytes();
     if (gzipped) {
@@ -77,10 +98,14 @@ class SafeArchiveExtractor implements ArchiveExtractor {
     } on Object catch (error) {
       throw ArchiveExtractionException('Invalid TAR archive: $error');
     }
-    await extractEntries(archive.files, destination);
+    await extractEntries(archive.files, destination, onWarning: onWarning);
   }
 
-  Future<void> extractEntries(List<ArchiveFile> files, String destination) async {
+  Future<void> extractEntries(
+    List<ArchiveFile> files,
+    String destination, {
+    ArchiveWarningCallback? onWarning,
+  }) async {
     await Directory(destination).create(recursive: true);
 
     var entries = 0;
@@ -89,9 +114,7 @@ class SafeArchiveExtractor implements ArchiveExtractor {
     for (final file in files) {
       entries++;
       if (entries > limits.maxEntries) {
-        throw ArchiveExtractionException(
-          'Archive contains more than ${limits.maxEntries} entries',
-        );
+        throw ArchiveExtractionException('Archive contains more than ${limits.maxEntries} entries');
       }
 
       final relative = normalizeEntryPath(file.name);
@@ -102,7 +125,11 @@ class SafeArchiveExtractor implements ArchiveExtractor {
         continue;
       }
       if (file.isSymbolicLink) {
-        throw ArchiveExtractionException('Symlink entries are not allowed: ${file.name}');
+        // Links are never created: a link combined with later entries can
+        // escape the destination (zip-slip via symlink), so untrusted archives
+        // get their links skipped instead.
+        onWarning?.call(SkippedArchiveEntry(path: relative, symlinkTarget: file.symbolicLink));
+        continue;
       }
 
       totalBytes += file.size;
