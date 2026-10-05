@@ -432,8 +432,15 @@ app-local so a clean machine without the system-wide redistributable can start
   `tool/generate_third_party_notices.dart` (regenerated, deterministic); the CI drift check runs
   on the committed file.
 - `flutter analyze` clean; 698 tests green (10 platform probes skipped).
-- Release workflow no-publish run and the `v0.4.6` publish are recorded in the `STATUS.md` session
-  log; the published zip was checked to contain the three runtime DLLs.
+- Release workflow no-publish run **37323499192** (`devel` `0793158`): appimage/windows green, publish
+  skipped; the downloaded `FreeCADLauncher-0.4.6-windows-x86_64.zip` sidecar verifies and the zip
+  carries the full app-local runtime set (`concrt140`, `msvcp140`/`_1`/`_2`/`_atomic_wait`/
+  `_codecvt_ids`, `vccorlib140`, `vcruntime140`/`_1`/`_threads`).
+- `v0.4.6` publish run **37324089592** (manual `create_release=true`, tag `v0.4.6`,
+  `prerelease=true`): all jobs green; both assets re-verified after download from the release page
+  (`sha256sum -c` OK), AppImage `--version` = 0.4.6 (exit 0), release zip contains the runtime DLLs.
+- Residual: no Windows machine without the redistributable was available for a live no-redist
+  start; the app-local load path is Microsoft-documented and the DLLs are inside the zip.
 
 ## 5. When something fails
 

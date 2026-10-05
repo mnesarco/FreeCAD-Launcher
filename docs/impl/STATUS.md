@@ -5,8 +5,9 @@
 
 - **Updated**: 2026-10-05
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
-  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; **`v0.4.5` is the current release** (pre-release)
-  with the Linux AppImage and the Windows portable zip; it carries the B-19 `package.xml`
+  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**; **`v0.4.6` is the current release** (pre-release)
+  with the Linux AppImage and the Windows portable zip, now self-contained (R-31/D-114: the MSVC
+  C++ runtime ships app-local); it carries the B-19 `package.xml`
   `<depend>` dependency install (D-108..D-111), the B-20 AppImage macro Python execution without
   extraction (D-112), R-29 (create profile → detail) and R-30/D-113 (archive symlinks skipped
   with warnings) on top of the R-25..R-28 work shipped in `v0.4.2`–`v0.4.4`; releases before
@@ -19,32 +20,32 @@
   `TASKS.md` so work can resume after an interruption.
 - **Decisions this session**: **D-114** (the Windows portable zip bundles the MSVC C++ runtime
   DLLs app-local, fetched from the VS toolchain at package time) — R-31.
-- **Next action**: **R-31 is WIP**: bundle the MSVC C++ runtime in the Windows zip so clean
-  machines without the redistributable can start `freecad_launcher.exe`; verify with a no-publish
-  release run, then bump to `0.4.6` and publish. After that: `v0.4.5` is published from `devel`
-  (`f6b5ac4`); finish the remaining B-19 live
+- **Next action**: R-31 is **DONE** (`v0.4.6` published). Continue with the remaining B-19 live
   checks (optional checkbox install, dependent addon load in FreeCAD, removal warning UI) and the
-  `v0.4.5` Linux AppImage retest (weekly install + open logs/folder + Python package install),
+  `v0.4.6` Linux AppImage retest (weekly install + open logs/folder + Python package install),
   then M8-05 (clean-VM Linux first-run) and M8-04 (macOS machine); the B-16 Windows-machine smoke
   is on hold (no machine). Next releases continue the `0.4.x` line. Backlog: `B-01` legacy
   channel, `B-14` CalVer readiness (before 27.1 branches, 2027-01-31), `B-02` in-place build
   updates, `R-21` (custom AppImage symlink cleanup), `B-16` dependency upgrades
   ([plan](PLAN-dependency-upgrades.md)) — B-18/R-24 shipped in `v0.4.2`, R-25/R-26 in `v0.4.3`,
-  R-27/R-28 in `v0.4.4`, B-19/B-20/R-29/R-30 in `v0.4.5`.
+  R-27/R-28 in `v0.4.4`, B-19/B-20/R-29/R-30 in `v0.4.5`, R-31 in `v0.4.6`.
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
   - The B-16 Phase 3 Windows-machine smoke is **on hold** (no Windows machine available as of
-    2026-10-02); B-16 is otherwise complete.
-- **Current state**: `devel` is pushed to `origin/devel` at the `v0.4.5` bump (`f6b5ac4`) and
-  **v0.4.5 is published** (manual `create_release=true`, tag `v0.4.5`, `prerelease=true`, run
-  37263850706; appimage/windows/publish all green) with
-  `FreeCADLauncher-0.4.5-windows-x86_64.zip` + `.sha256` and
-  `FreeCADLauncher-0.4.5-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
-  download, AppImage `--version` = 0.4.5 (exit 0), zip checked for `7zr.exe`/license/notices.
+    2026-10-02); B-16 is otherwise complete. The same applies to the R-31 no-redist live check.
+- **Current state**: `devel` is pushed to `origin/devel` at the `v0.4.6` bump (`0793158`) and
+  **v0.4.6 is published** (manual `create_release=true`, tag `v0.4.6`, `prerelease=true`, run
+  37324089592; appimage/windows/publish all green) with
+  `FreeCADLauncher-0.4.6-windows-x86_64.zip` + `.sha256` and
+  `FreeCADLauncher-0.4.6-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
+  download, AppImage `--version` = 0.4.6 (exit 0), the zip carries the app-local MSVC runtime
+  (`vcruntime140.dll`, `vcruntime140_1.dll`, `msvcp140.dll`, …). The no-publish run 37323499192
+  (same commits) verified the artifact before publishing.
   It ships B-19 (`<depend>` dependencies, D-108..D-111), B-20 (AppImage macro Python execution
-  without extraction, D-112), R-29 (create profile → detail) and R-30/D-113 (symlinks skipped
-  with warnings). Real E2E evidence: Ondsel-Lens installed from the catalog (probe skipped
-  `requests`, pip installed `tzlocal`), real catalog check (67 addons with `<depend>`), real
+  without extraction, D-112), R-29 (create profile → detail), R-30/D-113 (symlinks skipped
+  with warnings) and R-31/D-114 (self-contained Windows zip). Real E2E evidence: Ondsel-Lens
+  installed from the catalog (probe skipped `requests`, pip installed `tzlocal`), real catalog
+  check (67 addons with `<depend>`), real
   HistoryWorkbench archive extracted with 3 skipped links. The owner-reported “click install,
   nothing happens” (dialog-phase probe triggering a silent ~800 MB AppImage extraction) was fixed
   and re-verified live; B-20 removed the persistent `builds/<id>/extracted/` tree on FUSE
@@ -746,8 +747,10 @@
 - Publishing (D-081): public repo `mnesarco/FreeCAD-Launcher`, branch `devel`, releases only
   from CI (`release.yml`, tag push or manual `workflow_dispatch` with optional `create_release`).
   CI runs Linux + Windows with tests on both; macOS is disabled per D-083 until M8-04.
-  `v0.4.5` is the current release (published as a pre-release; D-100); the `0.4.x` line continues.
+  `v0.4.6` is the current release (published as a pre-release; D-100); the `0.4.x` line continues.
 - `AGENTS.md` is tracked again (no longer git-excluded); keep it in sync with `docs/impl/`
   when conventions or the project state change.
 
 | 2026-10-04 | R-29 | **Create profile → open its detail view** (owner request): `showProfileFormDialog` now returns the created/edited `Profile` (the `ProfileFormResult` wrapper is gone); `ProfilesView._createProfile` selects the new profile and Home's hero/first-run `New profile` routes through `onOpenProfile`, so both entry points (and `Ctrl+N`) land on the detail view. 2 widget tests added (Profiles tabs, Home callback); spec 03 §3.3 and TASKS updated; analyze clean, full suite green | R-29 | `lib/ui/profiles/{profile_dialogs,profiles_view}.dart`, `lib/ui/home/home_view.dart`, `test/ui/{profiles_view,home_view}_test.dart`, `docs/spec/03-ux.md`, `docs/impl/{TASKS,STATUS}.md` |
+
+| 2026-10-05 | R65 | **R-31/D-114: Windows zip is self-contained**: users on machines without the system-wide Visual C++ Redistributable could not start `freecad_launcher.exe` (`VCRUNTIME140.dll`/`MSVCP140.dll` not found). `packaging/windows/build_portable.ps1` now resolves the VS x64 CRT redist folder via `vswhere` (`$env:VCToolsRedistDir` fallback), stages every `*.dll` next to the executable and fails the build unless `vcruntime140.dll`/`vcruntime140_1.dll`/`msvcp140.dll` are in the bundle and the zip; `THIRD_PARTY_NOTICES.md` gained a Microsoft Visual C++ runtime section (generator + drift check); spec 07 §2, spec 06 §1.4, README and the user guide updated. No-publish release run 37323499192 verified the artifact (sidecar `sha256sum -c` OK, 10 runtime DLLs in the zip, CI smoke `--version` green); version bumped 0.4.5 → 0.4.6 and the manual `release.yml` run 37324089592 (`create_release=true`, tag `v0.4.6`, `prerelease=true`) published the pre-release; both assets re-verified after download, AppImage `--version` = 0.4.6 (exit 0), release zip carries the runtime DLLs. `flutter analyze` clean, 698 tests green (10 skipped); residual: no no-redist Windows machine for a live start check | R-31, D-114 | `packaging/windows/build_portable.ps1`, `tool/generate_third_party_notices.dart`, `THIRD_PARTY_NOTICES.md`, `README.md`, `lib/core/constants.dart`, `pubspec.yaml`, `docs/spec/{06-integrations,07-distribution}.md`, `docs/user-guide.md`, `docs/impl/{DECISIONS,TASKS,VERIFICATION,STATUS}.md` |
