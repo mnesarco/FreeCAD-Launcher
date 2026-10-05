@@ -77,4 +77,94 @@ void main() {
     }
     expect(File(profile.userCfg).existsSync(), isFalse);
   });
+
+  group('Windows data root', () {
+    late Directory appData;
+    late String newRoot;
+    late String legacyRoot;
+
+    setUp(() {
+      appData = Directory(p.join(tempDirectory.path, 'AppData', 'Roaming'))
+        ..createSync(recursive: true);
+      newRoot = p.join(appData.path, 'org.freecad.ext.launcher');
+      legacyRoot = p.join(appData.path, 'FreeCAD Launcher contributors', 'FreeCAD Launcher');
+    });
+
+    Future<AppPaths> resolveWindows({
+      Map<String, String>? environment,
+      DirectoryMove? move,
+    }) => AppPaths.resolve(
+      windows: true,
+      environment: environment ?? {'APPDATA': appData.path},
+      supportDirectory: () async => appData,
+      move: move,
+    );
+
+    test('fresh installs use the pinned application-id root', () async {
+      final resolved = await resolveWindows();
+      expect(resolved.dataRoot, newRoot);
+      expect(resolved.migrationWarning, isNull);
+    });
+
+    test('a legacy directory is renamed into the pinned root', () async {
+      final legacy = Directory(legacyRoot)..createSync(recursive: true);
+      File(p.join(legacy.path, 'config.db')).writeAsStringSync('db');
+
+      final resolved = await resolveWindows();
+
+      expect(resolved.dataRoot, newRoot);
+      expect(resolved.migrationWarning, isNull);
+      expect(File(p.join(newRoot, 'config.db')).existsSync(), isTrue);
+      expect(legacy.existsSync(), isFalse);
+      expect(Directory(p.dirname(legacyRoot)).existsSync(), isFalse);
+    });
+
+    test('an existing non-empty pinned root wins over the legacy directory', () async {
+      Directory(legacyRoot).createSync(recursive: true);
+      File(p.join(legacyRoot, 'config.db')).writeAsStringSync('legacy');
+      Directory(newRoot).createSync(recursive: true);
+      File(p.join(newRoot, 'config.db')).writeAsStringSync('current');
+
+      final resolved = await resolveWindows();
+
+      expect(resolved.dataRoot, newRoot);
+      expect(resolved.migrationWarning, isNull);
+      expect(File(p.join(legacyRoot, 'config.db')).existsSync(), isTrue);
+    });
+
+    test('a failed move keeps the legacy root and reports a warning', () async {
+      Directory(legacyRoot).createSync(recursive: true);
+      File(p.join(legacyRoot, 'config.db')).writeAsStringSync('db');
+
+      final resolved = await resolveWindows(
+        move: (from, to) => throw FileSystemException('locked', from),
+      );
+
+      expect(resolved.dataRoot, legacyRoot);
+      expect(resolved.migrationWarning, isNotNull);
+      expect(File(p.join(legacyRoot, 'config.db')).existsSync(), isTrue);
+      expect(Directory(newRoot).existsSync(), isFalse);
+    });
+
+    test('a missing APPDATA falls back to the support directory', () async {
+      final support = Directory(p.join(tempDirectory.path, 'support'))..createSync();
+      final resolved = await AppPaths.resolve(
+        windows: true,
+        environment: const {},
+        supportDirectory: () async => support,
+      );
+      expect(resolved.dataRoot, support.path);
+      expect(resolved.migrationWarning, isNull);
+    });
+  });
+
+  test('non-Windows resolves the support directory', () async {
+    final support = Directory(p.join(tempDirectory.path, 'support'))..createSync();
+    final resolved = await AppPaths.resolve(
+      windows: false,
+      supportDirectory: () async => support,
+    );
+    expect(resolved.dataRoot, support.path);
+    expect(resolved.migrationWarning, isNull);
+  });
 }
