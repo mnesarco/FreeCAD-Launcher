@@ -34,9 +34,11 @@
   - The B-16 Phase 3 Windows-machine smoke is **on hold** (no Windows machine available as of
     2026-10-02); B-16 is otherwise complete.
 - **In progress**: **B-19 FreeCAD `package.xml` `<depend>` support + B-20 AppImage macro Python
-  execution implemented** (branch `b19-addon-dependencies`, off `devel`, not committed/merged):
-  plan in [PLAN-B19-addon-dependencies.md](PLAN-B19-addon-dependencies.md), decisions
-  D-108..D-112, tasks B-19a..B-19f and B-20a..B-20e DONE. Real E2E passed: Ondsel-Lens installed from the catalog with `<depend>`
+  execution implemented and fast-forwarded into local `devel`** (`68289a6`..`3dee468`; `devel`
+  is 2 commits ahead of `origin/devel`, not pushed) plus **R-29** (create profile → detail).
+  Plan in [PLAN-B19-addon-dependencies.md](PLAN-B19-addon-dependencies.md), decisions
+  D-108..D-112, tasks B-19a..B-19f and B-20a..B-20e DONE; feature branch
+  `b19-addon-dependencies` kept at `3dee468`. Real E2E passed: Ondsel-Lens installed from the catalog with `<depend>`
   parsed, the probe skipping system-available `requests`/PyJWT, `tzlocal` pip-installed and
   recorded as `source=addon:Ondsel-Lens` (`real_addon_dependencies_test`); real catalog check
   (67 addons with `<depend>`, Beltrami → Curves + numpy/scipy + internals). The owner-reported
