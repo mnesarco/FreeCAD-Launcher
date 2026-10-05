@@ -5,9 +5,10 @@
 
 - **Updated**: 2026-10-05
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
-  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**/**M8-07 DONE**/**M8-08 WIP**; **`v0.4.7` is the current release** (pre-release)
-  with the Linux AppImage and the Windows portable zip, self-contained (R-31/D-114) and carrying
-  the R-32/D-115 addon-dependency pip fix; it also carries the B-19 `package.xml`
+  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**/**M8-07 DONE**/**M8-08 WIP**; **`v0.4.9` is the
+  current release** (pre-release, 2026-10-05) with the platform metadata alignment (M8-07/D-116)
+  and the data-root regression fix (M8-08/D-117; owner Windows retest pending); `v0.4.7` carried
+  the self-contained Windows zip (R-31/D-114) and the R-32/D-115 addon-dependency pip fix; it also carries the B-19 `package.xml`
   `<depend>` dependency install (D-108..D-111), the B-20 AppImage macro Python execution without
   extraction (D-112), R-29 (create profile → detail) and R-30/D-113 (archive symlinks skipped
   with warnings) on top of the R-25..R-28 work shipped in `v0.4.2`–`v0.4.4`; releases before
@@ -18,17 +19,18 @@
 - **Last session**: 2026-10-05
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
   `TASKS.md` so work can resume after an interruption.
-- **Decisions this session**: **D-116** (platform metadata aligned with the D-074 holder; Windows
-  data root pinned to `%APPDATA%\org.freecad.ext.launcher` with a one-time legacy migration and
-  fallback) — M8-07; D-115 (the asset-name `pyXY` hint is version metadata only, never an
-  interpreter path; legacy stored FreeCAD paths are ignored and FreeCAD is only ever called with
-  `-c`) — R-32.
-- **Next action**: **M8-08** (data-root regression fix, D-117) is implemented on `devel`: the
-  root is never moved, the resolver prefers the legacy root when it has `config.db`, and
-  `DataRootRepair` fixes the absolute paths stored by 0.4.8 — 713 tests green, analyze clean,
-  version 0.4.9. Next: push, build the Windows artifact and have the owner retest (the
-  already-moved install must show Installed builds again; a legacy-only install must stay
-  untouched). Then **R-32** (Windows “unrecognised option '-m'”
+- **Decisions this session**: **D-117** (the Windows data root is never renamed; the legacy root
+  stays in use when present and stale legacy-prefixed stored paths are repaired into the active
+  root only when the mapped target exists) — M8-08; **D-116** (platform metadata aligned with the
+  D-074 holder; Windows data root pinned to `%APPDATA%\org.freecad.ext.launcher`; its rename
+  migration superseded by D-117) — M8-07; D-115 (the asset-name `pyXY` hint is version metadata
+  only, never an interpreter path; legacy stored FreeCAD paths are ignored and FreeCAD is only ever
+  called with `-c`) — R-32.
+- **Next action**: **M8-08** (data-root regression fix, D-117) is implemented and shipped in the
+  **`v0.4.9`** pre-release (run 37371511156; Windows job needed one rerun after a GitHub
+  hosted-runner outage). Waiting on the owner's Windows retest: the install moved by 0.4.8 must
+  show Installed builds again, and a legacy-only install must keep its directory untouched. Then
+  **R-32** (Windows “unrecognised option '-m'”
   when installing an addon with dependencies) is fixed, test-verified and shipped in **`v0.4.7`** —
   retest on Windows with the published artifact (install an addon with `<depend>` packages and
   confirm the pip log shows `…\bin\python.exe`; existing builds are healed at install time, no
@@ -42,12 +44,19 @@
   updates, `R-21` (custom AppImage symlink cleanup), `B-16` dependency upgrades
   ([plan](PLAN-dependency-upgrades.md)) — B-18/R-24 shipped in `v0.4.2`, R-25/R-26 in `v0.4.3`,
   R-27/R-28 in `v0.4.4`, B-19/B-20/R-29/R-30 in `v0.4.5`, R-31 in `v0.4.6`, R-32 in `v0.4.7`,
-  M8-07 in the unreleased `0.4.8`.
+  M8-07/M8-08 in `v0.4.9`.
 - **Blockers**:
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
   - The B-16 Phase 3 Windows-machine smoke is **on hold** (no Windows machine available as of
     2026-10-02); B-16 is otherwise complete. The same applies to the R-31 no-redist live check.
-- **Current state**: `devel` is pushed to `origin/devel` at the `v0.4.7` bump (`e21ce1d`) and
+- **Current state**: `devel` is pushed to `origin/devel` at `e3ca073` (M8-08/D-117 fix + 0.4.9
+  bump) plus the docs record; **`v0.4.9` is published** as a pre-release (manual
+  `create_release=true`, tag `v0.4.9` on `e3ca073`, `prerelease=true`, run 37371511156;
+  appimage/windows/publish green after one Windows rerun during a GitHub hosted-runner outage)
+  with `FreeCADLauncher-0.4.9-windows-x86_64.zip` + `.sha256` and
+  `FreeCADLauncher-0.4.9-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
+  download, AppImage `--version` = 0.4.9 (exit 0). It carries M8-07/D-116 (metadata alignment +
+  pinned root) and M8-08/D-117 (no automatic root move + stored-path repair). Earlier:
   **v0.4.7 is published** (manual `create_release=true`, tag `v0.4.7`, `prerelease=true`, run
   37341658955; appimage/windows/publish all green) with
   `FreeCADLauncher-0.4.7-windows-x86_64.zip` + `.sha256` and
@@ -792,3 +801,4 @@
 | 2026-10-05 | R68 | **M8-07/D-116: platform metadata + Windows data-root decoupling**: `windows/runner/Runner.rc` `LegalCopyright` and macOS `PRODUCT_COPYRIGHT` now match the D-074 holder exactly (`Copyright 2026 Frank Martínez <mnesarco at gmail>`) and Windows `CompanyName` is `Frank Martínez`; the Windows data root is pinned to `%APPDATA%\org.freecad.ext.launcher` (D-016) computed from `APPDATA` instead of the exe VERSIONINFO, with a one-time rename of the legacy `%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher`, pinned-root precedence, and a logged fallback to the legacy root when the move fails (retried next start, never a partial copy); `AppPaths.migrationWarning` is logged after the logger is configured; new `packaging/windows/check_version_info.ps1` wired into `ci.yml` + `release.yml`; 6 new resolver tests, 709 tests green (10 skipped), analyze clean; D-116 recorded, D-016 amended, spec 05/README/user-guide updated; version 0.4.7 → 0.4.8. Pending: Windows CI run + live upgrade retest (no machine) | M8-07, D-116 | `lib/platform/paths.dart`, `lib/main.dart`, `windows/runner/Runner.rc`, `macos/Runner/Configs/AppInfo.xcconfig`, `packaging/windows/check_version_info.ps1`, `.github/workflows/{ci,release}.yml`, `test/platform/paths_test.dart`, `lib/core/constants.dart`, `pubspec.yaml`, `README.md`, `docs/spec/05-data-model.md`, `docs/user-guide.md`, `docs/impl/**` |
 | 2026-10-05 | R69 | **M8-07 verified on Windows CI and pushed** (owner request): the five M8-07 commits (`34438af`, `df3cf00`, `a2a26a9`, `5767553`, `09c4ded`) pushed to `origin/devel`; CI run 37362656403 green on both jobs — `windows-latest` (build release + `check_version_info.ps1` asserting `LegalCopyright`/`CompanyName`/`ProductName`/`ProductVersion`) and `ubuntu-latest` (version check, codegen/notices freshness, analyze, 709 tests, Linux build). M8-07 marked DONE in `TASKS.md`; residual: live upgrade retest over a `v0.4.7` data dir (no machine) | M8-07, D-116 | `docs/impl/{TASKS,VERIFICATION,STATUS,PLAN-M8-windows-release}.md` |
 | 2026-10-05 | R70 | **M8-08/D-117: data-root regression fixed** (owner report: all installed builds Broken after the M8-07 rename on Windows): the 0.4.8 migration moved `config.db` + `builds/` but the DB is an index storing absolute paths, invalidating every `builds.localPath` (`BuildsController._statusFor` marks Broken when the executable is missing). Fix: `AppPaths.resolve` never moves the root — pinned `%APPDATA%\org.freecad.ext.launcher` when it contains `config.db`, else the legacy `%APPDATA%\FreeCAD Launcher contributors\FreeCAD Launcher`, else pinned (fresh installs) — and exposes `legacyRoot`; new `DataRootRepair` rewrites legacy-prefixed `builds.localPath`/`pythonPath`, `catalog_cache.payloadPath`, `installed_addons.sourcePath` and `python_packages.targetDir` into the active root only when the mapped target exists (idempotent, logged once via `AppServices.startupWarning` after logger setup); `PythonPackagesDao.getAll` added. 5 resolver + 4 repair tests, analyze clean, 713 tests green (10 skipped); D-117 recorded, D-116 amended, README/user-guide/spec 05/PLAN/TASKS/VERIFICATION updated; version 0.4.8 → 0.4.9. Pending: owner Windows retest + CI artifact | M8-08, D-117 | `lib/platform/paths.dart`, `lib/data/data_root_repair.dart`, `lib/data/daos/python_packages_dao.dart`, `lib/state/app_services.dart`, `lib/main.dart`, `test/platform/paths_test.dart`, `test/data/data_root_repair_test.dart`, `lib/core/constants.dart`, `pubspec.yaml`, `README.md`, `docs/user-guide.md`, `docs/spec/05-data-model.md`, `docs/impl/**` |
+| 2026-10-05 | R71 | **v0.4.9 pre-release published** (owner request): the M8-08/D-117 commits (`afe9032` fix, `77b8201` docs, `e3ca073` bump) pushed to `origin/devel`; manual `release.yml` run 37371511156 (`create_release=true`, tag `v0.4.9`, `prerelease=true`) — appimage green, windows cancelled once by a GitHub hosted-runner acquisition outage ("job was not acquired by Runner of type hosted") and green on rerun, publish green; GitHub pre-release `v0.4.9` created with `FreeCADLauncher-0.4.9-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.9-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars re-verified after download (`sha256sum -c` OK) and AppImage `--version` = 0.4.9 (exit 0). Windows artifact 0.4.9 also repacked to `.7z` for the owner's retest (local `/tmp/opencode/fcl-win-0.4.9`, sha256 `a31b225c…8d89`) | M8-07, M8-08, D-116, D-117 | `docs/impl/{STATUS,VERIFICATION,TASKS}.md` |
