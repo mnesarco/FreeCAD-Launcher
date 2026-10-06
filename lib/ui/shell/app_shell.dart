@@ -257,7 +257,7 @@ class _StatusBar extends SignalWidget {
                 iconSize: 14,
                 textStyle: theme.textTheme.labelSmall,
               ),
-              icon: const Icon(Icons.sync),
+              icon: const _JobsActivityIcon(key: ValueKey('statusBarJobsIndicator')),
               label: Text('${active.length}  ·  ${active.first.label}'),
             ),
           ],
@@ -272,5 +272,48 @@ class _StatusBar extends SignalWidget {
         ],
       ),
     );
+  }
+}
+
+/// Rotating sync icon shown next to the active-jobs label in the status bar so
+/// running work is visible at a glance. Honors the OS "disable animations"
+/// accessibility setting with a static icon.
+class _JobsActivityIcon extends StatefulWidget {
+  const _JobsActivityIcon({super.key});
+
+  @override
+  State<_JobsActivityIcon> createState() => _JobsActivityIconState();
+}
+
+class _JobsActivityIconState extends State<_JobsActivityIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.stop();
+    } else if (!_controller.isAnimating) {
+      _controller.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const icon = Icon(Icons.sync);
+    if (MediaQuery.disableAnimationsOf(context)) {
+      return icon;
+    }
+    return RotationTransition(turns: _controller, child: icon);
   }
 }

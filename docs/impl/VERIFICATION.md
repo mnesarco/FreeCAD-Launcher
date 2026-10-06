@@ -534,6 +534,20 @@ interpreter identity and any `ssl` traceback, then runs pip with `runpy`. Eviden
   must show `patched _ssl.RAND_pseudo_bytes …` + `freecad-launcher: ssl …` and the packages must
   land in `AdditionalPythonPackages/pyXY`).
 
+### R-35 (2026-10-05, `devel`)
+
+Status bar active-jobs indicator animation. Evidence:
+
+- `app_shell_test` “status bar jobs indicator animates while a job is active”: with a queued job the
+  `statusBarJobsIndicator` key is present, its child `RotationTransition` turns value changes after
+  a 350 ms pump, and the indicator disappears once the job completes.
+- `app_shell_test` “status bar jobs indicator stays static when animations are disabled”: with a
+  faked `FakeAccessibilityFeatures(disableAnimations: true)` the key is present but no
+  `RotationTransition` is built.
+- `flutter analyze` clean; 718 tests green (10 platform probes skipped).
+- Not verified live: visual pass (trigger a long job and confirm the sync icon spins; enable the OS
+  “disable animations” setting and confirm it stays static).
+
 ## 5. When something fails
 
 1. Capture the job log tail and app logs from `logs/`.

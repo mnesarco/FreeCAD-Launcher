@@ -99,6 +99,9 @@ void main() {
   });
 
   testWidgets('status bar shows active jobs and opens the jobs dialog', (tester) async {
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
     final gate = Completer<void>();
     final run = services.jobs.run<void>(
       kind: JobKind.install,
@@ -123,6 +126,68 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Completed'), findsOneWidget);
+  });
+
+  testWidgets('status bar jobs indicator animates while a job is active', (tester) async {
+    final gate = Completer<void>();
+    final run = services.jobs.run<void>(
+      kind: JobKind.install,
+      label: 'Install FreeCAD 1.1.3',
+      task: (context) async {
+        await gate.future;
+      },
+    );
+
+    await tester.runAsync(() async {
+      await tester.pumpWidget(FreeCadLauncherApp(services: services));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    });
+    await tester.pump(const Duration(milliseconds: 16));
+
+    final indicator = find.byKey(const ValueKey('statusBarJobsIndicator'));
+    expect(indicator, findsOneWidget);
+    final rotation = find.descendant(
+      of: indicator,
+      matching: find.byType(RotationTransition),
+    );
+    final first = tester.widget<RotationTransition>(rotation).turns.value;
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(tester.widget<RotationTransition>(rotation).turns.value, isNot(first));
+
+    gate.complete();
+    await run;
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('statusBarJobsIndicator')), findsNothing);
+  });
+
+  testWidgets('status bar jobs indicator stays static when animations are disabled', (
+    tester,
+  ) async {
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    final gate = Completer<void>();
+    final run = services.jobs.run<void>(
+      kind: JobKind.install,
+      label: 'Install FreeCAD 1.1.3',
+      task: (context) async {
+        await gate.future;
+      },
+    );
+
+    await pumpApp(tester);
+
+    expect(find.textContaining('Install FreeCAD 1.1.3'), findsOneWidget);
+    final indicator = find.byKey(const ValueKey('statusBarJobsIndicator'));
+    expect(indicator, findsOneWidget);
+    expect(
+      find.descendant(of: indicator, matching: find.byType(RotationTransition)),
+      findsNothing,
+    );
+
+    gate.complete();
+    await run;
+    await tester.pumpAndSettle();
   });
 
   testWidgets('navigating shows each section empty state', (tester) async {
