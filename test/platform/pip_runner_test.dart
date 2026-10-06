@@ -81,6 +81,9 @@ void main() {
     expect(bootstrap, contains('os.add_dll_directory'));
     expect(bootstrap, contains('import ssl'));
     expect(bootstrap, contains('runpy.run_module("pip"'));
+    // Stale bundled ssl.py (weekly Windows builds) gets the removed
+    // _ssl.RAND_pseudo_bytes aliased before ssl is imported.
+    expect(bootstrap, contains('RAND_pseudo_bytes'));
   });
 
   test('reports pip failures with the output tail', () async {

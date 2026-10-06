@@ -507,27 +507,32 @@ on Windows) hit the closed sink (`_Socket._onData` → `_StreamSinkImpl.add`). E
 
 Windows weekly profile: addon `<depend>` pip install failed with `ssl` unavailable
 (`WARNING: Disabling truststore since ssl support is missing`,
-`The 'ssl' module is unavailable but required for HTTPS URLs`), while a manual
-`bin\python.exe -c "import _ssl"` in the same weekly build succeeded. Interpreter pip now runs
-through a generated bootstrap (D-118) that registers the interpreter's `bin`/`DLLs` with
-`os.add_dll_directory` (Windows), logs the interpreter identity and the `ssl` traceback, then runs
-pip with `runpy`. Evidence:
+`The 'ssl' module is unavailable but required for HTTPS URLs`). The bootstrap diagnostics added in
+this fix produced the exact error on the owner's machine:
+`ImportError: cannot import name 'RAND_pseudo_bytes' from '_ssl'` at `Lib/ssl.py:109`. Root cause:
+both 1.1 bundles ship the same stale Python 3.11-era `Lib/ssl.py` (byte-identical md5
+`e5498196…` in 1.1.3 and weekly-2026.10.01), but Python 3.11's `_ssl` still exports
+`RAND_pseudo_bytes` while 3.13 removed it (verified with `strings` on both `_ssl.pyd`). Interpreter
+pip now runs through a generated bootstrap (D-118) that aliases the missing symbol before importing
+`ssl`, registers the interpreter's `bin`/`DLLs` with `os.add_dll_directory` (Windows), logs the
+interpreter identity and any `ssl` traceback, then runs pip with `runpy`. Evidence:
 
 - `pip_runner_test`: interpreter installs pass the generated `run_pip.py` plus the unchanged
   `install --upgrade --target … --disable-pip-version-check --no-warn-script-location` arguments;
-  the bootstrap contains `os.add_dll_directory`, `import ssl` and
+  the bootstrap contains `RAND_pseudo_bytes`, `os.add_dll_directory`, `import ssl` and
   `runpy.run_module("pip"`; the AppImage-macro tests are unchanged.
-- Real smoke on Linux with the weekly bundle's Python/pip versions (3.13.11 + pip 26.2.1):
-  `tzlocal` installed through the bootstrap and the log shows `freecad-launcher: python 3.13.11 …`
-  and `freecad-launcher: ssl OpenSSL 3.5.4 …`; `real_pip_install_test` also passes with the system
-  Python (pip 24).
+- Reproduced the Windows failure on Linux: Python 3.13.11 + the archive's stale `ssl.py` on
+  `PYTHONPATH` fails `import ssl` with the same `RAND_pseudo_bytes` error; the extracted bootstrap
+  then logs `patched _ssl.RAND_pseudo_bytes for a stale ssl.py`, `ssl OpenSSL 3.5.4` and installs
+  `pyjwt`/`tzlocal` through pip 26.2.1. A plain Python 3.13 + pip 26 smoke (healthy `ssl.py`) also
+  passes, and `real_pip_install_test` passes with the system Python (pip 24).
 - `addons_controller_test`: dependency failures are recorded under `profile-1:WithReqs` and no
   packages are recorded; `profile_addons_picker_test`: the failure appears on the installed addon
   row and in the install snackbar.
 - `flutter analyze` clean; 716 tests green (10 platform probes skipped).
 - Not verified live: Windows weekly retest (install an addon with `<depend>` packages; the pip log
-  must show `freecad-launcher: ssl …` and the packages must land in
-  `AdditionalPythonPackages/pyXY`).
+  must show `patched _ssl.RAND_pseudo_bytes …` + `freecad-launcher: ssl …` and the packages must
+  land in `AdditionalPythonPackages/pyXY`).
 
 ## 5. When something fails
 

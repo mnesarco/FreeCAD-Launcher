@@ -208,7 +208,23 @@ def _register_windows_dll_directories():
         os.environ["PATH"] = os.pathsep.join(entries + ([existing] if existing else []))
 
 
+def _patch_legacy_ssl():
+    # Some FreeCAD bundles (the 1.1 Windows weeklies) ship a stale Lib/ssl.py
+    # that imports _ssl.RAND_pseudo_bytes, which newer CPython builds no longer
+    # export; without the alias `import ssl` fails and pip cannot use HTTPS.
+    # The symbol is only re-exported by ssl.py and unused by pip, so aliasing
+    # it to the stronger RAND_bytes is safe for this process.
+    try:
+        import _ssl
+    except Exception:
+        return
+    if not hasattr(_ssl, "RAND_pseudo_bytes") and hasattr(_ssl, "RAND_bytes"):
+        _ssl.RAND_pseudo_bytes = _ssl.RAND_bytes
+        sys.stderr.write("freecad-launcher: patched _ssl.RAND_pseudo_bytes for a stale ssl.py\n")
+
+
 def _report_ssl():
+    _patch_legacy_ssl()
     try:
         import ssl
     except Exception:
