@@ -596,6 +596,8 @@ class AddonsController {
     installing.value = {...installing.value, addonId};
     installErrors.value = {...installErrors.value}..remove(addonId);
     installWarnings.value = {...installWarnings.value}..remove(addonId);
+    requirementsErrors.value = {...requirementsErrors.value}
+      ..remove(requirementErrorKey(profileId, addonId));
     PreparedAddonInstall? prepared;
     try {
       context?.report(detail: 'Downloading addon');
@@ -653,7 +655,7 @@ class AddonsController {
           plan: plan,
           selection: selection,
           profile: profile,
-          errorKey: addon.id,
+          addonId: addon.id,
           chain: {...chain, addon.id},
           context: context,
         );
@@ -832,7 +834,7 @@ class AddonsController {
     required AddonDependencyPlan plan,
     required AddonDependencySelection selection,
     required Profile profile,
-    required String errorKey,
+    required String addonId,
     required Set<String> chain,
     JobContext? context,
   }) async {
@@ -852,7 +854,7 @@ class AddonsController {
       await _installPythonRequirements(
         profile: profile,
         requirements: python,
-        errorKey: errorKey,
+        addonId: addonId,
         context: context,
       );
     }
@@ -883,7 +885,7 @@ class AddonsController {
   Future<void> _installPythonRequirements({
     required Profile profile,
     required List<ResolvedPythonRequirement> requirements,
-    required String errorKey,
+    required String addonId,
     JobContext? context,
   }) async {
     if (requirements.isEmpty) {
@@ -893,6 +895,7 @@ class AddonsController {
     if (runner == null) {
       return;
     }
+    final errorKey = requirementErrorKey(profile.id, addonId);
 
     requirementsInstalling.value = {...requirementsInstalling.value, errorKey};
     requirementsErrors.value = {...requirementsErrors.value}..remove(errorKey);
@@ -906,7 +909,7 @@ class AddonsController {
         appImagePath: execution is PythonAppImageExecution ? execution.appImagePath : null,
         targetDirectory: _pythonTargetDirectory(profile),
         packages: specs,
-        label: errorKey,
+        label: addonId,
       );
       final targetDirectory = _pythonTargetDirectory(profile);
       final installedEntries = <ResolvedPythonRequirement>[];
@@ -1509,6 +1512,8 @@ class AddonsController {
     installing.value = {...installing.value, addonId};
     installErrors.value = {...installErrors.value}..remove(addonId);
     installWarnings.value = {...installWarnings.value}..remove(addonId);
+    requirementsErrors.value = {...requirementsErrors.value}
+      ..remove(requirementErrorKey(profileId, addonId));
     _CustomPreparedContent? prepared;
     try {
       if (replaceExisting) {
@@ -1550,7 +1555,7 @@ class AddonsController {
         plan: plan,
         selection: resolvedSelection,
         profile: profile,
-        errorKey: addonId,
+        addonId: addonId,
         chain: {addonId},
         context: context,
       );

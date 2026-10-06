@@ -2620,3 +2620,41 @@ Template:
 - **Refs**: `TASKS.md` M8-08, D-016, D-116, `lib/platform/paths.dart`,
   `lib/data/data_root_repair.dart`, `lib/state/app_services.dart`, `lib/main.dart`, `README.md`,
   `docs/user-guide.md`, `docs/spec/05-data-model.md` §3
+
+### D-118 — Interpreter pip runs through a launcher bootstrap that registers DLL directories and reports ssl (R-34)
+- **Date**: 2026-10-05
+- **Status**: Accepted
+- **Context**: Installing Ondsel-Lens (declares `pyjwt`, `requests`, `tzlocal`) into a profile backed by the
+  FreeCAD 1.1 **weekly** build on Windows failed while the same install on a stable build worked. The pip log
+  showed `WARNING: Disabling truststore since ssl support is missing` and
+  `The 'ssl' module is unavailable but required for HTTPS URLs`, so pip could not reach PyPI over HTTPS. The
+  weekly archive is not broken: it ships Python 3.13 with `bin\DLLs\_ssl.pyd` and
+  `bin\libssl-3-x64.dll`/`bin\libcrypto-3-x64.dll` (the imported OpenSSL symbols all resolve), and
+  `bin\python.exe -c "import _ssl"` succeeds when run by hand. The failure was specific to the process the
+  launcher spawned. `python.exe -m pip` also gave no way to register DLL directories, and the underlying
+  `ImportError` was swallowed; `_installPythonRequirements` treats dependency failures as non-fatal
+  (D-111) and only the catalog detail page displayed `requirementsErrors`, so the addon looked installed
+  with the packages missing.
+- **Decision**:
+  - `PipRunner` interpreter installs run a generated bootstrap (`run_pip.py` in a temp directory) instead of
+    `-m pip`: it writes an interpreter/target/packages header into the pip log, registers the interpreter's
+    directory and its `DLLs` subdirectory with `os.add_dll_directory()` (keeping the returned handles alive)
+    and prepends them to `PATH` (Windows only; the `hasattr` guard is a no-op elsewhere), prints the `ssl`
+    availability with the full traceback when the import fails, then executes
+    `runpy.run_module("pip", run_name="__main__", alter_sys=True)` with the same
+    `install --upgrade --target … --disable-pip-version-check --no-warn-script-location` arguments.
+  - `requirementErrorKey(profileId, addonId)` scopes `requirementsErrors`/`requirementsInstalling` to one
+    profile+addon pair (previously the raw addon id, so a failure in one profile leaked into the others).
+  - Dependency failures are surfaced on the profile Addons tab row and in the install snackbar (the catalog
+    detail already showed them); `python_packages` rows are still recorded only for successful pip runs.
+  - The Linux AppImage path (D-112 macro) and the `PYTHONPATH`/`PYTHONHOME` sanitization are unchanged; the
+    bootstrap is used by every interpreter install (Linux/macOS/Windows).
+- **Consequences**: HTTPS failures in pip are no longer silent — the pip log now names the interpreter and
+  carries the `ssl` traceback. On Windows the DLL directories are registered the same way FreeCAD's own
+  startup does, which fixes bundles whose `libssl`/`libcrypto` are not discoverable from the spawned
+  `python.exe`. Minor behavior change: pip runs via `runpy` from a temp script (equivalent to `-m pip`) and
+  `sys.path[0]` is the temp script's directory instead of the process cwd.
+- **Refs**: `TASKS.md` R-34, `docs/spec/06-integrations.md` §4.2, `lib/platform/pip_runner.dart`,
+  `lib/domain/addons/addon_dependencies.dart`, `lib/state/addons_controller.dart`,
+  `lib/ui/addons/addon_install_flow.dart`, `lib/ui/addons/addons_view.dart`,
+  `lib/ui/profiles/profile_detail_view.dart`, `test/platform/pip_runner_test.dart`, D-111, D-115

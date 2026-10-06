@@ -58,7 +58,21 @@ Future<void> installAddonIntoProfile(
     }
     result.fold(
       (_) {
-        messenger.showSnackBar(SnackBar(content: Text(l10n.addonsInstalledMessage)));
+        final requirementsError = controller
+            .requirementsErrors
+            .value[requirementErrorKey(profileId, addon.id)];
+        if (requirementsError != null) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                '${l10n.addonsInstalledMessage}. '
+                '${l10n.addonsRequirementsFailed}: $requirementsError',
+              ),
+            ),
+          );
+        } else {
+          messenger.showSnackBar(SnackBar(content: Text(l10n.addonsInstalledMessage)));
+        }
         final warnings = controller.installWarnings.value[addon.id] ?? const <String>[];
         if (warnings.isNotEmpty && context.mounted) {
           showAddonInstallWarningsDialog(context, addonName: addon.displayName, warnings: warnings);

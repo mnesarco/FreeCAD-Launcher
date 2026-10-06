@@ -118,6 +118,7 @@ class PipRunner {
     }
 
     final sink = logFile.openWrite();
+    Directory? bootstrapDirectory;
 
     void write(String line) {
       sink.writeln(line);
@@ -125,20 +126,23 @@ class PipRunner {
     }
 
     try {
+      // pip runs through a bootstrap so the interpreter's DLL directories can be
+      // registered before importing ssl/pip (D-118). Some FreeCAD bundles
+      // (e.g. the 1.1 weeklies) ship libssl/libcrypto next to python.exe but
+      // pip could not find them when spawned by the launcher, which made every
+      // HTTPS fetch fail. The bootstrap also records the interpreter identity
+      // and the ssl error, so the failure is no longer silent.
+      bootstrapDirectory = await Directory.systemTemp.createTemp('fcl-pip-');
+      final bootstrap = File(p.join(bootstrapDirectory.path, 'run_pip.py'));
+      await bootstrap.writeAsString(_pipBootstrap, flush: true);
+      write('# interpreter: $pythonPath');
+      write('# target: $targetDirectory');
+      write('# packages: ${packages.join(' ')}');
+
       final result = await _processRunner.run(
         ProcessSpec(
           executable: pythonPath,
-          arguments: [
-            '-m',
-            'pip',
-            'install',
-            '--upgrade',
-            '--target',
-            targetDirectory,
-            ...packages,
-            '--disable-pip-version-check',
-            '--no-warn-script-location',
-          ],
+          arguments: [bootstrap.path, ..._installArguments(targetDirectory, packages)],
           environment: _environment(),
         ),
         timeout: timeout,
@@ -156,8 +160,83 @@ class PipRunner {
       } on Object {
         // The sink may already be closed.
       }
+      try {
+        if (bootstrapDirectory != null && bootstrapDirectory.existsSync()) {
+          await bootstrapDirectory.delete(recursive: true);
+        }
+      } on Object {
+        // Bootstrap cleanup is best-effort.
+      }
     }
   }
+
+  static List<String> _installArguments(String targetDirectory, List<String> packages) => [
+    'install',
+    '--upgrade',
+    '--target',
+    targetDirectory,
+    ...packages,
+    '--disable-pip-version-check',
+    '--no-warn-script-location',
+  ];
+
+  /// Runs pip in-process after registering the interpreter's own DLL
+  /// directories (Windows) and reporting the ssl availability (D-118).
+  static const String _pipBootstrap = r'''
+import os
+import runpy
+import sys
+import traceback
+
+_DLL_DIRECTORY_HANDLES = []
+
+
+def _register_windows_dll_directories():
+    if not hasattr(os, "add_dll_directory"):
+        return
+    interpreter_directory = os.path.dirname(os.path.abspath(sys.executable))
+    candidates = [interpreter_directory, os.path.join(interpreter_directory, "DLLs")]
+    for candidate in candidates:
+        if os.path.isdir(candidate):
+            try:
+                _DLL_DIRECTORY_HANDLES.append(os.add_dll_directory(candidate))
+            except OSError:
+                pass
+    entries = [candidate for candidate in candidates if os.path.isdir(candidate)]
+    if entries:
+        existing = os.environ.get("PATH", "")
+        os.environ["PATH"] = os.pathsep.join(entries + ([existing] if existing else []))
+
+
+def _report_ssl():
+    try:
+        import ssl
+    except Exception:
+        sys.stderr.write("freecad-launcher: the ssl module is unavailable\n")
+        traceback.print_exc()
+    else:
+        sys.stderr.write("freecad-launcher: ssl {0}\n".format(ssl.OPENSSL_VERSION))
+
+
+def main():
+    sys.stderr.write(
+        "freecad-launcher: python {0} at {1}\n".format(sys.version.split()[0], sys.executable)
+    )
+    _register_windows_dll_directories()
+    _report_ssl()
+    sys.argv = ["pip"] + sys.argv[1:]
+    try:
+        runpy.run_module("pip", run_name="__main__", alter_sys=True)
+    except SystemExit:
+        raise
+    except BaseException:
+        traceback.print_exc()
+        sys.exit(1)
+    sys.exit(0)
+
+
+main()
+''';
 
   Future<PipResult> _installInAppImage({
     required String appImagePath,

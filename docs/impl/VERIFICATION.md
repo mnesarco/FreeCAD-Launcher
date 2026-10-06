@@ -503,6 +503,32 @@ on Windows) hit the closed sink (`_Socket._onData` → `_StreamSinkImpl.add`). E
 - Not verified live: no Windows retest yet (launch a profile and confirm the console stays clean
   after the process exits and a lingering child pipe closes).
 
+### R-34 (2026-10-05, `windows-1`)
+
+Windows weekly profile: addon `<depend>` pip install failed with `ssl` unavailable
+(`WARNING: Disabling truststore since ssl support is missing`,
+`The 'ssl' module is unavailable but required for HTTPS URLs`), while a manual
+`bin\python.exe -c "import _ssl"` in the same weekly build succeeded. Interpreter pip now runs
+through a generated bootstrap (D-118) that registers the interpreter's `bin`/`DLLs` with
+`os.add_dll_directory` (Windows), logs the interpreter identity and the `ssl` traceback, then runs
+pip with `runpy`. Evidence:
+
+- `pip_runner_test`: interpreter installs pass the generated `run_pip.py` plus the unchanged
+  `install --upgrade --target … --disable-pip-version-check --no-warn-script-location` arguments;
+  the bootstrap contains `os.add_dll_directory`, `import ssl` and
+  `runpy.run_module("pip"`; the AppImage-macro tests are unchanged.
+- Real smoke on Linux with the weekly bundle's Python/pip versions (3.13.11 + pip 26.2.1):
+  `tzlocal` installed through the bootstrap and the log shows `freecad-launcher: python 3.13.11 …`
+  and `freecad-launcher: ssl OpenSSL 3.5.4 …`; `real_pip_install_test` also passes with the system
+  Python (pip 24).
+- `addons_controller_test`: dependency failures are recorded under `profile-1:WithReqs` and no
+  packages are recorded; `profile_addons_picker_test`: the failure appears on the installed addon
+  row and in the install snackbar.
+- `flutter analyze` clean; 716 tests green (10 platform probes skipped).
+- Not verified live: Windows weekly retest (install an addon with `<depend>` packages; the pip log
+  must show `freecad-launcher: ssl …` and the packages must land in
+  `AdditionalPythonPackages/pyXY`).
+
 ## 5. When something fails
 
 1. Capture the job log tail and app logs from `logs/`.

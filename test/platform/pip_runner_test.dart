@@ -50,6 +50,8 @@ void main() {
       label: 'A2plus',
     );
     await waitForHandle(0);
+    final spec = launcher.specs.single;
+    final bootstrap = File(spec.arguments.first).readAsStringSync();
     launcher.handles[0]
       ..emitStdout('Collecting numpy\n')
       ..emitStderr('warning\n')
@@ -58,11 +60,9 @@ void main() {
 
     expect(result.isSuccess, isTrue);
     expect(Directory(target).existsSync(), isTrue);
-    final spec = launcher.specs.single;
     expect(spec.executable, '/opt/freecad/bin/python');
-    expect(spec.arguments, [
-      '-m',
-      'pip',
+    expect(spec.arguments.first, endsWith('run_pip.py'));
+    expect(spec.arguments.sublist(1), [
       'install',
       '--upgrade',
       '--target',
@@ -76,6 +76,11 @@ void main() {
     expect(spec.environment['PIP_NO_INPUT'], '1');
     expect(File(result.logPath).readAsStringSync(), contains('Collecting numpy'));
     expect(result.outputTail, contains('warning'));
+    // The bootstrap registers the interpreter's DLL directories (Windows) and
+    // reports ssl availability before running pip (D-118).
+    expect(bootstrap, contains('os.add_dll_directory'));
+    expect(bootstrap, contains('import ssl'));
+    expect(bootstrap, contains('runpy.run_module("pip"'));
   });
 
   test('reports pip failures with the output tail', () async {

@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
 import 'package:freecad_launcher/domain/addons/package_xml.dart';
 import 'package:freecad_launcher/domain/python/requirements_parser.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
@@ -419,7 +420,9 @@ class _AddonDetailViewState extends State<AddonDetailView> {
     final updateAvailable =
         !pinned && profileId != null && controller.isUpdateAvailable(profileId, currentAddon.id);
     final installError = controller.installErrors.value[currentAddon.id];
-    final requirementsError = controller.requirementsErrors.value[currentAddon.id];
+    final requirementsError = profileId == null
+        ? null
+        : controller.requirementsErrors.value[requirementErrorKey(profileId, currentAddon.id)];
     final canInstall = profileId != null && !installing && !installedInSelected;
 
     return Column(

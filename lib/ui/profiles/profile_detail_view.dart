@@ -9,6 +9,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:freecad_launcher/core/format.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
@@ -348,9 +349,9 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
       for (final addon in AppScope.of(context).addons.addons.value)
         addon.id: addon,
     };
+    final addonsController = AppScope.of(context).addons;
     final disabledIds =
-        AppScope.of(context).addons.disabledAddons.value[widget.profileId] ??
-        const <String>{};
+        addonsController.disabledAddons.value[widget.profileId] ?? const <String>{};
 
     final addAction = FilledButton.tonalIcon(
       onPressed: () => _addAddon(context),
@@ -387,6 +388,9 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
                     ].join('  ·  ');
                     final pinned = addon.pinnedAt != null;
                     final disabled = disabledIds.contains(addon.addonId);
+                    final requirementsError = addonsController
+                        .requirementsErrors
+                        .value[requirementErrorKey(widget.profileId, addon.addonId)];
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
@@ -403,7 +407,21 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
                               ? TextStyle(color: Theme.of(context).disabledColor)
                               : null,
                         ),
-                        subtitle: Text(subtitle),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(subtitle),
+                            if (requirementsError != null) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                '${l10n.addonsRequirementsFailed}: $requirementsError',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

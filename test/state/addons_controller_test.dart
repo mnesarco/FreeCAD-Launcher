@@ -591,7 +591,7 @@ void main() {
     );
 
     expect(result.isOk, isTrue);
-    expect(subject.requirementsErrors.value['WithReqs'], isNotNull);
+    expect(subject.requirementsErrors.value['profile-1:WithReqs'], isNotNull);
     expect(await db.pythonPackagesDao.getByProfile('profile-1'), isEmpty);
     subject.dispose();
   });

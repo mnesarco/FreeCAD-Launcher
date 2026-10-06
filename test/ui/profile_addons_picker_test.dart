@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:freecad_launcher/core/errors.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/catalog/addon_catalog.dart';
 import 'package:freecad_launcher/data/catalog/releases_catalog.dart' show CatalogFreshness;
@@ -75,6 +76,7 @@ class _SpyAddonsController extends AddonsController {
   final installs = <_InstallCall>[];
   final removes = <_RemoveCall>[];
   List<String> dependents = const [];
+  AppError? requirementsFailure;
 
   @override
   List<String> dependentsOf(String profileId, String addonId) => dependents;
@@ -93,6 +95,13 @@ class _SpyAddonsController extends AddonsController {
       profileId: profileId,
       selection: selection,
     ));
+    final failure = requirementsFailure;
+    if (failure != null) {
+      requirementsErrors.value = {
+        ...requirementsErrors.value,
+        requirementErrorKey(profileId, addonId): failure,
+      };
+    }
     return const Ok(null);
   }
 
@@ -299,5 +308,31 @@ void main() {
 
     expect(addons.installs, hasLength(1));
     expect(addons.installs.single.selection?.installRequired, isFalse);
+  });
+
+  testWidgets('shows a failed dependency install on the installed addon row', (tester) async {
+    await db.installedAddonsDao.save(
+      sampleAddon(profileId: profile.id, addonId: 'A2plus', displayName: 'A2plus'),
+    );
+    addons.requirementsErrors.value = {
+      requirementErrorKey(profile.id, 'A2plus'): const AppError(
+        message: 'the ssl module is unavailable',
+      ),
+    };
+    await openAddonsTab(tester);
+
+    expect(find.textContaining('Python packages failed'), findsOneWidget);
+    expect(find.textContaining('the ssl module is unavailable'), findsOneWidget);
+  });
+
+  testWidgets('reports a dependency failure after the addon is installed', (tester) async {
+    addons.requirementsFailure = const AppError(message: 'the ssl module is unavailable');
+    await openAddonsTab(tester);
+    await openPicker(tester);
+    await tapInstall(tester, 'A2plus');
+
+    expect(find.textContaining('Addon installed'), findsOneWidget);
+    expect(find.textContaining('Python packages failed'), findsOneWidget);
+    expect(find.textContaining('the ssl module is unavailable'), findsOneWidget);
   });
 }

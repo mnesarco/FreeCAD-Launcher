@@ -32,6 +32,10 @@ const Set<String> internalWorkbenches = {
 
 enum ResolvedDependencyKind { addon, python, internal }
 
+/// Scopes a dependency-install error to one addon in one profile, so a failed
+/// pip run in one profile is never reported on another profile's rows.
+String requirementErrorKey(String profileId, String addonId) => '$profileId:$addonId';
+
 class ResolvedAddonDependency {
   const ResolvedAddonDependency({
     required this.source,

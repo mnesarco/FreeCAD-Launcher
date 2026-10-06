@@ -170,8 +170,15 @@ launcher when one exists, e.g. macOS `Contents/MacOS/FreeCAD` sets its own env).
 
 ### 4.2 Pip invocation
 
+Interpreter-based pip runs through a small launcher-generated bootstrap script (D-118) that writes
+the interpreter/target/packages header to the pip log, registers the interpreter's own directory
+and its `DLLs` subdirectory with `os.add_dll_directory()` (Windows only; a no-op elsewhere, the
+returned handles stay alive), reports the `ssl` module availability with the full traceback when
+it is missing, and then executes the equivalent of `-m pip` in-process
+(`runpy.run_module("pip", run_name="__main__")`). The effective pip arguments are:
+
 ```
-<python> -m pip install --upgrade --target <targetDir> <spec...>
+<python> -c/runpy: pip install --upgrade --target <targetDir> <spec...>
     --disable-pip-version-check --no-warn-script-location
 ```
 
