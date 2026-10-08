@@ -54,6 +54,35 @@ void main() {
     });
   });
 
+  group('release candidates', () {
+    test('classifies the 26.3rc1 assets into the rc channel', () {
+      final candidates = classifyFixture('github_releases_26.3rc1.json');
+
+      expect(candidates, hasLength(6));
+      expect(candidates.every((candidate) => candidate.channel == BuildChannel.rc), isTrue);
+      expect(
+        candidates.every(
+          (candidate) =>
+              candidate.versionLabel == '26.3rc1' && candidate.version?.isPrerelease == true,
+        ),
+        isTrue,
+      );
+
+      final linux = select(candidates, platform: BuildPlatform.linux, arch: BuildArch.x86_64)!;
+      expect(linux.assetName, 'FreeCAD_26.3rc1-Linux-x86_64.AppImage');
+      expect(linux.kind, BuildKind.appimage);
+      expect(linux.pythonVersion, isNull);
+      expect(linux.checksumUrl, contains('SHA256'));
+
+      final windows = select(candidates, platform: BuildPlatform.windows, arch: BuildArch.x86_64)!;
+      expect(windows.assetName, 'FreeCAD_26.3rc1-Windows-x86_64.7z');
+
+      final macArm = select(candidates, platform: BuildPlatform.macos, arch: BuildArch.arm64)!;
+      expect(macArm.assetName, 'FreeCAD_26.3rc1-macOS15-arm64.dmg');
+      expect(macArm.kind, BuildKind.dmg);
+    });
+  });
+
   group('legacy naming era', () {
     test('1.0.2 conda names are legacy and installers are skipped', () {
       final candidates = classifyFixture('github_releases_1.0.2.json');

@@ -17,6 +17,7 @@ void main() {
         safePathSegment('weekly:weekly-2026.09.30:linux:aarch64'),
         'weekly_weekly-2026.09.30_linux_aarch64',
       );
+      expect(safePathSegment('rc:26.3rc1:linux:x86_64'), 'rc_26.3rc1_linux_x86_64');
     });
 
     test('replaces spaces, punctuation and non-ascii characters', () {

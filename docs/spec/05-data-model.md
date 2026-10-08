@@ -23,7 +23,7 @@
 | `kind` | text | `appimage` \| `archive` \| `dmg` \| `custom` |
 | `version` | text | e.g. `1.1.3`, `weekly-2026.09.16`, or the label given at custom import |
 | `label` | text? | user display name overriding `version` (D-069); never used for update/manifest logic |
-| `channel` | text | `stable` \| `weekly` \| `legacy` \| `custom` |
+| `channel` | text | `stable` \| `rc` \| `weekly` \| `legacy` \| `custom` |
 | `platform` | text | `linux` \| `windows` \| `macos` |
 | `arch` | text | `x86_64` \| `aarch64`/`arm64` |
 | `sourceUrl` | text? | download URL for catalog builds |

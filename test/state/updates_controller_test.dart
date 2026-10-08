@@ -95,6 +95,20 @@ BuildCandidate weeklyCandidate(String tag, BuildKind kind) {
   );
 }
 
+BuildCandidate rcCandidate(String tag, BuildKind kind) {
+  return BuildCandidate(
+    versionLabel: tag,
+    channel: BuildChannel.rc,
+    platform: BuildPlatform.linux,
+    arch: 'x86_64',
+    kind: kind,
+    assetName: 'FreeCAD_$tag.AppImage',
+    downloadUrl: 'https://example.invalid/$tag',
+    sizeBytes: 1,
+    version: FreeCadVersion.tryParse(tag),
+  );
+}
+
 void main() {
   late Directory tempDirectory;
   late AppDatabase db;
@@ -466,6 +480,23 @@ void main() {
     final updates = updatesController(addonsController(), builds);
 
     expect(updates.outdatedBuilds.value, isEmpty);
+  });
+
+  test('release candidates never surface as stable or weekly build updates', () {
+    final builds = buildsController();
+    builds.installedBuilds.value = [
+      sampleBuild(id: 'rc', version: '26.3rc1', channel: BuildChannel.rc),
+      sampleBuild(id: 'stable', version: '1.1.3'),
+    ];
+    builds.availableBuilds.value = [candidate('26.3', BuildKind.appimage)];
+    builds.rcBuilds.value = [rcCandidate('26.3rc2', BuildKind.appimage)];
+    final updates = updatesController(addonsController(), builds);
+
+    final flagged = {
+      for (final update in updates.outdatedBuilds.value) update.buildId,
+    };
+    expect(flagged, {'stable'});
+    expect(updates.outdatedBuilds.value.single.latestVersion, '26.3');
   });
 
   test('applyUpdates updates every selected addon sequentially', () async {

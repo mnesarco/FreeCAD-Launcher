@@ -2666,3 +2666,35 @@ Template:
   `lib/domain/addons/addon_dependencies.dart`, `lib/state/addons_controller.dart`,
   `lib/ui/addons/addon_install_flow.dart`, `lib/ui/addons/addons_view.dart`,
   `lib/ui/profiles/profile_detail_view.dart`, `test/platform/pip_runner_test.dart`, D-111, D-115
+
+### D-119 — Release candidates get their own `rc` channel (R-36)
+- **Date**: 2026-10-08
+- **Status**: Accepted
+- **Context**: The FreeCAD `26.3rc1` release (published 2026-10-08, GitHub `prerelease: true`,
+  assets `FreeCAD_26.3rc1-Linux-x86_64.AppImage`, `…-Windows-x86_64.7z`,
+  `…-macOS15-arm64.dmg`, no `pyXY` hint) is fetched by the catalog but dropped at
+  classification: the stable tag regex only accepts `X.Y[.Z]`, so the `rcN` suffix makes
+  `ReleaseTag.parse` return null and `AssetClassifier.classify` yields no candidate. D-078,
+  B-14 and spec 06 §1.3/§1.5 explicitly said RC tags were ignored until the final tag; the
+  owner wants RC installs.
+- **Decision**:
+  - `FreeCadVersion` gains an `rc` component (`0` = final; `isPrerelease`); the tag pattern
+    becomes `^(\d+)\.(\d+)(?:\.(\d+))?(?:rc(\d+))?$` and ordering is
+    `26.3rc1 < 26.3rc2 < 26.3` (RCs sort below the final release of the same version).
+  - New `BuildChannel.rc`; `ReleaseTag.parse` maps any supported prerelease version to it
+    (never to `stable`/`legacy`). Pre-1.0 RCs stay ignored by the support floor (D-021).
+  - Versions → Available gains an **RC** channel (release candidates) with its own empty
+    state; RC tiles carry the channel badge and install through a dedicated confirmation
+    warning (the weekly pattern). Build IDs become `rc:<tag>:<platform>:<arch>`.
+  - Stable semantics and update notifications are unchanged: `UpdatesController` still
+    checks `stable`/`weekly` only, and the catalog-derived stable line (B-14) ignores RC
+    tags — an RC only defines the line once the matching final tag exists. RC update
+    badges are out of scope (follow-up if requested).
+  - `builds.channel` is a drift `textEnum`, so no schema migration is required.
+- **Consequences**: RC releases become installable as opt-in pre-release builds; `26.3rc1`
+  and `26.3` are distinct builds; no stable update suggestion ever points at an RC. Spec 06
+  §1.3/§1.5, D-078 and B-14 are amended from "RCs ignored" to "RCs classify into the `rc`
+  channel; the stable line derivation ignores them".
+- **Refs**: `TASKS.md` R-36, B-14, `docs/spec/06-integrations.md` §1.3/§1.5,
+  `lib/domain/builds/freecad_version.dart`, `lib/domain/builds/asset_classifier.dart`,
+  `lib/state/builds_controller.dart`, `lib/ui/builds/builds_view.dart`, D-021, D-078

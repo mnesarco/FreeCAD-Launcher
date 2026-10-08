@@ -34,6 +34,10 @@ void main() {
       paths.buildDir('stable:1.1.3:windows:x86_64'),
       p.join(paths.buildsDir, 'stable_1.1.3_windows_x86_64'),
     );
+    expect(
+      paths.buildDir('rc:26.3rc1:linux:x86_64'),
+      p.join(paths.buildsDir, 'rc_26.3rc1_linux_x86_64'),
+    );
   });
 
   test('build directories are portable with a Windows path context', () {
@@ -44,6 +48,10 @@ void main() {
     expect(
       windows.buildDir('stable:1.1.3:windows:x86_64'),
       r'C:\data\builds\stable_1.1.3_windows_x86_64',
+    );
+    expect(
+      windows.buildDir('rc:26.3rc1:linux:x86_64'),
+      r'C:\data\builds\rc_26.3rc1_linux_x86_64',
     );
   });
 

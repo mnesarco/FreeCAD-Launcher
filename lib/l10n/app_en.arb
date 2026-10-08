@@ -250,6 +250,7 @@
   "versionsAvailableEmptyTitle": "No versions available",
   "versionsAvailableEmptyMessage": "Check your connection and refresh the catalog.",
   "versionsChannelStable": "Stable",
+  "versionsChannelRc": "RC",
   "versionsChannelWeekly": "Weekly",
   "versionsWeeklyBuild": "Weekly {date}",
   "@versionsWeeklyBuild": {
@@ -261,6 +262,10 @@
   "versionsWeeklyEmptyMessage": "Refresh the catalog; weekly builds are published most Wednesdays.",
   "versionsWeeklyInstallTitle": "Install a development build?",
   "versionsWeeklyInstallMessage": "Weekly builds are development-quality: features may break and they are not covered by support. Keep a stable build for real work.",
+  "versionsRcEmptyTitle": "No release candidates available",
+  "versionsRcEmptyMessage": "Refresh the catalog; release candidates are published before each stable release.",
+  "versionsRcInstallTitle": "Install a release candidate?",
+  "versionsRcInstallMessage": "Release candidates preview the next FreeCAD release: they may contain bugs and are not covered by support. Keep a stable build for real work.",
   "versionsStaleCatalog": "Using a cached catalog; newer versions may be missing.",
   "versionsCatalogError": "Could not load available versions.",
   "versionsRetry": "Retry",

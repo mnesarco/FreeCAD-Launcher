@@ -36,6 +36,7 @@ Asset names have evolved. Classification must use regex over exact names, not as
 | Channel | Tag pattern | Pre-release flag | Assets |
 |---|---|---|---|
 | `stable` | semver `X.Y.Z` >= 1.0 through 1.1.x; CalVer `YY.N` (e.g. `26.3`, three releases/year) and patches `YY.N.P` (e.g. `27.1.1`) from the next stable on (FEP-0003) | false | see below |
+| `rc` | `X.Y[.Z]rcN` of a supported version (e.g. `26.3rc1`, `1.1rc3`) | true | same naming as the matching stable/legacy era |
 | `weekly` | `weekly-YYYY.MM.DD` | true | `FreeCAD_weekly-...` |
 | `weekly` rolling | `weeklies` | true | Linux only (skipped by the launcher, D-077) |
 | `legacy` | supported stable lines older than the newest stable line in the catalog (currently 1.0.x; 1.1.x joins once 26.3 ships) | false | semver-era and 1.0 conda-era names |
@@ -63,6 +64,14 @@ Weekly notes:
 - The rolling `weeklies` tag provides generic Linux AppImages with zsync updates.
 - Weekly builds are development-quality; the UI must label them clearly and never auto-install.
 
+Release candidate notes:
+
+- RCs (`26.3rc1`) classify into the `rc` channel and order below the matching final release
+  (`26.3rc1 < 26.3rc2 < 26.3`); the catalog-derived stable line ignores them (D-078/D-119).
+- RCs are opt-in pre-release builds: Versions → Available has a dedicated **RC** filter with a
+  badge and an install confirmation warning. They never appear in stable/weekly update checks.
+- Pre-1.0 RCs (e.g. `0.21rc1`) stay ignored by the support floor (D-021).
+
 ### 1.4 Integrity
 
 - Assets ship a sidecar `<asset>-SHA256.txt`. Download it first when present, parse the hex
@@ -84,13 +93,16 @@ Weekly notes:
 
 - CalVer (FEP-0003, active 2026-05-15): stable tags are `YY.N` (three releases per year; `N` =
   1..3; `YY` = year of the cycle's `.1` release) with monthly patches `YY.N.P`. The first
-  CalVer release is `26.3` (branched 2026-09-30, expected ~2026-11-18). RCs (`26.3rc1`) are
-  ignored until the final tag; `26.3` and `26.3.0` denote the same release.
+  CalVer release is `26.3` (branched 2026-09-30, expected ~2026-11-18). RC tags
+  (`X.Y[.Z]rcN`) are supported pre-releases for the matching final version; `26.3` and
+  `26.3.0` denote the same release.
 - Stable/legacy: numeric compare across schemas (`26.3 > 1.1.4 > 1.0.2`); CalVer sorts above any
-  semver line; RC suffixes (`1.1rc3`, `26.3rc1`) are ignored until the final tag.
+  semver line; RC suffixes sort below their final release (`26.3rc1 < 26.3rc2 < 26.3`) and are
+  never treated as stable (D-119).
 - The stable/legacy split is catalog-derived (D-078): the highest supported stable version
-  (`major.minor`) present defines the current line; supported versions below it are `legacy`
-  (1.0.x today; 1.1.x joins once 26.3 ships, 26.3 once 27.1 branches).
+  (`major.minor`) **without** an RC tag present defines the current line; supported versions
+  below it are `legacy` (1.0.x today; 1.1.x joins once 26.3 ships, 26.3 once 27.1 branches).
+  RC tags never define the line.
 - Weekly: compare tag dates (`weekly-2026.09.16`), all weeklies sort above any stable only
   within the weekly channel; channels are never mixed in one update suggestion.
 - Build identity = `(channel, version, platform, arch)`; two builds of the same version from

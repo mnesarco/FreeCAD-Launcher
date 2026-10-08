@@ -1,0 +1,103 @@
+[
+  {
+    "id": 1,
+    "tag_name": "26.3rc1",
+    "name": "FreeCAD 26.3rc1",
+    "prerelease": true,
+    "published_at": "2026-10-08T14:40:27Z",
+    "html_url": "https://github.com/FreeCAD/FreeCAD/releases/tag/26.3rc1",
+    "body": "First release candidate of the 26.3 cycle.",
+    "assets": [
+      {
+        "name": "FreeCAD_26.3rc1-Linux-x86_64.AppImage",
+        "browser_download_url": "https://example.invalid/FreeCAD_26.3rc1-Linux-x86_64.AppImage",
+        "size": 767580664
+      },
+      {
+        "name": "FreeCAD_26.3rc1-Linux-x86_64.AppImage-SHA256.txt",
+        "browser_download_url": "https://example.invalid/FreeCAD_26.3rc1-Linux-x86_64.AppImage-SHA256.txt",
+        "size": 104
+      },
+      {
+        "name": "FreeCAD_26.3rc1-Linux-x86_64.AppImage.zsync",
+        "browser_download_url": "https://example.invalid/FreeCAD_26.3rc1-Linux-x86_64.AppImage.zsync",
+        "size": 1499430
+      },
+      {
+        "name": "FreeCAD_26.3rc1-Linux-aarch64.AppImage",
+        "browser_download_url": "https://example.invalid/FreeCAD_26.3rc1-Linux-aarch64.AppImage",
+        "size": 696650248
+      },
+      {
+        "name": "FreeCAD_26.3rc1-Linux-aarch64.AppImage-SHA256.txt",
+        "browser_download_url": "https://example.invalid/FreeCAD_26.3rc1-Linux-aarch64.AppImage-SHA256.txt",
+        "size": 105
+      },
+      {
+        "name": "FreeCAD_26.3rc1-Linux-aarch64.AppImage.zsync",
+        "browser_download_url": "https://example.invalid/FreeCAD_26.3rc1-Linux-aarch64.AppImage.zsync",
+        "size": 1360896
+      },
+      {
+        "name": "FreeCAD_26.3rc1-Windows-x86_64.7z",
+        "browser_download_url": "https://example.invalid/FreeCAD_26.3rc1-Windows-x86_64.7z",
+        "size": 356540664
+      },
+      {
+        "name": "FreeCAD_26.3rc1-Windows-x86_64.7z-SHA256.txt",
+        "browser_download_url": "https://example.invalid/FreeCAD_26.3rc1-Windows-x86_64.7z-SHA256.txt",
+        "size": 100
+      },
+      {
+        "name": "FreeCAD_26.3rc1-Windows-x86_64-installer.exe",
+        "browser_download_url": "https://example.invalid/FreeCAD_26.3rc1-Windows-x86_64-installer.exe",
+        "size": 436158960
+      },
+      {
+        "name": "FreeCAD_26.3rc1-Windows-x86_64-installer.exe-SHA256.txt",
+        "browser_download_url": "https://example.invalid/FreeCAD_26.3rc1-Windows-x86_64-installer.exe-SHA256.txt",
+        "size": 111
+      },
+      {
+        "name": "FreeCAD_26.3rc1-macOS10-x86_64.dmg",
+        "browser_download_url": "https://example.invalid/FreeCAD_26.3rc1-macOS10-x86_64.dmg",
+        "size": 632182570
+      },
+      {
+        "name": "FreeCAD_26.3rc1-macOS10-x86_64.dmg-SHA256.txt",
+        "browser_download_url": "https://example.invalid/FreeCAD_26.3rc1-macOS10-x86_64.dmg-SHA256.txt",
+        "size": 101
+      },
+      {
+        "name": "FreeCAD_26.3rc1-macOS11-arm64.dmg",
+        "browser_download_url": "https://example.invalid/FreeCAD_26.3rc1-macOS11-arm64.dmg",
+        "size": 605135760
+      },
+      {
+        "name": "FreeCAD_26.3rc1-macOS11-arm64.dmg-SHA256.txt",
+        "browser_download_url": "https://example.invalid/FreeCAD_26.3rc1-macOS11-arm64.dmg-SHA256.txt",
+        "size": 100
+      },
+      {
+        "name": "FreeCAD_26.3rc1-macOS15-arm64.dmg",
+        "browser_download_url": "https://example.invalid/FreeCAD_26.3rc1-macOS15-arm64.dmg",
+        "size": 604144480
+      },
+      {
+        "name": "FreeCAD_26.3rc1-macOS15-arm64.dmg-SHA256.txt",
+        "browser_download_url": "https://example.invalid/FreeCAD_26.3rc1-macOS15-arm64.dmg-SHA256.txt",
+        "size": 100
+      },
+      {
+        "name": "freecad_source_26.3rc1.tar.gz",
+        "browser_download_url": "https://example.invalid/freecad_source_26.3rc1.tar.gz",
+        "size": 97032950
+      },
+      {
+        "name": "freecad_source_26.3rc1.tar.gz-SHA256.txt",
+        "browser_download_url": "https://example.invalid/freecad_source_26.3rc1.tar.gz-SHA256.txt",
+        "size": 96
+      }
+    ]
+  }
+]

@@ -3,7 +3,7 @@
 > Live file. Every session updates this at start and end. Keep it short — details belong in
 > `TASKS.md` and `DECISIONS.md`.
 
-- **Updated**: 2026-10-05
+- **Updated**: 2026-10-08
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
   (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**/**M8-07 DONE**/**M8-08 WIP**; **`v0.4.9` is the
   current release** (pre-release, 2026-10-05) with the platform metadata alignment (M8-07/D-116)
@@ -16,10 +16,13 @@
   M8-05 clean-VM Linux pass ready)
 - **Active branch**: `devel` (public, pushed to `origin/devel`) — `main` is reserved for a future
   release line
-- **Last session**: 2026-10-05
+- **Last session**: 2026-10-08
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
   `TASKS.md` so work can resume after an interruption.
-- **Decisions this session**: **D-118** (interpreter pip runs through a generated bootstrap that
+- **Decisions this session**: **D-119** (release candidates get their own `rc` channel:
+  `FreeCadVersion.rc`/`isPrerelease` with `26.3rc1 < 26.3rc2 < 26.3`, `BuildChannel.rc`,
+  Available RC filter + badge + install warning, excluded from stable update checks and the
+  catalog-derived stable line, no schema migration) — R-36; **D-118** (interpreter pip runs through a generated bootstrap that
   registers the interpreter's `bin`/`DLLs` via `os.add_dll_directory` on Windows, logs the
   interpreter and the `ssl` traceback, then runs pip via `runpy`; dependency errors are keyed per
   profile+addon and surfaced in the UI) — R-34; **D-117** (the Windows data root is never renamed;
@@ -29,7 +32,12 @@
   `%APPDATA%\org.freecad.ext.launcher`; its rename migration superseded by D-117) — M8-07; D-115
   (the asset-name `pyXY` hint is version metadata only, never an interpreter path; legacy stored
   FreeCAD paths are ignored and FreeCAD is only ever called with `-c`) — R-32.
-- **Next action**: **R-34** (weekly Windows addon `<depend>` install failed because the bundle's
+- **Next action**: **R-36** (release candidate `26.3rc1` was not installable because the stable
+  tag regex rejected the `rcN` suffix) is implemented and test-verified — **D-119** adds the `rc`
+  channel (`26.3rc1 < 26.3rc2 < 26.3`), the Available **RC** filter with badge + install warning,
+  and excludes RCs from stable update checks and the stable line; analyze clean, 726 tests green
+  (10 skipped); **uncommitted**, awaiting owner approval, and the live catalog install/launch on
+  the real `26.3rc1` build is still pending. Then **R-34** (weekly Windows addon `<depend>` install failed because the bundle's
   stale `ssl.py` imports `_ssl.RAND_pseudo_bytes`, removed in Python 3.13 — stable 3.11 still has
   it) is implemented, test-verified and shipped in **`v0.4.10`** (bootstrap aliases the symbol +
   per-profile error surfacing, D-118): waiting on the owner's Windows weekly retest with the
@@ -59,7 +67,8 @@
   - The B-16 Phase 3 Windows-machine smoke is **on hold** (no Windows machine available as of
     2026-10-02); B-16 is otherwise complete. The same applies to the R-31 no-redist live check.
 - **Current state**: `devel` is pushed to `origin/devel` at `75803b5` (R-33 pipe-lifecycle fix,
-  R-34/D-118 weekly-ssl fix, R-35 animated jobs indicator, 0.4.10 bump); **`v0.4.10` is published**
+  R-34/D-118 weekly-ssl fix, R-35 animated jobs indicator, 0.4.10 bump); R-36/D-119 (`rc` channel)
+  is implemented and green on top of it but **uncommitted**; **`v0.4.10` is published**
   as a pre-release (manual `create_release=true`, tag `v0.4.10` on `75803b5`, `prerelease=true`, run
   37397595261; appimage/windows/publish all green) with
   `FreeCADLauncher-0.4.10-windows-x86_64.zip` + `.sha256` and
@@ -800,7 +809,8 @@
 - Read `docs/impl/DECISIONS.md` before proposing alternatives to anything already decided.
 - Support floor is FreeCAD 1.0+ (D-021); pre-1.0 catalog tags are ignored. `legacy` is
   catalog-derived (D-078): supported stable lines older than the newest one present. Weekly
-  builds are exposed in Versions → Available (D-077). CalVer readiness is backlog B-14.
+  builds are exposed in Versions → Available (D-077); release candidates have their own `rc`
+  channel (D-119) and never feed stable update checks. CalVer readiness is backlog B-14.
 - Publishing (D-081): public repo `mnesarco/FreeCAD-Launcher`, branch `devel`, releases only
   from CI (`release.yml`, tag push or manual `workflow_dispatch` with optional `create_release`).
   CI runs Linux + Windows with tests on both; macOS is disabled per D-083 until M8-04.
@@ -821,3 +831,4 @@
 | 2026-10-05 | R73 | **R-34/D-118: weekly Windows addon dependencies fixed and dependency failures surfaced** (owner report: Ondsel-Lens `<depend>` install worked on stable but failed on the weekly profile). Owner evidence: pip log `WARNING: Disabling truststore since ssl support is missing` + `The 'ssl' module is unavailable but required for HTTPS URLs`; the bootstrap diagnostics pinned it to `ImportError: cannot import name 'RAND_pseudo_bytes' from '_ssl'` at `Lib/ssl.py:109`. Root cause: both 1.1 bundles ship the same stale Python 3.11-era `ssl.py` (byte-identical), but 3.11's `_ssl` still exports `RAND_pseudo_bytes` while 3.13 removed it — stable works, weekly fails. Fix: interpreter pip now runs a generated bootstrap that aliases the removed symbol (`_ssl.RAND_pseudo_bytes = _ssl.RAND_bytes`) before importing `ssl`, registers the interpreter's `bin`/`DLLs` with `os.add_dll_directory` (Windows; handles kept alive) and prepends them to `PATH`, logs the interpreter identity and the full `ssl` traceback, then runs `runpy.run_module("pip", …)` with the same arguments; `requirementErrorKey(profileId, addonId)` scopes requirement errors to one profile+addon and the profile Addons row + install snackbar now show them (catalog detail already did). Linux AppImage macro (D-112) untouched; reproduced the Windows failure on Linux (Python 3.13.11 + archive `ssl.py` on `PYTHONPATH`) and verified the extracted bootstrap patches it and installs `pyjwt`/`tzlocal` via pip 26.2.1; plain 3.13/pip 26 and `real_pip_install_test` (system pip 24) also pass. `flutter analyze` clean, 716 tests green (10 skipped); TASKS R-34, DECISIONS D-118, VERIFICATION §R-34, spec 06 §4.2 updated; Windows weekly live retest pending | R-34, D-118 | `lib/platform/pip_runner.dart`, `lib/domain/addons/addon_dependencies.dart`, `lib/state/addons_controller.dart`, `lib/ui/addons/{addon_install_flow,addons_view}.dart`, `lib/ui/profiles/profile_detail_view.dart`, `test/platform/pip_runner_test.dart`, `test/state/addons_controller_test.dart`, `test/ui/profile_addons_picker_test.dart`, `docs/spec/06-integrations.md`, `docs/impl/**` |
 | 2026-10-05 | R74 | **R-35: status bar jobs indicator animated** (owner request: running work must be visible at a glance): the active-jobs chip used a static `Icons.sync`, so only the label showed that something was running. New `_JobsActivityIcon` (`lib/ui/shell/app_shell.dart`, key `statusBarJobsIndicator`) rotates continuously with a 1400 ms linear `AnimationController`/`RotationTransition` while jobs are queued/running and falls back to the static icon when `MediaQuery.disableAnimationsOf` reports the OS/accessibility "disable animations" setting. 2 new `app_shell_test` cases (rotation value changes while a job is active and the indicator disappears on completion; disabled-animations case has no `RotationTransition`); the existing jobs test fakes `disableAnimations` so `pumpAndSettle` stays settle-friendly. `flutter analyze` clean, 718 tests green (10 skipped); TASKS R-35, VERIFICATION §R-35 and spec 03 §1 updated; live visual pass pending | R-35 | `lib/ui/shell/app_shell.dart`, `test/app_shell_test.dart`, `docs/spec/03-ux.md`, `docs/impl/{TASKS,VERIFICATION,STATUS}.md` |
 | 2026-10-06 | R75 | **v0.4.10 pre-release published** (owner request): version bumped 0.4.9 → 0.4.10 in `pubspec.yaml`/`lib/core/constants.dart` (`chore(release): bump version to 0.4.10 [R-34]`, `75803b5`), `check_version.sh` OK, pushed to `origin/devel`. Manual `release.yml` run 37397595261 (`create_release=true`, tag `v0.4.10`, `prerelease=true`, ref `devel`) — appimage/windows/publish all green — published the GitHub pre-release `v0.4.10` with `FreeCADLauncher-0.4.10-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.10-x86_64.AppImage` + `.sha256` + `.zsync`. All five assets re-downloaded and verified: both sidecars `sha256sum -c` OK, AppImage `--version` = 0.4.10 (exit 0), zip carries `7zr.exe`, `freecad_launcher.exe`, `LICENSE`, `THIRD_PARTY_NOTICES.md` and the app-local MSVC runtime DLLs. The release carries R-33 (pipe lifecycle), R-34/D-118 (weekly ssl fix + dependency error surfacing) and R-35 (animated jobs indicator) plus the M8-07/M8-08 work from 0.4.8/0.4.9 | R-34, R-35, D-118 | `lib/core/constants.dart`, `pubspec.yaml`, `docs/impl/STATUS.md` |
+| 2026-10-08 | R76 | **R-36/D-119: release candidates installable** (owner report: `26.3rc1` not installable): the GitHub prerelease is fetched but `ReleaseTag.parse` dropped it because the stable regex rejected the `rcN` suffix. `FreeCadVersion` now carries an `rc` component (`isPrerelease`, `26.3rc1 < 26.3rc2 < 26.3`), `BuildChannel.rc` added, `ReleaseTag.parse` maps supported prereleases to it (pre-1.0 RCs stay below the floor), `BuildsController.rcBuilds` fed by the catalog, Versions → Available gets the **RC** filter + badge + confirmation warning (weekly pattern), `UpdatesController` unchanged (RC never stable/weekly), portable path `rc_26.3rc1_linux_x86_64` asserted (D-095). Real `26.3rc1` fixture; 6 new/updated tests; analyze clean, 726 tests green (10 skipped); spec 06/03/05, user guide, B-14, TASKS and VERIFICATION updated. Uncommitted; live catalog install/launch pending | R-36, D-119 | `lib/domain/builds/{freecad_version,build_types}.dart`, `lib/state/builds_controller.dart`, `lib/ui/builds/builds_view.dart`, `lib/l10n/app_en.arb`, `lib/l10n/gen/**`, `test/domain/{freecad_version,asset_classifier}_test.dart`, `test/fixtures/github_releases_26.3rc1.json`, `test/state/{builds_controller,updates_controller}_test.dart`, `test/ui/builds_view_test.dart`, `test/core/path_segments_test.dart`, `test/platform/paths_test.dart`, `docs/spec/{03-ux,05-data-model,06-integrations}.md`, `docs/user-guide.md`, `docs/impl/{DECISIONS,TASKS,VERIFICATION,STATUS}.md` |

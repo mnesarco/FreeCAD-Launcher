@@ -91,6 +91,7 @@ class BuildsController {
 
   final installedBuilds = signal<List<Build>>([]);
   final availableBuilds = signal<List<BuildCandidate>>([]);
+  final rcBuilds = signal<List<BuildCandidate>>([]);
   final weeklyBuilds = signal<List<BuildCandidate>>([]);
   final catalogFreshness = signal<CatalogFreshness?>(null);
   final catalogError = signal<AppError?>(null);
@@ -105,6 +106,15 @@ class BuildsController {
   BuildPlatform get platform => _platform;
 
   String get arch => _arch;
+
+  static int _byVersionDescending(BuildCandidate a, BuildCandidate b) {
+    final versionA = a.version;
+    final versionB = b.version;
+    if (versionA != null && versionB != null) {
+      return versionB.compareTo(versionA);
+    }
+    return b.versionLabel.compareTo(a.versionLabel);
+  }
 
   void start() {
     _buildsSubscription ??= _database.buildsDao.watchAll().listen(
@@ -168,6 +178,7 @@ class BuildsController {
     try {
       final result = await _catalog.load(forceRefresh: forceRefresh);
       final stableCandidates = <BuildCandidate>[];
+      final rcCandidates = <BuildCandidate>[];
       final weeklyCandidates = <BuildCandidate>[];
       final seen = <String>{};
       for (final release in result.releases) {
@@ -186,6 +197,8 @@ class BuildsController {
         switch (candidate.channel) {
           case BuildChannel.stable:
             stableCandidates.add(candidate);
+          case BuildChannel.rc:
+            rcCandidates.add(candidate);
           case BuildChannel.weekly:
             if (candidate.weekly != null) {
               weeklyCandidates.add(candidate);
@@ -195,22 +208,17 @@ class BuildsController {
             break;
         }
       }
-      stableCandidates.sort((a, b) {
-        final versionA = a.version;
-        final versionB = b.version;
-        if (versionA != null && versionB != null) {
-          return versionB.compareTo(versionA);
-        }
-        return b.versionLabel.compareTo(a.versionLabel);
-      });
+      stableCandidates.sort(_byVersionDescending);
+      rcCandidates.sort(_byVersionDescending);
       weeklyCandidates.sort((a, b) => b.weekly!.compareTo(a.weekly!));
       availableBuilds.value = stableCandidates;
+      rcBuilds.value = rcCandidates;
       weeklyBuilds.value = weeklyCandidates.take(weeklyBuildLimit).toList();
       catalogFreshness.value = result.freshness;
       appLogger.info(
         'releases catalog: ${result.releases.length} releases, '
-        '${stableCandidates.length} stable + ${weeklyCandidates.length} weekly '
-        'candidates in ${stopwatch.elapsedMilliseconds} ms',
+        '${stableCandidates.length} stable + ${rcCandidates.length} rc + '
+        '${weeklyCandidates.length} weekly candidates in ${stopwatch.elapsedMilliseconds} ms',
         tag: 'perf',
       );
     } on Object catch (error, stackTrace) {

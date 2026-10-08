@@ -2,15 +2,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 
-final RegExp _stableTag = RegExp(r'^(\d+)\.(\d+)(?:\.(\d+))?$');
+final RegExp _stableTag = RegExp(r'^(\d+)\.(\d+)(?:\.(\d+))?(?:rc(\d+))?$');
 final RegExp _weeklyTag = RegExp(r'^weekly-(\d{4})\.(\d{2})\.(\d{2})$');
 
 class FreeCadVersion implements Comparable<FreeCadVersion> {
-  const FreeCadVersion(this.major, this.minor, [this.patch = 0]);
+  const FreeCadVersion(this.major, this.minor, [this.patch = 0, this.rc = 0]);
 
   final int major;
   final int minor;
   final int patch;
+  final int rc;
 
   static const FreeCadVersion minSupported = FreeCadVersion(1, 0);
 
@@ -25,12 +26,15 @@ class FreeCadVersion implements Comparable<FreeCadVersion> {
       int.parse(match[1]!),
       int.parse(match[2]!),
       match[3] == null ? 0 : int.parse(match[3]!),
+      match[4] == null ? 0 : int.parse(match[4]!),
     );
   }
 
+  bool get isPrerelease => rc > 0;
+
   bool get isSupported => compareTo(minSupported) >= 0;
 
-  bool get isLegacy => isSupported && compareTo(stableLine) < 0;
+  bool get isLegacy => isSupported && !isPrerelease && compareTo(stableLine) < 0;
 
   bool operator <(FreeCadVersion other) => compareTo(other) < 0;
 
@@ -44,7 +48,19 @@ class FreeCadVersion implements Comparable<FreeCadVersion> {
     if (minor != other.minor) {
       return minor.compareTo(other.minor);
     }
-    return patch.compareTo(other.patch);
+    if (patch != other.patch) {
+      return patch.compareTo(other.patch);
+    }
+    if (rc == other.rc) {
+      return 0;
+    }
+    if (rc == 0) {
+      return 1;
+    }
+    if (other.rc == 0) {
+      return -1;
+    }
+    return rc.compareTo(other.rc);
   }
 
   @override
@@ -52,13 +68,14 @@ class FreeCadVersion implements Comparable<FreeCadVersion> {
       other is FreeCadVersion &&
       major == other.major &&
       minor == other.minor &&
-      patch == other.patch;
+      patch == other.patch &&
+      rc == other.rc;
 
   @override
-  int get hashCode => Object.hash(major, minor, patch);
+  int get hashCode => Object.hash(major, minor, patch, rc);
 
   @override
-  String toString() => '$major.$minor.$patch';
+  String toString() => '$major.$minor.$patch${rc == 0 ? '' : 'rc$rc'}';
 }
 
 class WeeklyVersion implements Comparable<WeeklyVersion> {
@@ -115,11 +132,10 @@ class ReleaseTag {
     }
     final version = FreeCadVersion.tryParse(tag);
     if (version != null && version.isSupported) {
-      return ReleaseTag(
-        raw: tag,
-        channel: version.isLegacy ? BuildChannel.legacy : BuildChannel.stable,
-        version: version,
-      );
+      final channel = version.isPrerelease
+          ? BuildChannel.rc
+          : (version.isLegacy ? BuildChannel.legacy : BuildChannel.stable);
+      return ReleaseTag(raw: tag, channel: channel, version: version);
     }
     return null;
   }

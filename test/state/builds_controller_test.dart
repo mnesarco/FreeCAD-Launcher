@@ -271,6 +271,57 @@ void main() {
     controller.dispose();
   });
 
+  test('loadCatalog separates release candidates from stable builds', () async {
+    final catalog = FakeReleasesCatalog()
+      ..nextResult = ReleasesCatalogResult(
+        releases: fixtureReleases([
+          'github_releases_1.1.3.json',
+          'github_releases_26.3rc1.json',
+        ]),
+        freshness: CatalogFreshness.refreshed,
+      );
+    final controller = buildController(catalog: catalog);
+
+    await controller.loadCatalog();
+
+    expect(
+      controller.availableBuilds.value.map((candidate) => candidate.versionLabel),
+      ['1.1.3'],
+    );
+    final rc = controller.rcBuilds.value;
+    expect(rc, hasLength(1));
+    expect(rc.single.versionLabel, '26.3rc1');
+    expect(rc.single.channel, BuildChannel.rc);
+    expect(rc.single.version!.isPrerelease, isTrue);
+    expect(rc.single.platform, BuildPlatform.linux);
+    expect(rc.single.arch, BuildArch.x86_64);
+    controller.dispose();
+  });
+
+  test('install stores an rc candidate under its channel and tag label', () async {
+    final controller = buildController();
+    final rc = BuildCandidate(
+      versionLabel: '26.3rc1',
+      channel: BuildChannel.rc,
+      platform: BuildPlatform.linux,
+      arch: BuildArch.x86_64,
+      kind: BuildKind.appimage,
+      assetName: 'FreeCAD_26.3rc1-Linux-x86_64.AppImage',
+      downloadUrl: 'https://example.invalid/FreeCAD_26.3rc1-Linux-x86_64.AppImage',
+      sizeBytes: 1000,
+      version: FreeCadVersion.tryParse('26.3rc1'),
+    );
+
+    final result = await controller.install(rc);
+
+    expect(result.isOk, isTrue);
+    final stored = await database.buildsDao.getById(rc.id);
+    expect(stored, isNotNull);
+    expect(stored!.channel, BuildChannel.rc);
+    expect(stored.version, '26.3rc1');
+    controller.dispose();
+  });
+
   test('loadCatalog picks one macOS weekly candidate per release', () async {
     final catalog = FakeReleasesCatalog()
       ..nextResult = ReleasesCatalogResult(

@@ -568,6 +568,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get versionsChannelStable => 'Stable';
 
   @override
+  String get versionsChannelRc => 'RC';
+
+  @override
   String get versionsChannelWeekly => 'Weekly';
 
   @override
@@ -588,6 +591,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get versionsWeeklyInstallMessage =>
       'Weekly builds are development-quality: features may break and they are not covered by support. Keep a stable build for real work.';
+
+  @override
+  String get versionsRcEmptyTitle => 'No release candidates available';
+
+  @override
+  String get versionsRcEmptyMessage =>
+      'Refresh the catalog; release candidates are published before each stable release.';
+
+  @override
+  String get versionsRcInstallTitle => 'Install a release candidate?';
+
+  @override
+  String get versionsRcInstallMessage =>
+      'Release candidates preview the next FreeCAD release: they may contain bugs and are not covered by support. Keep a stable build for real work.';
 
   @override
   String get versionsStaleCatalog =>

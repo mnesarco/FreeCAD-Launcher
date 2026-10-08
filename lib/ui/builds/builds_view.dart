@@ -421,9 +421,11 @@ class _AvailableTabState extends State<_AvailableTab> {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).builds;
     final stable = controller.availableBuilds.value;
+    final rc = controller.rcBuilds.value;
     final weekly = controller.weeklyBuilds.value;
     final isWeekly = _channel == BuildChannel.weekly;
-    final candidates = isWeekly ? weekly : stable;
+    final isRc = _channel == BuildChannel.rc;
+    final candidates = isWeekly ? weekly : (isRc ? rc : stable);
     final loading = controller.loadingCatalog.value;
     final error = controller.catalogError.value;
     final stale =
@@ -445,9 +447,16 @@ class _AvailableTabState extends State<_AvailableTab> {
     } else if (candidates.isEmpty) {
       body = EmptyState(
         icon: Icons.cloud_download_outlined,
-        title: isWeekly ? l10n.versionsWeeklyEmptyTitle : l10n.versionsAvailableEmptyTitle,
-        message:
-            isWeekly ? l10n.versionsWeeklyEmptyMessage : l10n.versionsAvailableEmptyMessage,
+        title: isWeekly
+            ? l10n.versionsWeeklyEmptyTitle
+            : isRc
+            ? l10n.versionsRcEmptyTitle
+            : l10n.versionsAvailableEmptyTitle,
+        message: isWeekly
+            ? l10n.versionsWeeklyEmptyMessage
+            : isRc
+            ? l10n.versionsRcEmptyMessage
+            : l10n.versionsAvailableEmptyMessage,
         action: FilledButton.tonal(
           onPressed: () => controller.loadCatalog(forceRefresh: true),
           child: Text(l10n.versionsRefresh),
@@ -489,6 +498,10 @@ class _AvailableTabState extends State<_AvailableTab> {
                     DropdownMenuItem(
                       value: BuildChannel.stable,
                       child: Text(l10n.versionsChannelStable),
+                    ),
+                    DropdownMenuItem(
+                      value: BuildChannel.rc,
+                      child: Text(l10n.versionsChannelRc),
                     ),
                     DropdownMenuItem(
                       value: BuildChannel.weekly,
@@ -572,6 +585,13 @@ class _AvailableBuildTile extends SignalWidget {
               tone: CompactBadgeTone.warning,
             ),
           ],
+          if (candidate.channel == BuildChannel.rc) ...[
+            const SizedBox(width: 8),
+            CompactBadge(
+              label: l10n.versionsChannelRc,
+              tone: CompactBadgeTone.info,
+            ),
+          ],
         ],
       ),
       subtitle: Column(
@@ -611,9 +631,25 @@ class _AvailableBuildTile extends SignalWidget {
     BuildsController controller,
     BuildCandidate candidate,
   ) async {
+    final l10n = AppLocalizations.of(context);
     final tabController = DefaultTabController.of(context);
-    if (candidate.channel == BuildChannel.weekly) {
-      final confirmed = await _confirmWeeklyInstall(context);
+    final warning = switch (candidate.channel) {
+      BuildChannel.weekly => (
+        title: l10n.versionsWeeklyInstallTitle,
+        message: l10n.versionsWeeklyInstallMessage,
+      ),
+      BuildChannel.rc => (
+        title: l10n.versionsRcInstallTitle,
+        message: l10n.versionsRcInstallMessage,
+      ),
+      _ => null,
+    };
+    if (warning != null) {
+      final confirmed = await _confirmChannelInstall(
+        context,
+        warning.title,
+        warning.message,
+      );
       if (confirmed != true) {
         return;
       }
@@ -624,13 +660,17 @@ class _AvailableBuildTile extends SignalWidget {
     }
   }
 
-  Future<bool?> _confirmWeeklyInstall(BuildContext context) {
+  Future<bool?> _confirmChannelInstall(
+    BuildContext context,
+    String title,
+    String message,
+  ) {
     final l10n = AppLocalizations.of(context);
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.versionsWeeklyInstallTitle),
-        content: Text(l10n.versionsWeeklyInstallMessage),
+        title: Text(title),
+        content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),

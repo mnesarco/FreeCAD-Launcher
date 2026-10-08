@@ -548,6 +548,32 @@ Status bar active-jobs indicator animation. Evidence:
 - Not verified live: visual pass (trigger a long job and confirm the sync icon spins; enable the OS
   “disable animations” setting and confirm it stays static).
 
+### R-36 (2026-10-08, `devel`)
+
+Release candidates are installable. `26.3rc1` (GitHub prerelease, 2026-10-08) was fetched but
+dropped because the stable tag regex rejected the `rcN` suffix. Evidence:
+
+- Live data: `GET /repos/FreeCAD/FreeCAD/releases/tags/26.3rc1` returns `prerelease: true` with
+  `FreeCAD_26.3rc1-Linux-x86_64.AppImage`, `…-Windows-x86_64.7z`, `…-macOS15-arm64.dmg` (no
+  `pyXY` hint; the existing probe fallback covers Python).
+- `freecad_version_test`: `26.3rc1`/`26.3.0rc2`/`1.1rc3` parse with an `rc` component;
+  `26.3rc1 < 26.3rc2 < 26.3`; `1.0rc1` stays below the support floor; `ReleaseTag.parse` maps
+  supported prereleases to `BuildChannel.rc` and still rejects `0.21rc1` and `1.1.3-rc1`.
+- `asset_classifier_test` with the new `github_releases_26.3rc1.json` fixture: 6 installable
+  candidates, all `rc`, `versionLabel` `26.3rc1`, Linux/Windows/macOS selections resolve and the
+  installer/source/`.zsync` assets are skipped.
+- `builds_controller_test`: `loadCatalog` separates `rcBuilds` from `availableBuilds`; installing
+  an rc candidate stores `channel = rc` and `version = 26.3rc1`.
+- `updates_controller_test`: an installed rc build and an rc candidate never surface as
+  stable/weekly build updates.
+- `builds_view_test`: the Available RC filter hides the candidate under Stable, shows it with the
+  RC badge, and the install action opens the release-candidate confirmation before installing.
+- Portable paths (hard rule): `path_segments_test`/`paths_test` assert
+  `rc:26.3rc1:linux:x86_64` → `rc_26.3rc1_linux_x86_64` in POSIX and Windows contexts.
+- `flutter analyze` clean; 726 tests green (10 platform probes skipped).
+- Not verified live: install `26.3rc1` from a real catalog refresh and launch a profile on it; the
+  GitHub release is an RC, so expect the normal pre-release quality caveat.
+
 ## 5. When something fails
 
 1. Capture the job log tail and app logs from `logs/`.

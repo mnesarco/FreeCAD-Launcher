@@ -1114,6 +1114,12 @@ abstract class AppLocalizations {
   /// **'Stable'**
   String get versionsChannelStable;
 
+  /// No description provided for @versionsChannelRc.
+  ///
+  /// In en, this message translates to:
+  /// **'RC'**
+  String get versionsChannelRc;
+
   /// No description provided for @versionsChannelWeekly.
   ///
   /// In en, this message translates to:
@@ -1149,6 +1155,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Weekly builds are development-quality: features may break and they are not covered by support. Keep a stable build for real work.'**
   String get versionsWeeklyInstallMessage;
+
+  /// No description provided for @versionsRcEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No release candidates available'**
+  String get versionsRcEmptyTitle;
+
+  /// No description provided for @versionsRcEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh the catalog; release candidates are published before each stable release.'**
+  String get versionsRcEmptyMessage;
+
+  /// No description provided for @versionsRcInstallTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Install a release candidate?'**
+  String get versionsRcInstallTitle;
+
+  /// No description provided for @versionsRcInstallMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Release candidates preview the next FreeCAD release: they may contain bugs and are not covered by support. Keep a stable build for real work.'**
+  String get versionsRcInstallMessage;
 
   /// No description provided for @versionsStaleCatalog.
   ///

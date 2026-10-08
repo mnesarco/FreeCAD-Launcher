@@ -162,6 +162,45 @@ void main() {
     expect(detail.overflow, TextOverflow.ellipsis);
   });
 
+  testWidgets('separates release candidates and warns before installing them', (tester) async {
+    final rc = BuildCandidate(
+      versionLabel: '26.3rc1',
+      channel: BuildChannel.rc,
+      platform: BuildPlatform.linux,
+      arch: BuildArch.x86_64,
+      kind: BuildKind.appimage,
+      assetName: 'FreeCAD_26.3rc1-Linux-x86_64.AppImage',
+      downloadUrl: 'https://example.invalid/26.3rc1.AppImage',
+      sizeBytes: 767 * 1024 * 1024,
+      version: FreeCadVersion.tryParse('26.3rc1'),
+    );
+    controller.availableBuilds.value = [sampleCandidate()];
+    controller.rcBuilds.value = [rc];
+
+    await pumpBuilds(tester);
+
+    expect(find.text('26.3rc1'), findsNothing);
+
+    await tester.tap(find.text('Stable').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('RC').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('26.3rc1'), findsOneWidget);
+    expect(find.text('RC'), findsWidgets);
+
+    await tester.tap(find.text('Install'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Install a release candidate?'), findsOneWidget);
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Install a release candidate?'), findsNothing);
+    expect(find.text('26.3rc1'), findsOneWidget);
+  });
+
   testWidgets('flags a newer stable release on installed builds', (tester) async {
     await tester.runAsync(() async {
       final buildDirectory = Directory(paths.buildDir('build-1'));
