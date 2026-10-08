@@ -5,8 +5,9 @@
 
 - **Updated**: 2026-10-08
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
-  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**/**M8-07 DONE**/**M8-08 WIP**; **`v0.4.9` is the
-  current release** (pre-release, 2026-10-05) with the platform metadata alignment (M8-07/D-116)
+  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**/**M8-07 DONE**/**M8-08 WIP**; **`v0.4.11` is the
+  current release** (pre-release, 2026-10-08) with R-36/D-119 (installable release candidates via
+  the `rc` channel); `v0.4.9` carried the platform metadata alignment (M8-07/D-116)
   and the data-root regression fix (M8-08/D-117; owner Windows retest pending); `v0.4.7` carried
   the self-contained Windows zip (R-31/D-114) and the R-32/D-115 addon-dependency pip fix; it also carries the B-19 `package.xml`
   `<depend>` dependency install (D-108..D-111), the B-20 AppImage macro Python execution without
@@ -33,11 +34,11 @@
   (the asset-name `pyXY` hint is version metadata only, never an interpreter path; legacy stored
   FreeCAD paths are ignored and FreeCAD is only ever called with `-c`) — R-32.
 - **Next action**: **R-36** (release candidate `26.3rc1` was not installable because the stable
-  tag regex rejected the `rcN` suffix) is implemented and test-verified — **D-119** adds the `rc`
-  channel (`26.3rc1 < 26.3rc2 < 26.3`), the Available **RC** filter with badge + install warning,
-  and excludes RCs from stable update checks and the stable line; analyze clean, 726 tests green
-  (10 skipped); **uncommitted**, awaiting owner approval, and the live catalog install/launch on
-  the real `26.3rc1` build is still pending. Then **R-34** (weekly Windows addon `<depend>` install failed because the bundle's
+  tag regex rejected the `rcN` suffix) is implemented, test-verified and shipped in **`v0.4.11`**
+  — **D-119** adds the `rc` channel (`26.3rc1 < 26.3rc2 < 26.3`), the Available **RC** filter with
+  badge + install warning, and excludes RCs from stable update checks and the stable line; analyze
+  clean, 726 tests green (10 skipped), both release sidecars verified; the live catalog
+  install/launch on the real `26.3rc1` build is still pending. Then **R-34** (weekly Windows addon `<depend>` install failed because the bundle's
   stale `ssl.py` imports `_ssl.RAND_pseudo_bytes`, removed in Python 3.13 — stable 3.11 still has
   it) is implemented, test-verified and shipped in **`v0.4.10`** (bootstrap aliases the symbol +
   per-profile error surfacing, D-118): waiting on the owner's Windows weekly retest with the
@@ -66,9 +67,14 @@
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
   - The B-16 Phase 3 Windows-machine smoke is **on hold** (no Windows machine available as of
     2026-10-02); B-16 is otherwise complete. The same applies to the R-31 no-redist live check.
-- **Current state**: `devel` is pushed to `origin/devel` at `75803b5` (R-33 pipe-lifecycle fix,
-  R-34/D-118 weekly-ssl fix, R-35 animated jobs indicator, 0.4.10 bump); R-36/D-119 (`rc` channel)
-  is implemented and green on top of it but **uncommitted**; **`v0.4.10` is published**
+- **Current state**: `devel` is pushed to `origin/devel` at `bc91ea9` (R-36/D-119 `rc` channel
+  `28faf1b` + 0.4.11 bump); **`v0.4.11` is published** as a pre-release (manual
+  `create_release=true`, tag `v0.4.11` on `bc91ea9`, `prerelease=true`, run 37830243774;
+  appimage/windows/publish all green) with
+  `FreeCADLauncher-0.4.11-windows-x86_64.zip` + `.sha256` and
+  `FreeCADLauncher-0.4.11-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
+  download (`sha256sum -c` OK), AppImage `--version` = 0.4.11 (exit 0) and the zip carries
+  `7zr.exe`, license/notices and the app-local MSVC runtime. Earlier: **`v0.4.10` is published**
   as a pre-release (manual `create_release=true`, tag `v0.4.10` on `75803b5`, `prerelease=true`, run
   37397595261; appimage/windows/publish all green) with
   `FreeCADLauncher-0.4.10-windows-x86_64.zip` + `.sha256` and
@@ -832,3 +838,4 @@
 | 2026-10-05 | R74 | **R-35: status bar jobs indicator animated** (owner request: running work must be visible at a glance): the active-jobs chip used a static `Icons.sync`, so only the label showed that something was running. New `_JobsActivityIcon` (`lib/ui/shell/app_shell.dart`, key `statusBarJobsIndicator`) rotates continuously with a 1400 ms linear `AnimationController`/`RotationTransition` while jobs are queued/running and falls back to the static icon when `MediaQuery.disableAnimationsOf` reports the OS/accessibility "disable animations" setting. 2 new `app_shell_test` cases (rotation value changes while a job is active and the indicator disappears on completion; disabled-animations case has no `RotationTransition`); the existing jobs test fakes `disableAnimations` so `pumpAndSettle` stays settle-friendly. `flutter analyze` clean, 718 tests green (10 skipped); TASKS R-35, VERIFICATION §R-35 and spec 03 §1 updated; live visual pass pending | R-35 | `lib/ui/shell/app_shell.dart`, `test/app_shell_test.dart`, `docs/spec/03-ux.md`, `docs/impl/{TASKS,VERIFICATION,STATUS}.md` |
 | 2026-10-06 | R75 | **v0.4.10 pre-release published** (owner request): version bumped 0.4.9 → 0.4.10 in `pubspec.yaml`/`lib/core/constants.dart` (`chore(release): bump version to 0.4.10 [R-34]`, `75803b5`), `check_version.sh` OK, pushed to `origin/devel`. Manual `release.yml` run 37397595261 (`create_release=true`, tag `v0.4.10`, `prerelease=true`, ref `devel`) — appimage/windows/publish all green — published the GitHub pre-release `v0.4.10` with `FreeCADLauncher-0.4.10-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.10-x86_64.AppImage` + `.sha256` + `.zsync`. All five assets re-downloaded and verified: both sidecars `sha256sum -c` OK, AppImage `--version` = 0.4.10 (exit 0), zip carries `7zr.exe`, `freecad_launcher.exe`, `LICENSE`, `THIRD_PARTY_NOTICES.md` and the app-local MSVC runtime DLLs. The release carries R-33 (pipe lifecycle), R-34/D-118 (weekly ssl fix + dependency error surfacing) and R-35 (animated jobs indicator) plus the M8-07/M8-08 work from 0.4.8/0.4.9 | R-34, R-35, D-118 | `lib/core/constants.dart`, `pubspec.yaml`, `docs/impl/STATUS.md` |
 | 2026-10-08 | R76 | **R-36/D-119: release candidates installable** (owner report: `26.3rc1` not installable): the GitHub prerelease is fetched but `ReleaseTag.parse` dropped it because the stable regex rejected the `rcN` suffix. `FreeCadVersion` now carries an `rc` component (`isPrerelease`, `26.3rc1 < 26.3rc2 < 26.3`), `BuildChannel.rc` added, `ReleaseTag.parse` maps supported prereleases to it (pre-1.0 RCs stay below the floor), `BuildsController.rcBuilds` fed by the catalog, Versions → Available gets the **RC** filter + badge + confirmation warning (weekly pattern), `UpdatesController` unchanged (RC never stable/weekly), portable path `rc_26.3rc1_linux_x86_64` asserted (D-095). Real `26.3rc1` fixture; 6 new/updated tests; analyze clean, 726 tests green (10 skipped); spec 06/03/05, user guide, B-14, TASKS and VERIFICATION updated. Uncommitted; live catalog install/launch pending | R-36, D-119 | `lib/domain/builds/{freecad_version,build_types}.dart`, `lib/state/builds_controller.dart`, `lib/ui/builds/builds_view.dart`, `lib/l10n/app_en.arb`, `lib/l10n/gen/**`, `test/domain/{freecad_version,asset_classifier}_test.dart`, `test/fixtures/github_releases_26.3rc1.json`, `test/state/{builds_controller,updates_controller}_test.dart`, `test/ui/builds_view_test.dart`, `test/core/path_segments_test.dart`, `test/platform/paths_test.dart`, `docs/spec/{03-ux,05-data-model,06-integrations}.md`, `docs/user-guide.md`, `docs/impl/{DECISIONS,TASKS,VERIFICATION,STATUS}.md` |
+| 2026-10-08 | R77 | **v0.4.11 pre-release published** (owner request): R-36/D-119 committed (`28faf1b feat(builds): install release candidates via the rc channel [R-36]`) and the version bumped 0.4.10 → 0.4.11 (`bc91ea9 chore(release): bump version to 0.4.11 [R-36]`); `packaging/check_version.sh` OK, `flutter analyze` clean. Pushed to `origin/devel` (`76b2a30..bc91ea9`). Manual `release.yml` run 37830243774 (`create_release=true`, tag `v0.4.11`, `prerelease=true`, ref `devel`) green on appimage/windows/publish and published the GitHub pre-release with `FreeCADLauncher-0.4.11-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.11-x86_64.AppImage` + `.sha256` + `.zsync`; all assets re-downloaded and verified: both sidecars `sha256sum -c` OK, AppImage `--version` = 0.4.11 (exit 0), zip carries `7zr.exe`, `freecad_launcher.exe`, `LICENSE`, `THIRD_PARTY_NOTICES.md` and the app-local MSVC runtime DLLs. The release carries R-36/D-119 (rc channel); live catalog install/launch of `26.3rc1` pending | R-36, D-119 | `lib/core/constants.dart`, `pubspec.yaml`, `docs/impl/STATUS.md` |
