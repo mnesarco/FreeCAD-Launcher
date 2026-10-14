@@ -21,46 +21,42 @@ void main() {
 
   group('profile palette contrast', () {
     for (final brightness in Brightness.values) {
+      test('base card text meets WCAG (${brightness.name})', () {
+        final scheme = buildAppTheme(brightness).colorScheme;
+
+        expect(
+          contrast(scheme.onSurface, scheme.surfaceContainerLow),
+          greaterThanOrEqualTo(textMinimum),
+        );
+        expect(
+          contrast(scheme.onSurfaceVariant, scheme.surfaceContainerLow),
+          greaterThanOrEqualTo(textMinimum),
+        );
+      });
+
       for (final entry in profilePalettes) {
         test('${entry.id} (${brightness.name}) meets WCAG on every used pair', () {
-          final base = buildAppTheme(brightness);
+          final baseScheme = buildAppTheme(brightness).colorScheme;
           final scheme = profileColorScheme(entry.seed, brightness);
-          final card = profileCardColor(scheme, brightness);
+          final seed = Color(entry.seed);
+          final checkColor = seed.computeLuminance() > 0.179 ? Colors.black : Colors.white;
           final failures = <String>[];
 
-          void check(String label, Color foreground, Color background, double minimum) {
+          void check(String label, Color foreground, Color background, [double? minimum]) {
             final ratio = contrast(foreground, background);
-            if (ratio < minimum) {
-              failures.add('$label ${ratio.toStringAsFixed(2)}:1 < $minimum:1');
+            if (ratio < (minimum ?? textMinimum)) {
+              failures.add(
+                '$label ${ratio.toStringAsFixed(2)}:1 < ${minimum ?? textMinimum}:1',
+              );
             }
           }
 
-          check('onSurface on card', base.colorScheme.onSurface, card, textMinimum);
-          check('onSurfaceVariant on card', base.colorScheme.onSurfaceVariant, card, textMinimum);
-          check(
-            'onSecondaryContainer on secondaryContainer',
-            scheme.onSecondaryContainer,
-            scheme.secondaryContainer,
-            textMinimum,
-          );
-          check(
-            'onPrimaryContainer on primaryContainer',
-            scheme.onPrimaryContainer,
-            scheme.primaryContainer,
-            textMinimum,
-          );
-          check(
-            'neutral badge text on surfaceContainerHighest',
-            scheme.onSurfaceVariant,
-            scheme.surfaceContainerHighest,
-            textMinimum,
-          );
-          check(
-            'onSurface on surfaceContainerLow',
-            scheme.onSurface,
-            scheme.surfaceContainerLow,
-            textMinimum,
-          );
+          check('profile name', scheme.primary, baseScheme.surfaceContainerLow);
+          check('detail title', scheme.primary, baseScheme.surface);
+          check('Launch button label', scheme.onSecondaryContainer, scheme.secondaryContainer);
+          check('neutral badge text', scheme.onSurfaceVariant, scheme.surfaceContainerHighest);
+          check('accent container pair', scheme.onPrimaryContainer, scheme.primaryContainer);
+          check('swatch check on seed', checkColor, seed);
 
           expect(failures, isEmpty, reason: failures.join('; '));
         });

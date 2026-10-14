@@ -155,16 +155,18 @@ void main() {
       expect(find.byIcon(Icons.more_vert), findsOneWidget);
     });
 
-    testWidgets('tints the card and icon with the profile palette color', (tester) async {
+    testWidgets('accents the card icon and name with the profile palette color', (tester) async {
       final profile = await services.profilesRepository.getByName('Dev');
       await services.profilesRepository.setColor(profileId: profile!.id, color: 0xFF6A1B9A);
       await pumpProfiles(tester);
 
       final scheme = profileColorScheme(0xFF6A1B9A, Brightness.light);
-      final card = tester.widget<Card>(find.byType(Card));
-      expect(card.color, profileCardColor(scheme, Brightness.light));
       final icon = tester.widget<Icon>(find.byIcon(Icons.workspaces).first);
       expect(icon.color, scheme.primary);
+      final name = tester.widget<Text>(find.text('Dev'));
+      expect(name.style?.color, scheme.primary);
+      final card = tester.widget<Card>(find.byType(Card));
+      expect(card.color, isNull);
     });
 
     testWidgets('edit dialog changes the profile color', (tester) async {
@@ -247,6 +249,19 @@ void main() {
       expect(find.text('Backups'), findsOneWidget);
       expect(find.text('Addons'), findsWidgets);
       expect(find.textContaining('1.1.3'), findsWidgets);
+    });
+
+    testWidgets('accents the detail title with the profile palette color', (tester) async {
+      final profile = await services.profilesRepository.getByName('Dev');
+      await services.profilesRepository.setColor(profileId: profile!.id, color: 0xFF6A1B9A);
+      await pumpProfiles(tester);
+      await tester.tap(find.text('Dev'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      final title = tester.widget<Text>(find.text('Dev'));
+      expect(title.style?.color, profileColorScheme(0xFF6A1B9A, Brightness.light).primary);
     });
 
     testWidgets('openProfile opens the detail view programmatically', (tester) async {

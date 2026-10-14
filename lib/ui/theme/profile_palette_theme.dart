@@ -11,17 +11,3 @@ ColorScheme profileColorScheme(int seed, Brightness brightness) {
     dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
   );
 }
-
-/// Tint strength of the profile color over the card surface. Kept low so the global
-/// (non-palette) text colors keep their WCAG contrast on every palette (see
-/// `test/ui/profile_palette_theme_test.dart`).
-double profileCardTint(Brightness brightness) =>
-    brightness == Brightness.dark ? 0.14 : 0.08;
-
-/// The profile card background: a subtle palette tint over the base card surface.
-Color profileCardColor(ColorScheme scheme, Brightness brightness) {
-  return Color.alphaBlend(
-    scheme.primary.withValues(alpha: profileCardTint(brightness)),
-    scheme.surfaceContainerLow,
-  );
-}

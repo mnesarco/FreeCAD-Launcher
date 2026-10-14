@@ -330,7 +330,6 @@ class _ProfileCard extends SignalWidget {
       data: baseTheme.copyWith(colorScheme: scheme),
       child: Card(
         margin: EdgeInsets.zero,
-        color: profileCardColor(scheme, baseTheme.brightness),
         child: InkWell(
           onTap: onOpen,
           child: Padding(
@@ -348,7 +347,7 @@ class _ProfileCard extends SignalWidget {
                         children: [
                           Text(
                             profile.name,
-                            style: baseTheme.textTheme.titleSmall,
+                            style: baseTheme.textTheme.titleSmall?.copyWith(color: scheme.primary),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),

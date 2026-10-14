@@ -2786,6 +2786,14 @@ Template:
   `Size · Last used`, `maxLines: 2`) with the Launch button row pinned to the bottom, removing
   most of the inter-content gap. Chips still share the bottom row; the two-chip cap keeps the
   fixed height safe.
+- **Amended (2026-10-14, owner request “tinted background produces weird colors”)**: the tinted
+  card surface is dropped — identity is accent-only: the colored profile **name**, profile icon
+  and the tonal Launch button come from the derived scheme, the Home recent cards keep the
+  colored name/icon, the detail header colors its icon **and title**, and the card surface stays
+  the neutral theme color. `profileCardColor`/`profileCardTint` were removed; the contrast tests
+  keep the used-pair checks (profile name, detail title, Launch button, neutral badge, accent
+  container, swatch check icon, chosen via a 0.179-luminance threshold for ≥ 4.5:1) and assert
+  the base card text contrast once per brightness.
 - **Consequences**: Profile cards keep all current data and actions while matching the Addons
   visual language; no state/schema/l10n-visible behavior changes beyond the card layout. The
   fixed extent and the two-badge cap must be revisited if badge content grows or a fourth

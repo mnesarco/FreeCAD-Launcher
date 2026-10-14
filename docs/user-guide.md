@@ -156,10 +156,10 @@ news feed with a short excerpt of each post (URL configurable in Settings).
 
 ### Profile colors
 
-- Every profile gets a color that tints its card and colors its icon and Launch button, so a
-  large grid is easy to scan. New profiles receive the first unused palette color automatically;
-  use the **Color** swatch row in the create/edit dialog to change it. The color is included in
-  exported manifests and comes back on import.
+- Every profile gets a color that accents its card name, icon and Launch button (and the detail
+  page title), so a large grid is easy to scan. New profiles receive the first unused palette
+  color automatically; use the **Color** swatch row in the create/edit dialog to change it. The
+  color is included in exported manifests and comes back on import.
 
 ### The profile detail page
 

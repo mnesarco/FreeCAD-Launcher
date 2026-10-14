@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -12,7 +13,6 @@ import 'package:freecad_launcher/domain/profiles/profile_palette.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/shell_controller.dart';
-import 'package:freecad_launcher/ui/icons.dart';
 import 'package:freecad_launcher/ui/profiles/profile_actions.dart';
 import 'package:freecad_launcher/ui/profiles/profile_dialogs.dart';
 import 'package:freecad_launcher/ui/theme/profile_palette_theme.dart';
@@ -208,11 +208,14 @@ class _HomeHero extends StatelessWidget {
           final brand = Container(
             width: 48,
             height: 48,
-            decoration: BoxDecoration(
-              color: onContainer.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(12),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+            child: SvgPicture.asset(
+              'assets/images/freecad-logo.svg',
+              width: 32,
+              height: 32,
+              semanticsLabel: l10n.aboutLogoLabel,
             ),
-            child: Icon(FreeCADIcons.freecad, size: 26, color: onContainer),
           );
           final headline = Expanded(
             child: Column(
@@ -347,7 +350,6 @@ class _RecentProfileCard extends StatelessWidget {
       data: theme.copyWith(colorScheme: scheme),
       child: Card(
         margin: EdgeInsets.zero,
-        color: profileCardColor(scheme, theme.brightness),
         child: Tooltip(
           message: l10n.homeLaunch,
           child: InkWell(
@@ -374,7 +376,7 @@ class _RecentProfileCard extends StatelessWidget {
                           profile.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall,
+                          style: theme.textTheme.titleSmall?.copyWith(color: scheme.primary),
                         ),
                       ),
                       if (running)

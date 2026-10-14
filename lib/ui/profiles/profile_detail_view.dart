@@ -172,7 +172,12 @@ class _DetailHeader extends StatelessWidget {
             const SizedBox(width: 8),
           ],
           Expanded(
-            child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+            child: Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(color: accentColor),
+            ),
           ),
           if (running) ...[
             CompactBadge(

@@ -358,8 +358,8 @@ class _ProfileColorPicker extends StatelessWidget {
                     ? Icon(
                         Icons.check,
                         size: 16,
-                        color: Color(entry.seed).computeLuminance() > 0.5
-                            ? Colors.black87
+                        color: Color(entry.seed).computeLuminance() > 0.179
+                            ? Colors.black
                             : Colors.white,
                       )
                     : null,
