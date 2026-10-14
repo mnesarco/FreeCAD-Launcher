@@ -595,7 +595,7 @@ Profile name search on the Profiles screen (D-120). Evidence:
   restored all 10 cards; zero runtime errors. No profile data was modified.
 - `flutter analyze` clean; 730 tests green (10 platform probes skipped).
 
-### B-16b (2026-10-14, branch `deps-upgrade-2`, PR [#6](https://github.com/mnesarco/FreeCAD-Launcher/pull/6))
+### B-16b (2026-10-14, merged via PR [#6](https://github.com/mnesarco/FreeCAD-Launcher/pull/6), rebase)
 
 Toolchain 3.47.7 + patch/minor dependency refresh (D-121). Evidence:
 
