@@ -595,6 +595,34 @@ Profile name search on the Profiles screen (D-120). Evidence:
   restored all 10 cards; zero runtime errors. No profile data was modified.
 - `flutter analyze` clean; 730 tests green (10 platform probes skipped).
 
+### B-16b (2026-10-14, branch `deps-upgrade-2`, PR [#6](https://github.com/mnesarco/FreeCAD-Launcher/pull/6))
+
+Toolchain 3.47.7 + patch/minor dependency refresh (D-121). Evidence:
+
+- `flutter pub upgrade` on Flutter 3.47.7 changed exactly the 11 predicted packages: `archive`
+  4.3.0→4.5.2, `drift` 2.35.1→2.35.2, `url_launcher` 6.3.2→6.3.3, `build_runner` 2.16.1→2.16.2,
+  `sqlite3` 3.7.0→3.7.1, `analyzer` 14.4.0→14.5.0, `_fe_analyzer_shared` 108→109, `source_gen`
+  4.3.0→4.3.1, `build_daemon` 4.1.6→4.1.7, `jni_flutter` 1.0.3→1.0.4+1, `vector_graphics_compiler`
+  1.3.0→1.3.1; `pubspec.yaml` untouched; blocked majors unchanged (`xml` 7.1.0 capped by
+  `vector_graphics_compiler` `<=7.0.1`; `build` 5.x ecosystem; Flutter-pinned transitives).
+- `build_runner` regen wrote outputs with **no `.g.dart` diff**; `THIRD_PARTY_NOTICES.md`
+  regenerated (version-reference-only diff; CI drift check covered it in the run below).
+- Local: `flutter analyze` clean; **730 tests green (10 skipped)** on 3.47.7.
+- CI run [38628668530](https://github.com/mnesarco/FreeCAD-Launcher/actions/runs/38628668530)
+  green on Flutter 3.47.7: ubuntu-latest 4m19s, windows-latest 9m34s (tests, generated-files and
+  notices drift checks, both desktop builds).
+- No-publish release smoke: run
+  [38630400790](https://github.com/mnesarco/FreeCAD-Launcher/actions/runs/38630400790) green
+  (appimage + windows, publish skipped). Artifacts downloaded and verified: AppImage
+  `sha256sum -c` OK and `--version` = 0.4.11 (exit 0); an isolated `XDG_DATA_HOME` CLI `list` run
+  created/opened `config.db` (sqlite3 native assets load); Windows zip sidecar OK and listing
+  includes `freecad_launcher.exe`, `7zr.exe`, the app-local MSVC runtime, `sqlite3.dll` and
+  `dartjni.dll`, `LICENSE`, `THIRD_PARTY_NOTICES.md`.
+- Live pass (`flutter run -d linux`, real dev DB): startup on 3.47.7, addon (178) + macro (263)
+  catalogs loaded, Addons grid rendered 15 cards, Profiles search re-checked (10 cards restored
+  after clear), Settings rendered, zero runtime errors.
+- Not repeated: the owner-dependent Windows-machine smoke stays on hold (B-16, unchanged).
+
 ## 5. When something fails
 
 1. Capture the job log tail and app logs from `logs/`.
