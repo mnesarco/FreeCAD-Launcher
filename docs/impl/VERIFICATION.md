@@ -662,6 +662,30 @@ Manual profile ordering with a long-press drag & drop grid (D-124). Evidence:
   errors (startup perf INFO logs only). The dev profile order was restored to its pre-session
   alphabetical state afterwards with the same backfill SQL.
 
+### R-42 (2026-10-14, `devel`, uncommitted)
+
+Profile color identity: curated palette + subtle tinted cards (D-125). Evidence:
+
+- Palette model tests (`test/domain/profile_palette_test.dart`): unique ids/seeds, default
+  fallback, first-unused and least-used assignment.
+- Contrast tests (`test/ui/profile_palette_theme_test.dart`): 10 palettes x light/dark, every
+  used pair (global body text on the tinted card, tonal button, neutral badge, container pairs)
+  >= 4.5:1 at the 8 %/14 % tint — all pass.
+- Repository/controller: auto-assign on create, `setColor` round-trip, duplicate keeps the
+  source color, one-pass startup backfill fills null colors.
+- Manifest: the color round-trips through the codec; legacy manifests without the field decode
+  to null and auto-assign on import.
+- Widget: the card tint and icon follow the profile scheme; the create and edit dialogs persist
+  the selected swatch.
+- A11y: new seeded test “profile cards pass the a11y guidelines” (cards on screen for the
+  contrast/tap-target checks); the base six-section test stays green. Full suite 778 green
+  (10 platform probes skipped); `flutter analyze` clean.
+- Live pass (real 22-profile dev DB): startup backfill colored all 22 profiles (10 distinct
+  seeds); dark and light screenshots verified the grid, Home recent cards, detail header and the
+  create dialog; zero runtime errors; `theme_mode` restored to dark afterwards.
+- Note: seeding a build in the a11y harness surfaced a pre-existing 24 px tap target on the
+  Addons “Any version” dropdown (unrelated to R-42; follow-up candidate).
+
 ## 5. When something fails
 
 1. Capture the job log tail and app logs from `logs/`.

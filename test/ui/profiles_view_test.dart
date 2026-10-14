@@ -7,12 +7,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/profiles/profile_palette.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/process.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/addons/addon_icon.dart';
 import 'package:freecad_launcher/ui/profiles/profiles_view.dart';
+import 'package:freecad_launcher/ui/theme/profile_palette_theme.dart';
 import 'package:path/path.dart' as p;
 
 import '../data/test_fixtures.dart';
@@ -89,6 +91,33 @@ void main() {
     expect(find.text('Fresh'), findsWidgets);
   });
 
+  testWidgets('create dialog persists the selected profile color', (tester) async {
+    await services.database.buildsDao.save(sampleBuild());
+    await pumpProfiles(tester);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'New profile').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'Colored');
+    await tester.pump();
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('1.1.3').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Purple'));
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+    for (var frame = 0; frame < 12; frame++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+
+    final created = await tester.runAsync(
+      () => services.profilesRepository.getByName('Colored'),
+    );
+    final purple = profilePalettes.firstWhere((entry) => entry.id == 'purple');
+    expect(created!.iconColor, purple.seed);
+  });
+
   group('with a profile', () {
     setUp(() async {
       await services.database.buildsDao.save(sampleBuild());
@@ -124,6 +153,40 @@ void main() {
       expect(find.byType(Card), findsOneWidget);
       expect(find.byIcon(Icons.play_arrow), findsOneWidget);
       expect(find.byIcon(Icons.more_vert), findsOneWidget);
+    });
+
+    testWidgets('tints the card and icon with the profile palette color', (tester) async {
+      final profile = await services.profilesRepository.getByName('Dev');
+      await services.profilesRepository.setColor(profileId: profile!.id, color: 0xFF6A1B9A);
+      await pumpProfiles(tester);
+
+      final scheme = profileColorScheme(0xFF6A1B9A, Brightness.light);
+      final card = tester.widget<Card>(find.byType(Card));
+      expect(card.color, profileCardColor(scheme, Brightness.light));
+      final icon = tester.widget<Icon>(find.byIcon(Icons.workspaces).first);
+      expect(icon.color, scheme.primary);
+    });
+
+    testWidgets('edit dialog changes the profile color', (tester) async {
+      await pumpProfiles(tester);
+      await tester.tap(find.text('Dev'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Teal'));
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      final saved = await tester.runAsync(() => services.profilesRepository.getByName('Dev'));
+      final teal = profilePalettes.firstWhere((entry) => entry.id == 'teal');
+      expect(saved!.iconColor, teal.seed);
     });
 
     testWidgets('summarizes extra badges with an overflow chip in a narrow grid cell', (

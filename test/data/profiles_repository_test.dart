@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/profiles/profile_palette.dart';
 import 'package:freecad_launcher/domain/profiles/profile_paths.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:path/path.dart' as p;
@@ -85,6 +86,7 @@ void main() {
     final copy = (await repository.duplicate(profileId: first.id, name: 'Copy')).valueOrNull!;
 
     expect(copy.sortOrder, 2);
+    expect(copy.iconColor, first.iconColor);
 
     final result = await repository.saveOrder([copy.id, second.id, first.id]);
 
@@ -93,6 +95,32 @@ void main() {
       [for (final profile in await repository.getAll()) profile.name],
       ['Copy', 'Second', 'First'],
     );
+  });
+
+  test('auto-assigns the first unused palette color on create', () async {
+    final first = (await repository.create(name: 'First', buildId: 'build-1')).valueOrNull!;
+    final second = (await repository.create(name: 'Second', buildId: 'build-1')).valueOrNull!;
+
+    expect(first.iconColor, profilePalettes[0].seed);
+    expect(second.iconColor, profilePalettes[1].seed);
+  });
+
+  test('keeps an explicit color and updates it through setColor', () async {
+    final created = (await repository.create(
+      name: 'Dev',
+      buildId: 'build-1',
+      iconColor: profilePalettes[4].seed,
+    )).valueOrNull!;
+    expect(created.iconColor, profilePalettes[4].seed);
+
+    final updated = (await repository.setColor(
+      profileId: created.id,
+      color: profilePalettes[6].seed,
+    )).valueOrNull!;
+
+    expect(updated.iconColor, profilePalettes[6].seed);
+    expect((await repository.getById(created.id))!.iconColor, profilePalettes[6].seed);
+    expect((await repository.setColor(profileId: 'nope', color: 0)).isErr, isTrue);
   });
 
   test('rejects duplicate names case-insensitively', () async {

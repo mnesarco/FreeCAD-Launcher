@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:io';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
@@ -9,6 +10,7 @@ import 'package:freecad_launcher/core/errors.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/profiles/profile_palette.dart';
 import 'package:freecad_launcher/domain/profiles/profile_paths.dart';
 import 'package:freecad_launcher/domain/profiles/profile_rules.dart';
 import 'package:freecad_launcher/platform/paths.dart';
@@ -53,10 +55,21 @@ class ProfilesRepository {
     }
   }
 
+  Future<Result<Profile>> setColor({required String profileId, required int color}) async {
+    final profile = await _database.profilesDao.getById(profileId);
+    if (profile == null) {
+      return const Err(AppError(message: 'Profile not found'));
+    }
+    final updated = profile.copyWith(iconColor: Value(color), updatedAt: _clock());
+    await _database.profilesDao.save(updated);
+    return Ok(updated);
+  }
+
   Future<Result<Profile>> create({
     required String name,
     required String buildId,
     String? description,
+    int? iconColor,
   }) async {
     final normalized = normalizeProfileName(name);
     final nameIssue = validateProfileName(normalized);
@@ -79,6 +92,9 @@ class ProfilesRepository {
       return Err(_bindingError(bindingIssue));
     }
 
+    final existingColors = (await _database.profilesDao.getAll()).map(
+      (profile) => profile.iconColor,
+    );
     final now = _clock();
     final profile = Profile(
       id: const Uuid().v4(),
@@ -87,6 +103,7 @@ class ProfilesRepository {
       description: description,
       buildId: build.id,
       pythonVersion: build.pythonVersion!,
+      iconColor: iconColor ?? nextProfileColor(existingColors),
       createdAt: now,
       updatedAt: now,
     );

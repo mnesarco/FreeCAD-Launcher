@@ -125,6 +125,7 @@ class ProfileManifestController {
           build: build?.version,
           channel: build?.channel.name,
           python: profile.pythonVersion,
+          color: profile.iconColor,
         ),
         addons: [
           for (final addon in addons)
@@ -196,7 +197,11 @@ class ProfileManifestController {
     bool installRequirements = false,
     void Function(String step)? onStep,
   }) async {
-    final created = await _repository.create(name: name, buildId: buildId);
+    final created = await _repository.create(
+      name: name,
+      buildId: buildId,
+      iconColor: preview.manifest.profile.color,
+    );
     if (created.isErr) {
       return Err(created.errorOrNull!);
     }

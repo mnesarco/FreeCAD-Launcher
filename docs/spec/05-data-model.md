@@ -55,7 +55,7 @@ removed on failure (D-028).
 | `description` | text? | |
 | `buildId` | text | FK → `builds.id` |
 | `pythonVersion` | text | copied from the build at creation; the build must be installed with a detected Python (D-027); drives pip target dir |
-| `iconColor` | int? | UI accent, v0.2 |
+| `iconColor` | int? | profile palette seed (ARGB) for the card identity (D-125); `null` legacy rows fall back to the default palette color and are backfilled once at startup |
 | `createdAt`, `updatedAt`, `lastUsedAt` | text | |
 
 ### `installed_addons`
@@ -219,7 +219,7 @@ Validation on import: `schema == 1`, non-empty name, each `id` exists in the cat
   "schema": 1,
   "exported_at": "2026-09-18T10:00:00Z",
   "source": { "os": "linux", "arch": "x86_64" },
-  "profile": { "name": "My Profile", "build": "1.1.3", "channel": "stable", "python": "3.11" },
+  "profile": { "name": "My Profile", "build": "1.1.3", "channel": "stable", "python": "3.11", "color": 4282486750 },
   "addons": [{ "id": "A2plus", "git_ref": "master", "version": "0.4.60", "pinned": true }],
   "python_packages": [{ "name": "numpy", "version": "1.26.4", "source": "requirements" }],
   "bundles": ["Mechanical"],
@@ -233,6 +233,8 @@ Notes:
 
 - `build` is a version, not an id; import matches version and channel among installed builds with
   a detected Python, and otherwise lists every usable build in the preview with a warning.
+- `color` is the palette seed (ARGB int) from D-125; legacy manifests without it import with an
+  auto-assigned color.
 - `python_packages` are reinstalled from the manifest (source recorded; `addon:<id>` rows are
   covered by the addon install), not copied.
 - `addons[].pinned` (optional, default false) freezes that addon in the imported profile after

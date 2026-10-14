@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/profiles/profile_palette.dart';
 import 'package:freecad_launcher/platform/diagnostics.dart';
 import 'package:freecad_launcher/platform/launch.dart';
 import 'package:freecad_launcher/platform/paths.dart';
@@ -138,6 +139,30 @@ void main() {
     final result = await controller.reorder(['nope']);
 
     expect(result.isErr, isTrue);
+    controller.dispose();
+  });
+
+  test('backfills missing profile colors on start', () async {
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile(id: 'p1', name: 'One'));
+    await db.profilesDao.save(sampleProfile(id: 'p2', name: 'Two'));
+    final controller = buildController();
+    controller.start();
+    await waitForProfiles(controller);
+
+    var profiles = <Profile>[];
+    for (var attempt = 0; attempt < 250; attempt++) {
+      profiles = await repository.getAll();
+      if (profiles.every((profile) => profile.iconColor != null)) {
+        break;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 2));
+    }
+
+    expect([for (final profile in profiles) profile.iconColor], [
+      profilePalettes[0].seed,
+      profilePalettes[1].seed,
+    ]);
     controller.dispose();
   });
 

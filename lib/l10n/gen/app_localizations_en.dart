@@ -169,6 +169,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profilesDeleteFailed => 'Could not delete the profile';
 
   @override
+  String get profilesColor => 'Color';
+
+  @override
+  String get profilesColorBlue => 'Blue';
+
+  @override
+  String get profilesColorTeal => 'Teal';
+
+  @override
+  String get profilesColorGreen => 'Green';
+
+  @override
+  String get profilesColorLime => 'Lime';
+
+  @override
+  String get profilesColorAmber => 'Amber';
+
+  @override
+  String get profilesColorOrange => 'Orange';
+
+  @override
+  String get profilesColorRed => 'Red';
+
+  @override
+  String get profilesColorPink => 'Pink';
+
+  @override
+  String get profilesColorPurple => 'Purple';
+
+  @override
+  String get profilesColorIndigo => 'Indigo';
+
+  @override
   String get profilesLaunch => 'Launch';
 
   @override

@@ -14,6 +14,7 @@ import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/data/repositories/profiles_repository.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/profiles/launch_plan.dart';
+import 'package:freecad_launcher/domain/profiles/profile_palette.dart';
 import 'package:freecad_launcher/platform/config_snapshots.dart';
 import 'package:freecad_launcher/platform/directory_size.dart';
 import 'package:freecad_launcher/platform/freecad_preferences.dart';
@@ -133,6 +134,7 @@ class ProfilesController {
         profilesLoaded.value = true;
         profilesError.value = null;
         unawaited(refreshSizes());
+        _backfillMissingColors(value);
       },
       onError: (Object error) {
         profilesError.value = AppError.from(error, retryable: true);
@@ -191,15 +193,40 @@ class ProfilesController {
     return _repository.saveOrder(orderedIds);
   }
 
+  Future<Result<Profile>> setColor({required String profileId, required int color}) {
+    return _repository.setColor(profileId: profileId, color: color);
+  }
+
+  bool _colorBackfillDone = false;
+
+  void _backfillMissingColors(List<Profile> profiles) {
+    if (_colorBackfillDone || profiles.every((profile) => profile.iconColor != null)) {
+      return;
+    }
+    _colorBackfillDone = true;
+    unawaited(_assignMissingColors(profiles));
+  }
+
+  Future<void> _assignMissingColors(List<Profile> profiles) async {
+    final used = <int?>[for (final profile in profiles) profile.iconColor];
+    for (final profile in profiles.where((profile) => profile.iconColor == null)) {
+      final color = nextProfileColor(used);
+      used.add(color);
+      await _repository.setColor(profileId: profile.id, color: color);
+    }
+  }
+
   Future<Result<Profile>> create({
     required String name,
     required String buildId,
     String? description,
+    int? iconColor,
   }) async {
     final result = await _repository.create(
       name: name,
       buildId: buildId,
       description: description,
+      iconColor: iconColor,
     );
     if (result.isOk) {
       unawaited(refreshSizes());

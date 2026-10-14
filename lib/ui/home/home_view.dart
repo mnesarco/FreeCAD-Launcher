@@ -8,12 +8,14 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/news/news_item.dart';
+import 'package:freecad_launcher/domain/profiles/profile_palette.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/shell_controller.dart';
 import 'package:freecad_launcher/ui/icons.dart';
 import 'package:freecad_launcher/ui/profiles/profile_actions.dart';
 import 'package:freecad_launcher/ui/profiles/profile_dialogs.dart';
+import 'package:freecad_launcher/ui/theme/profile_palette_theme.dart';
 import 'package:freecad_launcher/ui/updates/updates_summary_sheet.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 
@@ -336,77 +338,84 @@ class _RecentProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final scheme = profileColorScheme(profileColorOf(profile.iconColor), theme.brightness);
     final buildLine = [
       if (buildInfo != null) buildInfo!.displayLabel,
       if (buildInfo != null) buildInfo!.channel.name,
     ].join('  ·  ');
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Tooltip(
-        message: l10n.homeLaunch,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            final launch = onLaunch;
-            if (launch != null) {
-              launch(profile);
-            } else {
-              launchProfile(context, profile);
-            }
-          },
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        profile.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall,
+    return Theme(
+      data: theme.copyWith(colorScheme: scheme),
+      child: Card(
+        margin: EdgeInsets.zero,
+        color: profileCardColor(scheme, theme.brightness),
+        child: Tooltip(
+          message: l10n.homeLaunch,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              final launch = onLaunch;
+              if (launch != null) {
+                launch(profile);
+              } else {
+                launchProfile(context, profile);
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.workspaces, size: 18, color: scheme.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          profile.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall,
+                        ),
                       ),
-                    ),
-                    if (running)
-                      CompactBadge(
-                        icon: Icons.play_arrow,
-                        label: l10n.profilesRunning,
-                        tone: CompactBadgeTone.running,
+                      if (running)
+                        CompactBadge(
+                          icon: Icons.play_arrow,
+                          label: l10n.profilesRunning,
+                          tone: CompactBadgeTone.running,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    buildLine,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  const Spacer(),
+                  Row(
+                    children: [
+                      Icon(Icons.history, size: 14, color: theme.colorScheme.outline),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          formatProfileDateTime(l10n, profile.lastUsedAt),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall,
+                        ),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  buildLine,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall,
-                ),
-                const Spacer(),
-                Row(
-                  children: [
-                    Icon(Icons.history, size: 14, color: theme.colorScheme.outline),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        formatProfileDateTime(l10n, profile.lastUsedAt),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ),
-                    if (onOpenProfile != null)
-                      IconButton(
-                        icon: const Icon(Icons.chevron_right),
-                        tooltip: l10n.homeOpenProfile,
-                        visualDensity: VisualDensity.compact,
-                        onPressed: () => onOpenProfile!(profile.id),
-                      ),
-                  ],
-                ),
-              ],
+                      if (onOpenProfile != null)
+                        IconButton(
+                          icon: const Icon(Icons.chevron_right),
+                          tooltip: l10n.homeOpenProfile,
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () => onOpenProfile!(profile.id),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

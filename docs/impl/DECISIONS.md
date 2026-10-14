@@ -2826,3 +2826,39 @@ Template:
   `docs/spec/03-ux.md` §2.3, `docs/spec/05-data-model.md`, `lib/data/tables/profiles.dart`,
   `lib/data/daos/profiles_dao.dart`, `lib/state/profiles_controller.dart`,
   `lib/ui/profiles/profiles_view.dart`, R-40, D-123
+
+### D-125 — Profiles get a curated color identity (palette seed + subtle tinted cards) (R-42)
+- **Date**: 2026-10-14
+- **Status**: Accepted
+- **Context**: Every profile card looks the same apart from its name, making a large grid hard to
+  scan (owner request: “profiles card can be easily identifiable”). The `profiles.iconColor`
+  column (spec 05 “UI accent, v0.2”) already exists but was unused, and the app has one global
+  Material scheme plus the hand-tuned `AppStatusColors`. The owner approved the proposed palette
+  design and all recommended options.
+- **Decision**:
+  - **Curated palette**: ~10 fixed seeds (Blue/brand, Teal, Green, Lime, Amber, Orange, Red,
+    Pink, Purple, Indigo) defined in pure Dart (`domain/profiles/profile_palette.dart`); free
+    custom colors are out of scope for now. The stored value is the seed ARGB in the existing
+    `profiles.iconColor` column — **no schema migration**; `null`/unknown values fall back to the
+    default Blue.
+  - **Assignment**: create and manifest import auto-assign the first palette unused by other
+    profiles (deterministic); profiles with `null` colors are backfilled one pass at controller
+    start; duplicate copies the source color; the create/edit dialog gets a swatch row
+    (form-row style, ~36 px circles, tooltip = color name) to change it.
+  - **Application**: “subtle tint + accents” — each card is wrapped in a per-profile
+    `Theme(colorScheme: ColorScheme.fromSeed(seed, brightness, fidelity))`, the card surface is
+    the palette-tinted `surfaceContainerLow`, and the identity icon + tonal Launch button use
+    the palette roles. Text keeps the global on-surface colors (contrast stays stable across
+    palettes); status badges stay semantic (`AppStatusColors`). Applied to the Profiles grid,
+    the profile detail header accent and Home's recent-profile cards.
+  - **Contrast guardrail**: unit tests assert WCAG ratios (≥ 4.5:1 text/button pairs) for every
+    palette × brightness on the exact card pairs, and the a11y guideline test is extended with
+    seeded profiles so real cards are inspected. A seed that fails is replaced, not shipped.
+  - **Manifest**: the profile color is exported/imported (`color` ARGB in the manifest info);
+    manifests without it fall back to auto-assignment.
+- **Consequences**: no migration and no new dependency; `iconColor` becomes load-bearing for
+  presentation. Future custom colors can reuse the same column. Spec 03 §2.3, spec 05 and the
+  user guide are updated; D-123's card layout gains a palette-tinted surface.
+- **Refs**: `TASKS.md` R-42, `docs/spec/03-ux.md` §2.3, `docs/spec/05-data-model.md`,
+  `lib/domain/profiles/profile_palette.dart`, `lib/ui/theme/profile_palette_theme.dart`,
+  `lib/ui/profiles/profiles_view.dart`, D-123, D-124

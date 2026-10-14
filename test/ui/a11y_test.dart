@@ -17,6 +17,7 @@ import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/state/macros_controller.dart';
 import 'package:freecad_launcher/state/news_controller.dart';
 
+import '../data/test_fixtures.dart';
 import '../helpers/fake_addon_catalog.dart';
 import '../helpers/fake_download.dart';
 
@@ -111,5 +112,21 @@ void main() {
     ]) {
       await checkSection(tester, label);
     }
+  });
+
+  testWidgets('profile cards pass the a11y guidelines', (tester) async {
+    await database.buildsDao.save(sampleBuild());
+    await database.profilesDao.save(
+      sampleProfile(id: 'p-1', name: 'Alpha', sortOrder: 0, iconColor: 0xFF418FDE),
+    );
+    await database.profilesDao.save(
+      sampleProfile(id: 'p-2', name: 'Beta', sortOrder: 1, iconColor: 0xFF6A1B9A),
+    );
+    await pumpApp(tester);
+
+    await checkSection(tester, 'Profiles');
+
+    expect(find.text('Alpha'), findsOneWidget);
+    expect(find.text('Beta'), findsOneWidget);
   });
 }

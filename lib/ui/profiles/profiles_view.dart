@@ -9,6 +9,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:freecad_launcher/core/format.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/profiles/profile_palette.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/profiles/profile_actions.dart';
@@ -16,6 +17,7 @@ import 'package:freecad_launcher/ui/profiles/profile_detail_view.dart';
 import 'package:freecad_launcher/ui/profiles/profile_dialogs.dart';
 import 'package:freecad_launcher/ui/profiles/profile_manifest_dialogs.dart';
 import 'package:freecad_launcher/ui/shell/section_shortcuts.dart';
+import 'package:freecad_launcher/ui/theme/profile_palette_theme.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 
@@ -322,80 +324,88 @@ class _ProfileCard extends SignalWidget {
         ? badges
         : [badges.first, CompactBadge(label: l10n.profilesMoreBadges(badges.length - 1))];
 
-    final theme = Theme.of(context);
-    return Card(
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        onTap: onOpen,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.workspaces, size: 34, color: theme.colorScheme.primary),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          profile.name,
-                          style: theme.textTheme.titleSmall,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+    final baseTheme = Theme.of(context);
+    final scheme = profileColorScheme(profileColorOf(profile.iconColor), baseTheme.brightness);
+    return Theme(
+      data: baseTheme.copyWith(colorScheme: scheme),
+      child: Card(
+        margin: EdgeInsets.zero,
+        color: profileCardColor(scheme, baseTheme.brightness),
+        child: InkWell(
+          onTap: onOpen,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.workspaces, size: 34, color: scheme.primary),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            profile.name,
+                            style: baseTheme.textTheme.titleSmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            versionLine,
+                            style: baseTheme.textTheme.bodySmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    PopupMenuButton<_ProfileAction>(
+                      onSelected: (action) => _handleAction(context, action),
+                      padding: EdgeInsets.zero,
+                      iconSize: 20,
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: _ProfileAction.duplicate,
+                          child: Text(l10n.profilesDuplicate),
                         ),
-                        Text(
-                          versionLine,
-                          style: theme.textTheme.bodySmall,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        PopupMenuItem(
+                          value: _ProfileAction.export,
+                          child: Text(l10n.profilesExportManifest),
+                        ),
+                        PopupMenuItem(
+                          value: _ProfileAction.delete,
+                          child: Text(l10n.profilesDelete),
                         ),
                       ],
                     ),
-                  ),
-                  PopupMenuButton<_ProfileAction>(
-                    onSelected: (action) => _handleAction(context, action),
-                    padding: EdgeInsets.zero,
-                    iconSize: 20,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: _ProfileAction.duplicate,
-                        child: Text(l10n.profilesDuplicate),
-                      ),
-                      PopupMenuItem(
-                        value: _ProfileAction.export,
-                        child: Text(l10n.profilesExportManifest),
-                      ),
-                      PopupMenuItem(value: _ProfileAction.delete, child: Text(l10n.profilesDelete)),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Expanded(
-                child: Text(
-                  detailLine,
-                  style: theme.textTheme.bodySmall,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  ],
                 ),
-              ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(child: Wrap(spacing: 4, runSpacing: 4, children: visibleBadges)),
-                  const SizedBox(width: 8),
-                  IconButton.filledTonal(
-                    onPressed: () => launchProfile(context, profile),
-                    icon: const Icon(Icons.play_arrow),
-                    tooltip: l10n.profilesLaunch,
+                const SizedBox(height: 4),
+                Expanded(
+                  child: Text(
+                    detailLine,
+                    style: baseTheme.textTheme.bodySmall,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-              ),
-            ],
+                ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(child: Wrap(spacing: 4, runSpacing: 4, children: visibleBadges)),
+                    const SizedBox(width: 8),
+                    IconButton.filledTonal(
+                      onPressed: () => launchProfile(context, profile),
+                      icon: const Icon(Icons.play_arrow),
+                      tooltip: l10n.profilesLaunch,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

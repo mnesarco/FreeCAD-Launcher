@@ -11,6 +11,7 @@ import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
 import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/profiles/profile_palette.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/addons/addon_icon.dart';
@@ -22,6 +23,7 @@ import 'package:freecad_launcher/ui/profiles/config_snapshots_view.dart';
 import 'package:freecad_launcher/ui/profiles/launch_command_dialog.dart';
 import 'package:freecad_launcher/ui/profiles/profile_actions.dart';
 import 'package:freecad_launcher/ui/profiles/profile_dialogs.dart';
+import 'package:freecad_launcher/ui/theme/profile_palette_theme.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
@@ -83,6 +85,10 @@ class ProfileDetailView extends SignalWidget {
         children: [
           _DetailHeader(
             title: current.name,
+            accentColor: profileColorScheme(
+              profileColorOf(current.iconColor),
+              Theme.of(context).brightness,
+            ).primary,
             onBack: onBack,
             running: running,
             onLaunch: () => launchProfile(context, current),
@@ -137,9 +143,11 @@ class _DetailHeader extends StatelessWidget {
     required this.onShowCommand,
     required this.onOpenFolder,
     required this.onEdit,
+    this.accentColor,
   });
 
   final String title;
+  final Color? accentColor;
   final VoidCallback onBack;
   final bool running;
   final VoidCallback? onLaunch;
@@ -159,6 +167,10 @@ class _DetailHeader extends StatelessWidget {
             tooltip: l10n.profilesBack,
             onPressed: onBack,
           ),
+          if (accentColor != null) ...[
+            Icon(Icons.workspaces, size: 20, color: accentColor),
+            const SizedBox(width: 8),
+          ],
           Expanded(
             child: Text(title, style: Theme.of(context).textTheme.titleLarge),
           ),

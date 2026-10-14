@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:freecad_launcher/core/result.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/profiles/profile_palette.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/profiles_controller.dart';
 import 'package:freecad_launcher/ui/widgets/form_row.dart';
@@ -95,6 +96,7 @@ class _ProfileFormDialog extends StatefulWidget {
 class _ProfileFormDialogState extends State<_ProfileFormDialog> {
   late final TextEditingController _nameController;
   String? _buildId;
+  late int _color;
   bool _saving = false;
 
   bool get _isEdit => widget.profile != null;
@@ -104,6 +106,9 @@ class _ProfileFormDialogState extends State<_ProfileFormDialog> {
     super.initState();
     _nameController = TextEditingController(text: widget.profile?.name ?? '');
     _buildId = widget.profile?.buildId;
+    _color =
+        widget.profile?.iconColor ??
+        nextProfileColor(widget.controller.profiles.value.map((profile) => profile.iconColor));
   }
 
   @override
@@ -139,7 +144,7 @@ class _ProfileFormDialogState extends State<_ProfileFormDialog> {
     setState(() => _saving = true);
     final result = _isEdit
         ? await _edit(name, buildId)
-        : await widget.controller.create(name: name, buildId: buildId);
+        : await widget.controller.create(name: name, buildId: buildId, iconColor: _color);
     if (!mounted) {
       return;
     }
@@ -164,6 +169,12 @@ class _ProfileFormDialogState extends State<_ProfileFormDialog> {
       final rebound = await widget.controller.setBuild(profileId: profile.id, buildId: buildId);
       if (rebound.isErr) {
         return Err(rebound.errorOrNull!);
+      }
+    }
+    if (profile.iconColor != _color) {
+      final recolored = await widget.controller.setColor(profileId: profile.id, color: _color);
+      if (recolored.isErr) {
+        return Err(recolored.errorOrNull!);
       }
     }
     return renamed;
@@ -220,6 +231,13 @@ class _ProfileFormDialogState extends State<_ProfileFormDialog> {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
+            FormRow(
+              label: l10n.profilesColor,
+              field: _ProfileColorPicker(
+                value: _color,
+                onChanged: _saving ? null : (value) => setState(() => _color = value),
+              ),
+            ),
           ],
         ),
       ),
@@ -300,4 +318,71 @@ class _DuplicateProfileDialogState extends State<_DuplicateProfileDialog> {
       ],
     );
   }
+}
+
+class _ProfileColorPicker extends StatelessWidget {
+  const _ProfileColorPicker({required this.value, this.onChanged});
+
+  final int value;
+  final ValueChanged<int>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        for (final entry in profilePalettes)
+          Tooltip(
+            message: _profileColorName(l10n, entry.id),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: onChanged == null ? null : () => onChanged!(entry.seed),
+              child: Container(
+                width: 30,
+                height: 30,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Color(entry.seed),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: value == entry.seed
+                        ? theme.colorScheme.onSurface
+                        : theme.colorScheme.outlineVariant,
+                    width: value == entry.seed ? 2.5 : 1,
+                  ),
+                ),
+                child: value == entry.seed
+                    ? Icon(
+                        Icons.check,
+                        size: 16,
+                        color: Color(entry.seed).computeLuminance() > 0.5
+                            ? Colors.black87
+                            : Colors.white,
+                      )
+                    : null,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+String _profileColorName(AppLocalizations l10n, String id) {
+  return switch (id) {
+    'blue' => l10n.profilesColorBlue,
+    'teal' => l10n.profilesColorTeal,
+    'green' => l10n.profilesColorGreen,
+    'lime' => l10n.profilesColorLime,
+    'amber' => l10n.profilesColorAmber,
+    'orange' => l10n.profilesColorOrange,
+    'red' => l10n.profilesColorRed,
+    'pink' => l10n.profilesColorPink,
+    'purple' => l10n.profilesColorPurple,
+    'indigo' => l10n.profilesColorIndigo,
+    _ => id,
+  };
 }

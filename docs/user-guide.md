@@ -154,6 +154,13 @@ news feed with a short excerpt of each post (URL configurable in Settings).
   and used everywhere profiles are listed (including the CLI `list`). Reordering is disabled
   while the search box has text; clear it first.
 
+### Profile colors
+
+- Every profile gets a color that tints its card and colors its icon and Launch button, so a
+  large grid is easy to scan. New profiles receive the first unused palette color automatically;
+  use the **Color** swatch row in the create/edit dialog to change it. The color is included in
+  exported manifests and comes back on import.
+
 ### The profile detail page
 
 - **Overview** — build, channel, Python, health, paths and config file state.

@@ -19,12 +19,21 @@ class ManifestSource {
 }
 
 class ManifestProfileInfo {
-  const ManifestProfileInfo({required this.name, this.build, this.channel, this.python});
+  const ManifestProfileInfo({
+    required this.name,
+    this.build,
+    this.channel,
+    this.python,
+    this.color,
+  });
 
   final String name;
   final String? build;
   final String? channel;
   final String? python;
+
+  /// Palette seed (ARGB) for the profile color; absent in legacy manifests.
+  final int? color;
 }
 
 class ManifestAddon {
@@ -106,6 +115,7 @@ String encodeProfileManifest(ProfileManifest manifest) {
       if (manifest.profile.build != null) 'build': manifest.profile.build,
       if (manifest.profile.channel != null) 'channel': manifest.profile.channel,
       if (manifest.profile.python != null) 'python': manifest.profile.python,
+      if (manifest.profile.color != null) 'color': manifest.profile.color,
     },
     'addons': [
       for (final addon in manifest.addons)
@@ -165,6 +175,7 @@ Result<ProfileManifest> decodeProfileManifest(String text) {
     build: _trimmedString(profileJson['build']),
     channel: _trimmedString(profileJson['channel']),
     python: _trimmedString(profileJson['python']),
+    color: profileJson['color'] is int ? profileJson['color'] as int : null,
   );
 
   final configJson = decoded['config'];

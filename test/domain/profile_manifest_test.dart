@@ -14,6 +14,7 @@ ProfileManifest sampleManifest() {
       build: '1.1.3',
       channel: 'stable',
       python: '3.11',
+      color: 0xFF2E7D32,
     ),
     addons: const [
       ManifestAddon(id: 'A2plus', gitRef: 'master', version: '0.4.60', pinned: true),
@@ -48,6 +49,7 @@ void main() {
     expect(manifest.profile.build, '1.1.3');
     expect(manifest.profile.channel, 'stable');
     expect(manifest.profile.python, '3.11');
+    expect(manifest.profile.color, 0xFF2E7D32);
     expect(manifest.addons.length, 2);
     expect(manifest.addons.first.id, 'A2plus');
     expect(manifest.addons.first.gitRef, 'master');
@@ -77,6 +79,16 @@ void main() {
     expect(addons.first.source, 'symlink');
     expect(addons.last.source, 'repo');
     expect(addons.last.gitRef, 'main');
+  });
+
+  test('legacy manifests without a profile color decode to null', () {
+    final data = jsonDecode(encodeProfileManifest(sampleManifest())) as Map<String, dynamic>;
+    (data['profile'] as Map<String, dynamic>).remove('color');
+
+    final decoded = decodeProfileManifest(jsonEncode(data));
+
+    expect(decoded.isOk, isTrue);
+    expect(decoded.valueOrNull!.profile.color, isNull);
   });
 
   test('encoded JSON follows the documented schema', () {

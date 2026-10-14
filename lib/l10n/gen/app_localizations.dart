@@ -394,6 +394,72 @@ abstract class AppLocalizations {
   /// **'Could not delete the profile'**
   String get profilesDeleteFailed;
 
+  /// No description provided for @profilesColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get profilesColor;
+
+  /// No description provided for @profilesColorBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue'**
+  String get profilesColorBlue;
+
+  /// No description provided for @profilesColorTeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Teal'**
+  String get profilesColorTeal;
+
+  /// No description provided for @profilesColorGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get profilesColorGreen;
+
+  /// No description provided for @profilesColorLime.
+  ///
+  /// In en, this message translates to:
+  /// **'Lime'**
+  String get profilesColorLime;
+
+  /// No description provided for @profilesColorAmber.
+  ///
+  /// In en, this message translates to:
+  /// **'Amber'**
+  String get profilesColorAmber;
+
+  /// No description provided for @profilesColorOrange.
+  ///
+  /// In en, this message translates to:
+  /// **'Orange'**
+  String get profilesColorOrange;
+
+  /// No description provided for @profilesColorRed.
+  ///
+  /// In en, this message translates to:
+  /// **'Red'**
+  String get profilesColorRed;
+
+  /// No description provided for @profilesColorPink.
+  ///
+  /// In en, this message translates to:
+  /// **'Pink'**
+  String get profilesColorPink;
+
+  /// No description provided for @profilesColorPurple.
+  ///
+  /// In en, this message translates to:
+  /// **'Purple'**
+  String get profilesColorPurple;
+
+  /// No description provided for @profilesColorIndigo.
+  ///
+  /// In en, this message translates to:
+  /// **'Indigo'**
+  String get profilesColorIndigo;
+
   /// No description provided for @profilesLaunch.
   ///
   /// In en, this message translates to:
