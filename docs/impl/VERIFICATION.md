@@ -623,6 +623,40 @@ Toolchain 3.47.7 + patch/minor dependency refresh (D-121). Evidence:
   after clear), Settings rendered, zero runtime errors.
 - Not repeated: the owner-dependent Windows-machine smoke stays on hold (B-16, unchanged).
 
+### R-40 (2026-10-14, `devel`, uncommitted)
+
+Profiles screen rendered as an Addons-style card grid (D-123). Evidence:
+
+- Widget tests (`test/ui/profiles_view_test.dart`): the screen renders a `GridView` (no
+  `ListView`), one `Card` with the circular Launch play button (`Launch` tooltip) and the
+  `more_vert` menu; the narrow-cell case (340 px surface, running + missing build + one outdated
+  addon) renders `Running` and the `+2` overflow chip (`Build missing` intentionally collapses
+  into the chip) with no `RenderFlex` overflow. 736 tests green (10 platform probes skipped);
+  `flutter analyze` clean.
+- Live pass (`flutter run -d linux` + DTD connection, real dev data root): the Profiles screen
+  renders 10 profiles in a 3-column grid (1280x720) with the circular play button at each card's
+  bottom right, and a 480 px window falls back to a single column; zero runtime errors (only
+  startup perf INFO logs).
+
+### R-41 (2026-10-14, `devel`, uncommitted)
+
+Manual profile ordering with a long-press drag & drop grid (D-124). Evidence:
+
+- Unit tests: `profiles_dao_test` (order by `sortOrder, name`; `saveOrder` renumber; `nextSortOrder`),
+  `profiles_repository_test` (create/duplicate append; `saveOrder` round-trip),
+  `profiles_controller_test` (reorder updates the signal and persists; mismatched ids rejected).
+  745 tests green (10 platform probes skipped); `flutter analyze` clean.
+- Widget tests: `profiles_view_test` “reorders profiles with a long-press drag” moves the first
+  card to position 1 (checked against the repository); “does not reorder while the search filter
+  is active” leaves the order unchanged.
+- Migration (live, real dev DB): opened at `PRAGMA user_version = 7` with `sort_order` backfilled
+  in the previous name order (`123=0, CAM-Test-1=1, …`), so the grid looked unchanged after the
+  upgrade.
+- Drag + persistence (live): dragged `Draft` (row 2) to the first slot — the DB showed
+  `Draft=0, 123=1, …`; after an app restart the grid still showed `Draft` first. Zero runtime
+  errors (startup perf INFO logs only). The dev profile order was restored to its pre-session
+  alphabetical state afterwards with the same backfill SQL.
+
 ## 5. When something fails
 
 1. Capture the job log tail and app logs from `logs/`.

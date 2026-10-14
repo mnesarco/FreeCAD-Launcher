@@ -17,6 +17,8 @@ import 'package:freecad_launcher/ui/profiles/profile_dialogs.dart';
 import 'package:freecad_launcher/ui/updates/updates_summary_sheet.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 
+const double _compactHeroWidth = 480;
+
 class HomeView extends SignalStatefulWidget {
   const HomeView({super.key, this.onOpenProfile, this.onLaunchProfile});
 
@@ -198,9 +200,10 @@ class _HomeHero extends StatelessWidget {
         ),
         border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
-      child: Row(
-        children: [
-          Container(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < _compactHeroWidth;
+          final brand = Container(
             width: 48,
             height: 48,
             decoration: BoxDecoration(
@@ -208,9 +211,8 @@ class _HomeHero extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(FreeCADIcons.freecad, size: 26, color: onContainer),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
+          );
+          final headline = Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -229,9 +231,8 @@ class _HomeHero extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          FilledButton.icon(
+          );
+          final newProfile = FilledButton.icon(
             onPressed: onCreateProfile,
             style: FilledButton.styleFrom(
               backgroundColor: scheme.surface,
@@ -239,17 +240,37 @@ class _HomeHero extends StatelessWidget {
             ),
             icon: const Icon(Icons.add, size: 18),
             label: Text(l10n.profilesNew),
-          ),
-          const SizedBox(width: 8),
-          OutlinedButton(
+          );
+          final checkUpdates = OutlinedButton(
             onPressed: checking ? null : onCheckUpdates,
             style: OutlinedButton.styleFrom(
               foregroundColor: onContainer,
               side: BorderSide(color: onContainer.withValues(alpha: 0.5)),
             ),
             child: Text(checking ? l10n.homeUpdatesChecking : l10n.homeUpdatesCheck),
-          ),
-        ],
+          );
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [brand, const SizedBox(width: 14), headline]),
+                const SizedBox(height: 12),
+                Wrap(spacing: 8, runSpacing: 8, children: [newProfile, checkUpdates]),
+              ],
+            );
+          }
+          return Row(
+            children: [
+              brand,
+              const SizedBox(width: 14),
+              headline,
+              const SizedBox(width: 12),
+              newProfile,
+              const SizedBox(width: 8),
+              checkUpdates,
+            ],
+          );
+        },
       ),
     );
   }

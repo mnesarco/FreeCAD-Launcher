@@ -406,11 +406,23 @@ abstract class AppLocalizations {
   /// **'Running'**
   String get profilesRunning;
 
+  /// No description provided for @profilesMoreBadges.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count}'**
+  String profilesMoreBadges(int count);
+
   /// No description provided for @profilesLaunchFailed.
   ///
   /// In en, this message translates to:
   /// **'Launch failed'**
   String get profilesLaunchFailed;
+
+  /// No description provided for @profilesReorderFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the profile order'**
+  String get profilesReorderFailed;
 
   /// No description provided for @profilesQuarantineTitle.
   ///

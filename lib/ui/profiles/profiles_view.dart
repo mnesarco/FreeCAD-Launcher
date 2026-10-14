@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_reorderable_grid_view/widgets/widgets.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:freecad_launcher/core/format.dart';
@@ -18,6 +19,8 @@ import 'package:freecad_launcher/ui/shell/section_shortcuts.dart';
 import 'package:freecad_launcher/ui/widgets/compact_badge.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 
+const double _compactLayoutWidth = 440;
+
 class ProfilesView extends SignalStatefulWidget {
   const ProfilesView({super.key});
 
@@ -30,9 +33,11 @@ class ProfilesViewState extends State<ProfilesView> implements SectionShortcuts 
   String? _selectedProfileId;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+  final ScrollController _gridScrollController = ScrollController();
 
   @override
   void dispose() {
+    _gridScrollController.dispose();
     _searchFocusNode.dispose();
     _searchController.dispose();
     super.dispose();
@@ -93,17 +98,35 @@ class ProfilesViewState extends State<ProfilesView> implements SectionShortcuts 
     } else if (visibleProfiles.isEmpty) {
       body = Center(child: Text(l10n.profilesNoMatches));
     } else {
-      body = ListView.separated(
-        padding: const EdgeInsets.all(8),
+      body = ReorderableBuilder.builder(
         itemCount: visibleProfiles.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 8),
-        itemBuilder: (context, index) {
-          final profile = visibleProfiles[index];
-          return _ProfileCard(
-            profile: profile,
-            onOpen: () => setState(() => _selectedProfileId = profile.id),
-          );
+        scrollController: _gridScrollController,
+        enableDraggable: normalizedQuery.isEmpty,
+        onReorder: (ReorderedListFunction<Profile> reorderedListFunction) {
+          unawaited(_persistOrder(reorderedListFunction(controller.profiles.value)));
         },
+        childBuilder: (itemBuilder) => GridView.builder(
+          controller: _gridScrollController,
+          padding: const EdgeInsets.all(12),
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 380,
+            mainAxisExtent: 170,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+          ),
+          itemCount: visibleProfiles.length,
+          itemBuilder: (context, index) {
+            final profile = visibleProfiles[index];
+            return itemBuilder(
+              _ProfileCard(
+                key: ValueKey(profile.id),
+                profile: profile,
+                onOpen: () => setState(() => _selectedProfileId = profile.id),
+              ),
+              index,
+            );
+          },
+        ),
       );
     }
 
@@ -112,27 +135,46 @@ class ProfilesViewState extends State<ProfilesView> implements SectionShortcuts 
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.navProfiles,
-                  style: Theme.of(context).textTheme.titleLarge,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              OutlinedButton.icon(
-                onPressed: () => _importProfile(context),
-                icon: const Icon(Icons.file_open_outlined),
-                label: Text(l10n.profilesImport),
-              ),
-              const SizedBox(width: 8),
-              FilledButton.icon(
-                onPressed: () => _createProfile(context),
-                icon: const Icon(Icons.add),
-                label: Text(l10n.profilesNew),
-              ),
-            ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < _compactLayoutWidth;
+              return Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.navProfiles,
+                      style: Theme.of(context).textTheme.titleLarge,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (compact) ...[
+                    IconButton(
+                      onPressed: () => _importProfile(context),
+                      icon: const Icon(Icons.file_open_outlined),
+                      tooltip: l10n.profilesImport,
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton.filled(
+                      onPressed: () => _createProfile(context),
+                      icon: const Icon(Icons.add),
+                      tooltip: l10n.profilesNew,
+                    ),
+                  ] else ...[
+                    OutlinedButton.icon(
+                      onPressed: () => _importProfile(context),
+                      icon: const Icon(Icons.file_open_outlined),
+                      label: Text(l10n.profilesImport),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton.icon(
+                      onPressed: () => _createProfile(context),
+                      icon: const Icon(Icons.add),
+                      label: Text(l10n.profilesNew),
+                    ),
+                  ],
+                ],
+              );
+            },
           ),
         ),
         if (showSearch)
@@ -164,6 +206,22 @@ class ProfilesViewState extends State<ProfilesView> implements SectionShortcuts 
   void _clearSearch() {
     _searchController.clear();
     setState(() {});
+  }
+
+  Future<void> _persistOrder(List<Profile> ordered) async {
+    final l10n = AppLocalizations.of(context);
+    final result = await AppScope.of(
+      context,
+    ).profiles.reorder([for (final profile in ordered) profile.id]);
+    if (!mounted) {
+      return;
+    }
+    result.fold(
+      (_) {},
+      (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('${l10n.profilesReorderFailed}: $error'))),
+    );
   }
 
   Future<void> _createProfile(BuildContext context) async {
@@ -206,7 +264,7 @@ class ProfilesViewState extends State<ProfilesView> implements SectionShortcuts 
 }
 
 class _ProfileCard extends SignalWidget {
-  const _ProfileCard({required this.profile, required this.onOpen});
+  const _ProfileCard({super.key, required this.profile, required this.onOpen});
 
   final Profile profile;
   final VoidCallback onOpen;
@@ -237,69 +295,104 @@ class _ProfileCard extends SignalWidget {
       '${l10n.profilesLastUsed}: ${formatProfileDateTime(l10n, profile.lastUsedAt)}',
     ].join('  ·  ');
 
+    final badges = <Widget>[
+      if (running)
+        CompactBadge(
+          icon: Icons.play_arrow,
+          label: l10n.profilesRunning,
+          tone: CompactBadgeTone.running,
+        ),
+      if (build != null && build.status != BuildStatus.installed)
+        CompactBadge(
+          icon: Icons.warning_amber_outlined,
+          label: build.status == BuildStatus.missing
+              ? l10n.profilesStatusMissing
+              : l10n.profilesStatusBroken,
+          tone: CompactBadgeTone.danger,
+        ),
+      if (updatesOutdated > 0)
+        CompactBadge(
+          icon: Icons.system_update_alt,
+          label: l10n.updatesBadge(updatesOutdated),
+          tone: CompactBadgeTone.info,
+        ),
+    ];
+    final visibleBadges = badges.length <= 2
+        ? badges
+        : [badges.first, CompactBadge(label: l10n.profilesMoreBadges(badges.length - 1))];
+
+    final theme = Theme.of(context);
     return Card(
       margin: EdgeInsets.zero,
-      child: ListTile(
+      child: InkWell(
         onTap: onOpen,
-        leading: Icon(Icons.workspaces, color: Theme.of(context).colorScheme.primary),
-        title: Row(
-          children: [
-            Flexible(child: Text(profile.name, overflow: TextOverflow.ellipsis)),
-            if (running) ...[
-              const SizedBox(width: 8),
-              CompactBadge(
-                icon: Icons.play_arrow,
-                label: l10n.profilesRunning,
-                tone: CompactBadgeTone.running,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.workspaces, size: 36, color: theme.colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          profile.name,
+                          style: theme.textTheme.titleSmall,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          versionLine,
+                          style: theme.textTheme.bodySmall,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  PopupMenuButton<_ProfileAction>(
+                    onSelected: (action) => _handleAction(context, action),
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: _ProfileAction.duplicate,
+                        child: Text(l10n.profilesDuplicate),
+                      ),
+                      PopupMenuItem(
+                        value: _ProfileAction.export,
+                        child: Text(l10n.profilesExportManifest),
+                      ),
+                      PopupMenuItem(value: _ProfileAction.delete, child: Text(l10n.profilesDelete)),
+                    ],
+                  ),
+                ],
               ),
-            ],
-            if (build != null && build.status != BuildStatus.installed) ...[
-              const SizedBox(width: 8),
-              CompactBadge(
-                icon: Icons.warning_amber_outlined,
-                label: build.status == BuildStatus.missing
-                    ? l10n.profilesStatusMissing
-                    : l10n.profilesStatusBroken,
-                tone: CompactBadgeTone.danger,
-              ),
-            ],
-            if (updatesOutdated > 0) ...[
-              const SizedBox(width: 8),
-              CompactBadge(
-                icon: Icons.system_update_alt,
-                label: l10n.updatesBadge(updatesOutdated),
-                tone: CompactBadgeTone.info,
-              ),
-            ],
-          ],
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(versionLine, maxLines: 1, overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 2),
-            Text(detailLine, maxLines: 1, overflow: TextOverflow.ellipsis),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FilledButton.tonal(
-              onPressed: () => launchProfile(context, profile),
-              child: Text(l10n.profilesLaunch),
-            ),
-            PopupMenuButton<_ProfileAction>(
-              onSelected: (action) => _handleAction(context, action),
-              itemBuilder: (context) => [
-                PopupMenuItem(value: _ProfileAction.duplicate, child: Text(l10n.profilesDuplicate)),
-                PopupMenuItem(
-                  value: _ProfileAction.export,
-                  child: Text(l10n.profilesExportManifest),
+              const SizedBox(height: 4),
+              Expanded(
+                child: Text(
+                  detailLine,
+                  style: theme.textTheme.bodySmall,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                PopupMenuItem(value: _ProfileAction.delete, child: Text(l10n.profilesDelete)),
-              ],
-            ),
-          ],
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(child: Wrap(spacing: 4, runSpacing: 4, children: visibleBadges)),
+                  const SizedBox(width: 8),
+                  IconButton.filledTonal(
+                    onPressed: () => launchProfile(context, profile),
+                    icon: const Icon(Icons.play_arrow),
+                    tooltip: l10n.profilesLaunch,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

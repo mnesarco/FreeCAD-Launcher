@@ -182,6 +182,15 @@ class ProfilesController {
 
   Future<Profile?> getById(String id) => _repository.getById(id);
 
+  Future<Result<void>> reorder(List<String> orderedIds) async {
+    final byId = {for (final profile in profiles.value) profile.id: profile};
+    if (orderedIds.length != byId.length || !orderedIds.every(byId.containsKey)) {
+      return const Err(AppError(message: 'The new order does not match the profiles list'));
+    }
+    profiles.value = [for (final id in orderedIds) byId[id]!];
+    return _repository.saveOrder(orderedIds);
+  }
+
   Future<Result<Profile>> create({
     required String name,
     required String buildId,

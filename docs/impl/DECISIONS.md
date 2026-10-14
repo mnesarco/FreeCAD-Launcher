@@ -2759,3 +2759,64 @@ Template:
   branch push produces no check run, so CI must not become a required status check that would
   block docs-only PRs; verification-record docs-only pushes no longer consume runners.
 - **Refs**: `TASKS.md` R-38, `.github/workflows/ci.yml`, `docs/impl/STATUS.md` R80
+
+### D-123 — The Profiles screen lists profiles as an Addons-style card grid (R-40)
+- **Date**: 2026-10-14
+- **Status**: Accepted
+- **Context**: The Profiles screen rendered a vertical `ListView` of full-width `ListTile` cards
+  (M3-06, R-39). The owner asked for the same grid presentation as the Addons catalog so both
+  surfaces share one card language and many profiles scan better in columns. Spec 03 §2.3
+  already allowed a "grid/list of profile cards".
+- **Decision**:
+  - Profiles render in a `GridView` using the Addons delegate (max 380 px cells, 12 px
+    cross/main spacing, 12 px padding) with an Addons-style card: 36 px section icon, profile
+    name + `build · channel · Python 3.x` line, a 3-line detail line (addons/packages/size/last
+    used), status chips, a circular tonal Launch icon button at the bottom right (play icon,
+    `Launch` tooltip) and the Duplicate/Export/Delete popup menu (top-right). Tapping the card
+    opens the detail view.
+  - Cell height matches the Addons grid (`mainAxisExtent: 170`) so the Launch buttons align
+    across rows; to honour that height at every window width the card shows at most **two**
+    status chips in total — the first badge plus a neutral `+N` overflow chip when more exist
+    (`profilesMoreBadges`); the profile detail page remains the full-status surface.
+  - The R-39 per-card `LayoutBuilder` compact variant is removed (grid cells stay below the
+    440 px header breakpoint anyway); the responsive header behavior of R-39 is unchanged.
+- **Consequences**: Profile cards keep all current data and actions while matching the Addons
+  visual language; no state/schema/l10n-visible behavior changes beyond the card layout. The
+  fixed extent and the two-badge cap must be revisited if badge content grows or a fourth
+  status is added.
+- **Refs**: `TASKS.md` R-40, `docs/spec/03-ux.md` §2.3, `lib/ui/profiles/profiles_view.dart`,
+  `lib/l10n/app_en.arb`, `test/ui/profiles_view_test.dart`, D-120, R-39
+
+### D-124 — Profiles get a persisted manual order with long-press drag & drop (R-41)
+- **Date**: 2026-10-14
+- **Status**: Accepted
+- **Context**: Profile order was alphabetical (`ProfilesDao` orders by `name`), which the owner
+  wants to replace with a manual order maintained by dragging cards in the Profiles grid. The
+  feature needs persistence, a drag interaction for a desktop app, an implementation either as
+  a dependency or custom widgets, and a rule for drag while the name filter is active. The owner
+  approved the plan `PLAN-R41-profile-grid-reordering.md` with all recommendations.
+- **Decision**:
+  - **Persistence**: schema v7 adds `profiles.sort_order` (`INTEGER NOT NULL DEFAULT 0`); the
+    v6→v7 migration backfills `0..n-1` in the current name order so the upgrade is visually a
+    no-op. All profile queries order by `sort_order ASC, name ASC`; `saveOrder(ids)` renumbers
+    every row in one transaction. New profiles (create/duplicate/manifest import) append at the
+    end. The order is device-local: not exported in manifests.
+  - **Interaction**: the drag starts with a **long-press anywhere on the card** (package
+    default, ~500 ms); tap still opens the detail and the launch/menu buttons keep working.
+  - **Reordering is disabled while the search filter is active** (the filtered subset's indices
+    do not map to the persisted order).
+  - **Implementation**: `flutter_reorderable_grid_view` (BSD-3-Clause, verified publisher) wraps
+    the existing `GridView.builder` (`ReorderableBuilder.builder`) and provides animated
+    displacement, edge auto-scroll and the `enableDraggable` switch; a custom
+    `LongPressDraggable`/`DragTarget` implementation was rejected (hand-rolled animation,
+    auto-scroll and hover detection).
+  - CLI `list` follows the manual order (it consumes the same DAO order); Home "Recent profiles"
+    stays usage-based (last used) and is unaffected.
+- **Consequences**: one new third-party dependency (notices regenerated, CI drift check), one
+  schema migration, and a `sortOrder` field on `Profile`. All profile pickers adopt the manual
+  order automatically. Drag is pointer-only (no keyboard reorder) and no drag hint ships with
+  this task; both are possible follow-ups.
+- **Refs**: `TASKS.md` R-41, `docs/impl/PLAN-R41-profile-grid-reordering.md`,
+  `docs/spec/03-ux.md` §2.3, `docs/spec/05-data-model.md`, `lib/data/tables/profiles.dart`,
+  `lib/data/daos/profiles_dao.dart`, `lib/state/profiles_controller.dart`,
+  `lib/ui/profiles/profiles_view.dart`, R-40, D-123

@@ -10,11 +10,14 @@ part 'profiles_dao.g.dart';
 class ProfilesDao extends DatabaseAccessor<AppDatabase> with _$ProfilesDaoMixin {
   ProfilesDao(super.db);
 
-  Stream<List<Profile>> watchAll() =>
-      (select(profiles)..orderBy([(t) => OrderingTerm.asc(t.name)])).watch();
+  Stream<List<Profile>> watchAll() => (select(profiles)..orderBy(_order)).watch();
 
-  Future<List<Profile>> getAll() =>
-      (select(profiles)..orderBy([(t) => OrderingTerm.asc(t.name)])).get();
+  Future<List<Profile>> getAll() => (select(profiles)..orderBy(_order)).get();
+
+  static List<OrderingTerm Function($ProfilesTable)> get _order => [
+    (t) => OrderingTerm.asc(t.sortOrder),
+    (t) => OrderingTerm.asc(t.name),
+  ];
 
   Future<Profile?> getById(String id) =>
       (select(profiles)..where((t) => t.id.equals(id))).getSingleOrNull();
@@ -23,6 +26,23 @@ class ProfilesDao extends DatabaseAccessor<AppDatabase> with _$ProfilesDaoMixin 
       (select(profiles)..where((t) => t.name.lower().equals(name.toLowerCase()))).getSingleOrNull();
 
   Future<void> save(Profile profile) => into(profiles).insertOnConflictUpdate(profile);
+
+  Future<int> nextSortOrder() async {
+    final maxOrder = profiles.sortOrder.max();
+    final query = selectOnly(profiles)..addColumns([maxOrder]);
+    final row = await query.getSingle();
+    return (row.read(maxOrder) ?? -1) + 1;
+  }
+
+  Future<void> saveOrder(List<String> orderedIds) {
+    return transaction(() async {
+      for (var index = 0; index < orderedIds.length; index++) {
+        await (update(profiles)..where((t) => t.id.equals(orderedIds[index]))).write(
+          ProfilesCompanion(sortOrder: Value(index)),
+        );
+      }
+    });
+  }
 
   Future<int> deleteById(String id) => (delete(profiles)..where((t) => t.id.equals(id))).go();
 

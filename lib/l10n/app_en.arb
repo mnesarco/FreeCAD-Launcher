@@ -64,7 +64,14 @@
   "profilesDeleteFailed": "Could not delete the profile",
   "profilesLaunch": "Launch",
   "profilesRunning": "Running",
+  "profilesMoreBadges": "+{count}",
+  "@profilesMoreBadges": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "profilesLaunchFailed": "Launch failed",
+  "profilesReorderFailed": "Could not save the profile order",
   "profilesQuarantineTitle": "Remove quarantine?",
   "profilesQuarantineMessage": "macOS flagged this app as downloaded. Removing the quarantine attribute is needed to launch it. Only continue if you trust this build.",
   "profilesQuarantineRemove": "Remove and launch",

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/addons/addon.dart';
+import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/process.dart';
@@ -43,12 +44,12 @@ void main() {
 
   Future<void> pumpProfiles(WidgetTester tester) async {
     await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: AppScope(
-          services: services,
-          child: const Scaffold(body: ProfilesView()),
+      AppScope(
+        services: services,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: ProfilesView()),
         ),
       ),
     );
@@ -110,9 +111,66 @@ void main() {
       await pumpProfiles(tester);
 
       expect(find.text('Dev'), findsOneWidget);
-      expect(find.text('Launch'), findsOneWidget);
+      expect(find.byTooltip('Launch'), findsOneWidget);
       expect(find.textContaining('Python 3.11'), findsOneWidget);
       expect(find.textContaining('Addons: 1'), findsOneWidget);
+    });
+
+    testWidgets('renders the profiles as a grid of cards', (tester) async {
+      await pumpProfiles(tester);
+
+      expect(find.byType(GridView), findsOneWidget);
+      expect(find.byType(ListView), findsNothing);
+      expect(find.byType(Card), findsOneWidget);
+      expect(find.byIcon(Icons.play_arrow), findsOneWidget);
+      expect(find.byIcon(Icons.more_vert), findsOneWidget);
+    });
+
+    testWidgets('summarizes extra badges with an overflow chip in a narrow grid cell', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(340, 600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final profile = await services.profilesRepository.getByName('Dev');
+      await services.database.buildsDao.save(sampleBuild(status: BuildStatus.missing));
+      services.profiles.runningProfiles.value = {profile!.id};
+      services.addons.installedAddons.value = [
+        sampleAddon(profileId: profile.id, addonId: 'A2plus', version: '0.4.68'),
+      ];
+      services.addons.addons.value = [
+        Addon(
+          id: 'A2plus',
+          branches: [
+            AddonBranch(
+              gitRef: 'master',
+              displayName: 'master',
+              repositoryUrl: 'https://example.invalid/A2plus',
+              zipUrl: 'https://example.invalid/A2plus.zip',
+              curated: true,
+              sparseCache: false,
+              metadata: AddonMetadata(
+                name: 'A2plus',
+                description: '',
+                version: '0.5.0',
+                license: 'MIT',
+                minPython: '3.10',
+                tags: const [],
+                people: const [],
+                content: const {AddonContentType.workbench},
+                requirements: '',
+              ),
+            ),
+          ],
+        ),
+      ];
+
+      await pumpProfiles(tester);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Running'), findsOneWidget);
+      expect(find.text('+2'), findsOneWidget);
+      expect(find.text('Build missing'), findsNothing);
+      expect(find.byTooltip('Launch'), findsOneWidget);
     });
 
     testWidgets('opens the detail tabs skeleton', (tester) async {
@@ -454,6 +512,98 @@ void main() {
 
       expect(find.text('Prod'), findsOneWidget);
       expect(find.text('Dev'), findsNothing);
+    });
+  });
+
+  group('reordering', () {
+    setUp(() async {
+      await services.database.buildsDao.save(sampleBuild());
+      await services.profilesRepository.create(name: 'First', buildId: 'build-1');
+      await services.profilesRepository.create(name: 'Second', buildId: 'build-1');
+    });
+
+    Future<void> dragCard(WidgetTester tester, int from, int to) async {
+      final cards = find.byType(Card);
+      final start = tester.getCenter(cards.at(from));
+      final end = tester.getCenter(cards.at(to));
+      final gesture = await tester.startGesture(start);
+      await tester.pump(const Duration(milliseconds: 600));
+      for (var step = 1; step <= 10; step++) {
+        await gesture.moveTo(Offset.lerp(start, end, step / 10)!);
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await gesture.up();
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('reorders profiles with a long-press drag', (tester) async {
+      await pumpProfiles(tester);
+
+      await dragCard(tester, 0, 1);
+
+      expect(
+        [for (final profile in services.profiles.profiles.value) profile.name],
+        ['Second', 'First'],
+      );
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      expect(
+        [for (final profile in await services.profilesRepository.getAll()) profile.name],
+        ['Second', 'First'],
+      );
+    });
+
+    testWidgets('does not reorder while the search filter is active', (tester) async {
+      await pumpProfiles(tester);
+      await tester.enterText(find.byType(TextField), 's');
+      await tester.pump();
+
+      await dragCard(tester, 0, 1);
+
+      expect(
+        [for (final profile in services.profiles.profiles.value) profile.name],
+        ['First', 'Second'],
+      );
+    });
+  });
+
+  group('responsive header', () {
+    setUp(() async {
+      await services.database.buildsDao.save(sampleBuild());
+      await services.profilesRepository.create(name: 'Dev', buildId: 'build-1');
+    });
+
+    testWidgets('falls back to icon-only actions on narrow windows', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(340, 600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await pumpProfiles(tester);
+
+      expect(tester.takeException(), isNull);
+      expect(find.byTooltip('Import manifest'), findsOneWidget);
+      expect(find.byTooltip('New profile'), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.text('Dev'), findsOneWidget);
+    });
+
+    testWidgets('keeps the labelled actions at normal widths', (tester) async {
+      await pumpProfiles(tester);
+
+      expect(tester.takeException(), isNull);
+      expect(find.widgetWithText(OutlinedButton, 'Import manifest'), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, 'New profile'), findsOneWidget);
+      expect(find.byTooltip('Import manifest'), findsNothing);
+    });
+
+    testWidgets('compact header survives a running badge', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(340, 600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final profile = await services.profilesRepository.getByName('Dev');
+      services.profiles.runningProfiles.value = {profile!.id};
+
+      await pumpProfiles(tester);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Running'), findsOneWidget);
     });
   });
 }

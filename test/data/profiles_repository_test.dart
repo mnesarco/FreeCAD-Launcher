@@ -67,6 +67,34 @@ void main() {
     expect(hasStagingDirectory(), isFalse);
   });
 
+  test('appends new profiles after the existing manual order', () async {
+    final first = await repository.create(name: 'First', buildId: 'build-1');
+    final second = await repository.create(name: 'Second', buildId: 'build-1');
+
+    expect(first.valueOrNull!.sortOrder, 0);
+    expect(second.valueOrNull!.sortOrder, 1);
+    expect(
+      [for (final profile in await repository.getAll()) profile.name],
+      ['First', 'Second'],
+    );
+  });
+
+  test('duplicate appends at the end and saveOrder round-trips', () async {
+    final first = (await repository.create(name: 'First', buildId: 'build-1')).valueOrNull!;
+    final second = (await repository.create(name: 'Second', buildId: 'build-1')).valueOrNull!;
+    final copy = (await repository.duplicate(profileId: first.id, name: 'Copy')).valueOrNull!;
+
+    expect(copy.sortOrder, 2);
+
+    final result = await repository.saveOrder([copy.id, second.id, first.id]);
+
+    expect(result.isOk, isTrue);
+    expect(
+      [for (final profile in await repository.getAll()) profile.name],
+      ['Copy', 'Second', 'First'],
+    );
+  });
+
   test('rejects duplicate names case-insensitively', () async {
     await repository.create(name: 'Dev', buildId: 'build-1');
 

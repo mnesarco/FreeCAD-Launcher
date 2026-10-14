@@ -148,6 +148,12 @@ news feed with a short excerpt of each post (URL configurable in Settings).
 - The search box above the list filters the cards by name as you type (case-insensitive); the
   clear button shows all profiles again. `Ctrl/Cmd+F` focuses the search.
 
+### Reorder profiles
+
+- Press and hold a profile card, then drag it to a new position in the grid. The order is saved
+  and used everywhere profiles are listed (including the CLI `list`). Reordering is disabled
+  while the search box has text; clear it first.
+
 ### The profile detail page
 
 - **Overview** — build, channel, Python, health, paths and config file state.

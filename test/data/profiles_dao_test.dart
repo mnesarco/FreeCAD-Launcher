@@ -28,6 +28,35 @@ void main() {
     expect(await db.profilesDao.countByBuild('build-1'), 2);
   });
 
+  test('orders profiles by manual sort order, then name', () async {
+    await db.profilesDao.save(sampleProfile(id: 'p-c', name: 'Charlie', sortOrder: 1));
+    await db.profilesDao.save(sampleProfile(id: 'p-a', name: 'Alpha', sortOrder: 2));
+    await db.profilesDao.save(sampleProfile(id: 'p-b', name: 'Bravo', sortOrder: 0));
+
+    final profiles = await db.profilesDao.getAll();
+
+    expect([for (final profile in profiles) profile.name], ['Bravo', 'Charlie', 'Alpha']);
+  });
+
+  test('saveOrder renumbers profiles in the given order', () async {
+    await db.profilesDao.save(sampleProfile(id: 'p-a', name: 'Alpha', sortOrder: 0));
+    await db.profilesDao.save(sampleProfile(id: 'p-b', name: 'Bravo', sortOrder: 1));
+
+    await db.profilesDao.saveOrder(['p-b', 'p-a']);
+
+    final profiles = await db.profilesDao.getAll();
+    expect([for (final profile in profiles) profile.id], ['p-b', 'p-a']);
+    expect([for (final profile in profiles) profile.sortOrder], [0, 1]);
+  });
+
+  test('nextSortOrder appends after the last profile', () async {
+    expect(await db.profilesDao.nextSortOrder(), 0);
+
+    await db.profilesDao.save(sampleProfile(id: 'p-a', name: 'Alpha', sortOrder: 4));
+
+    expect(await db.profilesDao.nextSortOrder(), 5);
+  });
+
   test('blocks deleting a build referenced by a profile', () async {
     await db.profilesDao.save(sampleProfile());
 

@@ -43,6 +43,7 @@ Build sampleBuild({
 Profile sampleProfile({
   String id = 'profile-1',
   String name = 'Default',
+  int sortOrder = 0,
   String buildId = 'build-1',
   String pythonVersion = '3.11',
   DateTime? lastUsedAt,
@@ -50,6 +51,7 @@ Profile sampleProfile({
   return Profile(
     id: id,
     name: name,
+    sortOrder: sortOrder,
     buildId: buildId,
     pythonVersion: pythonVersion,
     createdAt: _baseTime,

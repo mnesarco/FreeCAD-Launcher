@@ -5,15 +5,16 @@
 - **DB is an index, not the source of truth.** Installed builds, profiles, and addons exist on
   disk; the drift DB indexes them. On startup a reconciler marks entries whose files vanished
   as `missing`/`broken` instead of assuming the DB is right.
-- **Fresh start.** No migration from the prototype schema. `schemaVersion = 6`: v1 plus the
+- **Fresh start.** No migration from the prototype schema. `schemaVersion = 7`: v1 plus the
   nullable `builds.pythonPath` (D-020), `macros.license`/`macros.sizeBytes` (D-049, v3),
-  `installed_addons.pinnedAt` (D-056, v4), `builds.label` (D-069, v5) and the
-  `installed_addons.source`/`sourcePath` provenance columns (D-085, v6), all added through
+  `installed_addons.pinnedAt` (D-056, v4), `builds.label` (D-069, v5), the
+  `installed_addons.source`/`sourcePath` provenance columns (D-085, v6) and
+  `profiles.sortOrder` (D-124, v7; backfilled with the previous name order), all added through
   `onUpgrade` `addColumn`s.
 - All timestamps stored as ISO-8601 strings (`store_date_time_values_as_text: true` in
   `build.yaml`, matching `driftRuntimeOptions.defaultSerializer` in `main.dart`).
 
-## 2. Drift schema (v6)
+## 2. Drift schema (v7)
 
 ### `builds`
 
@@ -50,6 +51,7 @@ removed on failure (D-028).
 |---|---|---|
 | `id` | text (uuid) | PK; directory name `profiles/<id>/` |
 | `name` | text | unique case-insensitive |
+| `sortOrder` | int | manual grid order (D-124); all queries order by `sortOrder, name`; new profiles append |
 | `description` | text? | |
 | `buildId` | text | FK → `builds.id` |
 | `pythonVersion` | text | copied from the build at creation; the build must be installed with a detected Python (D-027); drives pip target dir |

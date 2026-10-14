@@ -54,7 +54,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.inMemory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -75,6 +75,13 @@ class AppDatabase extends _$AppDatabase {
       if (from < 6) {
         await m.addColumn(installedAddons, installedAddons.source);
         await m.addColumn(installedAddons, installedAddons.sourcePath);
+      }
+      if (from < 7) {
+        await m.addColumn(profiles, profiles.sortOrder);
+        await customStatement(
+          'UPDATE profiles SET sort_order = '
+          '(SELECT COUNT(*) FROM profiles AS p2 WHERE p2.name < profiles.name)',
+        );
       }
     },
     beforeOpen: (details) async {

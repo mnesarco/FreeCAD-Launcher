@@ -180,6 +180,21 @@ void main() {
     expect(find.widgetWithText(OutlinedButton, 'Check for updates'), findsOneWidget);
   });
 
+  testWidgets('wraps the hero actions on narrow windows', (tester) async {
+    await seedInstalledBuild();
+    await db.profilesDao.save(sampleProfile());
+    newsSource.streamFactory = () => Stream.fromIterable([utf8.encode(rss)]);
+    await tester.binding.setSurfaceSize(const Size(390, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await pumpHome(tester);
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('FreeCAD Launcher'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'New profile'), findsOneWidget);
+    expect(find.widgetWithText(OutlinedButton, 'Check for updates'), findsOneWidget);
+  });
+
   testWidgets('creating a profile opens its detail view', (tester) async {
     await seedInstalledBuild();
     String? opened;

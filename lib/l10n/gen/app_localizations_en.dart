@@ -175,7 +175,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profilesRunning => 'Running';
 
   @override
+  String profilesMoreBadges(int count) {
+    return '+$count';
+  }
+
+  @override
   String get profilesLaunchFailed => 'Launch failed';
+
+  @override
+  String get profilesReorderFailed => 'Could not save the profile order';
 
   @override
   String get profilesQuarantineTitle => 'Remove quarantine?';

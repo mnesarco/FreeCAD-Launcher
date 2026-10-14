@@ -10,6 +10,8 @@ class Profiles extends Table {
 
   TextColumn get name => text().unique()();
 
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+
   TextColumn get description => text().nullable()();
 
   TextColumn get buildId => text().references(Builds, #id, onDelete: KeyAction.restrict)();

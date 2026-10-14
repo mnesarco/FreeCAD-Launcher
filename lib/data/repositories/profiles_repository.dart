@@ -44,6 +44,15 @@ class ProfilesRepository {
 
   Future<Profile?> getByName(String name) => _database.profilesDao.getByName(name);
 
+  Future<Result<void>> saveOrder(List<String> orderedIds) async {
+    try {
+      await _database.profilesDao.saveOrder(orderedIds);
+      return const Ok(null);
+    } on Object catch (error) {
+      return Err(AppError.from(error, retryable: true));
+    }
+  }
+
   Future<Result<Profile>> create({
     required String name,
     required String buildId,
@@ -74,6 +83,7 @@ class ProfilesRepository {
     final profile = Profile(
       id: const Uuid().v4(),
       name: normalized,
+      sortOrder: await _database.profilesDao.nextSortOrder(),
       description: description,
       buildId: build.id,
       pythonVersion: build.pythonVersion!,
@@ -130,6 +140,7 @@ class ProfilesRepository {
     final duplicate = Profile(
       id: newId,
       name: normalized,
+      sortOrder: await _database.profilesDao.nextSortOrder(),
       description: source.description,
       buildId: source.buildId,
       pythonVersion: source.pythonVersion,

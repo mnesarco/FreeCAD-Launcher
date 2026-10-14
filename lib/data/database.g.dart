@@ -1109,6 +1109,18 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _descriptionMeta = const VerificationMeta(
     'description',
   );
@@ -1193,6 +1205,7 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
   List<GeneratedColumn> get $columns => [
     id,
     name,
+    sortOrder,
     description,
     buildId,
     pythonVersion,
@@ -1225,6 +1238,12 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
       );
     } else if (isInserting) {
       context.missing(_nameMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
     }
     if (data.containsKey('description')) {
       context.handle(
@@ -1302,6 +1321,10 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
       description: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}description'],
@@ -1342,6 +1365,7 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
 class Profile extends DataClass implements Insertable<Profile> {
   final String id;
   final String name;
+  final int sortOrder;
   final String? description;
   final String buildId;
   final String pythonVersion;
@@ -1352,6 +1376,7 @@ class Profile extends DataClass implements Insertable<Profile> {
   const Profile({
     required this.id,
     required this.name,
+    required this.sortOrder,
     this.description,
     required this.buildId,
     required this.pythonVersion,
@@ -1365,6 +1390,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
+    map['sort_order'] = Variable<int>(sortOrder);
     if (!nullToAbsent || description != null) {
       map['description'] = Variable<String>(description);
     }
@@ -1385,6 +1411,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     return ProfilesCompanion(
       id: Value(id),
       name: Value(name),
+      sortOrder: Value(sortOrder),
       description: description == null && nullToAbsent
           ? const Value.absent()
           : Value(description),
@@ -1409,6 +1436,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     return Profile(
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
       description: serializer.fromJson<String?>(json['description']),
       buildId: serializer.fromJson<String>(json['buildId']),
       pythonVersion: serializer.fromJson<String>(json['pythonVersion']),
@@ -1424,6 +1452,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
+      'sortOrder': serializer.toJson<int>(sortOrder),
       'description': serializer.toJson<String?>(description),
       'buildId': serializer.toJson<String>(buildId),
       'pythonVersion': serializer.toJson<String>(pythonVersion),
@@ -1437,6 +1466,7 @@ class Profile extends DataClass implements Insertable<Profile> {
   Profile copyWith({
     String? id,
     String? name,
+    int? sortOrder,
     Value<String?> description = const Value.absent(),
     String? buildId,
     String? pythonVersion,
@@ -1447,6 +1477,7 @@ class Profile extends DataClass implements Insertable<Profile> {
   }) => Profile(
     id: id ?? this.id,
     name: name ?? this.name,
+    sortOrder: sortOrder ?? this.sortOrder,
     description: description.present ? description.value : this.description,
     buildId: buildId ?? this.buildId,
     pythonVersion: pythonVersion ?? this.pythonVersion,
@@ -1459,6 +1490,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     return Profile(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       description: data.description.present
           ? data.description.value
           : this.description,
@@ -1480,6 +1512,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     return (StringBuffer('Profile(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('sortOrder: $sortOrder, ')
           ..write('description: $description, ')
           ..write('buildId: $buildId, ')
           ..write('pythonVersion: $pythonVersion, ')
@@ -1495,6 +1528,7 @@ class Profile extends DataClass implements Insertable<Profile> {
   int get hashCode => Object.hash(
     id,
     name,
+    sortOrder,
     description,
     buildId,
     pythonVersion,
@@ -1509,6 +1543,7 @@ class Profile extends DataClass implements Insertable<Profile> {
       (other is Profile &&
           other.id == this.id &&
           other.name == this.name &&
+          other.sortOrder == this.sortOrder &&
           other.description == this.description &&
           other.buildId == this.buildId &&
           other.pythonVersion == this.pythonVersion &&
@@ -1521,6 +1556,7 @@ class Profile extends DataClass implements Insertable<Profile> {
 class ProfilesCompanion extends UpdateCompanion<Profile> {
   final Value<String> id;
   final Value<String> name;
+  final Value<int> sortOrder;
   final Value<String?> description;
   final Value<String> buildId;
   final Value<String> pythonVersion;
@@ -1532,6 +1568,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   const ProfilesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
+    this.sortOrder = const Value.absent(),
     this.description = const Value.absent(),
     this.buildId = const Value.absent(),
     this.pythonVersion = const Value.absent(),
@@ -1544,6 +1581,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   ProfilesCompanion.insert({
     required String id,
     required String name,
+    this.sortOrder = const Value.absent(),
     this.description = const Value.absent(),
     required String buildId,
     required String pythonVersion,
@@ -1561,6 +1599,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   static Insertable<Profile> custom({
     Expression<String>? id,
     Expression<String>? name,
+    Expression<int>? sortOrder,
     Expression<String>? description,
     Expression<String>? buildId,
     Expression<String>? pythonVersion,
@@ -1573,6 +1612,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
+      if (sortOrder != null) 'sort_order': sortOrder,
       if (description != null) 'description': description,
       if (buildId != null) 'build_id': buildId,
       if (pythonVersion != null) 'python_version': pythonVersion,
@@ -1587,6 +1627,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   ProfilesCompanion copyWith({
     Value<String>? id,
     Value<String>? name,
+    Value<int>? sortOrder,
     Value<String?>? description,
     Value<String>? buildId,
     Value<String>? pythonVersion,
@@ -1599,6 +1640,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     return ProfilesCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
+      sortOrder: sortOrder ?? this.sortOrder,
       description: description ?? this.description,
       buildId: buildId ?? this.buildId,
       pythonVersion: pythonVersion ?? this.pythonVersion,
@@ -1618,6 +1660,9 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
     }
     if (description.present) {
       map['description'] = Variable<String>(description.value);
@@ -1651,6 +1696,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     return (StringBuffer('ProfilesCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('sortOrder: $sortOrder, ')
           ..write('description: $description, ')
           ..write('buildId: $buildId, ')
           ..write('pythonVersion: $pythonVersion, ')
@@ -5521,6 +5567,7 @@ typedef $$ProfilesTableCreateCompanionBuilder =
     ProfilesCompanion Function({
       required String id,
       required String name,
+      Value<int> sortOrder,
       Value<String?> description,
       required String buildId,
       required String pythonVersion,
@@ -5534,6 +5581,7 @@ typedef $$ProfilesTableUpdateCompanionBuilder =
     ProfilesCompanion Function({
       Value<String> id,
       Value<String> name,
+      Value<int> sortOrder,
       Value<String?> description,
       Value<String> buildId,
       Value<String> pythonVersion,
@@ -5639,6 +5687,11 @@ class $$ProfilesTableFilterComposer
 
   ColumnFilters<String> get name => $composableBuilder(
     column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5790,6 +5843,11 @@ class $$ProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get description => $composableBuilder(
     column: $table.description,
     builder: (column) => ColumnOrderings(column),
@@ -5858,6 +5916,9 @@ class $$ProfilesTableAnnotationComposer
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
 
   GeneratedColumn<String> get description => $composableBuilder(
     column: $table.description,
@@ -6017,6 +6078,7 @@ class $$ProfilesTableTableManager
               ({
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<String> buildId = const Value.absent(),
                 Value<String> pythonVersion = const Value.absent(),
@@ -6028,6 +6090,7 @@ class $$ProfilesTableTableManager
               }) => ProfilesCompanion(
                 id: id,
                 name: name,
+                sortOrder: sortOrder,
                 description: description,
                 buildId: buildId,
                 pythonVersion: pythonVersion,
@@ -6041,6 +6104,7 @@ class $$ProfilesTableTableManager
               ({
                 required String id,
                 required String name,
+                Value<int> sortOrder = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 required String buildId,
                 required String pythonVersion,
@@ -6052,6 +6116,7 @@ class $$ProfilesTableTableManager
               }) => ProfilesCompanion.insert(
                 id: id,
                 name: name,
+                sortOrder: sortOrder,
                 description: description,
                 buildId: buildId,
                 pythonVersion: pythonVersion,

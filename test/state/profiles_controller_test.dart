@@ -108,6 +108,39 @@ void main() {
     controller.dispose();
   });
 
+  test('reorder applies the new order immediately and persists it', () async {
+    final first = (await repository.create(name: 'First', buildId: 'build-1')).valueOrNull!;
+    final second = (await repository.create(name: 'Second', buildId: 'build-1')).valueOrNull!;
+    final controller = buildController();
+    controller.start();
+    await waitForProfiles(controller);
+
+    final result = await controller.reorder([second.id, first.id]);
+
+    expect(result.isOk, isTrue);
+    expect([for (final profile in controller.profiles.value) profile.name], [
+      'Second',
+      'First',
+    ]);
+    expect([for (final profile in await repository.getAll()) profile.name], [
+      'Second',
+      'First',
+    ]);
+    controller.dispose();
+  });
+
+  test('reorder rejects ids that do not match the profiles list', () async {
+    await repository.create(name: 'Dev', buildId: 'build-1');
+    final controller = buildController();
+    controller.start();
+    await waitForProfiles(controller);
+
+    final result = await controller.reorder(['nope']);
+
+    expect(result.isErr, isTrue);
+    controller.dispose();
+  });
+
   test('planFor returns the isolated plan and blocks unhealthy builds', () async {
     final created = await repository.create(name: 'Dev', buildId: 'build-1');
     final profileId = created.valueOrNull!.id;
