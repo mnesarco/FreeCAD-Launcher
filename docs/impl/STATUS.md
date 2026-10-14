@@ -10,9 +10,12 @@
   `deps-upgrade-2`, PR [#6](https://github.com/mnesarco/FreeCAD-Launcher/pull/6); analyze clean,
   730 tests green (10 skipped); CI run 38628668530 green on ubuntu + windows (3.47.7);
   no-publish release run 38630400790 verified locally (AppImage sidecar/`--version`/isolated
-  sqlite DB, Windows zip bundle); live pass with zero runtime errors. Also **R-38 DONE** — CI
-  skips docs-only change sets (`paths-ignore: docs/**`). Earlier: **R-37 DONE** — profile name
-  search (D-120); live-verified, committed `587dfe3`.
+  sqlite DB, Windows zip bundle); live pass with zero runtime errors. Also **R-38** — CI now runs
+  per **branch push** with `paths-ignore: docs/**` and no `pull_request` trigger, so docs-only
+  pushes never start CI even on mixed PR branches (owner-accepted trade-offs: tip testing instead
+  of merge-commit, no CI for fork PRs); verification in progress. `devel` pushed through `189e601`
+  (R-37 + `v0.4.11` tag object). Earlier: **R-37 DONE** — profile name search (D-120);
+  live-verified, committed `587dfe3`.
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
   (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**/**M8-07 DONE**/**M8-08 WIP**; **`v0.4.11` is the
   current release** (pre-release, 2026-10-08) with R-36/D-119 (installable release candidates via
