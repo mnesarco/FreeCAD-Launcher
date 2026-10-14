@@ -6,6 +6,22 @@
 > owner verified a real Linux catalog install + isolated profile launch on the upgraded app.
 > Only the owner-dependent Windows-machine smoke remains.
 
+## B-16b round — toolchain 3.47.7 + patch/minor refresh (2026-10-14)
+
+- The owner directed the CI/release pin to **Flutter 3.47.7** (stable, 2026-10-08; D-121
+  supersedes D-103's version clause only). The local toolchain is 3.47.7, so the committed lock
+  is now resolved by exactly the SDK CI uses.
+- `flutter pub upgrade` on 3.47.7 within the existing constraints (Phase-1 pattern): `archive`
+  4.5.2, `drift` 2.35.2, `url_launcher` 6.3.3, `build_runner` 2.16.2, `sqlite3` 3.7.1 plus the
+  `analyzer` 14.5.0 / `_fe_analyzer_shared` 109 / `source_gen` 4.3.1 / `build_daemon` 4.1.7 /
+  `jni_flutter` 1.0.4+1 / `vector_graphics_compiler` 1.3.1 transitives. No `pubspec.yaml`
+  constraint changes and no majors.
+- Blocked and documented as not resolvable: `xml` 7.1.0 (capped `<=7.0.1` by
+  `vector_graphics_compiler`, also in 1.3.1), the `build` 5.x ecosystem (`build_runner` 2.17.1),
+  and the Flutter SDK-pinned transitives (`cross_file`, `material_color_utilities`, `test_api`).
+- Verification: build_runner diff, regenerated `THIRD_PARTY_NOTICES.md`, analyze/tests, CI on
+  Ubuntu + Windows (3.47.7), no-publish release smoke, live app pass.
+
 ## Goal
 
 Move the dependency set forward — patch/minor first, then selected majors — without regressing
@@ -116,4 +132,4 @@ Each group is a separate commit with its own verification; revert just the faili
 ## Refs
 
 `TASKS.md` B-16, `docs/impl/DECISIONS.md` (record any decision if a bump changes architecture),
-`pubspec.yaml`, `pubspec.lock`, `.github/workflows/ci.yml` (Flutter pin: 3.47.6, D-103).
+`pubspec.yaml`, `pubspec.lock`, `.github/workflows/ci.yml` (Flutter pin: 3.47.7, D-121).
