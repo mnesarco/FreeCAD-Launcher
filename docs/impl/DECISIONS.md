@@ -2739,3 +2739,23 @@ Template:
   3.47.7. Blocked majors are unchanged (`xml` 7.1.0 capped by `vector_graphics_compiler`).
 - **Refs**: `.github/workflows/{ci,release}.yml`, `pubspec.lock`, `TASKS.md` B-16b,
   `docs/impl/PLAN-dependency-upgrades.md`, D-071, D-103
+
+### D-122 — CI runs on branch pushes with a per-push docs-only skip (R-38)
+- **Date**: 2026-10-14
+- **Status**: Accepted
+- **Context**: CI ran the full Ubuntu+Windows matrix on documentation-only changes. The first fix
+  (`paths-ignore: docs/**` on `push [devel, main]` plus `pull_request`) skipped docs-only PRs and
+  docs-only pushes to `devel`/`main`, but for `pull_request` events GitHub evaluates the whole PR
+  diff, so docs-only commits pushed to a mixed PR branch still ran CI — the recurring case
+  (verification-record commits).
+- **Decision**: `ci.yml` triggers on `push` for **all branches** with `paths-ignore: docs/**`;
+  the `pull_request` trigger is removed. Push events evaluate the per-push diff, so a change set
+  touching only `docs/` never starts CI; PR checks still attach to PRs from the branch push runs
+  for in-repo branches. `release.yml` is unchanged (tags/manual only). Root-level Markdown
+  (`README.md`, `THIRD_PARTY_NOTICES.md`) still counts as code because the notices drift check
+  lives in CI.
+- **Consequences** (owner-accepted): CI validates the branch tip rather than the synthesized PR
+  merge commit; PRs from forks receive no CI (in-repo branches are the working model); a docs-only
+  branch push produces no check run, so CI must not become a required status check that would
+  block docs-only PRs; verification-record docs-only pushes no longer consume runners.
+- **Refs**: `TASKS.md` R-38, `.github/workflows/ci.yml`, `docs/impl/STATUS.md` R80
