@@ -296,16 +296,35 @@ void main() {
     await settle(tester);
   }
 
-  testWidgets('custom tab shows the three forms and the empty state', (tester) async {
+  testWidgets('custom tab shows one card with three source tabs', (tester) async {
     await db.buildsDao.save(sampleBuild());
     await db.profilesDao.save(sampleProfile());
 
     await openCustomTab(tester);
 
-    expect(find.text('From a repository'), findsOneWidget);
-    expect(find.text('From an archive file'), findsOneWidget);
-    expect(find.text('From a local folder (development)'), findsOneWidget);
+    expect(find.text('Repository'), findsOneWidget);
+    expect(find.text('Archive'), findsOneWidget);
+    expect(find.text('Dev Link'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'https://github.com/owner/repo'), findsOneWidget);
+    expect(find.byType(TabBar), findsNWidgets(2));
     expect(find.text('No custom addons'), findsOneWidget);
+  });
+
+  testWidgets('custom tab switches between the source forms', (tester) async {
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+
+    await openCustomTab(tester);
+
+    await tester.tap(find.text('Archive'));
+    await settle(tester);
+    expect(find.text('Archive file:'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'https://github.com/owner/repo'), findsNothing);
+
+    await tester.tap(find.text('Dev Link'));
+    await settle(tester);
+    expect(find.text('Local folder:'), findsOneWidget);
+    expect(find.text('Archive file:'), findsNothing);
   });
 
   testWidgets('custom tab previews the resolved repository archive URL', (tester) async {

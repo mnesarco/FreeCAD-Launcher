@@ -1582,11 +1582,23 @@ abstract class AppLocalizations {
   /// **'Custom'**
   String get addonsTabCustom;
 
-  /// No description provided for @addonsCustomRepoTitle.
+  /// No description provided for @addonsCustomTabRepository.
   ///
   /// In en, this message translates to:
-  /// **'From a repository'**
-  String get addonsCustomRepoTitle;
+  /// **'Repository'**
+  String get addonsCustomTabRepository;
+
+  /// No description provided for @addonsCustomTabArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get addonsCustomTabArchive;
+
+  /// No description provided for @addonsCustomTabDevLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Dev Link'**
+  String get addonsCustomTabDevLink;
 
   /// No description provided for @addonsCustomRepoUrl.
   ///
@@ -1642,12 +1654,6 @@ abstract class AppLocalizations {
   /// **'Enter a branch, tag or ref'**
   String get addonsCustomMissingRef;
 
-  /// No description provided for @addonsCustomArchiveTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'From an archive file'**
-  String get addonsCustomArchiveTitle;
-
   /// No description provided for @addonsCustomArchiveField.
   ///
   /// In en, this message translates to:
@@ -1671,12 +1677,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose an archive file first'**
   String get addonsCustomArchiveRequired;
-
-  /// No description provided for @addonsCustomDirectoryTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'From a local folder (development)'**
-  String get addonsCustomDirectoryTitle;
 
   /// No description provided for @addonsCustomDirectoryField.
   ///
@@ -2413,7 +2413,7 @@ abstract class AppLocalizations {
   /// No description provided for @addonsInstallTarget.
   ///
   /// In en, this message translates to:
-  /// **'Install into'**
+  /// **'Target profile'**
   String get addonsInstallTarget;
 
   /// No description provided for @addonsInstallFailed.

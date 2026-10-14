@@ -822,7 +822,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addonsTabCustom => 'Custom';
 
   @override
-  String get addonsCustomRepoTitle => 'From a repository';
+  String get addonsCustomTabRepository => 'Repository';
+
+  @override
+  String get addonsCustomTabArchive => 'Archive';
+
+  @override
+  String get addonsCustomTabDevLink => 'Dev Link';
 
   @override
   String get addonsCustomRepoUrl => 'Repository URL';
@@ -856,9 +862,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addonsCustomMissingRef => 'Enter a branch, tag or ref';
 
   @override
-  String get addonsCustomArchiveTitle => 'From an archive file';
-
-  @override
   String get addonsCustomArchiveField => 'Archive file';
 
   @override
@@ -869,9 +872,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addonsCustomArchiveRequired => 'Choose an archive file first';
-
-  @override
-  String get addonsCustomDirectoryTitle => 'From a local folder (development)';
 
   @override
   String get addonsCustomDirectoryField => 'Local folder';
@@ -1270,7 +1270,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addonsAddTitle => 'Add addon to profile';
 
   @override
-  String get addonsInstallTarget => 'Install into';
+  String get addonsInstallTarget => 'Target profile';
 
   @override
   String get addonsInstallFailed => 'Install failed';

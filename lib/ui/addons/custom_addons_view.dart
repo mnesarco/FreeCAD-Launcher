@@ -26,9 +26,10 @@ class CustomAddonsTab extends SignalStatefulWidget {
   State<CustomAddonsTab> createState() => _CustomAddonsTabState();
 }
 
-class _CustomAddonsTabState extends State<CustomAddonsTab> {
+class _CustomAddonsTabState extends State<CustomAddonsTab> with SingleTickerProviderStateMixin {
   final TextEditingController _repositoryController = TextEditingController();
   final TextEditingController _refController = TextEditingController(text: 'main');
+  late final TabController _sourceTabs = TabController(length: 3, vsync: this);
 
   String? _profileId;
   XFile? _archive;
@@ -51,6 +52,7 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
 
   @override
   void dispose() {
+    _sourceTabs.dispose();
     _repositoryController.removeListener(_handleFormChanged);
     _refController.removeListener(_handleFormChanged);
     _repositoryController.dispose();
@@ -82,7 +84,7 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
         else
           FormRow(
             label: l10n.addonsInstallTarget,
-            icon: Icons.person_outline,
+            icon: Icons.workspaces_outline,
             field: FormDropdown<String>(
               value: profileId,
               items: [
@@ -101,28 +103,55 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
           ),
           const SizedBox(height: 8),
         ],
-        _RepositoryCard(
-          repositoryController: _repositoryController,
-          refController: _refController,
-          busy: _busy,
-          enabled: profileId != null && !_busy,
-          onInstall: profileId == null ? null : () => _installRepository(profileId!, l10n),
-        ),
-        const SizedBox(height: 12),
-        _ArchiveCard(
-          archive: _archive,
-          busy: _busy,
-          enabled: profileId != null && !_busy,
-          onChoose: _chooseArchive,
-          onInstall: profileId == null ? null : () => _installArchive(profileId!, l10n),
-        ),
-        const SizedBox(height: 12),
-        _DirectoryCard(
-          directoryPath: _directoryPath,
-          busy: _busy,
-          enabled: profileId != null && !_busy,
-          onChoose: _chooseDirectory,
-          onInstall: profileId == null ? null : () => _installDirectory(profileId!, l10n),
+        Card(
+          margin: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TabBar(
+                  controller: _sourceTabs,
+                  tabs: [
+                    Tab(text: l10n.addonsCustomTabRepository),
+                    Tab(text: l10n.addonsCustomTabArchive),
+                    Tab(text: l10n.addonsCustomTabDevLink),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ListenableBuilder(
+                  listenable: _sourceTabs,
+                  builder: (context, _) => switch (_sourceTabs.index) {
+                    0 => _RepositoryForm(
+                      repositoryController: _repositoryController,
+                      refController: _refController,
+                      busy: _busy,
+                      enabled: profileId != null && !_busy,
+                      onInstall: profileId == null
+                          ? null
+                          : () => _installRepository(profileId!, l10n),
+                    ),
+                    1 => _ArchiveForm(
+                      archive: _archive,
+                      busy: _busy,
+                      enabled: profileId != null && !_busy,
+                      onChoose: _chooseArchive,
+                      onInstall: profileId == null ? null : () => _installArchive(profileId!, l10n),
+                    ),
+                    _ => _DirectoryForm(
+                      directoryPath: _directoryPath,
+                      busy: _busy,
+                      enabled: profileId != null && !_busy,
+                      onChoose: _chooseDirectory,
+                      onInstall: profileId == null
+                          ? null
+                          : () => _installDirectory(profileId!, l10n),
+                    ),
+                  },
+                ),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 12),
         _CustomInstallsCard(
@@ -390,8 +419,8 @@ class _CustomAddonsTabState extends State<CustomAddonsTab> {
   }
 }
 
-class _RepositoryCard extends StatelessWidget {
-  const _RepositoryCard({
+class _RepositoryForm extends StatelessWidget {
+  const _RepositoryForm({
     required this.repositoryController,
     required this.refController,
     required this.busy,
@@ -416,8 +445,8 @@ class _RepositoryCard extends StatelessWidget {
           ? _resolutionError(l10n, resolution.issue!)
           : l10n.addonsCustomRepoResolved(uri.toString());
     }
-    return _SectionCard(
-      title: l10n.addonsCustomRepoTitle,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         FormRow(
           label: l10n.addonsCustomRepoUrl,
@@ -466,8 +495,8 @@ class _RepositoryCard extends StatelessWidget {
   }
 }
 
-class _ArchiveCard extends StatelessWidget {
-  const _ArchiveCard({
+class _ArchiveForm extends StatelessWidget {
+  const _ArchiveForm({
     required this.archive,
     required this.busy,
     required this.enabled,
@@ -484,8 +513,8 @@ class _ArchiveCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return _SectionCard(
-      title: l10n.addonsCustomArchiveTitle,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         FormRow(
           label: l10n.addonsCustomArchiveField,
@@ -521,8 +550,8 @@ class _ArchiveCard extends StatelessWidget {
   }
 }
 
-class _DirectoryCard extends StatelessWidget {
-  const _DirectoryCard({
+class _DirectoryForm extends StatelessWidget {
+  const _DirectoryForm({
     required this.directoryPath,
     required this.busy,
     required this.enabled,
@@ -539,8 +568,8 @@ class _DirectoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return _SectionCard(
-      title: l10n.addonsCustomDirectoryTitle,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         FormRow(
           label: l10n.addonsCustomDirectoryField,

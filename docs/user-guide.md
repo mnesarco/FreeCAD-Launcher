@@ -222,9 +222,10 @@ with a notice).
 
 ### Custom sources (repository, archive, dev link)
 
-The **Custom** tab installs addons that are not in the official catalog. All three sources
-require a `package.xml` at the addon root, and an id that is already installed in the profile
-must be removed first:
+The **Custom** tab installs addons that are not in the official catalog. Pick the target
+profile, then choose one of the three source tabs — **Repository**, **Archive** or **Dev Link**.
+All three sources require a `package.xml` at the addon root, and an id that is already installed
+in the profile must be removed first:
 
 - **Repository**: paste a GitHub/GitLab/Gitea/Codeberg repository URL and a branch/ref — or a
   direct `.zip`/`.tar.gz` URL — and pick the target profile. The resolved archive URL is shown
