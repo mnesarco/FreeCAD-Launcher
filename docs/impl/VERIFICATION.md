@@ -574,6 +574,27 @@ dropped because the stable tag regex rejected the `rcN` suffix. Evidence:
 - Not verified live: install `26.3rc1` from a real catalog refresh and launch a profile on it; the
   GitHub release is an RC, so expect the normal pre-release quality caveat.
 
+### R-37 (2026-10-14, `devel`)
+
+Profile name search on the Profiles screen (D-120). Evidence:
+
+- `profiles_view_test` “filters profiles by name and clears with the suffix action”: with `Dev`
+  and `Prod` both cards render; typing `prod` leaves only `Prod`; the suffix clear action restores
+  both.
+- `profiles_view_test` “shows the filtered-empty state”: a non-matching query shows
+  “No profiles match the current search.” and clearing restores the list.
+- `profiles_view_test` “focusSearch focuses the search field”: `ProfilesViewState.focusSearch()`
+  gives the search `TextField` focus.
+- `profiles_view_test` “keeps the query when visiting a profile detail”: the query survives
+  opening a card and returning via Back.
+- The first-run empty-state test asserts the search row is hidden when no profiles exist.
+- Live pass (2026-10-14, `flutter run -d linux` on the real dev data root): the inspector widget
+  tree showed the search `TextField` between the header and the 10 real profile cards; `Ctrl+F`
+  focused it (typing went straight into the field); `dev` narrowed the list to `Development` and
+  `Lens Dev`; `devzzz` showed “No profiles match the current search.” with zero cards; clearing
+  restored all 10 cards; zero runtime errors. No profile data was modified.
+- `flutter analyze` clean; 730 tests green (10 platform probes skipped).
+
 ## 5. When something fails
 
 1. Capture the job log tail and app logs from `logs/`.

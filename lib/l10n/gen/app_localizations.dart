@@ -832,6 +832,24 @@ abstract class AppLocalizations {
   /// **'Import manifest'**
   String get profilesImport;
 
+  /// No description provided for @profilesSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search profiles'**
+  String get profilesSearchHint;
+
+  /// No description provided for @profilesClearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get profilesClearSearch;
+
+  /// No description provided for @profilesNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No profiles match the current search.'**
+  String get profilesNoMatches;
+
   /// No description provided for @manifestImportTitle.
   ///
   /// In en, this message translates to:

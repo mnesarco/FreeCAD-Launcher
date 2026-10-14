@@ -79,10 +79,11 @@ class _AppShellState extends State<AppShell> {
   void _focusActiveSearch() {
     switch (AppScope.of(context).shell.section.value) {
       case AppSection.home:
-      case AppSection.profiles:
       case AppSection.versions:
       case AppSection.settings:
         break;
+      case AppSection.profiles:
+        _profilesKey.currentState?.focusSearch();
       case AppSection.addons:
         _addonsKey.currentState?.focusSearch();
       case AppSection.macros:

@@ -394,6 +394,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profilesImport => 'Import manifest';
 
   @override
+  String get profilesSearchHint => 'Search profiles';
+
+  @override
+  String get profilesClearSearch => 'Clear search';
+
+  @override
+  String get profilesNoMatches => 'No profiles match the current search.';
+
+  @override
   String get manifestImportTitle => 'Import profile manifest';
 
   @override

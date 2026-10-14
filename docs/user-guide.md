@@ -143,6 +143,11 @@ news feed with a short excerpt of each post (URL configurable in Settings).
   with payload), delete (removes the profile directory and database rows; shared builds are not
   affected).
 
+### Find a profile
+
+- The search box above the list filters the cards by name as you type (case-insensitive); the
+  clear button shows all profiles again. `Ctrl/Cmd+F` focuses the search.
+
 ### The profile detail page
 
 - **Overview** — build, channel, Python, health, paths and config file state.

@@ -62,6 +62,7 @@ void main() {
 
     expect(find.text('No profiles yet'), findsOneWidget);
     expect(find.text('New profile'), findsWidgets);
+    expect(find.text('Search profiles'), findsNothing);
   });
 
   testWidgets('creating a profile opens its detail view', (tester) async {
@@ -378,6 +379,81 @@ void main() {
       }
       expect(marker.existsSync(), isFalse);
       expect(find.text('Disabled'), findsNothing);
+    });
+  });
+
+  group('search', () {
+    setUp(() async {
+      await services.database.buildsDao.save(sampleBuild());
+      await services.profilesRepository.create(name: 'Dev', buildId: 'build-1');
+      await services.profilesRepository.create(name: 'Prod', buildId: 'build-1');
+    });
+
+    testWidgets('filters profiles by name and clears with the suffix action', (tester) async {
+      await pumpProfiles(tester);
+
+      expect(find.text('Dev'), findsOneWidget);
+      expect(find.text('Prod'), findsOneWidget);
+      expect(find.byTooltip('Clear search'), findsNothing);
+
+      await tester.enterText(find.byType(TextField), 'prod');
+      await tester.pump();
+
+      expect(find.text('Prod'), findsOneWidget);
+      expect(find.text('Dev'), findsNothing);
+
+      await tester.tap(find.byTooltip('Clear search'));
+      await tester.pump();
+
+      expect(find.text('Dev'), findsOneWidget);
+      expect(find.text('Prod'), findsOneWidget);
+    });
+
+    testWidgets('shows the filtered-empty state', (tester) async {
+      await pumpProfiles(tester);
+
+      await tester.enterText(find.byType(TextField), 'zzz');
+      await tester.pump();
+
+      expect(find.text('No profiles match the current search.'), findsOneWidget);
+      expect(find.text('Dev'), findsNothing);
+      expect(find.text('Prod'), findsNothing);
+
+      await tester.tap(find.byTooltip('Clear search'));
+      await tester.pump();
+
+      expect(find.text('Dev'), findsOneWidget);
+      expect(find.text('Prod'), findsOneWidget);
+    });
+
+    testWidgets('focusSearch focuses the search field', (tester) async {
+      await pumpProfiles(tester);
+
+      tester.state<ProfilesViewState>(find.byType(ProfilesView)).focusSearch();
+      await tester.pump();
+
+      final field = tester.widget<TextField>(find.byType(TextField));
+      expect(field.focusNode?.hasFocus, isTrue);
+    });
+
+    testWidgets('keeps the query when visiting a profile detail', (tester) async {
+      await pumpProfiles(tester);
+      await tester.enterText(find.byType(TextField), 'prod');
+      await tester.pump();
+
+      await tester.tap(find.text('Prod'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      expect(find.text('Overview'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Back'));
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      expect(find.text('Prod'), findsOneWidget);
+      expect(find.text('Dev'), findsNothing);
     });
   });
 }

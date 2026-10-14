@@ -2698,3 +2698,27 @@ Template:
 - **Refs**: `TASKS.md` R-36, B-14, `docs/spec/06-integrations.md` §1.3/§1.5,
   `lib/domain/builds/freecad_version.dart`, `lib/domain/builds/asset_classifier.dart`,
   `lib/state/builds_controller.dart`, `lib/ui/builds/builds_view.dart`, D-021, D-078
+
+### D-120 — Profile search is a view-local name filter with `Ctrl/Cmd+F` focus (R-37)
+- **Date**: 2026-10-14
+- **Status**: Accepted
+- **Context**: Spec 03 §2.3 described the Profiles card list but no search, and `Ctrl/Cmd+F`
+  was a no-op on that section (`ProfilesViewState.focusSearch` was empty and `AppShell`
+  skipped `AppSection.profiles`). The owner requested a search box for long profile lists.
+- **Decision**:
+  - The Profiles screen gets a search row under the header (shown only when profiles exist)
+    filtering the cards by **profile name** (trimmed, case-insensitive substring). The
+    optional `description` and the bound build label are not matched.
+  - Query state and filtering are **view-local** (`ProfilesViewState` controller + `setState`)
+    rather than a `ProfilesController.query` signal: the list is small, only this screen
+    consumes the filter, and the catalog screens' controller-level query exists for their
+    larger/shared datasets. The query persists when opening a profile detail and returning
+    (matching the Addons search behavior).
+  - A filtered-empty state replaces the list (the first-run empty state is unaffected), and
+    the suffix clear action resets the query.
+  - `Ctrl/Cmd+F` now focuses the profile search (no-op while the detail page is open or when
+    no profiles exist), like the Addons/Macros sections.
+- **Consequences**: Searching profiles is presentation-only; no schema, controller or
+  repository changes. Spec 03 §2.3 documents the field.
+- **Refs**: `TASKS.md` R-37, `docs/spec/03-ux.md` §2.3, `lib/ui/profiles/profiles_view.dart`,
+  `lib/ui/shell/app_shell.dart`, `test/ui/profiles_view_test.dart`

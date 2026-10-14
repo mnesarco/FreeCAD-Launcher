@@ -28,6 +28,15 @@ class ProfilesView extends SignalStatefulWidget {
 class ProfilesViewState extends State<ProfilesView> implements SectionShortcuts {
   bool _started = false;
   String? _selectedProfileId;
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _searchFocusNode.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   void didChangeDependencies() {
@@ -45,6 +54,13 @@ class ProfilesViewState extends State<ProfilesView> implements SectionShortcuts 
     final profiles = controller.profiles.value;
     final loaded = controller.profilesLoaded.value;
     final error = controller.profilesError.value;
+    final query = _searchController.text;
+    final normalizedQuery = query.trim().toLowerCase();
+    final visibleProfiles = normalizedQuery.isEmpty
+        ? profiles
+        : profiles
+              .where((profile) => profile.name.toLowerCase().contains(normalizedQuery))
+              .toList();
 
     final selectedId = _selectedProfileId;
     if (selectedId != null && profiles.any((profile) => profile.id == selectedId)) {
@@ -74,13 +90,15 @@ class ProfilesViewState extends State<ProfilesView> implements SectionShortcuts 
           label: Text(l10n.profilesNew),
         ),
       );
+    } else if (visibleProfiles.isEmpty) {
+      body = Center(child: Text(l10n.profilesNoMatches));
     } else {
       body = ListView.separated(
         padding: const EdgeInsets.all(8),
-        itemCount: profiles.length,
+        itemCount: visibleProfiles.length,
         separatorBuilder: (context, index) => const SizedBox(height: 8),
         itemBuilder: (context, index) {
-          final profile = profiles[index];
+          final profile = visibleProfiles[index];
           return _ProfileCard(
             profile: profile,
             onOpen: () => setState(() => _selectedProfileId = profile.id),
@@ -89,6 +107,7 @@ class ProfilesViewState extends State<ProfilesView> implements SectionShortcuts 
       );
     }
 
+    final showSearch = error == null && loaded && profiles.isNotEmpty;
     return Column(
       children: [
         Padding(
@@ -116,9 +135,35 @@ class ProfilesViewState extends State<ProfilesView> implements SectionShortcuts 
             ],
           ),
         ),
+        if (showSearch)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: TextField(
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              onChanged: (value) => setState(() {}),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: l10n.profilesSearchHint,
+                isDense: true,
+                suffixIcon: query.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.clear),
+                        tooltip: l10n.profilesClearSearch,
+                        onPressed: _clearSearch,
+                      ),
+              ),
+            ),
+          ),
         Expanded(child: body),
       ],
     );
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() {});
   }
 
   Future<void> _createProfile(BuildContext context) async {
@@ -137,7 +182,13 @@ class ProfilesViewState extends State<ProfilesView> implements SectionShortcuts 
   }
 
   @override
-  void focusSearch() {}
+  void focusSearch() {
+    final controller = AppScope.of(context).profiles;
+    if (_selectedProfileId != null || controller.profiles.value.isEmpty) {
+      return;
+    }
+    _searchFocusNode.requestFocus();
+  }
 
   void createProfile() => unawaited(_createProfile(context));
 
