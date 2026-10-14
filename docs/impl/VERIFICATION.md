@@ -637,6 +637,11 @@ Profiles screen rendered as an Addons-style card grid (D-123). Evidence:
   renders 10 profiles in a 3-column grid (1280x720) with the circular play button at each card's
   bottom right, and a 480 px window falls back to a single column; zero runtime errors (only
   startup perf INFO logs).
+- Amendment (2026-10-14, owner request “too much wasted white space”): the cell tightened to
+  140 px (12x8 padding, compact 32 px popup, 34 px icon) and the detail became two fixed lines
+  (`Addons · Packages` / `Size · Last used`). Re-verified: full suite 745 green (10 skipped),
+  `flutter analyze` clean, live pass at 1280 px (3 columns, gap removed) and 480 px (single
+  column, no overflow), zero runtime errors.
 
 ### R-41 (2026-10-14, `devel`, committed `494612f`)
 

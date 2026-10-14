@@ -110,7 +110,7 @@ class ProfilesViewState extends State<ProfilesView> implements SectionShortcuts 
           padding: const EdgeInsets.all(12),
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: 380,
-            mainAxisExtent: 170,
+            mainAxisExtent: 140,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
           ),
@@ -289,11 +289,12 @@ class _ProfileCard extends SignalWidget {
     ].join('  ·  ');
 
     final detailLine = [
-      '${l10n.profilesAddons}: $addons',
-      '${l10n.profilesPackages}: $packages',
-      if (size != null) '${l10n.profilesSize}: ${formatBytes(size)}',
-      '${l10n.profilesLastUsed}: ${formatProfileDateTime(l10n, profile.lastUsedAt)}',
-    ].join('  ·  ');
+      '${l10n.profilesAddons}: $addons  ·  ${l10n.profilesPackages}: $packages',
+      [
+        if (size != null) '${l10n.profilesSize}: ${formatBytes(size)}',
+        '${l10n.profilesLastUsed}: ${formatProfileDateTime(l10n, profile.lastUsedAt)}',
+      ].join('  ·  '),
+    ].join('\n');
 
     final badges = <Widget>[
       if (running)
@@ -327,14 +328,14 @@ class _ProfileCard extends SignalWidget {
       child: InkWell(
         onTap: onOpen,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(Icons.workspaces, size: 36, color: theme.colorScheme.primary),
-                  const SizedBox(width: 12),
+                  Icon(Icons.workspaces, size: 34, color: theme.colorScheme.primary),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,6 +357,9 @@ class _ProfileCard extends SignalWidget {
                   ),
                   PopupMenuButton<_ProfileAction>(
                     onSelected: (action) => _handleAction(context, action),
+                    padding: EdgeInsets.zero,
+                    iconSize: 20,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                     itemBuilder: (context) => [
                       PopupMenuItem(
                         value: _ProfileAction.duplicate,
@@ -375,7 +379,7 @@ class _ProfileCard extends SignalWidget {
                 child: Text(
                   detailLine,
                   style: theme.textTheme.bodySmall,
-                  maxLines: 3,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),

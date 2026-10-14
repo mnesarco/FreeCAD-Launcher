@@ -2780,6 +2780,12 @@ Template:
     (`profilesMoreBadges`); the profile detail page remains the full-status surface.
   - The R-39 per-card `LayoutBuilder` compact variant is removed (grid cells stay below the
     440 px header breakpoint anyway); the responsive header behavior of R-39 is unchanged.
+- **Amended (2026-10-14, owner request “too much wasted white space”)**: the cell tightens to
+  `mainAxisExtent: 140` with 12×8 px padding (34 px icon, compact 32 px popup menu, 20 px
+  glyph); the detail text is split into two fixed lines (`Addons · Packages` then
+  `Size · Last used`, `maxLines: 2`) with the Launch button row pinned to the bottom, removing
+  most of the inter-content gap. Chips still share the bottom row; the two-chip cap keeps the
+  fixed height safe.
 - **Consequences**: Profile cards keep all current data and actions while matching the Addons
   visual language; no state/schema/l10n-visible behavior changes beyond the card layout. The
   fixed extent and the two-badge cap must be revisited if badge content grows or a fourth
