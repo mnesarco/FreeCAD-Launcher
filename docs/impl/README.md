@@ -85,3 +85,4 @@ older decisions only when needed.
 3. Loading / empty / error / offline states handled where UI is involved.
 4. No secrets logged; errors mapped to `AppError` with actionable messages.
 5. `TASKS.md`, `DECISIONS.md`, `STATUS.md` updated in the same session.
+
