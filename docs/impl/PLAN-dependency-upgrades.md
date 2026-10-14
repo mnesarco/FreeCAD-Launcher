@@ -22,6 +22,15 @@
 - Verification: build_runner diff, regenerated `THIRD_PARTY_NOTICES.md`, analyze/tests, CI on
   Ubuntu + Windows (3.47.7), no-publish release smoke, live app pass.
 
+**Result (2026-10-14): done.** Commit `bed4c73` on `deps-upgrade-2` (PR
+[#6](https://github.com/mnesarco/FreeCAD-Launcher/pull/6)); exactly the predicted lock set with no
+codegen changes; analyze clean; 730 tests green (10 skipped); CI run
+[38628668530](https://github.com/mnesarco/FreeCAD-Launcher/actions/runs/38628668530) green on
+ubuntu + windows; no-publish release run
+[38630400790](https://github.com/mnesarco/FreeCAD-Launcher/actions/runs/38630400790) verified
+locally (AppImage sidecar/`--version`/isolated sqlite DB; Windows zip bundle). PR merge and the
+Windows-machine smoke (pre-existing, on hold) remain owner-side.
+
 ## Goal
 
 Move the dependency set forward — patch/minor first, then selected majors — without regressing
