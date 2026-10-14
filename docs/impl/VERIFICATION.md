@@ -623,7 +623,7 @@ Toolchain 3.47.7 + patch/minor dependency refresh (D-121). Evidence:
   after clear), Settings rendered, zero runtime errors.
 - Not repeated: the owner-dependent Windows-machine smoke stays on hold (B-16, unchanged).
 
-### R-40 (2026-10-14, `devel`, uncommitted)
+### R-40 (2026-10-14, `devel`, committed `494612f`)
 
 Profiles screen rendered as an Addons-style card grid (D-123). Evidence:
 
@@ -638,7 +638,7 @@ Profiles screen rendered as an Addons-style card grid (D-123). Evidence:
   bottom right, and a 480 px window falls back to a single column; zero runtime errors (only
   startup perf INFO logs).
 
-### R-41 (2026-10-14, `devel`, uncommitted)
+### R-41 (2026-10-14, `devel`, committed `494612f`)
 
 Manual profile ordering with a long-press drag & drop grid (D-124). Evidence:
 
