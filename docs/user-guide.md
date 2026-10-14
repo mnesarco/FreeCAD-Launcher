@@ -79,7 +79,7 @@ dart run build_runner build --delete-conflicting-outputs
 flutter run -d linux    # or -d windows
 ```
 
-Requires Flutter 3.47.6 (stable) and the usual desktop build dependencies for the target OS.
+Requires Flutter 3.47.7 (stable) and the usual desktop build dependencies for the target OS.
 On Windows, build the portable zip with `flutter build windows --release` followed by
 `packaging/windows/build_portable.ps1`.
 

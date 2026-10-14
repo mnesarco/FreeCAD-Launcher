@@ -2722,3 +2722,20 @@ Template:
   repository changes. Spec 03 §2.3 documents the field.
 - **Refs**: `TASKS.md` R-37, `docs/spec/03-ux.md` §2.3, `lib/ui/profiles/profiles_view.dart`,
   `lib/ui/shell/app_shell.dart`, `test/ui/profiles_view_test.dart`
+
+### D-121 — CI and release toolchain moves to Flutter 3.47.7 (B-16b)
+- **Date**: 2026-10-14
+- **Status**: Accepted (supersedes D-103's version clause only)
+- **Context**: The owner directed the CI/release pin to Flutter **3.47.7** (stable, 2026-10-08)
+  as part of the B-16b dependency refresh. The local dev toolchain is already 3.47.7, so any
+  `flutter` command re-resolves the lock that 3.47.6 produced (patch/minor packages only);
+  pinning CI to the same SDK keeps the committed lock reproducible.
+- **Decision**: Pin CI (`ci.yml`) and both release jobs (`release.yml`) to Flutter **3.47.7**
+  (stable), update the user-guide and plan references, and resolve the lock with it. The Dart SDK
+  constraint stays `^3.11.0`. D-071's other clauses (placeholder policy, icon sizes) remain in
+  force.
+- **Consequences**: CI and release artifacts build with 3.47.7 from the next run on; the B-16b
+  no-publish smoke re-verifies the AppImage and the Windows zip on it; dev machines must match
+  3.47.7. Blocked majors are unchanged (`xml` 7.1.0 capped by `vector_graphics_compiler`).
+- **Refs**: `.github/workflows/{ci,release}.yml`, `pubspec.lock`, `TASKS.md` B-16b,
+  `docs/impl/PLAN-dependency-upgrades.md`, D-071, D-103

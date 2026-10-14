@@ -4,10 +4,13 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-10-14
-- **Current work**: **R-37 DONE** — profile name search on the Profiles screen (D-120: search row
-  under the header, view-local query, filtered-empty state, `Ctrl/Cmd+F` focus); 4 new widget
-  tests (730 green, 10 skipped), analyze clean, live pass on the real dev app with zero runtime
-  errors. Committed `587dfe3`.
+- **Current work**: **B-16b WIP** — toolchain pin Flutter 3.47.6 → **3.47.7** (D-121 pending) plus
+  `flutter pub upgrade` within existing constraints (archive 4.5.2, drift 2.35.2, url_launcher
+  6.3.3, build_runner 2.16.2, sqlite3 3.7.1 + transitives); blocked majors excluded. Then
+  CI (Ubuntu + Windows) and the no-publish release smoke. **R-37 DONE** — profile name search on
+  the Profiles screen (D-120: search row under the header, view-local query, filtered-empty
+  state, `Ctrl/Cmd+F` focus); 4 new widget tests (730 green, 10 skipped), analyze clean, live pass
+  on the real dev app with zero runtime errors. Committed `587dfe3`.
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
   (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**/**M8-07 DONE**/**M8-08 WIP**; **`v0.4.11` is the
   current release** (pre-release, 2026-10-08) with R-36/D-119 (installable release candidates via

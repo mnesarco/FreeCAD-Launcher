@@ -187,7 +187,7 @@ FreeCAD and the FreeCAD logo are trademarks of the FreeCAD Project Association A
 
 | Package | Version | License file |
 |---|---|---|
-| archive | 4.3.0 | LICENSE |
+| archive | 4.5.2 | LICENSE |
 | args | 2.7.0 | LICENSE |
 | async | 2.13.1 | LICENSE |
 | characters | 1.4.1 | LICENSE |
@@ -197,7 +197,7 @@ FreeCAD and the FreeCAD logo are trademarks of the FreeCAD Project Association A
 | convert | 3.1.2 | LICENSE |
 | cross_file | 0.3.5+5 | LICENSE |
 | crypto | 3.0.7 | LICENSE |
-| drift | 2.35.1 | LICENSE |
+| drift | 2.35.2 | LICENSE |
 | ffi | 2.2.0 | LICENSE |
 | file | 7.0.1 | LICENSE |
 | file_selector | 1.1.0 | LICENSE |
@@ -219,7 +219,7 @@ FreeCAD and the FreeCAD logo are trademarks of the FreeCAD Project Association A
 | http_parser | 4.1.2 | LICENSE |
 | intl | 0.20.3 | LICENSE |
 | jni | 1.1.0 | LICENSE |
-| jni_flutter | 1.0.3 | LICENSE |
+| jni_flutter | 1.0.4+1 | LICENSE |
 | jni_util | 1.0.0 | LICENSE |
 | logging | 1.3.0 | LICENSE |
 | material_color_utilities | 0.13.0 | LICENSE |
@@ -247,14 +247,14 @@ FreeCAD and the FreeCAD logo are trademarks of the FreeCAD Project Association A
 | signals_flutter | 7.1.0 | LICENSE |
 | sky_engine | 0.0.0 | LICENSE |
 | source_span | 1.10.2 | LICENSE |
-| sqlite3 | 3.7.0 | LICENSE |
+| sqlite3 | 3.7.1 | LICENSE |
 | sqlite3_flutter_libs | 0.6.0+eol | LICENSE |
 | stack_trace | 1.12.2 | LICENSE |
 | stream_channel | 2.1.4 | LICENSE |
 | string_scanner | 1.4.1 | LICENSE |
 | term_glyph | 1.2.2 | LICENSE |
 | typed_data | 1.4.0 | LICENSE |
-| url_launcher | 6.3.2 | LICENSE |
+| url_launcher | 6.3.3 | LICENSE |
 | url_launcher_android | 6.3.33 | LICENSE |
 | url_launcher_ios | 6.4.2 | LICENSE |
 | url_launcher_linux | 3.2.3 | LICENSE |
@@ -265,7 +265,7 @@ FreeCAD and the FreeCAD logo are trademarks of the FreeCAD Project Association A
 | uuid | 4.6.0 | LICENSE |
 | vector_graphics | 1.2.3 | LICENSE |
 | vector_graphics_codec | 1.1.13 | LICENSE |
-| vector_graphics_compiler | 1.3.0 | LICENSE |
+| vector_graphics_compiler | 1.3.1 | LICENSE |
 | vector_math | 2.4.3 | LICENSE |
 | web | 1.1.1 | LICENSE |
 | xdg_directories | 1.1.0 | LICENSE |
@@ -276,7 +276,7 @@ FreeCAD and the FreeCAD logo are trademarks of the FreeCAD Project Association A
 
 ### LICENSE — The MIT License
 
-Applies to: archive 4.3.0
+Applies to: archive 4.5.2
 
 ```text
 The MIT License
@@ -684,7 +684,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### LICENSE — Copyright 2013 The Flutter Authors
 
-Applies to: cross_file 0.3.5+5, file_selector 1.1.0, file_selector_ios 0.5.3+6, file_selector_linux 0.9.4+1, file_selector_macos 0.9.5+1, file_selector_platform_interface 2.7.0, file_selector_web 0.9.5, file_selector_windows 0.9.3+6, path_provider 2.1.6, path_provider_android 2.3.1, path_provider_foundation 2.6.0, path_provider_linux 2.2.2, path_provider_platform_interface 2.1.3, url_launcher_android 6.3.33, url_launcher_ios 6.4.2, url_launcher_linux 3.2.3, url_launcher_macos 3.2.6, url_launcher_web 2.4.3, url_launcher_windows 3.1.6, vector_graphics 1.2.3, vector_graphics_compiler 1.3.0, vector_math 2.4.3
+Applies to: cross_file 0.3.5+5, file_selector 1.1.0, file_selector_ios 0.5.3+6, file_selector_linux 0.9.4+1, file_selector_macos 0.9.5+1, file_selector_platform_interface 2.7.0, file_selector_web 0.9.5, file_selector_windows 0.9.3+6, path_provider 2.1.6, path_provider_android 2.3.1, path_provider_foundation 2.6.0, path_provider_linux 2.2.2, path_provider_platform_interface 2.1.3, url_launcher 6.3.3, url_launcher_android 6.3.33, url_launcher_ios 6.4.2, url_launcher_linux 3.2.3, url_launcher_macos 3.2.6, url_launcher_web 2.4.3, url_launcher_windows 3.1.6, vector_graphics 1.2.3, vector_graphics_compiler 1.3.1, vector_math 2.4.3
 
 ```text
 Copyright 2013 The Flutter Authors
@@ -716,7 +716,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### LICENSE — MIT License
 
-Applies to: drift 2.35.1
+Applies to: drift 2.35.2
 
 ```text
 MIT License
@@ -1207,7 +1207,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### LICENSE — Copyright 2026, the Dart project authors.
 
-Applies to: jni_flutter 1.0.3, jni_util 1.0.0
+Applies to: jni_flutter 1.0.4+1, jni_util 1.0.0
 
 ```text
 Copyright 2026, the Dart project authors.
@@ -1552,7 +1552,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### LICENSE — Copyright 2013 The Flutter Authors. All rights reserved.
 
-Applies to: path_provider_windows 2.3.0, plugin_platform_interface 2.1.8, url_launcher 6.3.2, url_launcher_platform_interface 2.3.2, vector_graphics_codec 1.1.13, xdg_directories 1.1.0
+Applies to: path_provider_windows 2.3.0, plugin_platform_interface 2.1.8, url_launcher_platform_interface 2.3.2, vector_graphics_codec 1.1.13, xdg_directories 1.1.0
 
 ```text
 Copyright 2013 The Flutter Authors. All rights reserved.
@@ -31490,7 +31490,7 @@ Google, and others. All Rights Reserved.
 
 ### LICENSE — MIT License
 
-Applies to: sqlite3 3.7.0, sqlite3_flutter_libs 0.6.0+eol
+Applies to: sqlite3 3.7.1, sqlite3_flutter_libs 0.6.0+eol
 
 ```text
 MIT License
