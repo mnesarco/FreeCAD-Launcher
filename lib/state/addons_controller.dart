@@ -27,7 +27,9 @@ import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/domain/python/python_names.dart';
 import 'package:freecad_launcher/domain/python/python_stdlib_names.dart';
 import 'package:freecad_launcher/domain/python/requirements_parser.dart';
+import 'package:freecad_launcher/platform/addon_installation_manifest.dart';
 import 'package:freecad_launcher/platform/addon_installer.dart';
+import 'package:freecad_launcher/platform/addon_macros.dart';
 import 'package:freecad_launcher/platform/archive_extract.dart';
 import 'package:freecad_launcher/platform/addon_manifest_reader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
@@ -45,6 +47,7 @@ class AddonsController {
     required AddonCatalog catalog,
     required AddonInstaller installer,
     required AppPaths paths,
+    AddonMacroInstaller macroInstaller = const AddonMacroInstaller(),
     PipRunner? pipRunner,
     PythonEnvResolver? pythonResolver,
     PythonPackageProbe? packageProbe,
@@ -55,6 +58,7 @@ class AddonsController {
        _catalog = catalog,
        _installer = installer,
        _paths = paths,
+       _macroInstaller = macroInstaller,
        _pipRunner = pipRunner,
        _pythonExecution = pythonResolver == null
            ? null
@@ -67,6 +71,7 @@ class AddonsController {
   final AddonCatalog _catalog;
   final AddonInstaller _installer;
   final AppPaths _paths;
+  final AddonMacroInstaller _macroInstaller;
   final PipRunner? _pipRunner;
   final PythonExecutionResolver? _pythonExecution;
   final PythonPackageProbe? _packageProbe;
@@ -497,8 +502,9 @@ class AddonsController {
       return const Err(AppError(message: 'Addon is not installed in this profile'));
     }
     try {
-      final directory = p.join(_paths.profilePaths(profileId).mod, addonId);
-      deleteAddonEntry(directory);
+      final paths = _paths.profilePaths(profileId);
+      _removeAddonExtras(profileId: profileId, addonId: addonId);
+      deleteAddonEntry(p.join(paths.mod, addonId));
       final deleted = await _database.installedAddonsDao.deleteAddon(profileId, addonId);
       if (deleted == 0) {
         return const Err(AppError(message: 'Addon is not installed in this profile'));
@@ -592,6 +598,7 @@ class AddonsController {
     if (profile == null) {
       return const Err(AppError(message: 'Profile not found'));
     }
+    final build = await _database.buildsDao.getById(profile.buildId);
 
     installing.value = {...installing.value, addonId};
     installErrors.value = {...installErrors.value}..remove(addonId);
@@ -665,6 +672,13 @@ class AddonsController {
       context?.report(detail: 'Installing files');
       await _installer.commitPrepared(prepared, cancellationToken: context?.token);
       prepared = null;
+      _installAddonExtras(
+        profileId: profileId,
+        addonId: addon.id,
+        branchDisplayName: branch.gitRef,
+        content: branch.metadata?.content ?? const {},
+        freecadVersion: build?.version,
+      );
       final now = _clock();
       await _database.installedAddonsDao.save(
         InstalledAddon(
@@ -1481,6 +1495,7 @@ class AddonsController {
     if (profile == null) {
       return const Err(AppError(message: 'Profile not found'));
     }
+    final build = await _database.buildsDao.getById(profile.buildId);
 
     final existing = await _database.installedAddonsDao.getByAddon(profileId, addonId);
     if (replaceExisting) {
@@ -1562,6 +1577,13 @@ class AddonsController {
       context?.report(detail: 'Installing files');
       await prepared.commit();
       prepared = null;
+      _installAddonExtras(
+        profileId: profileId,
+        addonId: addonId,
+        branchDisplayName: gitRef ?? '',
+        content: info.content,
+        freecadVersion: build?.version,
+      );
 
       final now = _clock();
       final name = info.name.trim().isEmpty ? addonId : info.name.trim();
@@ -1597,6 +1619,92 @@ class AddonsController {
       return Err(appError);
     } finally {
       installing.value = {...installing.value}..remove(addonId);
+    }
+  }
+
+  /// Copies addon-embedded `.FCMacro` files into the profile macro directory
+  /// and maintains the AddonManager digest/manifest (D-126). Dev symlink
+  /// installs are skipped so the user's dev tree is never written to.
+  void _installAddonExtras({
+    required String profileId,
+    required String addonId,
+    required String branchDisplayName,
+    required Set<AddonContentType> content,
+    required String? freecadVersion,
+  }) {
+    if (content.contains(AddonContentType.preferencePack)) {
+      return;
+    }
+    final paths = _paths.profilePaths(profileId);
+    final addonDirectory = p.join(paths.mod, addonId);
+    if (FileSystemEntity.typeSync(addonDirectory, followLinks: false) !=
+        FileSystemEntityType.directory) {
+      return;
+    }
+    try {
+      final copied = _macroInstaller.copyMacros(
+        addonDirectory: addonDirectory,
+        macroDirectory: paths.macros,
+      );
+      if (copied.isNotEmpty) {
+        _macroInstaller.writeDigest(
+          addonDirectory: addonDirectory,
+          files: copied,
+          now: _clock(),
+        );
+      }
+      AddonInstallationManifest(modDirectory: paths.mod).recordInstallation(
+        addonId: addonId,
+        branchDisplayName: branchDisplayName,
+        extraFiles: copied,
+        freecadVersion: manifestFreeCadVersion(freecadVersion),
+        now: _clock(),
+      );
+    } on Object catch (error, stackTrace) {
+      appLogger.warn(
+        'Addon "$addonId": could not install embedded macros',
+        error: error,
+        stackTrace: stackTrace,
+        tag: 'addons',
+      );
+    }
+  }
+
+  /// Deletes the macros copied during installation (manifest `extra_files`
+  /// merged with the on-disk digest, confined to the profile macros
+  /// directory) and drops the installation manifest entry (D-126).
+  void _removeAddonExtras({required String profileId, required String addonId}) {
+    final paths = _paths.profilePaths(profileId);
+    final files = <String>{};
+    try {
+      files.addAll(AddonInstallationManifest(modDirectory: paths.mod).extraFilesOf(addonId));
+    } on Object catch (error) {
+      appLogger.warn(
+        'Addon "$addonId": could not read the installation manifest',
+        error: error,
+        tag: 'addons',
+      );
+    }
+    try {
+      files.addAll(_macroInstaller.readDigest(p.join(paths.mod, addonId)));
+    } on Object catch (error) {
+      appLogger.warn(
+        'Addon "$addonId": could not read the installation digest',
+        error: error,
+        tag: 'addons',
+      );
+    }
+    if (files.isNotEmpty) {
+      _macroInstaller.removeCopiedMacros(macroDirectory: paths.macros, files: files);
+    }
+    try {
+      AddonInstallationManifest(modDirectory: paths.mod).removeAddon(addonId);
+    } on Object catch (error) {
+      appLogger.warn(
+        'Addon "$addonId": could not update the installation manifest',
+        error: error,
+        tag: 'addons',
+      );
     }
   }
 

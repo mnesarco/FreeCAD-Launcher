@@ -98,6 +98,9 @@ FCL_REAL_ISOLATION=1 flutter test test/manual/isolation_e2e_linux_test.dart
 - [ ] Addon with `requirements.txt`: consent flow shown; imported module resolves in FreeCAD
 - [ ] Addon update creates a backup and leaves a working install
 - [ ] Addon remove deletes only that profile's copy
+- [ ] Addon with embedded `.FCMacro` files (e.g. LiveSectionAnalyzer) copies them into
+      `<profile>/Macros/` and matches the AddonManager digest/manifest (D-126); remove deletes
+      them
 - [ ] Concurrent downloads work; cancel leaves no `.part` files
 - [ ] Module installed in profile A is not importable in profile B
 
@@ -685,6 +688,31 @@ Profile color identity: curated palette + subtle tinted cards (D-125). Evidence:
   create dialog; zero runtime errors; `theme_mode` restored to dark afterwards.
 - Note: seeding a build in the a11y harness surfaced a pre-existing 24 px tap target on the
   Addons “Any version” dropdown (unrelated to R-42; follow-up candidate).
+
+### R-48 (2026-10-15, `devel`)
+
+Addon-embedded macro parity with FreeCAD's AddonManager (D-126). Evidence:
+
+- Platform tests: `addon_macros_test.dart` (recursive case-insensitive `.fcmacro` copy by base
+  name, overwrite, no-op without macros, digest write/read, removal confined to the macro
+  directory) and `addon_installation_manifest_test.dart` (new-entry schema, update merge keeping
+  `first_installed`, remove, invalid JSON, `freecad_version` parsing).
+- Controller tests (`addons_controller_test.dart`): catalog install copies `macro/Tool.FCMacro`
+  into `Macros/`, writes the digest and the `manifest.json` entry (`branch_display_name`,
+  `freecad_version ["1","1","3"]`, `extra_files`); preference-pack addons are skipped; update
+  refreshes macros and merges `extra_files`; remove deletes the macro and the manifest entry;
+  a tampered digest cannot delete files outside `Macros/`; dev symlink installs copy nothing and
+  never write into the working copy; local archive installs get the same extras.
+- Full suite 797 green (10 platform probes skipped), `flutter analyze` clean.
+- Live pass (real network, isolated data root, real catalog): `test/manual/real_addon_macros_test.dart`
+  (`FCL_REAL_ADDON_MACROS=1`, reference `FCL_ADDON_MANAGER_PROFILE` = the owner's
+  AddonManager-installed `Section` profile) installed the real `LiveSectionAnalyzer` (main
+  branch) through `AddonsController`: `Macros/LiveSectionAnalyzer.FCMacro` byte-identical to the
+  addon's `macro/LiveSectionAnalyzer.FCMacro`, digest header equal to the AddonManager one
+  (modulo timestamp), `Mod/manifest.json` entry with the same keys/`migrated`/`branch_display_name`
+  (`freecad_version ["1","1","3"]`); remove deleted the macro, the addon directory and the
+  manifest entry. Note: the owner's `Section2` profile keeps its launcher install without extras
+  until the addon is updated/reinstalled there; no automatic healing is performed (D-126).
 
 ## 5. When something fails
 

@@ -303,6 +303,180 @@ void main() {
     subject.dispose();
   });
 
+  test('install copies addon-embedded macros and records the AddonManager extras', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [addon('A2plus', name: 'A2plus', version: '0.4.68')],
+      freshness: CatalogFreshness.fresh,
+    );
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    downloadSource.streamFactory = () => Stream.fromIterable([
+      catalogZip({
+        'A2plus-master/InitGui.py': 'gui',
+        'A2plus-master/package.xml': '<package><name>A2plus</name></package>',
+        'A2plus-master/macro/Tool.FCMacro': 'macro-code',
+      }),
+    ]);
+    final subject = controller();
+    await subject.load();
+
+    final result = await subject.install(
+      addonId: 'A2plus',
+      branchRef: 'master',
+      profileId: 'profile-1',
+    );
+
+    expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+    final profileRoot = p.join(tempDirectory.path, 'profiles', 'profile-1');
+    final macro = File(p.join(profileRoot, 'Macros', 'Tool.FCMacro'));
+    expect(macro.existsSync(), isTrue);
+    expect(macro.readAsStringSync(), 'macro-code');
+    final digest = File(
+      p.join(profileRoot, 'Mod', 'A2plus', 'AM_INSTALLATION_DIGEST.txt'),
+    );
+    expect(digest.existsSync(), isTrue);
+    expect(digest.readAsStringSync(), contains('Tool.FCMacro'));
+    final manifest =
+        jsonDecode(File(p.join(profileRoot, 'Mod', 'manifest.json')).readAsStringSync())
+            as Map<String, dynamic>;
+    final entry = manifest['A2plus'] as Map<String, dynamic>;
+    expect(entry['addon_id'], 'A2plus');
+    expect(entry['migrated'], isFalse);
+    expect(entry['branch_display_name'], 'master');
+    expect(entry['freecad_version'], ['1', '1', '3']);
+    expect(entry['extra_files'], [macro.path]);
+    subject.dispose();
+  });
+
+  test('preference pack addons do not copy their fcmacro files', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [addon('Prefs', content: {AddonContentType.preferencePack})],
+      freshness: CatalogFreshness.fresh,
+    );
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    downloadSource.streamFactory = () => Stream.fromIterable([
+      catalogZip({
+        'Prefs-master/package.xml': '<package><name>Prefs</name></package>',
+        'Prefs-master/pre.FCMacro': 'pre-script',
+      }),
+    ]);
+    final subject = controller();
+    await subject.load();
+
+    final result = await subject.install(
+      addonId: 'Prefs',
+      branchRef: 'master',
+      profileId: 'profile-1',
+    );
+
+    expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+    final profileRoot = p.join(tempDirectory.path, 'profiles', 'profile-1');
+    expect(File(p.join(profileRoot, 'Macros', 'pre.FCMacro')).existsSync(), isFalse);
+    expect(File(p.join(profileRoot, 'Mod', 'Prefs', 'AM_INSTALLATION_DIGEST.txt')).existsSync(),
+        isFalse);
+    expect(File(p.join(profileRoot, 'Mod', 'manifest.json')).existsSync(), isFalse);
+    subject.dispose();
+  });
+
+  test('update refreshes copied macros and merges the manifest extras', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [addon('A2plus', name: 'A2plus', version: '0.4.68')],
+      freshness: CatalogFreshness.fresh,
+    );
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    downloadSource.streamFactory = () => Stream.fromIterable([
+      catalogZip({
+        'A2plus-master/package.xml': '<package><name>A2plus</name></package>',
+        'A2plus-master/macro/First.FCMacro': 'v1',
+      }),
+    ]);
+    final subject = controller();
+    await subject.load();
+    subject.start();
+    await pumpEventQueue();
+    await subject.install(addonId: 'A2plus', branchRef: 'master', profileId: 'profile-1');
+    await pumpEventQueue();
+    final profileRoot = p.join(tempDirectory.path, 'profiles', 'profile-1');
+    expect(File(p.join(profileRoot, 'Macros', 'First.FCMacro')).readAsStringSync(), 'v1');
+
+    downloadSource.streamFactory = () => Stream.fromIterable([
+      catalogZip({
+        'A2plus-master/package.xml': '<package><name>A2plus</name></package>',
+        'A2plus-master/macro/Second.FCMacro': 'v2',
+      }),
+    ]);
+    final result = await subject.update(
+      addonId: 'A2plus',
+      branchRef: 'master',
+      profileId: 'profile-1',
+    );
+
+    expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+    expect(File(p.join(profileRoot, 'Macros', 'Second.FCMacro')).readAsStringSync(), 'v2');
+    final manifest =
+        jsonDecode(File(p.join(profileRoot, 'Mod', 'manifest.json')).readAsStringSync())
+            as Map<String, dynamic>;
+    final extras = (manifest['A2plus'] as Map<String, dynamic>)['extra_files'] as List;
+    expect(extras, hasLength(2));
+    expect(extras.cast<String>().map(p.basename).toSet(), {'First.FCMacro', 'Second.FCMacro'});
+    subject.dispose();
+  });
+
+  test('remove deletes copied macros and the manifest entry', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [addon('A2plus')],
+      freshness: CatalogFreshness.fresh,
+    );
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    downloadSource.streamFactory = () => Stream.fromIterable([
+      catalogZip({
+        'A2plus-master/package.xml': '<package><name>A2plus</name></package>',
+        'A2plus-master/macro/Tool.FCMacro': 'macro-code',
+      }),
+    ]);
+    final subject = controller();
+    await subject.load();
+    await subject.install(addonId: 'A2plus', branchRef: 'master', profileId: 'profile-1');
+    final profileRoot = p.join(tempDirectory.path, 'profiles', 'profile-1');
+    final macro = File(p.join(profileRoot, 'Macros', 'Tool.FCMacro'));
+    expect(macro.existsSync(), isTrue);
+
+    final result = await subject.remove(addonId: 'A2plus', profileId: 'profile-1');
+
+    expect(result.isOk, isTrue);
+    expect(macro.existsSync(), isFalse);
+    final manifest = jsonDecode(File(p.join(profileRoot, 'Mod', 'manifest.json')).readAsStringSync());
+    expect(manifest, isEmpty);
+    subject.dispose();
+  });
+
+  test('remove never deletes files outside the profile macro directory', () async {
+    catalog.result = AddonCatalogResult(
+      addons: [addon('A2plus')],
+      freshness: CatalogFreshness.fresh,
+    );
+    await db.buildsDao.save(sampleBuild());
+    await db.profilesDao.save(sampleProfile());
+    final outsider = File(p.join(tempDirectory.path, 'keep.txt'))..writeAsStringSync('keep');
+    final modDirectory = p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'A2plus');
+    Directory(modDirectory).createSync(recursive: true);
+    File(p.join(modDirectory, 'AM_INSTALLATION_DIGEST.txt')).writeAsStringSync(
+      '# header\n${outsider.path}\n',
+    );
+    await db.installedAddonsDao.save(sampleAddon(profileId: 'profile-1', addonId: 'A2plus'));
+    final subject = controller();
+    await subject.load();
+
+    final result = await subject.remove(addonId: 'A2plus', profileId: 'profile-1');
+
+    expect(result.isOk, isTrue);
+    expect(outsider.existsSync(), isTrue);
+    subject.dispose();
+  });
+
   test('cancelling an addon install job removes the partial download', () async {
     catalog.result = AddonCatalogResult(
       addons: [addon('A2plus', name: 'A2plus')],
@@ -785,6 +959,7 @@ void main() {
         catalogZip({
           'LocalAddon/package.xml': _packageXml('LocalAddon', '0.9.0'),
           'LocalAddon/InitGui.py': 'gui',
+          'LocalAddon/LocalAddon.FCMacro': 'local-macro',
         }),
       );
       final subject = controller();
@@ -801,6 +976,17 @@ void main() {
       expect(row.sourcePath, File(archivePath).absolute.path);
       expect(row.version, '0.9.0');
       expect(downloadSource.requests, isEmpty);
+      final profileRoot = p.join(tempDirectory.path, 'profiles', 'profile-1');
+      expect(
+        File(p.join(profileRoot, 'Macros', 'LocalAddon.FCMacro')).readAsStringSync(),
+        'local-macro',
+      );
+      final manifest =
+          jsonDecode(File(p.join(profileRoot, 'Mod', 'manifest.json')).readAsStringSync())
+              as Map<String, dynamic>;
+      final entry = manifest['LocalAddon'] as Map<String, dynamic>;
+      expect(entry['branch_display_name'], '');
+      expect(entry['extra_files'], hasLength(1));
       subject.dispose();
     });
 
@@ -914,6 +1100,7 @@ void main() {
         p.join(sourceDirectory, 'package.xml'),
       ).writeAsStringSync(_packageXml('DevAddon', '0.1.0'));
       File(p.join(sourceDirectory, 'InitGui.py')).writeAsStringSync('live');
+      File(p.join(sourceDirectory, 'DevAddon.FCMacro')).writeAsStringSync('dev');
       final subject = controller();
 
       final result = await subject.installFromDirectory(
@@ -923,8 +1110,12 @@ void main() {
 
       expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
       expect(result.errorOrNull, isNull);
-      final modDirectory = p.join(tempDirectory.path, 'profiles', 'profile-1', 'Mod', 'DevAddon');
+      final profileRoot = p.join(tempDirectory.path, 'profiles', 'profile-1');
+      final modDirectory = p.join(profileRoot, 'Mod', 'DevAddon');
       expect(isAddonLink(modDirectory), isTrue);
+      expect(File(p.join(profileRoot, 'Macros', 'DevAddon.FCMacro')).existsSync(), isFalse);
+      expect(File(p.join(profileRoot, 'Mod', 'manifest.json')).existsSync(), isFalse);
+      expect(File(p.join(sourceDirectory, 'AM_INSTALLATION_DIGEST.txt')).existsSync(), isFalse);
       final row = await db.installedAddonsDao.getByAddon('profile-1', 'DevAddon');
       expect(row!.source, 'symlink');
       expect(row.sourcePath, p.normalize(sourceDirectory));

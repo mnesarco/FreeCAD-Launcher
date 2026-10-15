@@ -2870,3 +2870,42 @@ Template:
 - **Refs**: `TASKS.md` R-42, `docs/spec/03-ux.md` §2.3, `docs/spec/05-data-model.md`,
   `lib/domain/profiles/profile_palette.dart`, `lib/ui/theme/profile_palette_theme.dart`,
   `lib/ui/profiles/profiles_view.dart`, D-123, D-124
+
+### D-126 — Addons installed by the launcher ship their embedded macros with AddonManager parity (R-48)
+- **Date**: 2026-10-15
+- **Status**: Accepted
+- **Context**: Installing the LiveSectionAnalyzer addon through FreeCAD's AddonManager in a profile
+  produces `<profile>/Macros/LiveSectionAnalyzer.FCMacro`, an `AM_INSTALLATION_DIGEST.txt` inside
+  the addon directory and an entry in `<profile>/Mod/manifest.json`; installing the same addon
+  through the launcher only places `Mod/LiveSectionAnalyzer/` and records the DB row (owner
+  report). FreeCAD's AddonManager (`addonmanager_installer.py::_install_macros` and
+  `addonmanager_installation_manifest.py`) is the reference behavior.
+- **Decision** (owner-approved options):
+  - **Copy rule**: after a successful addon commit, copy **every** `*.fcmacro` found recursively
+    in the addon (case-insensitive) into `<profile>/Macros/<basename>`, exactly like AddonManager;
+    the only exclusion is an addon that declares a `<preferencepack>` content item (its macros are
+    pre/post scripts). Files with the same name are overwritten (last copy wins, as in
+    AddonManager).
+  - **Bookkeeping**: write an AddonManager-format `AM_INSTALLATION_DIGEST.txt` inside the installed
+    addon listing the copied absolute paths, and maintain `<profile>/Mod/manifest.json` with the
+    AddonManager `InstallationManifest` schema (`addon_id`, `migrated: false`, `first_installed`,
+    `last_updated`, `branch_display_name`, `extra_files`, `freecad_version`); updates merge
+    `extra_files` and refresh times. `freecad_version` is the profile build version as three
+    strings (e.g. `["1","1","3"]`), empty when unparseable.
+  - **Removal**: the union of the manifest `extra_files` and the digest lines is deleted, but only
+    paths that resolve **inside** `<profile>/Macros/` are ever touched (never trust archive-supplied
+    digest paths), then the addon directory, the manifest entry and the DB row are removed.
+    Removal failures of extra files are logged, not fatal.
+  - **Dev symlink installs** (`AddonSource.symlink`): no macro copy and no digest/manifest write
+    (never write into the user's dev tree); documented limitation.
+  - Copied macros surface through the normal macro reconciler (`<profile>/Macros/` scan) as local
+    macros; **no schema/DB change** and no new dependency.
+- **Consequences**: the launcher and FreeCAD's AddonManager agree on addon-installed macros in both
+  directions (each can clean up the other's `extra_files`). Known parity limitations: a renamed
+  macro from a previous addon version is only removed on uninstall when it is still recorded in
+  `manifest.json` `extra_files`; basename collisions between addons follow AddonManager semantics.
+  Spec 06 §2 and the user guide are updated.
+- **Refs**: `TASKS.md` R-48, `docs/spec/06-integrations.md` §2, `lib/platform/addon_macros.dart`,
+  `lib/platform/addon_installation_manifest.dart`, `lib/state/addons_controller.dart`,
+  FreeCAD/AddonManager `addonmanager_installer.py` (`_install_macros`),
+  `addonmanager_installation_manifest.py`, `addonmanager_uninstaller.py` (`remove_extra_files`)

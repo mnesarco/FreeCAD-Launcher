@@ -209,6 +209,12 @@ with a notice).
   still allowed.
 - Archives that contain symbolic links install with the links skipped (links are never created);
   a “Some files were skipped” dialog lists every skipped path and its target.
+- Addons that ship macros (any `.FCMacro` file in the addon, e.g. LiveSectionAnalyzer) get them
+  copied into `<profile>/Macros/` on install and update, exactly like FreeCAD's AddonManager
+  (addons declaring a preference pack are excluded). An `AM_INSTALLATION_DIGEST.txt` is written
+  inside the addon and `<profile>/Mod/manifest.json` is kept in sync, so FreeCAD's AddonManager
+  and the launcher can both clean up; removing the addon deletes the copied macros. Dev-link
+  addons are excluded (the working copy is never written to).
 - Installed addons are listed per profile (Addons tab) with **Update** and **Remove**; updates
   keep a backup under `<profile>/backups/addon-<id>-<timestamp>/`.
 - **Pin** an addon per profile to freeze it: pinned addons are skipped by update checks, batch

@@ -121,6 +121,13 @@ cache format. Integration rules for v2:
 - **Branch choice**: entries are per-branch; prefer the user's explicit `git_ref`, else the
   first entry whose `freecad_min`/`freecad_max` brackets the profile's version, else the first.
 - **Placement**: extract to `<profile>/Mod/<AddonId>` (matches FreeCAD's AddonManager).
+- **Embedded macros** (D-126, AddonManager parity): every `.FCMacro` file in the addon is copied
+  to `<profile>/Macros/` on install and update (addons declaring a `<preferencepack>` content
+  item are excluded); an `AM_INSTALLATION_DIGEST.txt` is written inside the addon listing the
+  copied paths and `<profile>/Mod/manifest.json` is maintained with the AddonManager
+  `InstallationManifest` schema. Removal deletes the copied files (manifest `extra_files` merged
+  with the digest, confined to the profile macros directory) and the manifest entry. Dev symlink
+  installs are excluded (the working copy is never written to).
 - **Update detection**: compare installed `catalogLastUpdate`/package version against the
   catalog entry; show update, never auto-apply.
 - **Dependencies**: `package.xml` `<depend>` tags (root and nested `<content>` items) and

@@ -3,8 +3,15 @@
 > Live file. Every session updates this at start and end. Keep it short — details belong in
 > `TASKS.md` and `DECISIONS.md`.
 
-- **Updated**: 2026-10-14
-- **Current work**: **B-16b DONE (merged)** — toolchain pin Flutter 3.47.6 → **3.47.7**
+- **Updated**: 2026-10-15
+- **Current work**: **R-48 DONE (uncommitted)** — addon-embedded macros now match FreeCAD's
+  AddonManager (D-126, owner report): installing an addon through the Launcher copies every
+  `.FCMacro` into `<profile>/Macros/`, writes `AM_INSTALLATION_DIGEST.txt` inside the addon and
+  maintains `Mod/manifest.json`; removal deletes the copied macros (confined to the macros dir)
+  and the manifest entry; dev symlink installs are skipped. Real-network E2E on the actual
+  `LiveSectionAnalyzer` (macro byte-identical, digest header/manifest keys match the
+  AddonManager-installed `Section` profile), 797 tests green (10 probes skipped), analyze clean.
+  Earlier: **B-16b DONE (merged)** — toolchain pin Flutter 3.47.6 → **3.47.7**
   (D-121) plus `flutter pub upgrade` within existing constraints (archive 4.5.2, drift 2.35.2,
   url_launcher 6.3.3, build_runner 2.16.2, sqlite3 3.7.1 + transitives). Merged via PR [#6](https://github.com/mnesarco/FreeCAD-Launcher/pull/6) (rebase) as
   `5c78264`…`ce00a9e`; analyze clean,
@@ -28,10 +35,14 @@
   M8-05 clean-VM Linux pass ready)
 - **Active branch**: `devel` (public, pushed to `origin/devel`) — `main` is reserved for a future
   release line
-- **Last session**: 2026-10-14
+- **Last session**: 2026-10-15
 - **Plan**: `docs/impl/PLAN-M8-windows-release.md` — the session saves progress there and in
   `TASKS.md` so work can resume after an interruption.
-- **Decisions this session**: **D-119** (release candidates get their own `rc` channel:
+- **Decisions this session**: **D-126** (launcher addon installs ship embedded macros with
+  AddonManager parity: copy every `.FCMacro` to the profile macros dir unless the addon declares
+  a preference pack, write `AM_INSTALLATION_DIGEST.txt` + maintain `Mod/manifest.json`, removal
+  deletes extras confined to the macros dir, dev symlinks skipped; no schema change) — R-48;
+  **D-119** (release candidates get their own `rc` channel:
   `FreeCadVersion.rc`/`isPrerelease` with `26.3rc1 < 26.3rc2 < 26.3`, `BuildChannel.rc`,
   Available RC filter + badge + install warning, excluded from stable update checks and the
   catalog-derived stable line, no schema migration) — R-36; **D-118** (interpreter pip runs through a generated bootstrap that
@@ -44,7 +55,10 @@
   `%APPDATA%\org.freecad.ext.launcher`; its rename migration superseded by D-117) — M8-07; D-115
   (the asset-name `pyXY` hint is version metadata only, never an interpreter path; legacy stored
   FreeCAD paths are ignored and FreeCAD is only ever called with `-c`) — R-32.
-- **Next action**: **R-36** (release candidate `26.3rc1` was not installable because the stable
+- **Next action**: **R-48 is DONE (uncommitted)** — addon-embedded macros now match FreeCAD's
+  AddonManager (D-126): copy every `.FCMacro` into `<profile>/Macros/`, digest +
+  `Mod/manifest.json`, cleanup on remove, dev symlinks skipped; test-covered plus a real-network
+  E2E on `LiveSectionAnalyzer`; commit/push pending owner approval. Then: **R-36** (release candidate `26.3rc1` was not installable because the stable
   tag regex rejected the `rcN` suffix) is implemented, test-verified and shipped in **`v0.4.11`**
   — **D-119** adds the `rc` channel (`26.3rc1 < 26.3rc2 < 26.3`), the Available **RC** filter with
   badge + install warning, and excludes RCs from stable update checks and the stable line; analyze
@@ -78,7 +92,13 @@
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
   - The B-16 Phase 3 Windows-machine smoke is **on hold** (no Windows machine available as of
     2026-10-02); B-16 is otherwise complete. The same applies to the R-31 no-redist live check.
-- **Current state**: `devel` is pushed to `origin/devel` at `65ba799` (R-37..R-47 + the
+- **Current state**: **R-48/D-126 is implemented, test-verified and live-verified but
+  uncommitted** (owner report: addon-installed `.FCMacro`/manifest missing vs AddonManager):
+  `AddonMacroInstaller` + `AddonInstallationManifest` + `AddonsController` wiring, real
+  `LiveSectionAnalyzer` E2E (`test/manual/real_addon_macros_test.dart`), 797 tests green
+  (10 probes skipped), analyze clean; the owner's `Section2` profile keeps its pre-fix install
+  until the addon is updated/reinstalled there (no automatic healing). `devel` is pushed to
+  `origin/devel` at `65ba799` (R-37..R-47 + the
   0.4.12 bump; this docs record follows) and **`v0.4.12` is published** as a pre-release (manual
   `create_release=true`, tag `v0.4.12` on `65ba799`, `prerelease=true`, run 38657277264;
   appimage/windows/publish all green) with
@@ -872,3 +892,4 @@
 | 2026-10-14 | R96 | **Docs: R-47 Addons Custom tabs commit SHA recorded** (owner request): the change was committed as `b7f805e` (`feat(addons): merge custom source forms into one tabbed card [R-47]`, 9 files); the TASKS R-47 row and STATUS R95 now read `Committed b7f805e`, and `Current work`/`Current state` list the local `devel` lead over `origin/devel` (`494612f`…`b7f805e` + this docs record; push pending). Docs-only commit; per D-122 no CI run starts | R-47 | `docs/impl/{TASKS,STATUS}.md` |
 | 2026-10-14 | R97 | **Version bumped 0.4.11 → 0.4.12** (owner request, pre-release step for the R-39..R-47 batch): `lib/core/constants.dart` + `pubspec.yaml` updated (`packaging/check_version.sh` OK, prints `0.4.12`); no other file references the old version. `flutter analyze` clean, 782 tests green (10 skipped). Committed and pushed as part of the `v0.4.12` release; the release run is recorded in the row below | R-39..R-47 | `lib/core/constants.dart`, `pubspec.yaml`, `docs/impl/STATUS.md` |
 | 2026-10-14 | R98 | **`v0.4.12` pre-release published** (owner request: commit, push, release): the bump `65ba799` (`chore(release): bump version to 0.4.12 [R-37..R-47]`) was pushed to `origin/devel` (`10d89ea..65ba799`) and the manual `release.yml` run [38657277264](https://github.com/mnesarco/FreeCAD-Launcher/actions/runs/38657277264) (`create_release=true`, tag `v0.4.12`, `prerelease=true`, ref `devel`) went green on appimage/windows/publish and published the GitHub pre-release with `FreeCADLauncher-0.4.12-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.12-x86_64.AppImage` + `.sha256` + `.zsync`; all assets downloaded and verified after publication: both sidecars `sha256sum -c` OK, AppImage `--version` = “FreeCAD Launcher 0.4.12” (exit 0), zip carries `7zr.exe`, `freecad_launcher.exe`, `LICENSE`, `THIRD_PARTY_NOTICES.md`, `sqlite3.dll`, `dartjni.dll` and the app-local MSVC runtime (`vcruntime140.dll`, `vcruntime140_1.dll`, `msvcp140.dll`/`_1`/`_2`, `concrt140.dll`). The release carries B-16b/R-38 plus R-37..R-47 (profile search, Addons-style grid, drag ordering, color identity, card tightening, Home hero logo, Custom tabs). Release-only; the docs record is this commit | R-37..R-47, B-16b, R-38 | `lib/core/constants.dart`, `pubspec.yaml`, `docs/impl/STATUS.md` |
+| 2026-10-15 | R99 | **R-48/D-126: addon-embedded macros parity with FreeCAD's AddonManager** (owner report: installing `LiveSectionAnalyzer` via AddonManager ships `Macros/LiveSectionAnalyzer.FCMacro` + `AM_INSTALLATION_DIGEST.txt` + `Mod/manifest.json`, via the Launcher only `Mod/<id>`). Owner-approved scope: copy every `.FCMacro` in the addon (preference-pack addons excluded), write both bookkeeping files, skip dev symlinks. New `lib/platform/addon_macros.dart` (`AddonMacroInstaller`: recursive case-insensitive copy by base name, AddonManager-format digest write/read, removal confined to `<profile>/Macros/` so a tampered digest can never delete arbitrary files) and `lib/platform/addon_installation_manifest.dart` (`AddonInstallationManifest`: AddonManager schema, update merges `extra_files` and keeps `first_installed`, `freecad_version` as three strings); `AddonsController` install/update (catalog + custom repo/zip; symlinks skipped, extras failures log-only) and remove (manifest ∪ digest cleanup + manifest entry removal) wired; no schema/DB change. Tests: 10 platform + 6 controller (copy/digest/manifest, preference-pack skip, update merge, remove cleanup, confinement, symlink no-op, local archive path) → 797 green (10 probes skipped), `flutter analyze` clean. Real-network E2E `test/manual/real_addon_macros_test.dart` (`FCL_REAL_ADDON_MACROS=1`, reference `FCL_ADDON_MANAGER_PROFILE` = owner `Section` profile): real catalog + real addon install copied the macro byte-identical, digest header and manifest keys/`migrated`/`branch_display_name` match, remove cleaned macro + dir + entry; D-126, spec 06 §2, user guide, TASKS/VERIFICATION updated. Uncommitted; the owner's `Section2` install gets the extras on its next update/reinstall (no auto-healing) | R-48, D-126 | `lib/platform/{addon_macros,addon_installation_manifest}.dart`, `lib/state/addons_controller.dart`, `test/platform/{addon_macros,addon_installation_manifest}_test.dart`, `test/state/addons_controller_test.dart`, `test/manual/real_addon_macros_test.dart`, `docs/spec/06-integrations.md`, `docs/user-guide.md`, `docs/impl/{DECISIONS,TASKS,VERIFICATION,STATUS}.md` |
