@@ -4,12 +4,19 @@
 > `TASKS.md` and `DECISIONS.md`.
 
 - **Updated**: 2026-10-15
-- **Current work**: **R-49 DONE** (committed `bccdfae`, push pending) — installs from the profile detail tabs (Add addon
+- **Current work**: **`v0.4.13` published (pre-release)** carrying R-48 and R-49 — version bump
+  `eb42dd2` pushed to `origin/devel`, manual `release.yml` run
+  [38736890695](https://github.com/mnesarco/FreeCAD-Launcher/actions/runs/38736890695)
+  (`create_release=true`, tag `v0.4.13`, `prerelease=true`, ref `devel`) green on
+  appimage/windows/publish and the GitHub pre-release created with a plain-English user summary
+  (`gh release edit`); both sidecars re-verified (`sha256sum -c` OK), AppImage `--version` =
+  0.4.13 (exit 0), zip carries `7zr.exe`/license/notices/`sqlite3.dll`/`dartjni.dll` and the
+  app-local MSVC runtime. **R-49 DONE** — installs from the profile detail tabs (Add addon
   / Add macro) now auto-open the jobs dialog immediately (D-127, owner request) and the dialog
   stays until the user closes it; closing it leaves the jobs running (status bar keeps tracking
   them). Widget tests + real live click-through on the `Demo` profile (macro install → Jobs
   dialog shown/completed → closed → test macro removed); 798 tests green (11 probes skipped),
-  analyze clean. Earlier today: **R-48 DONE** (committed `9a4d080`, push pending) — addon-embedded macros now match FreeCAD's
+  analyze clean. **R-48 DONE** — addon-embedded macros now match FreeCAD's
   AddonManager (D-126, owner report): installing an addon through the Launcher copies every
   `.FCMacro` into `<profile>/Macros/`, writes `AM_INSTALLATION_DIGEST.txt` inside the addon and
   maintains `Mod/manifest.json`; removal deletes the copied macros (confined to the macros dir)
@@ -63,10 +70,11 @@
   `%APPDATA%\org.freecad.ext.launcher`; its rename migration superseded by D-117) — M8-07; D-115
   (the asset-name `pyXY` hint is version metadata only, never an interpreter path; legacy stored
   FreeCAD paths are ignored and FreeCAD is only ever called with `-c`) — R-32.
-- **Next action**: **R-49 is DONE** (committed `bccdfae`, push pending) — profile-tab addon/macro
-  installs auto-open the jobs dialog (D-127); widget tests + live click-through green. **R-48 is
-  DONE** (committed `9a4d080`, push pending) — addon-embedded macros now match FreeCAD's
-  AddonManager (D-126). The push of both tasks awaits owner approval. Then: **R-36** (release candidate `26.3rc1` was not installable because the stable
+- **Next action**: **`v0.4.13` is published** (pre-release, run 38736890695) with R-48/D-126
+  (addon-embedded macros) and R-49/D-127 (jobs dialog on profile-tab installs); `devel` is pushed
+  to `origin/devel` at `eb42dd2` and this release record follows. Owner retest suggestions:
+  update/reinstall LiveSectionAnalyzer in `Section2` to get its macro; install an addon/macro
+  from a profile tab to see the Jobs dialog. Then: **R-36** (release candidate `26.3rc1` was not installable because the stable
   tag regex rejected the `rcN` suffix) is implemented, test-verified and shipped in **`v0.4.11`**
   — **D-119** adds the `rc` channel (`26.3rc1 < 26.3rc2 < 26.3`), the Available **RC** filter with
   badge + install warning, and excludes RCs from stable update checks and the stable line; analyze
@@ -100,15 +108,22 @@
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
   - The B-16 Phase 3 Windows-machine smoke is **on hold** (no Windows machine available as of
     2026-10-02); B-16 is otherwise complete. The same applies to the R-31 no-redist live check.
-- **Current state**: **R-48/D-126 and R-49/D-127 are implemented, test-verified and
-  live-verified, committed `9a4d080` and `bccdfae` (not pushed yet)**. R-49: profile-tab
-  addon/macro installs auto-open the jobs dialog (D-127), 798 tests green (11 probes skipped),
-  live click-through on `Demo`. R-48 (owner report: addon-installed `.FCMacro`/manifest missing
-  vs AddonManager):
-  `AddonMacroInstaller` + `AddonInstallationManifest` + `AddonsController` wiring, real
-  `LiveSectionAnalyzer` E2E (`test/manual/real_addon_macros_test.dart`); the owner's `Section2`
-  profile keeps its pre-fix install
-  until the addon is updated/reinstalled there (no automatic healing). `devel` is pushed to
+- **Current state**: **`v0.4.13` is published** as a pre-release (manual `create_release=true`,
+  tag `v0.4.13` on `eb42dd2`, `prerelease=true`, run 38736890695; appimage/windows/publish all
+  green) with `FreeCADLauncher-0.4.13-windows-x86_64.zip` + `.sha256` and
+  `FreeCADLauncher-0.4.13-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
+  download (`sha256sum -c` OK), AppImage `--version` = 0.4.13 (exit 0), zip carries `7zr.exe`,
+  license/notices, `sqlite3.dll`/`dartjni.dll` and the app-local MSVC runtime
+  (`vcruntime140.dll`, `vcruntime140_1.dll`, …). The release carries R-48/D-126 (addon-embedded
+  macros; real `LiveSectionAnalyzer` E2E) and R-49/D-127 (profile-tab installs auto-open the
+  jobs dialog); its notes were replaced with a plain-English user summary. `devel` is pushed to
+  `origin/devel` at `eb42dd2` (R-48 + R-49 + bump; this release record follows); the owner's
+  `Section2` profile keeps its pre-fix install until the addon is updated/reinstalled there
+  (no automatic healing). Earlier: **R-48/D-126 and R-49/D-127 implemented, test-verified and
+  live-verified** — R-48 `AddonMacroInstaller` + `AddonInstallationManifest` +
+  `AddonsController` wiring, real `LiveSectionAnalyzer` E2E
+  (`test/manual/real_addon_macros_test.dart`); R-49 798 tests green (11 probes skipped), live
+  click-through on `Demo`. `devel` had been pushed to
   `origin/devel` at `65ba799` (R-37..R-47 + the
   0.4.12 bump; this docs record follows) and **`v0.4.12` is published** as a pre-release (manual
   `create_release=true`, tag `v0.4.12` on `65ba799`, `prerelease=true`, run 38657277264;
@@ -905,3 +920,4 @@
 | 2026-10-14 | R98 | **`v0.4.12` pre-release published** (owner request: commit, push, release): the bump `65ba799` (`chore(release): bump version to 0.4.12 [R-37..R-47]`) was pushed to `origin/devel` (`10d89ea..65ba799`) and the manual `release.yml` run [38657277264](https://github.com/mnesarco/FreeCAD-Launcher/actions/runs/38657277264) (`create_release=true`, tag `v0.4.12`, `prerelease=true`, ref `devel`) went green on appimage/windows/publish and published the GitHub pre-release with `FreeCADLauncher-0.4.12-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.12-x86_64.AppImage` + `.sha256` + `.zsync`; all assets downloaded and verified after publication: both sidecars `sha256sum -c` OK, AppImage `--version` = “FreeCAD Launcher 0.4.12” (exit 0), zip carries `7zr.exe`, `freecad_launcher.exe`, `LICENSE`, `THIRD_PARTY_NOTICES.md`, `sqlite3.dll`, `dartjni.dll` and the app-local MSVC runtime (`vcruntime140.dll`, `vcruntime140_1.dll`, `msvcp140.dll`/`_1`/`_2`, `concrt140.dll`). The release carries B-16b/R-38 plus R-37..R-47 (profile search, Addons-style grid, drag ordering, color identity, card tightening, Home hero logo, Custom tabs). Release-only; the docs record is this commit | R-37..R-47, B-16b, R-38 | `lib/core/constants.dart`, `pubspec.yaml`, `docs/impl/STATUS.md` |
 | 2026-10-15 | R99 | **R-48/D-126: addon-embedded macros parity with FreeCAD's AddonManager** (owner report: installing `LiveSectionAnalyzer` via AddonManager ships `Macros/LiveSectionAnalyzer.FCMacro` + `AM_INSTALLATION_DIGEST.txt` + `Mod/manifest.json`, via the Launcher only `Mod/<id>`). Owner-approved scope: copy every `.FCMacro` in the addon (preference-pack addons excluded), write both bookkeeping files, skip dev symlinks. New `lib/platform/addon_macros.dart` (`AddonMacroInstaller`: recursive case-insensitive copy by base name, AddonManager-format digest write/read, removal confined to `<profile>/Macros/` so a tampered digest can never delete arbitrary files) and `lib/platform/addon_installation_manifest.dart` (`AddonInstallationManifest`: AddonManager schema, update merges `extra_files` and keeps `first_installed`, `freecad_version` as three strings); `AddonsController` install/update (catalog + custom repo/zip; symlinks skipped, extras failures log-only) and remove (manifest ∪ digest cleanup + manifest entry removal) wired; no schema/DB change. Tests: 10 platform + 6 controller (copy/digest/manifest, preference-pack skip, update merge, remove cleanup, confinement, symlink no-op, local archive path) → 797 green (10 probes skipped), `flutter analyze` clean. Real-network E2E `test/manual/real_addon_macros_test.dart` (`FCL_REAL_ADDON_MACROS=1`, reference `FCL_ADDON_MANAGER_PROFILE` = owner `Section` profile): real catalog + real addon install copied the macro byte-identical, digest header and manifest keys/`migrated`/`branch_display_name` match, remove cleaned macro + dir + entry; D-126, spec 06 §2, user guide, TASKS/VERIFICATION updated. Committed `9a4d080` (not pushed yet); the owner's `Section2` install gets the extras on its next update/reinstall (no auto-healing) | R-48, D-126 | `lib/platform/{addon_macros,addon_installation_manifest}.dart`, `lib/state/addons_controller.dart`, `test/platform/{addon_macros,addon_installation_manifest}_test.dart`, `test/state/addons_controller_test.dart`, `test/manual/real_addon_macros_test.dart`, `docs/spec/06-integrations.md`, `docs/user-guide.md`, `docs/impl/{DECISIONS,TASKS,VERIFICATION,STATUS}.md` |
 | 2026-10-15 | R100 | **R-49/D-127: profile-tab installs auto-open the jobs dialog** (owner request: “by default when user install addons/macros show the jobs dialog … the user can close it and jobs continue in background as normal”). Owner choices recorded: scope = only the profile detail **Addons**/**Macros** tabs (catalog detail, Addons ▸ Custom, Macros catalog, Python packages, builds/bundles keep the status-bar chip; batch flows keep their own progress UI); immediate show, after the dependency-consent dialog; the dialog stays until the user closes it (no auto-close), jobs keep running if closed early. Implementation: `installAddonIntoProfile` gained `autoShowJobs` (default `false`; profile Addons tab `_addAddon` passes `true`) and `InstalledMacrosList` gained `showJobs` (default `false`; profile Macros tab passes `true`); both call the existing `showJobsDialog` fire-and-forget right after starting the install future — no controller/queue/schema change. Tests: `profile_addons_picker_test` asserts the dialog opens and Close dismisses it; `profile_macros_picker_test` gained an auto-open test and the default path asserts no dialog → 798 tests green (11 probes skipped), `flutter analyze` clean. Live click-through on the real dev app/data root (`Demo` profile, xdotool on the debug build): Add macro → Install auto-opened **Jobs** with `Install macro 3d Printer Slicer · Completed` (snackbar behind it), Close dismissed the dialog, app stayed usable; the test macro was deleted afterwards and the profile restored (only `FCCamera` remains), zero runtime errors (only pre-existing SVG loader notices). Spec 03 §2.3, user guide, D-127, TASKS R-49 and VERIFICATION §R-49 updated. Committed `bccdfae` (not pushed yet) | R-49, D-127 | `lib/ui/addons/addon_install_flow.dart`, `lib/ui/macros/installed_macros.dart`, `lib/ui/profiles/profile_detail_view.dart`, `test/ui/profile_addons_picker_test.dart`, `test/ui/profile_macros_picker_test.dart`, `docs/spec/03-ux.md`, `docs/user-guide.md`, `docs/impl/{DECISIONS,TASKS,VERIFICATION,STATUS}.md` |
+| 2026-10-15 | R101 | **`v0.4.13` pre-release published** (owner request: bump, commit, push, release, plain-English notes): version bumped 0.4.12 → 0.4.13 (`lib/core/constants.dart` + `pubspec.yaml`, `check_version.sh` OK, `chore(release): bump version to 0.4.13 [R-48, R-49]`, `eb42dd2`), analyze clean and 798 tests green (11 probes skipped) before the push; `devel` pushed (`51cda4f..eb42dd2`; the code push started CI run 38736882730). Manual `release.yml` run [38736890695](https://github.com/mnesarco/FreeCAD-Launcher/actions/runs/38736890695) (`create_release=true`, tag `v0.4.13`, `prerelease=true`, ref `devel`) green on appimage/windows/publish and published the GitHub pre-release with `FreeCADLauncher-0.4.13-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.13-x86_64.AppImage` + `.sha256` + `.zsync`; the auto-generated body was replaced via `gh release edit` with a plain-English user summary (addon macros now install like FreeCAD's AddonManager, and the Jobs window opens on profile-tab installs; downloads + changelog link). All assets downloaded and verified: both sidecars `sha256sum -c` OK, AppImage `--version` = “FreeCAD Launcher 0.4.13” (exit 0), zip carries `7zr.exe`, `LICENSE`, `THIRD_PARTY_NOTICES.md`, `sqlite3.dll`, `dartjni.dll` and the app-local MSVC runtime (`vcruntime140.dll`, `vcruntime140_1.dll`, `msvcp140*.dll`). The release carries R-48/D-126 and R-49/D-127; TASKS rows updated to “released in `v0.4.13`”. Docs-only record commit (per D-122 starts no CI) | R-48, R-49, D-126, D-127 | `lib/core/constants.dart`, `pubspec.yaml`, `docs/impl/{TASKS,STATUS}.md` |
