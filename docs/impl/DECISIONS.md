@@ -2909,3 +2909,35 @@ Template:
   `lib/platform/addon_installation_manifest.dart`, `lib/state/addons_controller.dart`,
   FreeCAD/AddonManager `addonmanager_installer.py` (`_install_macros`),
   `addonmanager_installation_manifest.py`, `addonmanager_uninstaller.py` (`remove_extra_files`)
+
+### D-127 — Installs from the profile tabs auto-open the jobs dialog (R-49)
+- **Date**: 2026-10-15
+- **Status**: Accepted
+- **Context**: Installing an addon or macro from the profile detail tabs runs through the shared
+  job queue but shows no direct feedback: the user must notice the animated status-bar chip and
+  click it to see progress. Owner request: “by default when user install addons/macros show the
+  jobs dialog (the user can close it and jobs continue in background as normal) this gives
+  better feedback to the user”.
+- **Decision** (owner-approved options):
+  - **Scope**: only installs started from the **profile detail tabs** — “Add addon”
+    (Profile ▸ Addons) and “Add macro” (Profile ▸ Macros). Catalog detail, Addons ▸ Custom,
+    the Macros catalog, Python packages, builds, bundle apply and batch updates keep the current
+    behavior (status-bar chip; the batch flows already have their own progress UI).
+  - **Timing**: the jobs dialog opens **immediately** when the install job starts — after the
+    dependency-consent dialog (when present), right after the controller install call, not after
+    completion.
+  - **Lifetime**: the dialog stays until the user closes it (Close button, `Esc` or barrier
+    tap); there is no auto-close. Closing it early leaves the jobs running in the background, and
+    the status-bar chip keeps tracking them. Existing completion snackbars and the
+    install-warnings dialog still fire (they may render behind/above the open dialog).
+  - **Implementation**: `installAddonIntoProfile` gains `autoShowJobs` (default `false`; the
+    profile Addons tab passes `true`) and `InstalledMacrosList` gains `showJobs` (default
+    `false`; the profile Macros tab passes `true`); when set, `showJobsDialog` is invoked
+    fire-and-forget after the install future is started. No controller, queue or schema changes.
+- **Consequences**: purely a UI behavior change; one shared dialog
+  (`lib/ui/jobs/jobs_dialog.dart`) is reused, so the status-bar chip and the auto-opened dialog
+  stay identical. Tests assert the dialog opens from both profile tabs and stays closed on the
+  default (non-profile) code paths.
+- **Refs**: `TASKS.md` R-49, `lib/ui/addons/addon_install_flow.dart`,
+  `lib/ui/macros/installed_macros.dart`, `lib/ui/profiles/profile_detail_view.dart`,
+  `lib/ui/jobs/jobs_dialog.dart`, D-068 (jobs queue/status bar)

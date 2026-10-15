@@ -121,7 +121,7 @@ class ProfileDetailView extends SignalWidget {
                 _ProfilePythonTab(profileId: current.id),
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: InstalledMacrosList(profileId: current.id),
+                  child: InstalledMacrosList(profileId: current.id, showJobs: true),
                 ),
                 ProfileConfigTab(profileId: current.id),
                 ProfileBackupsTab(profileId: current.id),
@@ -516,6 +516,7 @@ class _ProfileAddonsTabState extends State<_ProfileAddonsTab> {
       addon: addon,
       branchRef: addon.primaryBranch.gitRef,
       profileId: widget.profileId,
+      autoShowJobs: true,
     );
   }
 

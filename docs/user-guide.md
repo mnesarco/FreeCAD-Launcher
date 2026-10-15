@@ -164,7 +164,9 @@ news feed with a short excerpt of each post (URL configurable in Settings).
 ### The profile detail page
 
 - **Overview** — build, channel, Python, health, paths and config file state.
-- **Addons / Python / Macros** — per-profile content (see below).
+- **Addons / Python / Macros** — per-profile content (see below). Adding an addon or macro from
+  these tabs opens the jobs dialog automatically so you can follow the work; closing it any time
+  leaves the job running in the background.
 - **Config / Backups** — config snapshots and restore.
 - **Launch** — starts FreeCAD; while running, a **Running** badge appears (and on the profile
   card) with a live log path. The badge clears when the process exits.

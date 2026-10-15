@@ -220,6 +220,11 @@ void main() {
     expect(addons.installs.single.profileId, profile.id);
     expect(addons.installs.single.selection, isNull);
     expect(find.text('Addon installed'), findsOneWidget);
+
+    expect(find.text('Jobs'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Close'));
+    await settle(tester);
+    expect(find.text('Jobs'), findsNothing);
   });
 
   testWidgets('search filters by text and #tag', (tester) async {

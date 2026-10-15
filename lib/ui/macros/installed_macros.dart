@@ -11,14 +11,19 @@ import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/macros/macro_catalog_entry.dart';
 import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
+import 'package:freecad_launcher/ui/jobs/jobs_dialog.dart';
 import 'package:freecad_launcher/ui/macros/macro_icon.dart';
 import 'package:freecad_launcher/ui/macros/macro_picker_dialog.dart';
 import 'package:freecad_launcher/ui/widgets/empty_state.dart';
 
 class InstalledMacrosList extends SignalStatefulWidget {
-  const InstalledMacrosList({super.key, required this.profileId});
+  const InstalledMacrosList({super.key, required this.profileId, this.showJobs = false});
 
   final String profileId;
+
+  /// Auto-opens the jobs dialog when an install starts (profile detail tabs,
+  /// D-127); disabled for the global Macros screen.
+  final bool showJobs;
 
   @override
   State<InstalledMacrosList> createState() => _InstalledMacrosListState();
@@ -101,10 +106,14 @@ class _InstalledMacrosListState extends State<InstalledMacrosList> {
     if (entry == null || !context.mounted) {
       return;
     }
-    final result = await services.macros.install(
+    final installFuture = services.macros.install(
       name: entry.name,
       profileId: widget.profileId,
     );
+    if (widget.showJobs && context.mounted) {
+      unawaited(showJobsDialog(context));
+    }
+    final result = await installFuture;
     if (!context.mounted) {
       return;
     }

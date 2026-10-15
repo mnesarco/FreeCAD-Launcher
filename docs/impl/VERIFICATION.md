@@ -714,6 +714,22 @@ Addon-embedded macro parity with FreeCAD's AddonManager (D-126). Evidence:
   manifest entry. Note: the owner's `Section2` profile keeps its launcher install without extras
   until the addon is updated/reinstalled there; no automatic healing is performed (D-126).
 
+### R-49 (2026-10-15, `devel`)
+
+Auto-open jobs dialog for installs from the profile detail tabs (D-127). Evidence:
+
+- Widget tests: `profile_macros_picker_test` — with `showJobs: true` the jobs dialog opens after
+  installing from the profile Macros list and the Close button dismisses it; the existing default
+  test asserts no jobs dialog for the global (non-profile) `InstalledMacrosList`.
+  `profile_addons_picker_test` — installing from the profile Addons tab opens the jobs dialog and
+  Close dismisses it; the consent/dependency flows stay green.
+- Full suite 798 green (11 platform probes skipped), `flutter analyze` clean.
+- Live pass (real dev app + data root, `Demo` profile, scripted click-through): “Add macro” →
+  Install opened the **Jobs** dialog automatically showing `Install macro 3d Printer Slicer ·
+  Completed` with the `Macro installed` snackbar behind it; Close dismissed the dialog while the
+  app stayed usable; the test macro was deleted afterwards (profile restored to only `FCCamera`).
+  Zero runtime errors (only the pre-existing SVG loader notices).
+
 ## 5. When something fails
 
 1. Capture the job log tail and app logs from `logs/`.

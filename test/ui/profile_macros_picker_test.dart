@@ -81,14 +81,14 @@ void main() {
     }
   }
 
-  Future<void> pumpList(WidgetTester tester) async {
+  Future<void> pumpList(WidgetTester tester, {bool showJobs = false}) async {
     await tester.pumpWidget(
       AppScope(
         services: services,
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(body: InstalledMacrosList(profileId: 'profile-1')),
+          home: Scaffold(body: InstalledMacrosList(profileId: 'profile-1', showJobs: showJobs)),
         ),
       ),
     );
@@ -120,6 +120,25 @@ void main() {
     expect(macros.installs.single.name, 'Foto');
     expect(macros.installs.single.profileId, 'profile-1');
     expect(find.text('Macro installed'), findsOneWidget);
+    expect(find.text('Jobs'), findsNothing);
+  });
+
+  testWidgets('auto-opens the jobs dialog when showJobs is enabled', (tester) async {
+    await pumpList(tester, showJobs: true);
+
+    await tester.tap(find.text('Add macro'));
+    await settle(tester);
+    await tester.tap(
+      find.descendant(of: find.widgetWithText(ListTile, 'Foto'), matching: find.text('Install')),
+    );
+    await settle(tester);
+
+    expect(macros.installs, hasLength(1));
+    expect(find.text('Jobs'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Close'));
+    await settle(tester);
+    expect(find.text('Jobs'), findsNothing);
   });
 
   testWidgets('marks macros already installed in the profile', (tester) async {

@@ -1,5 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Frank Martínez <mnesarco at gmail>
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:freecad_launcher/core/log.dart';
@@ -9,12 +11,14 @@ import 'package:freecad_launcher/l10n/gen/app_localizations.dart';
 import 'package:freecad_launcher/state/app_services.dart';
 import 'package:freecad_launcher/ui/addons/addon_dependencies_dialog.dart';
 import 'package:freecad_launcher/ui/addons/addon_install_warnings_dialog.dart';
+import 'package:freecad_launcher/ui/jobs/jobs_dialog.dart';
 
 Future<void> installAddonIntoProfile(
   BuildContext context, {
   required Addon addon,
   required String branchRef,
   required String profileId,
+  bool autoShowJobs = false,
 }) async {
   final l10n = AppLocalizations.of(context);
   final controller = AppScope.of(context).addons;
@@ -41,7 +45,7 @@ Future<void> installAddonIntoProfile(
       }
     }
 
-    final result = await controller.install(
+    final installFuture = controller.install(
       addonId: addon.id,
       branchRef: branchRef,
       profileId: profileId,
@@ -53,6 +57,10 @@ Future<void> installAddonIntoProfile(
         return showAddonDependenciesDialog(context, addonName: addon.displayName, plan: plan);
       },
     );
+    if (autoShowJobs && context.mounted) {
+      unawaited(showJobsDialog(context));
+    }
+    final result = await installFuture;
     if (!context.mounted) {
       return;
     }
