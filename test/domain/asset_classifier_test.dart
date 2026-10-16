@@ -3,14 +3,15 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/domain/builds/asset_classifier.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/builds/freecad_version.dart';
 import 'package:freecad_launcher/domain/builds/release_info.dart';
 
 import '../helpers/fixtures.dart';
 
 void main() {
-  List<BuildCandidate> classifyFixture(String fixture) {
+  List<BuildCandidate> classifyFixture(String fixture, {FreeCadVersion? stableLine}) {
     final releases = parseReleasesJson(loadFixture(fixture));
-    return AssetClassifier.classify(releases.single);
+    return AssetClassifier.classify(releases.single, stableLine: stableLine);
   }
 
   BuildCandidate? select(
@@ -84,14 +85,53 @@ void main() {
   });
 
   group('legacy naming era', () {
-    test('1.0.2 conda names are legacy and installers are skipped', () {
-      final candidates = classifyFixture('github_releases_1.0.2.json');
+    test('1.0.2 conda names are legacy under a 1.1 line and installers are skipped', () {
+      final candidates = classifyFixture(
+        'github_releases_1.0.2.json',
+        stableLine: const FreeCadVersion(1, 1),
+      );
 
       expect(candidates, hasLength(5));
       expect(candidates.every((candidate) => candidate.channel == BuildChannel.legacy), isTrue);
       final linux = select(candidates, platform: BuildPlatform.linux, arch: BuildArch.x86_64)!;
       expect(linux.assetName, 'FreeCAD_1.0.2-conda-Linux-x86_64-py311.AppImage');
       expect(linux.pythonVersion, '3.11');
+    });
+  });
+
+  group('catalog-derived channel transitions', () {
+    test('1.1.3 flips from stable to legacy once 26.3 defines the line', () {
+      final stable = classifyFixture(
+        'github_releases_1.1.3.json',
+        stableLine: const FreeCadVersion(1, 1),
+      );
+      expect(stable.every((candidate) => candidate.channel == BuildChannel.stable), isTrue);
+
+      final legacy = classifyFixture(
+        'github_releases_1.1.3.json',
+        stableLine: const FreeCadVersion(26, 3),
+      );
+      expect(legacy.every((candidate) => candidate.channel == BuildChannel.legacy), isTrue);
+      expect(
+        legacy.every((candidate) => candidate.id.startsWith('legacy:1.1.3')),
+        isTrue,
+      );
+    });
+
+    test('release candidates stay rc under any derived line', () {
+      final candidates = classifyFixture(
+        'github_releases_26.3rc1.json',
+        stableLine: const FreeCadVersion(26, 3),
+      );
+      expect(candidates.every((candidate) => candidate.channel == BuildChannel.rc), isTrue);
+    });
+
+    test('a newer line never reclassifies the line itself or newer versions', () {
+      final candidates = classifyFixture(
+        'github_releases_1.1.3.json',
+        stableLine: const FreeCadVersion(1, 0),
+      );
+      expect(candidates.every((candidate) => candidate.channel == BuildChannel.stable), isTrue);
     });
   });
 

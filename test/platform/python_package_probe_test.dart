@@ -18,11 +18,8 @@ void main() {
     probe = PythonPackageProbe(processRunner: ProcessRunner(launcher: launcher));
   });
 
-  Future<void> waitForHandle(int index) async {
-    for (var attempt = 0; attempt < 250 && launcher.handles.length <= index; attempt++) {
-      await Future<void>.delayed(const Duration(milliseconds: 2));
-    }
-  }
+  /// Deterministic wait: resolves when the fake process at [index] has started.
+  Future<void> waitForHandle(int index) => launcher.whenStarted(index);
 
   test('parses and normalizes available packages', () async {
     final future = probe.availablePackages(

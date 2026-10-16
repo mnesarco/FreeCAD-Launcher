@@ -9,6 +9,7 @@ import 'package:freecad_launcher/domain/addons/addon_dependencies.dart';
 import 'package:freecad_launcher/domain/addons/addon_source.dart';
 import 'package:freecad_launcher/domain/addons/addon_update.dart';
 import 'package:freecad_launcher/domain/addons/addon_update_rules.dart';
+import 'package:freecad_launcher/domain/builds/asset_classifier.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/domain/builds/build_update.dart';
 import 'package:freecad_launcher/domain/builds/freecad_version.dart';
@@ -111,11 +112,14 @@ class UpdatesController {
   });
 
   late final outdatedBuilds = computed<List<BuildUpdate>>(() {
-    final candidates = _builds.availableBuilds.value;
+    final versionedCandidates = <BuildCandidate>[
+      ..._builds.availableBuilds.value,
+      ..._builds.legacyBuilds.value,
+    ];
     final weeklyCandidates = _builds.weeklyBuilds.value;
     final result = <BuildUpdate>[];
     for (final build in _builds.installedBuilds.value) {
-      if (build.channel != BuildChannel.stable ||
+      if ((build.channel != BuildChannel.stable && build.channel != BuildChannel.legacy) ||
           build.kind == BuildKind.custom ||
           build.status != BuildStatus.installed) {
         continue;
@@ -124,23 +128,28 @@ class UpdatesController {
       if (installed == null) {
         continue;
       }
-      for (final candidate in candidates) {
+      BuildCandidate? best;
+      for (final candidate in versionedCandidates) {
         final latest = candidate.version;
-        if (candidate.kind != build.kind || latest == null) {
+        if (candidate.kind != build.kind ||
+            latest == null ||
+            latest.compareTo(installed) <= 0 ||
+            !latest.sameLine(installed)) {
           continue;
         }
-        if (latest.compareTo(installed) <= 0) {
-          break;
+        if (best == null || latest.compareTo(best.version!) > 0) {
+          best = candidate;
         }
+      }
+      if (best != null) {
         result.add(
           BuildUpdate(
             buildId: build.id,
             installedVersion: build.version,
-            latestVersion: candidate.versionLabel,
-            candidateId: candidate.id,
+            latestVersion: best.versionLabel,
+            candidateId: best.id,
           ),
         );
-        break;
       }
     }
     for (final build in _builds.installedBuilds.value) {

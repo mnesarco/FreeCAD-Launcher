@@ -59,6 +59,9 @@ jobs:
         run: flutter analyze
 
       - name: Test
+        # Manual/network tests in test/manual/ are env-gated (FCL_* flags are never set here)
+        # and the big-download tests are hard-disabled when CI/GITHUB_ACTIONS is set.
+        # They must never be wired into CI.
         run: flutter test
 
       - name: Build (Linux)

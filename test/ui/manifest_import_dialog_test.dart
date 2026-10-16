@@ -18,6 +18,25 @@ import 'package:freecad_launcher/ui/profiles/profile_manifest_dialogs.dart';
 
 import '../data/test_fixtures.dart';
 
+/// Bounded poll that yields the real event loop (so file/DB I/O can finish)
+/// and pumps a frame until [condition] holds. Replaces fixed-delay + fixed
+/// pump windows, which flake when the machine is loaded.
+Future<void> _pumpUntil(
+  WidgetTester tester,
+  bool Function() condition, {
+  int maxAttempts = 300,
+  Duration step = const Duration(milliseconds: 20),
+}) async {
+  for (var attempt = 0; attempt < maxAttempts; attempt++) {
+    if (condition()) {
+      return;
+    }
+    await tester.runAsync(() => Future<void>.delayed(step));
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+  fail('Condition not met after $maxAttempts attempts');
+}
+
 void main() {
   late Directory tempDirectory;
   late AppPaths paths;
@@ -112,9 +131,11 @@ void main() {
       ),
     );
     await tester.tap(find.text('open'));
-    for (var frame = 0; frame < 12; frame++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
+    await _pumpUntil(tester, () {
+      final importButton = find.widgetWithText(FilledButton, 'Import');
+      return importButton.evaluate().isNotEmpty &&
+          tester.widget<FilledButton>(importButton).onPressed != null;
+    });
   }
 
   testWidgets('previews the manifest with a clash-free name and path warnings', (tester) async {
@@ -131,10 +152,7 @@ void main() {
     await openDialog(tester);
 
     await tester.tap(find.text('Import'));
-    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
-    for (var frame = 0; frame < 12; frame++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
+    await _pumpUntil(tester, () => find.byType(ManifestImportDialog).evaluate().isEmpty);
 
     expect(find.byType(ManifestImportDialog), findsNothing);
     final profile = await db.profilesDao.getByName('Dev (imported)');

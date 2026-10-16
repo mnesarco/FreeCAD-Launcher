@@ -1,5 +1,10 @@
 // SPDX-FileCopyrightText: 2026 Frank Martínez <mnesarco at gmail>
 // SPDX-License-Identifier: GPL-3.0-or-later
+//
+// MANUAL TEST — explicit local invocation only; never runs in a default `flutter test` and
+// never on CI: it downloads the full AppImage (~760 MB) from GitHub.
+// Run:  FCL_REAL_INSTALL=1 flutter test test/manual/real_install_linux_test.dart
+// Opt:  FCL_INSTALL_TAG=<tag> FCL_INSTALL_ASSET=<asset name> (default 1.1.3)
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -11,9 +16,22 @@ import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/process.dart';
 import 'package:http/http.dart' as http;
 
+/// Hard gate for manual tests: never run on CI, even if the `FCL_*` flag were present.
+String? _manualSkip() {
+  final ci = Platform.environment['CI'];
+  final actions = Platform.environment['GITHUB_ACTIONS'];
+  if ((ci != null && ci.isNotEmpty && ci != 'false') || actions == 'true') {
+    return 'Manual test disabled on CI (explicit local invocation only)';
+  }
+  if (Platform.environment['FCL_REAL_INSTALL'] != '1') {
+    return 'Manual test: set FCL_REAL_INSTALL=1 to download the real AppImage';
+  }
+  return null;
+}
+
 void main() {
   test(
-    'installs and runs the real FreeCAD 1.1.3 Linux AppImage',
+    'installs and runs the real FreeCAD Linux AppImage (default 1.1.3)',
     () async {
       final root = Directory('/tmp/opencode/fcl_manual_install_check');
       if (root.existsSync()) {
@@ -22,9 +40,10 @@ void main() {
       final paths = AppPaths(dataRoot: root.path);
       await paths.ensureBaseDirectories();
 
-      const asset = 'FreeCAD_1.1.3-Linux-x86_64-py311.AppImage';
-      const baseUrl =
-          'https://github.com/FreeCAD/FreeCAD/releases/download/1.1.3/$asset';
+      final tag = Platform.environment['FCL_INSTALL_TAG'] ?? '1.1.3';
+      final asset = Platform.environment['FCL_INSTALL_ASSET'] ??
+          'FreeCAD_1.1.3-Linux-x86_64-py311.AppImage';
+      final baseUrl = 'https://github.com/FreeCAD/FreeCAD/releases/download/$tag/$asset';
 
       final downloader = Downloader(
         source: HttpDownloadSource(http.Client()),
@@ -49,7 +68,7 @@ void main() {
       final installer = BuildInstaller(paths: paths, processRunner: runner);
       final installed = await installer.install(
         InstallRequest(
-          buildId: 'real-1.1.3',
+          buildId: 'real-$tag',
           kind: BuildKind.appimage,
           archivePath: appImage.path,
           assetName: asset,
@@ -70,13 +89,11 @@ void main() {
       expect(result.exitCode, 0);
 
       // ignore: avoid_print
-      print('installed=${installed.executablePath} size=${installed.sizeBytes}');
+      print('tag=$tag installed=${installed.executablePath} size=${installed.sizeBytes}');
       // ignore: avoid_print
       print('version stdout=${result.stdout.trim()}');
     },
-    skip: Platform.environment['FCL_REAL_INSTALL'] != '1'
-        ? 'Manual test: set FCL_REAL_INSTALL=1 to download the real AppImage'
-        : null,
-    timeout: const Timeout(Duration(minutes: 15)),
+    skip: _manualSkip(),
+    timeout: const Timeout(Duration(minutes: 30)),
   );
 }

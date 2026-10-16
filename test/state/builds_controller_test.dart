@@ -200,6 +200,18 @@ void main() {
     );
   }
 
+  ReleaseInfo versionRelease(String tag, List<String> assetNames) {
+    return ReleaseInfo(
+      tagName: tag,
+      prerelease: false,
+      htmlUrl: 'https://example.invalid/$tag',
+      assets: [
+        for (final name in assetNames)
+          ReleaseAsset(name: name, downloadUrl: 'https://example.invalid/$name'),
+      ],
+    );
+  }
+
   test('start mirrors installed builds from the database', () async {
     final controller = buildController();
     controller.start();
@@ -298,6 +310,143 @@ void main() {
     controller.dispose();
   });
 
+  test('loadCatalog derives the stable line and collects legacy candidates', () async {
+    final catalog = FakeReleasesCatalog()
+      ..nextResult = ReleasesCatalogResult(
+        releases: fixtureReleases([
+          'github_releases_1.1.3.json',
+          'github_releases_1.0.2.json',
+          'github_releases_26.3rc1.json',
+        ]),
+        freshness: CatalogFreshness.refreshed,
+      );
+    final controller = buildController(catalog: catalog);
+
+    await controller.loadCatalog();
+
+    expect(
+      controller.derivedStableLine.value,
+      const FreeCadVersion(1, 1),
+      reason: 'RC tags never define the line',
+    );
+    expect(
+      controller.availableBuilds.value.map((candidate) => candidate.versionLabel),
+      ['1.1.3'],
+    );
+    final legacy = controller.legacyBuilds.value;
+    expect(legacy, hasLength(1));
+    expect(legacy.single.versionLabel, '1.0.2');
+    expect(legacy.single.channel, BuildChannel.legacy);
+    expect(legacy.single.id, startsWith('legacy:1.0.2'));
+    expect(legacy.single.platform, BuildPlatform.linux);
+    expect(legacy.single.arch, BuildArch.x86_64);
+    controller.dispose();
+  });
+
+  test('a 26.3 stable defines the line and reclassifies 1.1 candidates as legacy', () async {
+    final catalog = FakeReleasesCatalog()
+      ..nextResult = ReleasesCatalogResult(
+        releases: [
+          ...fixtureReleases(['github_releases_1.1.3.json']),
+          versionRelease('26.3', ['FreeCAD_26.3-Linux-x86_64-py311.AppImage']),
+        ],
+        freshness: CatalogFreshness.refreshed,
+      );
+    final controller = buildController(catalog: catalog);
+
+    await controller.loadCatalog();
+
+    expect(controller.derivedStableLine.value, const FreeCadVersion(26, 3));
+    expect(
+      controller.availableBuilds.value.map((candidate) => candidate.versionLabel),
+      ['26.3'],
+    );
+    expect(
+      controller.legacyBuilds.value.map((candidate) => candidate.versionLabel),
+      ['1.1.3'],
+    );
+    controller.dispose();
+  });
+
+  test('loadCatalog dedupes 26.3 and 26.3.0 into one canonical candidate', () async {
+    final catalog = FakeReleasesCatalog()
+      ..nextResult = ReleasesCatalogResult(
+        releases: [
+          versionRelease('26.3.0', ['FreeCAD_26.3.0-Linux-x86_64-py311.AppImage']),
+          versionRelease('26.3', ['FreeCAD_26.3-Linux-x86_64-py311.AppImage']),
+        ],
+        freshness: CatalogFreshness.refreshed,
+      );
+    final controller = buildController(catalog: catalog);
+
+    await controller.loadCatalog();
+
+    final stable = controller.availableBuilds.value;
+    expect(stable, hasLength(1));
+    expect(stable.single.versionLabel, '26.3');
+    controller.dispose();
+  });
+
+  test('loadCatalog heals installed stable builds below the derived line to legacy', () async {
+    final catalog = FakeReleasesCatalog()
+      ..nextResult = ReleasesCatalogResult(
+        releases: [
+          ...fixtureReleases(['github_releases_1.1.3.json']),
+          versionRelease('26.3', ['FreeCAD_26.3-Linux-x86_64-py311.AppImage']),
+        ],
+        freshness: CatalogFreshness.refreshed,
+      );
+    final controller = buildController(catalog: catalog);
+    const id = 'stable:1.1.3:linux:x86_64';
+    await database.buildsDao.save(sampleBuild(id: id, version: '1.1.3'));
+
+    await controller.loadCatalog();
+
+    final stored = (await database.buildsDao.getById(id))!;
+    expect(stored.channel, BuildChannel.legacy);
+    expect(stored.id, id, reason: 'the row id and on-disk paths never change');
+    expect(stored.updatedAt, DateTime.utc(2026, 9, 18));
+  });
+
+  test('loadCatalog leaves installs on the derived line classified as stable', () async {
+    final catalog = FakeReleasesCatalog()
+      ..nextResult = ReleasesCatalogResult(
+        releases: fixtureReleases(['github_releases_1.1.3.json', 'github_releases_1.0.2.json']),
+        freshness: CatalogFreshness.refreshed,
+      );
+    final controller = buildController(catalog: catalog);
+    await database.buildsDao.save(sampleBuild(id: 'stable:1.1.3:linux:x86_64', version: '1.1.3'));
+
+    await controller.loadCatalog();
+
+    final stored = (await database.buildsDao.getById('stable:1.1.3:linux:x86_64'))!;
+    expect(stored.channel, BuildChannel.stable);
+    expect(stored.updatedAt, DateTime.utc(2026, 9, 18, 10));
+  });
+
+  test('isInstalled matches a reclassified release across stable and legacy', () async {
+    final controller = buildController();
+    controller.start();
+    await database.buildsDao.save(sampleBuild(id: 'stable:1.1.3:linux:x86_64', version: '1.1.3'));
+    await Future<void>.delayed(Duration.zero);
+
+    BuildCandidate reclassified(String version) => BuildCandidate(
+      versionLabel: version,
+      channel: BuildChannel.legacy,
+      platform: BuildPlatform.linux,
+      arch: BuildArch.x86_64,
+      kind: BuildKind.appimage,
+      assetName: 'FreeCAD_$version-Linux-x86_64-py311.AppImage',
+      downloadUrl: 'https://example.invalid/$version.AppImage',
+      sizeBytes: 1000,
+      version: FreeCadVersion.tryParse(version),
+    );
+
+    expect(controller.isInstalled(reclassified('1.1.3')), isTrue);
+    expect(controller.isInstalled(reclassified('1.1.4')), isFalse);
+    controller.dispose();
+  });
+
   test('install stores an rc candidate under its channel and tag label', () async {
     final controller = buildController();
     final rc = BuildCandidate(
@@ -319,6 +468,31 @@ void main() {
     expect(stored, isNotNull);
     expect(stored!.channel, BuildChannel.rc);
     expect(stored.version, '26.3rc1');
+    controller.dispose();
+  });
+
+  test('install stores a legacy candidate under its channel and tag label', () async {
+    final controller = buildController();
+    final legacy = BuildCandidate(
+      versionLabel: '1.0.2',
+      channel: BuildChannel.legacy,
+      platform: BuildPlatform.linux,
+      arch: BuildArch.x86_64,
+      kind: BuildKind.appimage,
+      assetName: 'FreeCAD_1.0.2-conda-Linux-x86_64-py311.AppImage',
+      downloadUrl: 'https://example.invalid/FreeCAD_1.0.2-conda-Linux-x86_64-py311.AppImage',
+      sizeBytes: 1000,
+      version: FreeCadVersion.tryParse('1.0.2'),
+    );
+
+    final result = await controller.install(legacy);
+
+    expect(result.isOk, isTrue);
+    final stored = await database.buildsDao.getById(legacy.id);
+    expect(stored, isNotNull);
+    expect(stored!.channel, BuildChannel.legacy);
+    expect(stored.version, '1.0.2');
+    expect(legacy.id, startsWith('legacy:1.0.2'));
     controller.dispose();
   });
 

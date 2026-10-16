@@ -212,16 +212,16 @@ void main() {
     });
     controller.availableBuilds.value = [
       BuildCandidate(
-        versionLabel: '2.0.0',
+        versionLabel: '1.1.4',
         channel: BuildChannel.stable,
         platform: BuildPlatform.linux,
         arch: BuildArch.x86_64,
         kind: BuildKind.appimage,
-        assetName: 'FreeCAD_2.0.0-Linux-x86_64-py311.AppImage',
-        downloadUrl: 'https://example.invalid/2.0.0.AppImage',
+        assetName: 'FreeCAD_1.1.4-Linux-x86_64-py311.AppImage',
+        downloadUrl: 'https://example.invalid/1.1.4.AppImage',
         sizeBytes: 820 * 1024 * 1024,
         pythonVersion: '3.11',
-        version: FreeCadVersion.tryParse('2.0.0'),
+        version: FreeCadVersion.tryParse('1.1.4'),
       ),
     ];
 
@@ -237,7 +237,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('1.1.3 → 2.0.0'), findsOneWidget);
+    expect(find.text('1.1.3 → 1.1.4'), findsOneWidget);
   });
 
   testWidgets('renames an installed build and resets it to its version', (tester) async {
@@ -421,5 +421,61 @@ void main() {
 
     expect(find.text('Install a development build?'), findsNothing);
     expect(find.text('Weekly 2026-09-23'), findsOneWidget);
+  });
+
+  testWidgets('shows legacy builds behind the channel filter with an install warning', (
+    tester,
+  ) async {
+    final legacy = BuildCandidate(
+      versionLabel: '1.0.2',
+      channel: BuildChannel.legacy,
+      platform: BuildPlatform.linux,
+      arch: BuildArch.x86_64,
+      kind: BuildKind.appimage,
+      assetName: 'FreeCAD_1.0.2-conda-Linux-x86_64-py311.AppImage',
+      downloadUrl: 'https://example.invalid/FreeCAD_1.0.2-conda-Linux-x86_64-py311.AppImage',
+      sizeBytes: 767 * 1024 * 1024,
+      pythonVersion: '3.11',
+      version: FreeCadVersion.tryParse('1.0.2'),
+    );
+    controller.availableBuilds.value = [sampleCandidate()];
+    controller.legacyBuilds.value = [legacy];
+
+    await pumpBuilds(tester);
+
+    expect(find.text('1.0.2'), findsNothing);
+
+    await tester.tap(find.text('Stable').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Legacy').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('1.0.2'), findsOneWidget);
+    expect(find.text('Legacy'), findsWidgets);
+
+    await tester.tap(find.text('Install'));
+    await tester.pumpAndSettle();
+    expect(find.text('Install a legacy version?'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Install a legacy version?'), findsNothing);
+    expect(find.text('1.0.2'), findsOneWidget);
+  });
+
+  testWidgets('shows the legacy empty state when no legacy builds are available', (
+    tester,
+  ) async {
+    controller.availableBuilds.value = [sampleCandidate()];
+
+    await pumpBuilds(tester);
+
+    await tester.tap(find.text('Stable').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Legacy').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('No legacy versions available'), findsOneWidget);
   });
 }

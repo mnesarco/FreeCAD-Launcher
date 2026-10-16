@@ -39,7 +39,7 @@ Asset names have evolved. Classification must use regex over exact names, not as
 | `rc` | `X.Y[.Z]rcN` of a supported version (e.g. `26.3rc1`, `1.1rc3`) | true | same naming as the matching stable/legacy era |
 | `weekly` | `weekly-YYYY.MM.DD` | true | `FreeCAD_weekly-...` |
 | `weekly` rolling | `weeklies` | true | Linux only (skipped by the launcher, D-077) |
-| `legacy` | supported stable lines older than the newest stable line in the catalog (currently 1.0.x; 1.1.x joins once 26.3 ships) | false | semver-era and 1.0 conda-era names |
+| `legacy` | catalog-derived counterpart of stable (D-078/D-128): supported stable lines below the newest supported stable line (`major.minor`) present in the catalog (1.0.x today; 1.1.x joins once 26.3 ships) | false | semver-era and 1.0 conda-era names |
 
 Asset patterns (current era, 1.1.x):
 
@@ -72,6 +72,19 @@ Release candidate notes:
   badge and an install confirmation warning. They never appear in stable/weekly update checks.
 - Pre-1.0 RCs (e.g. `0.21rc1`) stay ignored by the support floor (D-021).
 
+Legacy notes:
+
+- Legacy is derived at catalog load (D-078/D-128): the highest supported non-RC `major.minor`
+  present defines the current stable line; older supported lines are `legacy` (floor 1.0+,
+  D-021). A stable→legacy reclassification denotes the **same release**: the catalog candidate
+  gets a `legacy:` id prefix, existing installs are healed in place (row id and on-disk paths
+  unchanged) and are never re-downloaded.
+- Versions → Available has one **Legacy** filter listing all older lines (newest first) with a
+  badge and an install confirmation warning; update checks for stable/legacy installs are
+  notify-only within the same line and never suggest cross-line jumps (apply deferred to B-02).
+- `26.3` and `26.3.0` denote the same release; the collector keeps one candidate per
+  platform/arch, preferring the canonical short label.
+
 ### 1.4 Integrity
 
 - Assets ship a sidecar `<asset>-SHA256.txt`. Download it first when present, parse the hex
@@ -103,10 +116,14 @@ Release candidate notes:
   (`major.minor`) **without** an RC tag present defines the current line; supported versions
   below it are `legacy` (1.0.x today; 1.1.x joins once 26.3 ships, 26.3 once 27.1 branches).
   RC tags never define the line.
+- Update notifications compare within the same `major.minor` line only, searching the stable
+  and legacy lists (D-128); a line change is never suggested as an update and channels never
+  mix in one suggestion.
 - Weekly: compare tag dates (`weekly-2026.09.16`), all weeklies sort above any stable only
   within the weekly channel; channels are never mixed in one update suggestion.
 - Build identity = `(channel, version, platform, arch)`; two builds of the same version from
-  different channels are distinct.
+  different channels are distinct, with one exception: the stable↔legacy reclassification of
+  the same release preserves the install identity (no re-download, D-128).
 
 ## 2. Addon catalog
 

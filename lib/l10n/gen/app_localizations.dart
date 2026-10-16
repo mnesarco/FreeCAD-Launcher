@@ -1222,6 +1222,12 @@ abstract class AppLocalizations {
   /// **'Weekly'**
   String get versionsChannelWeekly;
 
+  /// No description provided for @versionsChannelLegacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Legacy'**
+  String get versionsChannelLegacy;
+
   /// No description provided for @versionsWeeklyBuild.
   ///
   /// In en, this message translates to:
@@ -1275,6 +1281,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Release candidates preview the next FreeCAD release: they may contain bugs and are not covered by support. Keep a stable build for real work.'**
   String get versionsRcInstallMessage;
+
+  /// No description provided for @versionsLegacyEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No legacy versions available'**
+  String get versionsLegacyEmptyTitle;
+
+  /// No description provided for @versionsLegacyEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh the catalog; the legacy channel lists older supported lines below the current stable line.'**
+  String get versionsLegacyEmptyMessage;
+
+  /// No description provided for @versionsLegacyInstallTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Install a legacy version?'**
+  String get versionsLegacyInstallTitle;
+
+  /// No description provided for @versionsLegacyInstallMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This build is from an older FreeCAD line that is no longer current: it stays installable and works, but it no longer receives fixes. Keep the current stable line for regular work.'**
+  String get versionsLegacyInstallMessage;
 
   /// No description provided for @versionsStaleCatalog.
   ///

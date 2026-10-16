@@ -347,6 +347,7 @@ Record results in the `STATUS.md` session log (date, OS, FreeCAD version, result
 |---|---|---|---|
 | Install latest stable build | ✅ 2026-09-24 — 1.1.3 AppImage (782.8 MiB), Python 3.11 detected (M7-06); post-upgrade re-run 2026-10-02 — real catalog install with the upgraded app (B-16, owner-verified, no issues) | ✅ 2026-10-01 — 1.1.3 `.7z` extracted with the bundled `7zr.exe`, Python probed (owner matrix pass, artifact run 36941684639) | |
 | Install a weekly build | ✅ 2026-09-30 — real `weekly-2026.09.30` AppImage (767.3 MiB, checksum verified, Python 3.13 probed, headless `--version` = FreeCAD 26.3.0); two profiles created/launched isolated on it (B-01d) | | |
+| Install a legacy build | ✅ 2026-10-16 — real 1.0.2 conda AppImage: published SHA-256 verified, installed as a managed copy (795,892,216 bytes), headless launch exit 0 (`real_install_linux_test`); catalog derivation + stable→legacy flip verified against the real catalog (`real_stable_line_test`) | | |
 | Create two profiles, verify isolation | ✅ 2026-09-30 — real 1.0.2: distinct markers in `FREECAD_USER_HOME`/`TMPDIR`/`Mod`, inherited `HOME` passed through, no `home/` dir (R-09; M3-10) | ✅ 2026-10-01 (same pass) | |
 | Launch from app | ✅ 2026-09-24 — GUI launch (1.1.3), running badge, log, exit tracking; headless M3-04/M3-05; post-upgrade profile launch smoke 2026-10-02 (B-16, owner-verified) | ✅ 2026-10-01 (same pass) | |
 | Launch via CLI wrapper | ✅ 2026-09-19 — wrapper ran the built CLI (M3-09) | ✅ 2026-10-01 (same pass) | |
@@ -729,6 +730,69 @@ Auto-open jobs dialog for installs from the profile detail tabs (D-127). Evidenc
   Completed` with the `Macro installed` snackbar behind it; Close dismissed the dialog while the
   app stayed usable; the test macro was deleted afterwards (profile restored to only `FCCamera`).
   Zero runtime errors (only the pre-existing SVG loader notices).
+
+### B-14 + B-01 legacy (2026-10-16, `devel`)
+
+Four-channel model: catalog-derived stable line + Legacy channel (D-128). Evidence:
+
+- `freecad_version_test`: `deriveStableLine` picks the highest supported non-RC `major.minor`
+  (empty → null; 1.0.2 → 1.0; 1.0.2+1.1.3 → 1.1; `26.3rc1` present does not define 26.3;
+  26.3 present → 26.3; patch tags define their own line; pre-1.0 ignored); `sameLine`, and
+  `ReleaseTag.parse` returns the provisional `stable` channel for non-RC tags (the split is
+  computed at catalog load).
+- `asset_classifier_test`: 1.0.2 is `legacy` under a 1.1 line; 1.1.3 flips stable→legacy under
+  a 26.3 line with a `legacy:1.1.3…` candidate id; RCs stay `rc` under any line; a lower
+  derived line never reclassifies newer versions.
+- `builds_controller_test`: `loadCatalog` sets `derivedStableLine` (RC ignored), collects
+  `legacyBuilds` (1.0.2, `legacy:` id), dedupes `26.3`/`26.3.0` into one canonical candidate,
+  heals an installed `stable:1.1.3` row to `legacy` under a 26.3 line (row id and `updatedAt`
+  of untouched rows preserved; no heal when the row is on the line) and `isInstalled` matches
+  a reclassified release across stable/legacy without a re-download.
+- `updates_controller_test`: stable/legacy installs get notify-only updates only within their
+  own `major.minor` line (1.0.1 → 1.0.2, 1.1.3 → 1.1.4, 26.3 → 26.3.1); cross-line jumps
+  (1.1.3 → 2.0.0) and kind mismatches are never suggested; RC/weekly behavior unchanged.
+- `profile_manifest_controller_test`: a manifest exported as `stable` matches a build healed to
+  `legacy` (same release, D-128).
+- `builds_view_test`: the Legacy filter hides legacy candidates under Stable, shows the badge,
+  opens the “Install a legacy version?” confirmation on Install (cancel keeps the list), and
+  shows the dedicated empty state when no legacy builds exist; the installed-tile update chip
+  now asserts the same-line `1.1.3 → 1.1.4`.
+- Full suite **814 green (13 platform probes skipped)**, `flutter analyze` clean.
+- Real-catalog dry run (`test/manual/real_stable_line_test.dart`, `FCL_REAL_STABLE_LINE=1`,
+  network): the real `FreeCAD/FreeCAD` catalog yields `line=1.1.0 stable=5 newest=1.1.4
+  legacy=3 newest=1.0.2 oldest=1.0.0 rc=4 newest=26.3rc1 weekly=52` with no duplicate
+  candidates; a synthetic `26.3` tail flips the real 1.1.x line to legacy — `1.1.4`
+  stable→legacy, `legacy=8`, row id `stable:1.1.4:linux:x86_64` unchanged and
+  `isInstalled(flipped)=true` (no re-download on the transition).
+- Real legacy install (2026-10-16, Linux, network, explicit manual invocation only —
+  hard-disabled on CI): `FCL_REAL_INSTALL=1 FCL_INSTALL_TAG=1.0.2
+  FCL_INSTALL_ASSET=FreeCAD_1.0.2-conda-Linux-x86_64-py311.AppImage flutter test
+  test/manual/real_install_linux_test.dart` — the real 1.0.2 conda AppImage downloaded with its
+  published SHA-256 verified, installed as a managed copy (795,892,216 bytes) and ran headless
+  with exit 0.
+- Not repeated live: the full UI click-through of a 1.0.x download (the Install action path is
+  the same `BuildsController.install` covered by controller/widget tests); optional owner check.
+
+### R-51 (2026-10-16, `devel`)
+
+Deterministic fake-process waits (flaky platform tests). Evidence:
+
+- `FakeProcessLauncher.whenStarted(index)` completes as soon as `start` adds the handle
+  (queued completers are flushed inside `start`); the identical `waitForHandle` helpers in
+  `dmg_extractor`, `build_installer`, `pip_runner`, `python_env`, `seven_zip_extractor`,
+  `python_probe`, `freecad_macro_runner` and `python_package_probe` tests now delegate to it,
+  removing the 250 × 2 ms polling window.
+- `pip_runner_test` green on three consecutive runs, one with all 12 cores saturated by `yes`
+  (the load condition under which the old 500 ms budget could be exceeded); `test/platform/`
+  **217 green**; full suite **814 green (13 skipped)**; `flutter analyze` clean.
+- Grep-verified that no test depended on the old timeout behavior: every
+  `launcher.specs, isEmpty` assertion lives in tests that never call `waitForHandle`.
+- Follow-up (same session, owner request): `manifest_import_dialog_test` no longer uses fixed
+  delay/pump windows; a local bounded `_pumpUntil` yields the real event loop
+  (`tester.runAsync`) and pumps a frame until the preview state (the `Import` button exists and
+  is enabled) or the import state (`ManifestImportDialog` gone) holds, failing with a clear
+  message after ~300 attempts. Green on repeated runs including 3 with all 12 cores saturated
+  by `yes`.
 
 ## 5. When something fails
 

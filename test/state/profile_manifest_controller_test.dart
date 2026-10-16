@@ -390,6 +390,34 @@ void main() {
       );
     });
 
+    test('matches a manifest that references a build reclassified to legacy', () async {
+      await db.buildsDao.save(sampleBuild(channel: BuildChannel.legacy));
+      final controller = controllerFor();
+      final manifest = ProfileManifest(
+        profile: const ManifestProfileInfo(name: 'Healed', build: '1.1.3', channel: 'stable'),
+      );
+      final preview = (await controller.previewImport(
+        encodeProfileManifest(manifest),
+      )).valueOrNull!;
+
+      expect(
+        preview.matchingBuild,
+        isNotNull,
+        reason: 'stable and legacy classify the same release (D-128)',
+      );
+      expect(preview.matchingBuild!.channel, BuildChannel.legacy);
+
+      final result = await controller.importManifest(
+        preview: preview,
+        name: preview.suggestedName,
+        buildId: preview.matchingBuild!.id,
+        reinstall: false,
+      );
+
+      expect(result.isOk, isTrue);
+      expect(result.valueOrNull!.profile.buildId, preview.matchingBuild!.id);
+    });
+
     test('collects addon and package failures without aborting', () async {
       await db.buildsDao.save(sampleBuild());
       final controller = controllerFor(

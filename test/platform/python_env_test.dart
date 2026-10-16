@@ -27,11 +27,8 @@ void main() {
     }
   });
 
-  Future<void> waitForHandle(int index) async {
-    for (var attempt = 0; attempt < 250 && launcher.handles.length <= index; attempt++) {
-      await Future<void>.delayed(const Duration(milliseconds: 2));
-    }
-  }
+  /// Deterministic wait: resolves when the fake process at [index] has started.
+  Future<void> waitForHandle(int index) => launcher.whenStarted(index);
 
   test('prefers the stored interpreter path', () async {
     final stored = File(p.join(tempDirectory.path, 'bin', 'python3'))..createSync(recursive: true);

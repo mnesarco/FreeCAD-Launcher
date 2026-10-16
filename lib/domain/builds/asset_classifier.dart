@@ -41,11 +41,12 @@ class BuildCandidate {
 }
 
 abstract final class AssetClassifier {
-  static List<BuildCandidate> classify(ReleaseInfo release) {
+  static List<BuildCandidate> classify(ReleaseInfo release, {FreeCadVersion? stableLine}) {
     final tag = ReleaseTag.parse(release.tagName);
     if (tag == null) {
       return const [];
     }
+    final channel = _channelFor(tag, stableLine);
 
     final candidates = <BuildCandidate>[];
     for (final asset in release.assets) {
@@ -64,7 +65,7 @@ abstract final class AssetClassifier {
       candidates.add(
         BuildCandidate(
           versionLabel: tag.raw,
-          channel: tag.channel,
+          channel: channel,
           platform: platformKind.$1,
           kind: platformKind.$2,
           arch: arch,
@@ -81,6 +82,22 @@ abstract final class AssetClassifier {
       );
     }
     return candidates;
+  }
+
+  /// Assigns the channel with catalog context: weekly/RC keep their channel, supported stable
+  /// versions below the catalog-derived stable line are legacy (D-078/D-128).
+  static BuildChannel _channelFor(ReleaseTag tag, FreeCadVersion? stableLine) {
+    final version = tag.version;
+    if (version == null) {
+      return tag.channel;
+    }
+    if (version.isPrerelease) {
+      return BuildChannel.rc;
+    }
+    if (stableLine != null && version.compareTo(stableLine) < 0) {
+      return BuildChannel.legacy;
+    }
+    return BuildChannel.stable;
   }
 
   static BuildCandidate? selectFor(

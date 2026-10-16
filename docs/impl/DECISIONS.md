@@ -2941,3 +2941,45 @@ Template:
 - **Refs**: `TASKS.md` R-49, `lib/ui/addons/addon_install_flow.dart`,
   `lib/ui/macros/installed_macros.dart`, `lib/ui/profiles/profile_detail_view.dart`,
   `lib/ui/jobs/jobs_dialog.dart`, D-068 (jobs queue/status bar)
+
+### D-128 — Four-channel model: catalog-derived stable line and a legacy channel (B-14, B-01)
+- **Date**: 2026-10-16
+- **Status**: Accepted
+- **Context**: D-078 defined the catalog-derived stable line and retired the hardcoded
+  `stableLine` in favor of it, but B-14 was never implemented: `FreeCadVersion.stableLine` is
+  still `const FreeCadVersion(1, 1)` and `BuildsController.loadCatalog` drops
+  `BuildChannel.legacy` candidates, so Versions → Available only offers Stable | RC | Weekly.
+  The owner requires that once `26.3` final ships, `1.1.x` remains installable alongside
+  `26.x`/`27.x`/… with clear weekly/rc/legacy/stable classification, and asked for the work now.
+  Owner choices (2026-10-16): one Legacy channel listing all older supported lines (newest
+  first), install confirmation warning, update notifications within the same line only.
+- **Decision**:
+  - **Derived line**: after every catalog load the current stable line is the highest supported
+    non-RC `major.minor` present among the loaded releases (offline/stale loads included); RC
+    tags never define it (D-119). `FreeCadVersion.stableLine`/`isLegacy` are retired in favor of
+    a pure `deriveStableLine` and a catalog-aware classification pass
+    (`AssetClassifier.classify(release, stableLine: …)`); the support floor stays 1.0+ (D-021).
+  - **Channels**: `BuildChannel.legacy` collects every supported stable version below the
+    derived line. Versions → Available gains a **Legacy** filter (Stable | RC | Weekly | Legacy,
+    Stable default) listing all older lines newest first, with a Legacy badge and an install
+    confirmation warning (weekly/RC pattern) plus a dedicated empty state.
+  - **Dedupe**: `26.3` and `26.3.0` are one release (already equal in `FreeCadVersion`); the
+    collector keeps a single candidate per platform/arch, preferring the canonical short label
+    when both tags appear.
+  - **Install identity**: candidate IDs keep the channel prefix (`legacy:<ver>:…`). A
+    stable→legacy reclassification is the same release, never a distinct build: `isInstalled`
+    falls back to equal parsed version + kind/platform/arch across stable/legacy when the exact
+    id misses; stored rows are healed stable→legacy in one pass after a load when the derived
+    line says so (row id and on-disk paths unchanged); manifest build matching treats
+    stable/legacy as the same versioned classification so pre-transition manifests still match.
+  - **Updates**: notify-only checks run for stable and legacy installs against the highest
+    same-`major.minor` candidate from the stable + legacy lists, same kind; cross-line jumps
+    are never suggested (weekly/RC rules unchanged, apply stays B-02).
+- **Consequences**: legacy builds become installable and clearly classified; existing 1.1.x
+  installs flip their displayed channel to legacy once `26.3` final defines the line (id and
+  paths untouched). Legacy is deliberately low-key (no special support). Per-line grouping in
+  the Legacy list and legacy update apply are deferred (B-02).
+- **Refs**: `TASKS.md` B-14, B-01, `docs/spec/06-integrations.md` §1.3/§1.5,
+  `docs/spec/03-ux.md` §2.2, `lib/domain/builds/freecad_version.dart`,
+  `lib/domain/builds/asset_classifier.dart`, `lib/state/builds_controller.dart`,
+  `lib/state/updates_controller.dart`, `lib/ui/builds/builds_view.dart`, D-021, D-078, D-119

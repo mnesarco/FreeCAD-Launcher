@@ -18,6 +18,7 @@ import 'package:freecad_launcher/data/database.dart';
 import 'package:freecad_launcher/domain/builds/asset_classifier.dart';
 import 'package:freecad_launcher/domain/builds/build_label_rules.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
+import 'package:freecad_launcher/domain/builds/freecad_version.dart';
 import 'package:freecad_launcher/domain/jobs/job_types.dart';
 import 'package:freecad_launcher/platform/build_installer.dart';
 import 'package:freecad_launcher/platform/checksum.dart';
@@ -91,8 +92,10 @@ class BuildsController {
 
   final installedBuilds = signal<List<Build>>([]);
   final availableBuilds = signal<List<BuildCandidate>>([]);
+  final legacyBuilds = signal<List<BuildCandidate>>([]);
   final rcBuilds = signal<List<BuildCandidate>>([]);
   final weeklyBuilds = signal<List<BuildCandidate>>([]);
+  final derivedStableLine = signal<FreeCadVersion?>(null);
   final catalogFreshness = signal<CatalogFreshness?>(null);
   final catalogError = signal<AppError?>(null);
   final loadingCatalog = signal(false);
@@ -177,12 +180,16 @@ class BuildsController {
     catalogError.value = null;
     try {
       final result = await _catalog.load(forceRefresh: forceRefresh);
-      final stableCandidates = <BuildCandidate>[];
-      final rcCandidates = <BuildCandidate>[];
+      final line = FreeCadVersion.deriveStableLine(
+        result.releases
+            .map((release) => ReleaseTag.parse(release.tagName)?.version)
+            .nonNulls,
+      );
+      final versionedCandidates = <String, BuildCandidate>{};
       final weeklyCandidates = <BuildCandidate>[];
-      final seen = <String>{};
+      final weeklySeen = <String>{};
       for (final release in result.releases) {
-        final classified = AssetClassifier.classify(release);
+        final classified = AssetClassifier.classify(release, stableLine: line);
         if (classified.isEmpty) {
           continue;
         }
@@ -191,34 +198,66 @@ class BuildsController {
           platform: _platform,
           arch: _arch,
         );
-        if (candidate == null || !seen.add(candidate.id)) {
+        if (candidate == null) {
           continue;
         }
+        final version = candidate.version;
+        if (version == null) {
+          if (candidate.weekly == null || !weeklySeen.add(candidate.id)) {
+            continue;
+          }
+          weeklyCandidates.add(candidate);
+          continue;
+        }
+        final key = [
+          candidate.channel.name,
+          version.major,
+          version.minor,
+          version.patch,
+          version.rc,
+          candidate.platform.name,
+          candidate.arch,
+          candidate.kind.name,
+        ].join(':');
+        final existing = versionedCandidates[key];
+        if (existing == null || candidate.versionLabel.length < existing.versionLabel.length) {
+          versionedCandidates[key] = candidate;
+        }
+      }
+
+      final stableCandidates = <BuildCandidate>[];
+      final legacyCandidates = <BuildCandidate>[];
+      final rcCandidates = <BuildCandidate>[];
+      for (final candidate in versionedCandidates.values) {
         switch (candidate.channel) {
           case BuildChannel.stable:
             stableCandidates.add(candidate);
+          case BuildChannel.legacy:
+            legacyCandidates.add(candidate);
           case BuildChannel.rc:
             rcCandidates.add(candidate);
           case BuildChannel.weekly:
-            if (candidate.weekly != null) {
-              weeklyCandidates.add(candidate);
-            }
-          case BuildChannel.legacy:
           case BuildChannel.custom:
             break;
         }
       }
       stableCandidates.sort(_byVersionDescending);
+      legacyCandidates.sort(_byVersionDescending);
       rcCandidates.sort(_byVersionDescending);
       weeklyCandidates.sort((a, b) => b.weekly!.compareTo(a.weekly!));
       availableBuilds.value = stableCandidates;
+      legacyBuilds.value = legacyCandidates;
       rcBuilds.value = rcCandidates;
       weeklyBuilds.value = weeklyCandidates.take(weeklyBuildLimit).toList();
+      derivedStableLine.value = line;
       catalogFreshness.value = result.freshness;
+      await _healReclassifiedBuilds(line);
       appLogger.info(
         'releases catalog: ${result.releases.length} releases, '
-        '${stableCandidates.length} stable + ${rcCandidates.length} rc + '
-        '${weeklyCandidates.length} weekly candidates in ${stopwatch.elapsedMilliseconds} ms',
+        'line ${line ?? '—'}, '
+        '${stableCandidates.length} stable + ${legacyCandidates.length} legacy + '
+        '${rcCandidates.length} rc + ${weeklyCandidates.length} weekly candidates '
+        'in ${stopwatch.elapsedMilliseconds} ms',
         tag: 'perf',
       );
     } on Object catch (error, stackTrace) {
@@ -235,8 +274,59 @@ class BuildsController {
     }
   }
 
+  /// One-pass channel repair (D-128): installed stable builds below the catalog-derived line
+  /// become legacy. The row id and its on-disk paths are untouched — the id's channel prefix is
+  /// historical once healed.
+  Future<void> _healReclassifiedBuilds(FreeCadVersion? line) async {
+    if (line == null) {
+      return;
+    }
+    final builds = await _database.buildsDao.getAll();
+    for (final build in builds) {
+      if (build.channel != BuildChannel.stable) {
+        continue;
+      }
+      final version = FreeCadVersion.tryParse(build.version);
+      if (version == null || version.isPrerelease || !version.isSupported) {
+        continue;
+      }
+      if (version.compareTo(line) >= 0) {
+        continue;
+      }
+      await _database.buildsDao.save(
+        build.copyWith(channel: BuildChannel.legacy, updatedAt: _clock()),
+      );
+      appLogger.info(
+        'build ${build.id} reclassified stable → legacy (line $line)',
+        tag: 'builds',
+      );
+    }
+  }
+
+  /// A stable→legacy reclassification is the same release, not a distinct build (D-128):
+  /// exact id match first, then same parsed version/kind/platform/arch across stable and legacy.
   bool isInstalled(BuildCandidate candidate) {
-    return installedBuilds.value.any((build) => build.id == candidate.id);
+    final builds = installedBuilds.value;
+    if (builds.any((build) => build.id == candidate.id)) {
+      return true;
+    }
+    final version = candidate.version;
+    if (version == null ||
+        (candidate.channel != BuildChannel.stable &&
+            candidate.channel != BuildChannel.legacy)) {
+      return false;
+    }
+    return builds.any((build) {
+      if (build.channel != BuildChannel.stable && build.channel != BuildChannel.legacy) {
+        return false;
+      }
+      if (build.kind != candidate.kind ||
+          build.platform != candidate.platform ||
+          build.arch != candidate.arch) {
+        return false;
+      }
+      return FreeCadVersion.tryParse(build.version) == version;
+    });
   }
 
   bool isInstalling(BuildCandidate candidate) {

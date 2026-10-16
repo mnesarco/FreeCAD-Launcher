@@ -52,6 +52,13 @@ flutter run -d linux                                       # run on Linux
 flutter build linux                                        # production bundle
 ```
 
+Manual/network tests live in `test/manual/` and are **explicit-invocation only**: run them with
+their `FCL_*` flag plus the file path (e.g.
+`FCL_REAL_INSTALL=1 flutter test test/manual/real_install_linux_test.dart`). The big-download
+tests (`real_install_linux_test`, `real_weekly_install_linux_test`; ~760–770 MB payloads) are
+hard-disabled when `CI`/`GITHUB_ACTIONS` is set and must **never** be wired into CI or run
+automatically.
+
 ## v2 architecture (authoritative details in docs/spec/04-architecture.md)
 
 - **State**: `signals_flutter` (signals + streamSignal), NOT Provider/Riverpod/Bloc.

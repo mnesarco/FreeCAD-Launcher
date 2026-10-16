@@ -1,5 +1,10 @@
 // SPDX-FileCopyrightText: 2026 Frank Martínez <mnesarco at gmail>
 // SPDX-License-Identifier: GPL-3.0-or-later
+//
+// MANUAL TEST — explicit local invocation only; never runs in a default `flutter test` and
+// never on CI: it downloads the full weekly AppImage (~770 MB) from GitHub.
+// Run:  FCL_REAL_WEEKLY=1 flutter test test/manual/real_weekly_install_linux_test.dart
+// Opt:  FCL_WEEKLY_TAG / FCL_WEEKLY_ASSET (default weekly-2026.09.30)
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +16,19 @@ import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/process.dart';
 import 'package:freecad_launcher/platform/python_probe.dart';
 import 'package:http/http.dart' as http;
+
+/// Hard gate for manual tests: never run on CI, even if the `FCL_*` flag were present.
+String? _manualSkip() {
+  final ci = Platform.environment['CI'];
+  final actions = Platform.environment['GITHUB_ACTIONS'];
+  if ((ci != null && ci.isNotEmpty && ci != 'false') || actions == 'true') {
+    return 'Manual test disabled on CI (explicit local invocation only)';
+  }
+  if (Platform.environment['FCL_REAL_WEEKLY'] != '1') {
+    return 'Manual test: set FCL_REAL_WEEKLY=1 to download a real weekly AppImage';
+  }
+  return null;
+}
 
 void main() {
   test(
@@ -85,9 +103,7 @@ void main() {
       // ignore: avoid_print
       print('version stdout=${result.stdout.trim()}');
     },
-    skip: Platform.environment['FCL_REAL_WEEKLY'] != '1'
-        ? 'Manual test: set FCL_REAL_WEEKLY=1 to download a real weekly AppImage'
-        : null,
+    skip: _manualSkip(),
     timeout: const Timeout(Duration(minutes: 30)),
   );
 }

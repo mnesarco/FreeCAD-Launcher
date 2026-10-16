@@ -101,11 +101,14 @@ news feed with a short excerpt of each post (URL configurable in Settings).
 ### Install from the catalog (Versions → Available)
 
 - Each entry shows version, size and detected Python version.
-- Use the **Stable | RC | Weekly** channel selector: release candidates (`26.3rc1`) preview the
-  next stable release and ask for confirmation before installing (they are never offered as
-  updates); weekly builds are dated development snapshots (`weekly-YYYY.MM.DD`) shown with a
-  badge; the latest 52 (one year) are listed, newest first. Installing one asks for confirmation
-  because they are development-quality and not covered by support.
+- Use the **Stable | RC | Weekly | Legacy** channel selector: release candidates (`26.3rc1`)
+  preview the next stable release and ask for confirmation before installing (they are never
+  offered as updates); weekly builds are dated development snapshots (`weekly-YYYY.MM.DD`)
+  shown with a badge; the latest 52 (one year) are listed, newest first. Installing one asks
+  for confirmation because they are development-quality and not covered by support. Legacy
+  lists the supported lines below the current stable line (for example 1.1.x and 1.0.x once
+  26.3 is current), newest first; legacy builds keep working but no longer receive fixes, so
+  installing one asks for confirmation.
 - **Install** downloads the asset (`.part` file, cancellable), verifies the published SHA-256
   when available, installs it as a managed copy and detects the bundled Python interpreter.
 - Successful installs switch to the **Installed** tab automatically.
@@ -460,10 +463,11 @@ environment details and diagnostics — never your database, profiles or tokens.
   (`FREECAD_USER_HOME`, config, `Mod/`, macros, temporary files) is still per profile.
 - Network access is direct: system proxy settings are not used yet, so a mandatory proxy
   blocks the catalogs and the news feed (Settings → Diagnostics → Network shows the failure).
-- Release candidates (Versions → Available → RC) and weekly builds (Weekly) are available; the
-  legacy 1.0.x channel is not exposed yet (the support floor is FreeCAD 1.0+ for catalog builds).
-- Build updates are notify-only: install the new version from Versions → Available and rebind
-  profiles manually.
+- Release candidates (Versions → Available → RC), weekly builds (Weekly) and older supported
+  lines (Legacy, for example 1.1.x and 1.0.x once 26.3 is current) are all installable; builds
+  below FreeCAD 1.0 are not offered (support floor, D-021).
+- Build updates are notify-only and only suggested within the same version line: install the
+  new version from Versions → Available and rebind profiles manually.
 - No launcher self-update yet; replace the AppImage manually (on Windows, extract the newer zip
   over a fresh folder).
 - i18n scaffolding is in place but v0.2 ships English only.

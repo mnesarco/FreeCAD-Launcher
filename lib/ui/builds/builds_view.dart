@@ -421,11 +421,15 @@ class _AvailableTabState extends State<_AvailableTab> {
     final l10n = AppLocalizations.of(context);
     final controller = AppScope.of(context).builds;
     final stable = controller.availableBuilds.value;
+    final legacy = controller.legacyBuilds.value;
     final rc = controller.rcBuilds.value;
     final weekly = controller.weeklyBuilds.value;
-    final isWeekly = _channel == BuildChannel.weekly;
-    final isRc = _channel == BuildChannel.rc;
-    final candidates = isWeekly ? weekly : (isRc ? rc : stable);
+    final candidates = switch (_channel) {
+      BuildChannel.rc => rc,
+      BuildChannel.weekly => weekly,
+      BuildChannel.legacy => legacy,
+      _ => stable,
+    };
     final loading = controller.loadingCatalog.value;
     final error = controller.catalogError.value;
     final stale =
@@ -447,16 +451,18 @@ class _AvailableTabState extends State<_AvailableTab> {
     } else if (candidates.isEmpty) {
       body = EmptyState(
         icon: Icons.cloud_download_outlined,
-        title: isWeekly
-            ? l10n.versionsWeeklyEmptyTitle
-            : isRc
-            ? l10n.versionsRcEmptyTitle
-            : l10n.versionsAvailableEmptyTitle,
-        message: isWeekly
-            ? l10n.versionsWeeklyEmptyMessage
-            : isRc
-            ? l10n.versionsRcEmptyMessage
-            : l10n.versionsAvailableEmptyMessage,
+        title: switch (_channel) {
+          BuildChannel.weekly => l10n.versionsWeeklyEmptyTitle,
+          BuildChannel.rc => l10n.versionsRcEmptyTitle,
+          BuildChannel.legacy => l10n.versionsLegacyEmptyTitle,
+          _ => l10n.versionsAvailableEmptyTitle,
+        },
+        message: switch (_channel) {
+          BuildChannel.weekly => l10n.versionsWeeklyEmptyMessage,
+          BuildChannel.rc => l10n.versionsRcEmptyMessage,
+          BuildChannel.legacy => l10n.versionsLegacyEmptyMessage,
+          _ => l10n.versionsAvailableEmptyMessage,
+        },
         action: FilledButton.tonal(
           onPressed: () => controller.loadCatalog(forceRefresh: true),
           child: Text(l10n.versionsRefresh),
@@ -506,6 +512,10 @@ class _AvailableTabState extends State<_AvailableTab> {
                     DropdownMenuItem(
                       value: BuildChannel.weekly,
                       child: Text(l10n.versionsChannelWeekly),
+                    ),
+                    DropdownMenuItem(
+                      value: BuildChannel.legacy,
+                      child: Text(l10n.versionsChannelLegacy),
                     ),
                   ],
                   onChanged: (value) {
@@ -592,6 +602,10 @@ class _AvailableBuildTile extends SignalWidget {
               tone: CompactBadgeTone.info,
             ),
           ],
+          if (candidate.channel == BuildChannel.legacy) ...[
+            const SizedBox(width: 8),
+            CompactBadge(label: l10n.versionsChannelLegacy),
+          ],
         ],
       ),
       subtitle: Column(
@@ -641,6 +655,10 @@ class _AvailableBuildTile extends SignalWidget {
       BuildChannel.rc => (
         title: l10n.versionsRcInstallTitle,
         message: l10n.versionsRcInstallMessage,
+      ),
+      BuildChannel.legacy => (
+        title: l10n.versionsLegacyInstallTitle,
+        message: l10n.versionsLegacyInstallMessage,
       ),
       _ => null,
     };

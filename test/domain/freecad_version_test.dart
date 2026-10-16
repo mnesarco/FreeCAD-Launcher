@@ -44,11 +44,60 @@ void main() {
       expect(rc1.hashCode, const FreeCadVersion(26, 3, 0, 1).hashCode);
     });
 
-    test('marks supported pre-1.1 versions as legacy', () {
-      expect(const FreeCadVersion(1, 0, 2).isLegacy, isTrue);
-      expect(const FreeCadVersion(1, 1, 0).isLegacy, isFalse);
-      expect(const FreeCadVersion(1, 1, 0, 3).isLegacy, isFalse);
-      expect(const FreeCadVersion(0, 21, 2).isLegacy, isFalse);
+    test('derives the catalog stable line from supported stable versions', () {
+      expect(FreeCadVersion.deriveStableLine(const []), isNull);
+      expect(
+        FreeCadVersion.deriveStableLine(const [FreeCadVersion(1, 0, 2)]),
+        const FreeCadVersion(1, 0),
+      );
+      expect(
+        FreeCadVersion.deriveStableLine(const [
+          FreeCadVersion(1, 0, 2),
+          FreeCadVersion(1, 1, 3),
+        ]),
+        const FreeCadVersion(1, 1),
+      );
+      expect(
+        FreeCadVersion.deriveStableLine(const [
+          FreeCadVersion(1, 0, 2),
+          FreeCadVersion(1, 1, 3),
+          FreeCadVersion(26, 3, 0, 1),
+        ]),
+        const FreeCadVersion(1, 1),
+        reason: 'RC tags never define the stable line',
+      );
+      expect(
+        FreeCadVersion.deriveStableLine(const [
+          FreeCadVersion(1, 0, 2),
+          FreeCadVersion(1, 1, 4),
+          FreeCadVersion(26, 3),
+        ]),
+        const FreeCadVersion(26, 3),
+      );
+      expect(
+        FreeCadVersion.deriveStableLine(const [
+          FreeCadVersion(26, 3, 1),
+          FreeCadVersion(27, 1, 1),
+        ]),
+        const FreeCadVersion(27, 1),
+        reason: 'patch tags define their own line',
+      );
+      expect(
+        FreeCadVersion.deriveStableLine(const [
+          FreeCadVersion(0, 21, 2),
+          FreeCadVersion(0, 20),
+        ]),
+        isNull,
+        reason: 'pre-1.0 stays below the support floor',
+      );
+    });
+
+    test('matches major.minor lines', () {
+      expect(const FreeCadVersion(1, 1, 3).sameLine(const FreeCadVersion(1, 1)), isTrue);
+      expect(const FreeCadVersion(1, 0, 2).sameLine(const FreeCadVersion(1, 1)), isFalse);
+      expect(const FreeCadVersion(26, 3, 1).sameLine(const FreeCadVersion(26, 3)), isTrue);
+      expect(const FreeCadVersion(26, 3, 0, 1).sameLine(const FreeCadVersion(26, 3)), isTrue);
+      expect(const FreeCadVersion(26, 3).sameLine(const FreeCadVersion(1, 1, 4)), isFalse);
     });
 
     test('flags the 1.0 support floor', () {
@@ -81,10 +130,14 @@ void main() {
   });
 
   group('ReleaseTag', () {
-    test('classifies stable, legacy and weekly tags', () {
+    test('classifies stable and weekly tags (legacy needs catalog context)', () {
       expect(ReleaseTag.parse('1.1.3')!.channel, BuildChannel.stable);
       expect(ReleaseTag.parse('26.3')!.channel, BuildChannel.stable);
-      expect(ReleaseTag.parse('1.0.2')!.channel, BuildChannel.legacy);
+      expect(
+        ReleaseTag.parse('1.0.2')!.channel,
+        BuildChannel.stable,
+        reason: 'stable/legacy split is derived at catalog load (D-128)',
+      );
       expect(ReleaseTag.parse('weekly-2026.09.16')!.channel, BuildChannel.weekly);
       expect(ReleaseTag.parse('weekly-2026.09.16')!.weekly, isNotNull);
       expect(ReleaseTag.parse('weeklies')!.channel, BuildChannel.weekly);

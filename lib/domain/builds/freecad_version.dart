@@ -15,8 +15,6 @@ class FreeCadVersion implements Comparable<FreeCadVersion> {
 
   static const FreeCadVersion minSupported = FreeCadVersion(1, 0);
 
-  static const FreeCadVersion stableLine = FreeCadVersion(1, 1);
-
   static FreeCadVersion? tryParse(String text) {
     final match = _stableTag.firstMatch(text.trim());
     if (match == null) {
@@ -30,11 +28,28 @@ class FreeCadVersion implements Comparable<FreeCadVersion> {
     );
   }
 
+  /// Current stable line: the highest supported non-RC `major.minor` present in the loaded
+  /// catalog (D-078/D-128). RC-only lines never define the line; null when no supported stable
+  /// version is present.
+  static FreeCadVersion? deriveStableLine(Iterable<FreeCadVersion> versions) {
+    FreeCadVersion? line;
+    for (final version in versions) {
+      if (!version.isSupported || version.isPrerelease) {
+        continue;
+      }
+      if (line == null || version.compareTo(line) > 0) {
+        line = version;
+      }
+    }
+    return line == null ? null : FreeCadVersion(line.major, line.minor);
+  }
+
   bool get isPrerelease => rc > 0;
 
   bool get isSupported => compareTo(minSupported) >= 0;
 
-  bool get isLegacy => isSupported && !isPrerelease && compareTo(stableLine) < 0;
+  /// True when both versions belong to the same `major.minor` line (CalVer `YY.N` or semver).
+  bool sameLine(FreeCadVersion other) => major == other.major && minor == other.minor;
 
   bool operator <(FreeCadVersion other) => compareTo(other) < 0;
 
@@ -132,9 +147,7 @@ class ReleaseTag {
     }
     final version = FreeCadVersion.tryParse(tag);
     if (version != null && version.isSupported) {
-      final channel = version.isPrerelease
-          ? BuildChannel.rc
-          : (version.isLegacy ? BuildChannel.legacy : BuildChannel.stable);
+      final channel = version.isPrerelease ? BuildChannel.rc : BuildChannel.stable;
       return ReleaseTag(raw: tag, channel: channel, version: version);
     }
     return null;

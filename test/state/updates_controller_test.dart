@@ -109,6 +109,20 @@ BuildCandidate rcCandidate(String tag, BuildKind kind) {
   );
 }
 
+BuildCandidate legacyCandidate(String version, BuildKind kind) {
+  return BuildCandidate(
+    versionLabel: version,
+    channel: BuildChannel.legacy,
+    platform: BuildPlatform.linux,
+    arch: 'x86_64',
+    kind: kind,
+    assetName: 'FreeCAD_$version.AppImage',
+    downloadUrl: 'https://example.invalid/$version',
+    sizeBytes: 1,
+    version: FreeCadVersion.tryParse(version),
+  );
+}
+
 void main() {
   late Directory tempDirectory;
   late AppDatabase db;
@@ -400,6 +414,8 @@ void main() {
       builds.availableBuilds.value = [
         candidate('2.0.0', BuildKind.appimage),
         candidate('2.0.0', BuildKind.archive),
+        candidate('1.1.4', BuildKind.appimage),
+        candidate('1.1.4', BuildKind.archive),
       ];
       final addons = addonsController();
       final updates = updatesController(addons, builds);
@@ -413,8 +429,9 @@ void main() {
         isA<BuildUpdate>().having(
           (update) => update.latestVersion,
           'latestVersion',
-          '2.0.0',
+          '1.1.4',
         ),
+        reason: 'same-line only: the newer 2.0.0 line is never suggested',
       );
       expect(updates.outdatedCount.value, 2);
 
@@ -453,13 +470,13 @@ void main() {
     final flagged = {
       for (final update in updates.outdatedBuilds.value) update.buildId,
     };
-    expect(flagged, {'stable', 'weekly-old'});
+    expect(flagged, {'weekly-old'});
     final weekly = updates.outdatedBuilds.value.firstWhere(
       (update) => update.buildId == 'weekly-old',
     );
     expect(weekly.installedVersion, 'weekly-2026.09.10');
     expect(weekly.latestVersion, 'weekly-2026.09.23');
-    expect(updates.outdatedCount.value, 2);
+    expect(updates.outdatedCount.value, 1);
   });
 
   test('weekly suggestions never cross channels or asset kinds', () {
@@ -488,7 +505,7 @@ void main() {
       sampleBuild(id: 'rc', version: '26.3rc1', channel: BuildChannel.rc),
       sampleBuild(id: 'stable', version: '1.1.3'),
     ];
-    builds.availableBuilds.value = [candidate('26.3', BuildKind.appimage)];
+    builds.availableBuilds.value = [candidate('1.1.4', BuildKind.appimage)];
     builds.rcBuilds.value = [rcCandidate('26.3rc2', BuildKind.appimage)];
     final updates = updatesController(addonsController(), builds);
 
@@ -496,7 +513,51 @@ void main() {
       for (final update in updates.outdatedBuilds.value) update.buildId,
     };
     expect(flagged, {'stable'});
-    expect(updates.outdatedBuilds.value.single.latestVersion, '26.3');
+    expect(updates.outdatedBuilds.value.single.latestVersion, '1.1.4');
+  });
+
+  test('legacy installs get notify-only updates within their own line', () {
+    final builds = buildsController();
+    builds.installedBuilds.value = [
+      sampleBuild(id: 'legacy-1-0', version: '1.0.1', channel: BuildChannel.legacy),
+      sampleBuild(id: 'legacy-1-1', version: '1.1.3', channel: BuildChannel.legacy),
+      sampleBuild(id: 'stable', version: '26.3'),
+    ];
+    builds.availableBuilds.value = [candidate('26.3.1', BuildKind.appimage)];
+    builds.legacyBuilds.value = [
+      legacyCandidate('1.1.4', BuildKind.appimage),
+      legacyCandidate('1.0.2', BuildKind.appimage),
+    ];
+    final updates = updatesController(addonsController(), builds);
+
+    final byBuild = {
+      for (final update in updates.outdatedBuilds.value) update.buildId: update,
+    };
+    expect(byBuild.keys, containsAll(['legacy-1-0', 'legacy-1-1', 'stable']));
+    expect(byBuild['legacy-1-0']!.latestVersion, '1.0.2');
+    expect(byBuild['legacy-1-1']!.latestVersion, '1.1.4');
+    expect(byBuild['stable']!.latestVersion, '26.3.1');
+    expect(updates.outdatedCount.value, 3);
+  });
+
+  test('legacy update checks never suggest cross-line jumps or other kinds', () {
+    final builds = buildsController();
+    builds.installedBuilds.value = [
+      sampleBuild(id: 'legacy-1-0', version: '1.0.1', channel: BuildChannel.legacy),
+      sampleBuild(
+        id: 'legacy-archive',
+        version: '1.1.3',
+        channel: BuildChannel.legacy,
+        kind: BuildKind.archive,
+      ),
+    ];
+    builds.legacyBuilds.value = [
+      legacyCandidate('1.1.4', BuildKind.appimage),
+      legacyCandidate('26.3.1', BuildKind.appimage),
+    ];
+    final updates = updatesController(addonsController(), builds);
+
+    expect(updates.outdatedBuilds.value, isEmpty);
   });
 
   test('applyUpdates updates every selected addon sequentially', () async {

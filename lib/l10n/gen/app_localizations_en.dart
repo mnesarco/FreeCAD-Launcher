@@ -624,6 +624,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get versionsChannelWeekly => 'Weekly';
 
   @override
+  String get versionsChannelLegacy => 'Legacy';
+
+  @override
   String versionsWeeklyBuild(String date) {
     return 'Weekly $date';
   }
@@ -655,6 +658,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get versionsRcInstallMessage =>
       'Release candidates preview the next FreeCAD release: they may contain bugs and are not covered by support. Keep a stable build for real work.';
+
+  @override
+  String get versionsLegacyEmptyTitle => 'No legacy versions available';
+
+  @override
+  String get versionsLegacyEmptyMessage =>
+      'Refresh the catalog; the legacy channel lists older supported lines below the current stable line.';
+
+  @override
+  String get versionsLegacyInstallTitle => 'Install a legacy version?';
+
+  @override
+  String get versionsLegacyInstallMessage =>
+      'This build is from an older FreeCAD line that is no longer current: it stays installable and works, but it no longer receives fixes. Keep the current stable line for regular work.';
 
   @override
   String get versionsStaleCatalog =>

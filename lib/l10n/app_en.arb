@@ -273,6 +273,7 @@
   "versionsChannelStable": "Stable",
   "versionsChannelRc": "RC",
   "versionsChannelWeekly": "Weekly",
+  "versionsChannelLegacy": "Legacy",
   "versionsWeeklyBuild": "Weekly {date}",
   "@versionsWeeklyBuild": {
     "placeholders": {
@@ -287,6 +288,10 @@
   "versionsRcEmptyMessage": "Refresh the catalog; release candidates are published before each stable release.",
   "versionsRcInstallTitle": "Install a release candidate?",
   "versionsRcInstallMessage": "Release candidates preview the next FreeCAD release: they may contain bugs and are not covered by support. Keep a stable build for real work.",
+  "versionsLegacyEmptyTitle": "No legacy versions available",
+  "versionsLegacyEmptyMessage": "Refresh the catalog; the legacy channel lists older supported lines below the current stable line.",
+  "versionsLegacyInstallTitle": "Install a legacy version?",
+  "versionsLegacyInstallMessage": "This build is from an older FreeCAD line that is no longer current: it stays installable and works, but it no longer receives fixes. Keep the current stable line for regular work.",
   "versionsStaleCatalog": "Using a cached catalog; newer versions may be missing.",
   "versionsCatalogError": "Could not load available versions.",
   "versionsRetry": "Retry",

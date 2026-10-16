@@ -350,7 +350,8 @@ class ProfileManifestController {
       return null;
     }
     for (final build in usable) {
-      if (build.version == version && (channel == null || build.channel.name == channel)) {
+      if (build.version == version &&
+          (channel == null || _channelMatches(build.channel.name, channel))) {
         return build;
       }
     }
@@ -360,6 +361,16 @@ class ProfileManifestController {
       }
     }
     return null;
+  }
+
+  /// Manifests exported before the D-128 stable→legacy reclassification still reference the
+  /// build as `stable`; both classify the same release.
+  static bool _channelMatches(String buildChannel, String manifestChannel) {
+    if (buildChannel == manifestChannel) {
+      return true;
+    }
+    const versioned = {'stable', 'legacy'};
+    return versioned.contains(buildChannel) && versioned.contains(manifestChannel);
   }
 
   bool _isUsable(Build build) {

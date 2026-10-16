@@ -88,11 +88,8 @@ void main() {
     }
   });
 
-  Future<void> waitForHandle(int index) async {
-    for (var attempt = 0; attempt < 250 && launcher.handles.length <= index; attempt++) {
-      await Future<void>.delayed(const Duration(milliseconds: 2));
-    }
-  }
+  /// Deterministic wait: resolves when the fake process at [index] has started.
+  Future<void> waitForHandle(int index) => launcher.whenStarted(index);
 
   Future<File> writeArchive(String name, List<int> bytes) async {
     return File(p.join(tempDirectory.path, name))..writeAsBytesSync(bytes);
