@@ -3,8 +3,25 @@
 > Live file. Every session updates this at start and end. Keep it short — details belong in
 > `TASKS.md` and `DECISIONS.md`.
 
-- **Updated**: 2026-10-16
-- **Current work**: **`v0.4.14` published (pre-release)** carrying the B-14/B-01 four-channel
+- **Updated**: 2026-10-27
+- **Current work**: **`v0.4.15` published (pre-release)** carrying **R-52/D-129**: FreeCAD stopped
+  publishing `-SHA256.txt` sidecars (FreeCAD/FreeCAD#33318, 2026-10-14), which silently disabled
+  build verification for `26.3rc2`+ and weeklies from `weekly-2026.10.21` (no hash stored,
+  `verify()` inert); installs now take the GitHub release asset `digest` (`assets[].digest`,
+  present for assets uploaded from ~2025-07) and keep the sidecar as the legacy fallback for
+  older releases (1.0.0/1.0.1, weeklies before ~2025-07). Fix `e841c1b` + bump `362b1b9` pushed
+  to `origin/devel` (`25e786d..362b1b9`); CI run 40572819351 green on ubuntu and on the
+  **windows rerun** (the first attempt lost one test to the known fixed-wait flake class,
+  `profiles_view_test.dart` “create dialog persists the selected profile color” — recorded under
+  R-50); manual `release.yml` run
+  [40575577541](https://github.com/mnesarco/FreeCAD-Launcher/actions/runs/40575577541)
+  (`create_release=true`, tag `v0.4.15`, `prerelease=true`, ref `devel`) green on
+  appimage/windows/publish and the GitHub pre-release published with a plain-English user
+  summary (`gh release edit`); assets re-downloaded and verified locally (`sha256sum -c` OK on
+  the AppImage and the Windows zip, AppImage `--version` = 0.4.15 exit 0, zip carries
+  `7zr.exe`/license/notices/`sqlite3.dll`/`dartjni.dll` and the app-local MSVC runtime).
+  818 tests green (13 skipped), analyze clean.
+  Earlier: **`v0.4.14` published (pre-release)** carrying the B-14/B-01 four-channel
   model (D-128) plus the manual-test gating (R103) and the flake fixes (R-51): bump `e3555ba`
   pushed to `origin/devel` (`8d66e27..e3555ba`, single push cycle; the code push started CI run
   38887647253, green on ubuntu + windows), manual `release.yml` run
@@ -56,9 +73,10 @@
   (38633891222) and the docs-only push `d3a4d37` produced no CI run. `devel` is pushed to `origin/devel` at `65ba799` (bump) with the `v0.4.12` pre-release published (run 38657277264; full record in `Current state` below); the R-37..R-47 batch plus B-16b/R-38 is released. Also **R-47 DONE** — Addons ▸ Custom now uses one card with Repository/Archive/Dev Link tabs; **R-42 DONE** — profile color identity (D-125: curated 10-palette, auto-assign/backfill, swatch picker, accent colors on card names/icons/buttons, detail title and Home cards, manifest color, WCAG contrast tests); **R-46 DONE** — profile detail title uses the palette accent; **R-45 DONE** — card names use the palette accent; **R-44 DONE** — tinted card background removed (accent-only identity); **R-43 DONE** — the Home hero band shows the official colorful FreeCAD logo (the About dialog asset) instead of the monochrome glyph; **R-40 DONE** — the Profiles screen renders as an Addons-style card grid (D-123; amended 2026-10-14: tighter 140 px cards, `1f7aea3`); **R-41 DONE** — manual profile ordering by long-press drag & drop (D-124, schema v7 `profiles.sort_order`, `flutter_reorderable_grid_view` 5.7.0, [plan](PLAN-R41-profile-grid-reordering.md)); live-verified on the real v6 dev DB (migration kept the name order, drag persisted across a restart, dev order restored afterwards). **R-39 DONE** — narrow-window overflow fixes (Profiles header per owner report + the Home hero found in the live pass). Earlier: **R-37
   DONE** — profile name search (D-120); live-verified, committed `587dfe3`.
 - **Current milestone**: **M8 — Packaging, CI & cross-platform release: in progress**
-  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**/**M8-07 DONE**/**M8-08 WIP**; **`v0.4.14` is the
-  current release** (pre-release, 2026-10-16) carrying the four-channel model (B-14/B-01,
-  D-128) and the R-51/R-103 test hardening, on top of `v0.4.12`'s R-37..R-47 (profile search, grid, drag ordering,
+  (M8-01/M8-02/**M8-03 DONE**/**M8-06 DONE**/**M8-07 DONE**/**M8-08 WIP**; **`v0.4.15` is the
+  current release** (pre-release, 2026-10-27) carrying R-52/D-129 (build verification from the
+  GitHub asset digest), on top of `v0.4.14`'s four-channel model (B-14/B-01, D-128) and the
+  R-51/R-103 test hardening, `v0.4.12`'s R-37..R-47 (profile search, grid, drag ordering,
   color identity, Addons Custom tabs, Home hero logo; R-36/D-119 `rc` channel included); `v0.4.9` carried the platform metadata alignment (M8-07/D-116)
   and the data-root regression fix (M8-08/D-117; owner Windows retest pending); `v0.4.7` carried
   the self-contained Windows zip (R-31/D-114) and the R-32/D-115 addon-dependency pip fix; it also carries the B-19 `package.xml`
@@ -97,7 +115,11 @@
   `%APPDATA%\org.freecad.ext.launcher`; its rename migration superseded by D-117) — M8-07; D-115
   (the asset-name `pyXY` hint is version metadata only, never an interpreter path; legacy stored
   FreeCAD paths are ignored and FreeCAD is only ever called with `-c`) — R-32.
-- **Next action**: **`v0.4.14` is published** (pre-release, run 38887652967) carrying the
+- **Next action**: **`v0.4.15` is published** (pre-release, run 40575577541) carrying the digest
+  verification (R-52/D-129); owner retest suggestions: install a build from **RC** (`26.3rc2`) or
+  **Weekly** (2026-10-21 or newer) and confirm the install now verifies (`verified`, hash stored)
+  instead of installing unverified. Then the previous list:
+  **`v0.4.14` is published** (pre-release, run 38887652967) carrying the
   four-channel model + the R-51/R-103 test hardening; owner retest suggestions: open
   Versions → Available → **Legacy** (1.0.0–1.0.2 installable today, with the confirmation
   warning) and confirm the four channels render as expected. Then the previous list:
@@ -139,7 +161,15 @@
   - M8-04 needs a macOS machine. The Windows TLS-inspection VM is no longer a blocker.
   - The B-16 Phase 3 Windows-machine smoke is **on hold** (no Windows machine available as of
     2026-10-02); B-16 is otherwise complete. The same applies to the R-31 no-redist live check.
-- **Current state**: **`v0.4.14` is published** as a pre-release (manual `create_release=true`,
+- **Current state**: **`v0.4.15` is published** as a pre-release (manual `create_release=true`,
+  tag `v0.4.15` on `362b1b9`, `prerelease=true`, run 40575577541; appimage/windows/publish all
+  green) with `FreeCADLauncher-0.4.15-windows-x86_64.zip` + `.sha256` and
+  `FreeCADLauncher-0.4.15-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
+  download (`sha256sum -c` OK), AppImage `--version` = 0.4.15 (exit 0), zip carries `7zr.exe`,
+  license/notices, `sqlite3.dll`/`dartjni.dll` and the app-local MSVC runtime
+  (`vcruntime140.dll`, `vcruntime140_1.dll`, `msvcp140*.dll`). The release carries R-52/D-129
+  (build checksums from the GitHub asset digest, sidecar kept as legacy fallback). Earlier:
+  **`v0.4.14` is published** as a pre-release (manual `create_release=true`,
   tag `v0.4.14` on `e3555ba`, `prerelease=true`, run 38887652967; appimage/windows/publish all
   green) with `FreeCADLauncher-0.4.14-windows-x86_64.zip` + `.sha256` and
   `FreeCADLauncher-0.4.14-x86_64.AppImage` + `.sha256` + `.zsync`; both sidecars verified after
@@ -921,7 +951,7 @@
 - Publishing (D-081): public repo `mnesarco/FreeCAD-Launcher`, branch `devel`, releases only
   from CI (`release.yml`, tag push or manual `workflow_dispatch` with optional `create_release`).
   CI runs Linux + Windows with tests on both; macOS is disabled per D-083 until M8-04.
-  `v0.4.14` is the current release (published as a pre-release; D-100); the `0.4.x` line continues.
+  `v0.4.15` is the current release (published as a pre-release; D-100); the `0.4.x` line continues.
 - `AGENTS.md` is tracked again (no longer git-excluded); keep it in sync with `docs/impl/`
   when conventions or the project state change.
 
@@ -971,3 +1001,4 @@
 | 2026-10-16 | R106 | **Docs: four-channel-model commit SHA recorded** (owner request: “commit everything, no need to split the commits”): the full change set committed as `57ebaa3` — `feat(builds): catalog-derived stable line and legacy channel [B-14, B-01]`, 37 files, +1293/−156, one commit that also carries the R-51 flake fixes and the R-103 manual-test gating; TASKS B-14a/B-01g and STATUS Current work/R102 now read `Committed 57ebaa3`. Local `devel` is one commit ahead of `origin/devel` (push pending owner approval). Docs-only commit; per D-122 no CI run starts | B-14, B-01, R-51, R-103 | `docs/impl/{TASKS,STATUS}.md` |
 | 2026-10-16 | R107 | **Version bumped 0.4.13 → 0.4.14 and pushed in one cycle** (owner request: “bump 0.4.14 first so one single push and release cycle”): `lib/core/constants.dart` + `pubspec.yaml` updated (`packaging/check_version.sh` OK, `chore(release): bump version to 0.4.14 [B-14, B-01, R-51, R-103]`, `e3555ba`); `devel` pushed to `origin/devel` (`8d66e27..e3555ba`, three commits: the four-channel feature `57ebaa3`, the SHA docs record `dfb0cb1`, the bump); the code push started CI run 38887647253 — **green on ubuntu + windows** (the new four-channel tests pass on Windows too). `flutter analyze` clean before the push | B-14, B-01, R-51, R-103 | `lib/core/constants.dart`, `pubspec.yaml`, `docs/impl/STATUS.md` |
 | 2026-10-16 | R108 | **`v0.4.14` pre-release published** (same cycle): manual `release.yml` run [38887652967](https://github.com/mnesarco/FreeCAD-Launcher/actions/runs/38887652967) (`create_release=true`, tag `v0.4.14`, `prerelease=true`, ref `devel`) green on appimage/windows/publish and published the GitHub pre-release with `FreeCADLauncher-0.4.14-windows-x86_64.zip` + `.sha256` and `FreeCADLauncher-0.4.14-x86_64.AppImage` + `.sha256` + `.zsync`; the auto-generated body was replaced via `gh release edit` with a plain-English user summary (Legacy channel + catalog-derived stable line + within-line updates; downloads/changelog link). All assets downloaded and verified: both sidecars `sha256sum -c` OK, AppImage `--version` = “FreeCAD Launcher 0.4.14” (exit 0), zip carries `7zr.exe`, `freecad_launcher.exe`, `LICENSE`, `THIRD_PARTY_NOTICES.md`, `sqlite3.dll`, `dartjni.dll` and the app-local MSVC runtime (`vcruntime140.dll`, `vcruntime140_1.dll`, `msvcp140*.dll`). The release carries the four-channel model (B-14/B-01, D-128), the manual-test CI gating (R103) and the flake fixes (R-51); TASKS/STATUS/VERIFICATION updated (this record) | B-14, B-01, R-51, R-103 | `docs/impl/{STATUS,VERIFICATION}.md` |
+| 2026-10-27 | R109 | **R-52/D-129: build verification moved to the GitHub asset digest + `v0.4.15` released** (owner request: evaluate FreeCAD/FreeCAD#33318, then fix, commit and release): FreeCAD stopped publishing `<asset>-SHA256.txt` sidecars on 2026-10-14, so catalog installs of `26.3rc2`+ and weeklies from `weekly-2026.10.21` downloaded unverified, stored no `sha256` and left `verify()` inert (the old sidecar-only wiring found the file missing and silently fell back to no hash). `ReleaseAsset.sha256` now parses `assets[].digest` (`sha256:` only, lowercased) into `BuildCandidate.expectedSha256`; the sidecar stays as a legacy fallback (`_fetchSidecarChecksum`) because assets uploaded before ~2025-07 (1.0.0/1.0.1, older weeklies) have no digest. New sidecar-less `26.3rc2` fixture + digest edge cases (null/`md5:`/uppercase) + 3 controller cases (digest / sidecar fallback / neither) → 818 tests green (13 skipped), analyze clean; real-catalog check: 26.3rc2 6/6, `weekly-2026.10.21` 6/6, `weekly-2026.10.14` 6/6, 1.1.3 5/5 candidates carry a digest (26.3rc2/2026.10.21 have 0 sidecars), 1.0.0 exposes 6 sidecars for the fallback; manual install tests read the API digest instead of the removed sidecar. Committed `e841c1b`. **`v0.4.15` pre-release published** (same cycle): bump `362b1b9` pushed to `origin/devel` (`25e786d..362b1b9`); CI run [40572819351](https://github.com/mnesarco/FreeCAD-Launcher/actions/runs/40572819351) green on ubuntu, windows green on the failed-job rerun (first attempt lost `profiles_view_test.dart` “create dialog persists the selected profile color” to the known fixed-wait flake class — recorded under R-50); manual `release.yml` run [40575577541](https://github.com/mnesarco/FreeCAD-Launcher/actions/runs/40575577541) green on appimage/windows/publish; both sidecars `sha256sum -c` OK, AppImage `--version` = 0.4.15 (exit 0), zip carries `7zr.exe`/license/notices/`sqlite3.dll`/`dartjni.dll` + app-local MSVC runtime; release body replaced with plain-English notes | R-52, R-50, D-129 | `lib/domain/builds/{release_info,asset_classifier}.dart`, `lib/state/builds_controller.dart`, `test/domain/asset_classifier_test.dart`, `test/state/builds_controller_test.dart`, `test/fixtures/github_releases_26.3rc2.json`, `test/helpers/release_digest.dart`, `test/manual/{real_install_linux,real_weekly_install_linux}_test.dart`, `docs/spec/{02-requirements,06-integrations}.md`, `docs/impl/{DECISIONS,TASKS,STATUS,VERIFICATION}.md`, `lib/core/constants.dart`, `pubspec.yaml` |

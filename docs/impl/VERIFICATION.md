@@ -328,7 +328,7 @@ M7-01 (D-071) productionization checks (2026-09-21):
       Windows machine (the B-16 smoke is also on hold)
 - [ ] macOS artifacts built, installed and launched on clean machines (M8-04, OQ-1)
 - [ ] Clean-machine Linux first-run flow completes with the published AppImage (M8-05)
-- Note (D-100): `v0.1.0`–`v0.3.0` releases were withdrawn by the owner; `v0.4.14` is the current
+- Note (D-100): `v0.1.0`–`v0.3.0` releases were withdrawn by the owner; `v0.4.15` is the current
   release (pre-release) and the `0.4.x` line continues. The entries above document the
   historical verification; the tags still exist.
 
