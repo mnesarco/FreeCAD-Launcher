@@ -2983,3 +2983,26 @@ Template:
   `docs/spec/03-ux.md` §2.2, `lib/domain/builds/freecad_version.dart`,
   `lib/domain/builds/asset_classifier.dart`, `lib/state/builds_controller.dart`,
   `lib/state/updates_controller.dart`, `lib/ui/builds/builds_view.dart`, D-021, D-078, D-119
+
+### D-129 — Build checksums come from the GitHub asset digest, with the sidecar as legacy fallback (R-52)
+- **Date**: 2026-10-27
+- **Status**: Accepted
+- **Context**: FreeCAD stopped publishing `<asset>-SHA256.txt` sidecars in FreeCAD/FreeCAD#33318
+  (merged 2026-10-14; the last releases carrying them are `26.3rc1` and `weekly-2026.10.14`). The
+  launcher wired verification to those sidecars, so every newer release (`26.3rc2`, weeklies from
+  `weekly-2026.10.21`) installed silently unverified, stored no hash, and left `verify()` inert.
+  The releases listing the launcher already fetches carries `assets[].digest` (`sha256:<hex>`) for
+  assets uploaded from ~2025-07 onward (1.0.x older than 1.0.2 and weeklies before that have no
+  digest and still ship sidecars), so a hard cut-over would lose verification for those.
+- **Decision**: parse `digest` into `ReleaseAsset.sha256` (sha256 only, lowercase) and use it as
+  the candidate's preferred expected hash; when a release has no digest, fall back to the existing
+  `<asset>-SHA256.txt` sidecar (`BuildCandidate.checksumUrl` + `BuildsController._fetchSidecarChecksum`).
+  The sidecar path is legacy-only and can be deleted once pre-2025-07 releases age out. A release
+  with neither still installs, unverified and with a null hash.
+- **Consequences**: current and future releases verify with no extra request (and one fewer
+  download per install); old releases keep working through the sidecar. GitHub becomes the hash
+  authority for everything it has digested. `verify()` on an unverified build stays a no-op until
+  the post-install hash is always recorded.
+- **Refs**: `docs/spec/06-integrations.md` §1.4, `docs/spec/02-requirements.md` FR-1.2,
+  FreeCAD/FreeCAD#33318, FreeCAD/FreeCAD#33934, `lib/domain/builds/release_info.dart`,
+  `lib/domain/builds/asset_classifier.dart`, `lib/state/builds_controller.dart`, `TASKS.md` R-52

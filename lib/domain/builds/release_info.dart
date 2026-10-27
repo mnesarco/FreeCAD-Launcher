@@ -2,20 +2,33 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:convert';
 
+final RegExp _sha256Digest = RegExp(r'^sha256:([0-9a-fA-F]{64})$');
+
 class ReleaseAsset {
-  const ReleaseAsset({required this.name, required this.downloadUrl, this.size = 0});
+  const ReleaseAsset({
+    required this.name,
+    required this.downloadUrl,
+    this.size = 0,
+    this.sha256,
+  });
 
   factory ReleaseAsset.fromJson(Map<String, dynamic> json) {
     return ReleaseAsset(
       name: json['name'] as String,
       downloadUrl: json['browser_download_url'] as String,
       size: json['size'] as int? ?? 0,
+      sha256: _sha256Digest.firstMatch(json['digest'] as String? ?? '')?.group(1)?.toLowerCase(),
     );
   }
 
   final String name;
   final String downloadUrl;
   final int size;
+
+  /// GitHub-computed `digest` (`sha256` only), present for assets uploaded from ~2025-07 onward;
+  /// FreeCAD stopped publishing `-SHA256.txt` sidecars on 2026-10-14 (PR #33318), so this is the
+  /// primary checksum source and the sidecar only covers older assets.
+  final String? sha256;
 }
 
 class ReleaseInfo {

@@ -17,6 +17,7 @@ class BuildCandidate {
     this.version,
     this.weekly,
     this.pythonVersion,
+    this.expectedSha256,
     this.checksumUrl,
     this.macosMinVersion,
     this.releaseNotesUrl,
@@ -33,6 +34,7 @@ class BuildCandidate {
   final FreeCadVersion? version;
   final WeeklyVersion? weekly;
   final String? pythonVersion;
+  final String? expectedSha256;
   final String? checksumUrl;
   final int? macosMinVersion;
   final String? releaseNotesUrl;
@@ -75,6 +77,7 @@ abstract final class AssetClassifier {
           version: tag.version,
           weekly: tag.weekly,
           pythonVersion: _pythonFromName(asset.name),
+          expectedSha256: asset.sha256,
           checksumUrl: sidecar.isEmpty ? null : sidecar.first.downloadUrl,
           macosMinVersion: _macosMinVersion(asset.name),
           releaseNotesUrl: release.htmlUrl,

@@ -120,7 +120,11 @@ void main() {
     }
   });
 
-  BuildCandidate candidate({String? checksumUrl, String version = '1.1.3'}) {
+  BuildCandidate candidate({
+    String? expectedSha256,
+    String? checksumUrl,
+    String version = '1.1.3',
+  }) {
     return BuildCandidate(
       versionLabel: version,
       channel: BuildChannel.stable,
@@ -131,6 +135,7 @@ void main() {
       downloadUrl: 'https://example.invalid/$version.AppImage',
       sizeBytes: 1000,
       pythonVersion: '3.11',
+      expectedSha256: expectedSha256,
       checksumUrl: checksumUrl,
       releaseNotesUrl: 'https://example.invalid/notes',
     );
@@ -680,7 +685,24 @@ void main() {
     controller.dispose();
   });
 
-  test('install verifies the checksum sidecar when present', () async {
+  test('install verifies the download against the catalog digest', () async {
+    final data = utf8.encode('data');
+    final expected = sha256OfBytes(data);
+    final source = FakeDownloadSourceWithResponses(
+      (uri) async => DownloadStream(bytes: bytesStream(data), contentLength: data.length),
+    );
+    final installer = FakeInstaller();
+    final controller = buildController(source: source, installer: installer);
+
+    final result = await controller.install(candidate(expectedSha256: expected));
+
+    expect(result, isA<Ok<Build>>());
+    final stored = await database.buildsDao.getById(candidate().id);
+    expect(stored!.verified, isTrue);
+    expect(stored.sha256, expected);
+  });
+
+  test('install falls back to the SHA256 sidecar when the release has no digest', () async {
     final data = utf8.encode('data');
     final expected = sha256OfBytes(data);
     final source = FakeDownloadSourceWithResponses((uri) async {
@@ -703,6 +725,21 @@ void main() {
     final stored = await database.buildsDao.getById(candidate().id);
     expect(stored!.verified, isTrue);
     expect(stored.sha256, expected);
+  });
+
+  test('install without a digest records no hash and stays unverified', () async {
+    final data = utf8.encode('data');
+    final source = FakeDownloadSourceWithResponses(
+      (uri) async => DownloadStream(bytes: bytesStream(data), contentLength: data.length),
+    );
+    final controller = buildController(source: source);
+
+    final result = await controller.install(candidate());
+
+    expect(result, isA<Ok<Build>>());
+    final stored = await database.buildsDao.getById(candidate().id);
+    expect(stored!.verified, isFalse);
+    expect(stored.sha256, isNull);
   });
 
   test('reports downloaded bytes and totals in install progress', () async {

@@ -87,8 +87,12 @@ Legacy notes:
 
 ### 1.4 Integrity
 
-- Assets ship a sidecar `<asset>-SHA256.txt`. Download it first when present, parse the hex
-  digest, verify after download; block install on mismatch.
+- Assets carry a GitHub release asset `digest` (`sha256:<hex>`) for everything uploaded from
+  ~2025-07 onward; FreeCAD stopped publishing `<asset>-SHA256.txt` sidecars on 2026-10-14
+  (FreeCAD/FreeCAD#33318). Read the digest from the release listing already fetched, verify after
+  download and block install on mismatch; releases without a digest (1.0.0/1.0.1, weeklies before
+  2025-07) fall back to their sidecar, and a release with neither installs unverified and records
+  no hash (D-129).
 - macOS builds are signed by "The FreeCAD project association AISBL" in CI, but notarization
   has been unreliable (open issue FreeCAD/FreeCAD#30621: `spctl` can reject with unnotarized
   or invalid-signature errors). Strategy: install `.app` to a user-writable directory, offer

@@ -10,11 +10,12 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/domain/builds/build_types.dart';
 import 'package:freecad_launcher/platform/build_installer.dart';
-import 'package:freecad_launcher/platform/checksum.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
 import 'package:freecad_launcher/platform/paths.dart';
 import 'package:freecad_launcher/platform/process.dart';
 import 'package:http/http.dart' as http;
+
+import '../helpers/release_digest.dart';
 
 /// Hard gate for manual tests: never run on CI, even if the `FCL_*` flag were present.
 String? _manualSkip() {
@@ -50,11 +51,7 @@ void main() {
         cacheDirectory: paths.downloadsCacheDir,
       );
 
-      final sidecar = await downloader.download(
-        uri: Uri.parse('$baseUrl-SHA256.txt'),
-        fileName: '$asset-SHA256.txt',
-      );
-      final expected = parseSha256Text(File(sidecar.path).readAsStringSync());
+      final expected = await fetchReleaseAssetSha256(tag: tag, asset: asset);
       expect(expected, isNotNull);
 
       final appImage = await downloader.download(

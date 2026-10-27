@@ -41,6 +41,7 @@ void main() {
       expect(linux.assetName, 'FreeCAD_1.1.3-Linux-x86_64-py311.AppImage');
       expect(linux.kind, BuildKind.appimage);
       expect(linux.pythonVersion, '3.11');
+      expect(linux.expectedSha256, isNull, reason: 'this capture predates GitHub asset digests');
       expect(linux.checksumUrl, contains('SHA256'));
 
       final windows = select(candidates, platform: BuildPlatform.windows, arch: BuildArch.x86_64)!;
@@ -73,7 +74,7 @@ void main() {
       expect(linux.assetName, 'FreeCAD_26.3rc1-Linux-x86_64.AppImage');
       expect(linux.kind, BuildKind.appimage);
       expect(linux.pythonVersion, isNull);
-      expect(linux.checksumUrl, contains('SHA256'));
+      expect(linux.expectedSha256, isNull, reason: 'this capture predates GitHub asset digests');
 
       final windows = select(candidates, platform: BuildPlatform.windows, arch: BuildArch.x86_64)!;
       expect(windows.assetName, 'FreeCAD_26.3rc1-Windows-x86_64.7z');
@@ -81,6 +82,34 @@ void main() {
       final macArm = select(candidates, platform: BuildPlatform.macos, arch: BuildArch.arm64)!;
       expect(macArm.assetName, 'FreeCAD_26.3rc1-macOS15-arm64.dmg');
       expect(macArm.kind, BuildKind.dmg);
+    });
+  });
+
+  group('post-sidecar releases (FreeCAD PR #33318)', () {
+    test('takes the checksum from the GitHub asset digest', () {
+      final candidates = classifyFixture('github_releases_26.3rc2.json');
+
+      expect(candidates, hasLength(6));
+      final linux = select(candidates, platform: BuildPlatform.linux, arch: BuildArch.x86_64)!;
+      expect(linux.assetName, 'FreeCAD_26.3rc2-Linux-x86_64.AppImage');
+      expect(
+        linux.expectedSha256,
+        '2cf4212d5a348574e786da7d5a8faeeb3e83dd4245c23898dede92ce82ce4908',
+      );
+      expect(candidates.every((candidate) => candidate.expectedSha256 != null), isTrue);
+    });
+
+    test('ignores missing or non-sha256 digests', () {
+      ReleaseAsset asset(Object? digest) => ReleaseAsset.fromJson({
+        'name': 'FreeCAD_26.4-Linux-x86_64.AppImage',
+        'browser_download_url': 'https://example.invalid/FreeCAD_26.4-Linux-x86_64.AppImage',
+        'digest': digest,
+      });
+
+      final hex = List.filled(64, 'a').join();
+      expect(asset(null).sha256, isNull);
+      expect(asset('md5:$hex').sha256, isNull);
+      expect(asset('sha256:${hex.toUpperCase()}').sha256, hex);
     });
   });
 

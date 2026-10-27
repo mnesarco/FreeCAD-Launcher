@@ -370,7 +370,7 @@ class BuildsController {
 
     try {
       log.writeln('${_clock().toIso8601String()} downloading');
-      final expected = await _fetchExpectedChecksum(candidate, token);
+      final expected = candidate.expectedSha256 ?? await _fetchSidecarChecksum(candidate, token);
 
       final download = await _downloader.download(
         uri: Uri.parse(candidate.downloadUrl),
@@ -755,7 +755,9 @@ class BuildsController {
     installErrors.value = {...installErrors.value}..remove(buildId);
   }
 
-  Future<String?> _fetchExpectedChecksum(BuildCandidate candidate, CancellationToken token) async {
+  // Legacy fallback only: assets uploaded before GitHub published `digest` (~2025-07) carry just
+  // the `<asset>-SHA256.txt` sidecar that FreeCAD stopped shipping on 2026-10-14 (PR #33318).
+  Future<String?> _fetchSidecarChecksum(BuildCandidate candidate, CancellationToken token) async {
     final checksumUrl = candidate.checksumUrl;
     if (checksumUrl == null) {
       return null;

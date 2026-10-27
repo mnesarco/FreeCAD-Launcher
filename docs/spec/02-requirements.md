@@ -8,8 +8,9 @@ Priority tags: **[v0.1]** MVP, **[v0.2]** next, **[v1.0]** before public stable 
 
 - FR-1.1 **[v0.1]** The app lists installable stable builds for the current OS/arch from the
   official GitHub releases, with version, channel, size, date, and checksum availability.
-- FR-1.2 **[v0.1]** Installing a build downloads it, verifies SHA-256 against the
-  `-SHA256.txt` sidecar (when present), extracts if needed, and records it atomically.
+- FR-1.2 **[v0.1]** Installing a build downloads it, verifies SHA-256 against the GitHub asset
+  digest (D-129; no verification when a release has none), extracts if needed, and records it
+  atomically.
 - FR-1.3 **[v0.1]** Supported formats: Linux AppImage, Windows portable `.7z`, macOS `.dmg`
   (`.app` extracted), and user-supplied local files/URLs. A local FreeCAD executable may also be
   referenced in place (self-compiled or installed by other methods), Linux-first.
