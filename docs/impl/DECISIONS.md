@@ -3006,3 +3006,29 @@ Template:
 - **Refs**: `docs/spec/06-integrations.md` §1.4, `docs/spec/02-requirements.md` FR-1.2,
   FreeCAD/FreeCAD#33318, FreeCAD/FreeCAD#33934, `lib/domain/builds/release_info.dart`,
   `lib/domain/builds/asset_classifier.dart`, `lib/state/builds_controller.dart`, `TASKS.md` R-52
+
+### D-130 — Downloads and file hashing run in worker isolates
+- **Date**: 2026-11-02
+- **Status**: Accepted
+- **Context**: an 820 MB AppImage took 577 s (~1.4 MB/s) inside the launcher while the same asset
+  reached ~68 MB/s via curl/browser on the same machine, and the identical code path measured
+  55–59 MB/s in a plain Dart process — so the gap was the runtime, not the network or the code.
+  The transfer loop streamed `package:http` chunks (~5 KB, ≈150 000 callbacks per AppImage) on the
+  Flutter UI isolate, the same isolate that builds and paints frames, so throughput collapsed
+  whenever the UI was busy (a debug build idles at ~20 % of one core and animates a progress
+  spinner while a job runs). `sha256File` hashed the whole file on that isolate too (~20 s per
+  820 MB — the 22 s "install" of a cached AppImage).
+- **Decision**: HTTP transfers run in a worker isolate (`Isolate.run`) spawned by `Downloader`;
+  the worker owns its own `http.Client`, keeps the existing progress throttling and reports
+  through a `SendPort`, and takes cancellation as a command message (`DownloadCancelledException`
+  at the next chunk). `sha256File` hashes in a worker isolate (sync 1 MiB reads) and streams the
+  fraction back; its callers are unchanged. Injected non-HTTP `DownloadSource`s (tests) keep
+  streaming in-process, so unit tests stay fake-driven.
+- **Consequences**: downloads and hashing no longer compete with frame work; the cost is one
+  isolate spawn per transfer (~ms). Public signatures, progress granularity, `.part` cleanup and
+  cancellation behaviour are unchanged. Isolate messages must stay sendable: a spawn closure
+  that shared a context with a parent callback failed with `Illegal argument in isolate message`,
+  so spawn closures capture only scalars/`SendPort`s via top-level helpers (covered by the new
+  loopback-HTTP test).
+- **Refs**: `TASKS.md` R-53, `lib/platform/downloader.dart`, `lib/platform/checksum.dart`,
+  `test/platform/downloader_test.dart`, `docs/spec/04-architecture.md`

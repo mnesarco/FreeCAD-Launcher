@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:freecad_launcher/core/cancellation.dart';
 import 'package:freecad_launcher/platform/checksum.dart';
 import 'package:freecad_launcher/platform/downloader.dart';
+import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 
 import '../helpers/fake_download.dart';
@@ -194,5 +195,78 @@ void main() {
     );
 
     expect(Directory(cacheDirectory.path).listSync(), isEmpty);
+  });
+
+  group('HTTP transfers run in a worker isolate', () {
+    late HttpServer server;
+    late Uri endpoint;
+    late Downloader httpDownloader;
+
+    setUp(() async {
+      server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      endpoint = Uri.parse('http://${server.address.host}:${server.port}/asset');
+      httpDownloader = Downloader(
+        source: HttpDownloadSource(http.Client()),
+        cacheDirectory: cacheDirectory.path,
+      );
+    });
+
+    tearDown(() => server.close(force: true));
+
+    test('downloads, verifies and reports progress', () async {
+      server.listen((request) async {
+        request.response.contentLength = data.length;
+        request.response.add(data);
+        await request.response.close();
+      });
+      final progress = <DownloadProgress>[];
+
+      final result = await httpDownloader.download(
+        uri: endpoint,
+        fileName: 'http.bin',
+        expectedSha256: sha256OfBytes(data),
+        onProgress: progress.add,
+      );
+
+      expect(result.fromCache, isFalse);
+      expect(result.bytes, data.length);
+      expect(result.sha256, sha256OfBytes(data));
+      expect(File(result.path).readAsBytesSync(), data);
+      expect(progress, isNotEmpty);
+      expect(progress.last.receivedBytes, data.length);
+      expect(progress.last.totalBytes, data.length);
+      expect(progress.last.fraction, 1.0);
+    }, timeout: const Timeout(Duration(seconds: 30)));
+
+    test('cancels a slow body and leaves no files behind', () async {
+      final token = CancellationToken();
+      final chunk = List<int>.filled(64 * 1024, 7);
+      server.listen((request) async {
+        request.response.contentLength = chunk.length * 40;
+        try {
+          for (var index = 0; index < 40; index++) {
+            request.response.add(chunk);
+            await request.response.flush();
+            await Future<void>.delayed(const Duration(milliseconds: 10));
+          }
+          await request.response.close();
+        } on Object {
+          // The client goes away mid-write on cancellation.
+        }
+      });
+
+      await expectLater(
+        httpDownloader.download(
+          uri: endpoint,
+          fileName: 'slow.bin',
+          cancellationToken: token,
+          onProgress: (_) => token.cancel(),
+        ),
+        throwsA(isA<DownloadCancelledException>()),
+      );
+
+      expect(File(p.join(cacheDirectory.path, 'slow.bin')).existsSync(), isFalse);
+      expect(File(p.join(cacheDirectory.path, 'slow.bin.part')).existsSync(), isFalse);
+    }, timeout: const Timeout(Duration(seconds: 30)));
   });
 }

@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Frank Martínez <mnesarco at gmail>
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
@@ -141,98 +142,227 @@ class Downloader {
       target.deleteSync();
     }
 
-    DownloadStream stream;
+    void reportProgress(int received, int? total) => onProgress?.call(
+      DownloadProgress(receivedBytes: received, totalBytes: total),
+    );
+
     try {
-      stream = await _source.open(uri);
+      final transfer = await _transfer(
+        uri: uri,
+        part: part,
+        cancellationToken: cancellationToken,
+        onProgress: reportProgress,
+      );
+
+      if (transfer.total != null && transfer.bytes < transfer.total!) {
+        throw DownloadException(
+          'The download ended early (${transfer.bytes} of ${transfer.total} bytes)',
+        );
+      }
+
+      String? actual;
+      if (expected != null) {
+        actual = await sha256File(part.path);
+        if (actual != expected) {
+          throw ChecksumMismatchException(expected: expected, actual: actual);
+        }
+      }
+
+      if (target.existsSync()) {
+        target.deleteSync();
+      }
+      final result = await part.rename(target.path);
+
+      return DownloadResult(
+        path: result.path,
+        bytes: transfer.bytes,
+        sha256: actual,
+        fromCache: false,
+      );
+    } on Object {
+      if (part.existsSync()) {
+        part.deleteSync();
+      }
+      rethrow;
+    }
+  }
+
+  Future<_Transfer> _transfer({
+    required Uri uri,
+    required File part,
+    required CancellationToken? cancellationToken,
+    required void Function(int received, int? total) onProgress,
+  }) async {
+    final source = _source;
+    // HTTP bodies are pulled off the UI isolate; injected sources (tests) stream in-process.
+    if (source is HttpDownloadSource) {
+      return _transferInIsolate(
+        uri: uri,
+        part: part,
+        cancellationToken: cancellationToken,
+        onProgress: onProgress,
+      );
+    }
+    final DownloadStream stream;
+    try {
+      stream = await source.open(uri);
     } on DownloadException {
       rethrow;
     } on Object catch (error) {
       throw DownloadException('Could not start the download', cause: error);
     }
-
-    var received = 0;
-    var lastReported = 0;
-    var lastPercent = -1;
-    var sinkClosed = false;
-    final sink = part.openWrite();
-    final totalBytes = stream.contentLength;
-
-    void reportProgress({required bool force}) {
-      final bool shouldReport;
-      if (totalBytes != null && totalBytes > 0) {
-        final percent = received * 100 ~/ totalBytes;
-        shouldReport = percent != lastPercent;
-        lastPercent = percent;
-      } else {
-        shouldReport = received - lastReported >= _progressDeltaBytes;
-        lastReported = received;
-      }
-      if (!force && !shouldReport) {
-        return;
-      }
-      onProgress?.call(
-        DownloadProgress(receivedBytes: received, totalBytes: totalBytes),
-      );
-    }
-
-    try {
-      await for (final chunk in stream.bytes) {
-        if (cancellationToken?.isCancelled ?? false) {
-          throw const DownloadCancelledException();
-        }
-        sink.add(chunk);
-        received += chunk.length;
-        reportProgress(force: false);
-        if (totalBytes != null && received >= totalBytes) {
-          break;
-        }
-      }
-      await sink.flush();
-      await sink.close();
-      sinkClosed = true;
-      reportProgress(force: true);
-    } on Object {
-      if (!sinkClosed) {
-        try {
-          await sink.close();
-        } catch (_) {
-          // The sink may already be closed; cleanup below still applies.
-        }
-      }
-      if (part.existsSync()) {
-        part.deleteSync();
-      }
-      rethrow;
-    }
-
-    if (totalBytes != null && received < totalBytes) {
-      if (part.existsSync()) {
-        part.deleteSync();
-      }
-      throw DownloadException(
-        'The download ended early ($received of $totalBytes bytes)',
-      );
-    }
-
-    String? actual;
-    if (expected != null) {
-      actual = await sha256File(part.path);
-      if (actual != expected) {
-        part.deleteSync();
-        throw ChecksumMismatchException(expected: expected, actual: actual);
-      }
-    }
-
-    if (target.existsSync()) {
-      target.deleteSync();
-    }
-    final result = await part.rename(target.path);
-
-    return DownloadResult(
-      path: result.path,
-      bytes: received,
-      sha256: actual,
-      fromCache: false,
+    return _copyToFile(
+      stream,
+      part,
+      isCancelled: () => cancellationToken?.isCancelled ?? false,
+      onProgress: onProgress,
     );
   }
+
+  Future<_Transfer> _transferInIsolate({
+    required Uri uri,
+    required File part,
+    required CancellationToken? cancellationToken,
+    required void Function(int received, int? total) onProgress,
+  }) async {
+    final messages = ReceivePort();
+    final SendPort replyPort = messages.sendPort;
+    SendPort? commands;
+    var cancelled = false;
+    var finished = false;
+
+    cancellationToken?.addListener(() {
+      cancelled = true;
+      commands?.send(true);
+    });
+    final subscription = messages.listen((message) {
+      switch (message) {
+        case SendPort port:
+          commands = port;
+          if (cancelled) {
+            port.send(true);
+          }
+        case _TransferProgress(:final received, :final total):
+          if (!finished) {
+            onProgress(received, total);
+          }
+      }
+    });
+
+    try {
+      final transfer = await _runTransferIsolate(uri, part.path, replyPort);
+      finished = true;
+      if (cancelled) {
+        throw const DownloadCancelledException();
+      }
+      return transfer;
+    } finally {
+      await subscription.cancel();
+      messages.close();
+    }
+  }
+}
+
+/// Kept separate so the spawned closure captures only sendable values.
+Future<_Transfer> _runTransferIsolate(Uri uri, String path, SendPort reply) =>
+    Isolate.run(() => _transferWorker(uri, path, reply));
+
+class _Transfer {
+  const _Transfer({required this.bytes, required this.total});
+
+  final int bytes;
+  final int? total;
+}
+
+class _TransferProgress {
+  const _TransferProgress(this.received, this.total);
+
+  final int received;
+  final int? total;
+}
+
+/// Worker isolate entry: streams [uri] into [path] and reports progress to [reply].
+Future<_Transfer> _transferWorker(Uri uri, String path, SendPort reply) async {
+  final commands = ReceivePort();
+  var cancelled = false;
+  final subscription = commands.listen((_) => cancelled = true);
+  reply.send(commands.sendPort);
+  final client = http.Client();
+  try {
+    final DownloadStream stream;
+    try {
+      stream = await HttpDownloadSource(client).open(uri);
+    } on DownloadException {
+      rethrow;
+    } on Object catch (error) {
+      throw DownloadException('Could not start the download', cause: error);
+    }
+    return await _copyToFile(
+      stream,
+      File(path),
+      isCancelled: () => cancelled,
+      onProgress: (received, total) => reply.send(_TransferProgress(received, total)),
+    );
+  } finally {
+    await subscription.cancel();
+    commands.close();
+    client.close();
+  }
+}
+
+Future<_Transfer> _copyToFile(
+  DownloadStream stream,
+  File part, {
+  required bool Function() isCancelled,
+  required void Function(int received, int? total) onProgress,
+}) async {
+  final total = stream.contentLength;
+  var received = 0;
+  var lastReported = 0;
+  var lastPercent = -1;
+
+  void report({required bool force}) {
+    final bool shouldReport;
+    if (total != null && total > 0) {
+      final percent = received * 100 ~/ total;
+      shouldReport = percent != lastPercent;
+      lastPercent = percent;
+    } else {
+      shouldReport = received - lastReported >= Downloader._progressDeltaBytes;
+      lastReported = received;
+    }
+    if (force || shouldReport) {
+      onProgress(received, total);
+    }
+  }
+
+  final sink = part.openWrite();
+  var sinkClosed = false;
+  try {
+    await for (final chunk in stream.bytes) {
+      if (isCancelled()) {
+        throw const DownloadCancelledException();
+      }
+      sink.add(chunk);
+      received += chunk.length;
+      report(force: false);
+      if (total != null && received >= total) {
+        break;
+      }
+    }
+    await sink.flush();
+    await sink.close();
+    sinkClosed = true;
+    report(force: true);
+  } on Object {
+    if (!sinkClosed) {
+      try {
+        await sink.close();
+      } catch (_) {
+        // The sink may already be closed; the caller deletes the partial file.
+      }
+    }
+    rethrow;
+  }
+  return _Transfer(bytes: received, total: total);
 }
