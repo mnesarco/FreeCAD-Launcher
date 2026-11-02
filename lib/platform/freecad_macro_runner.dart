@@ -148,6 +148,7 @@ class FreeCadMacroRunner {
   }) {
     final environment = Map<String, String>.from(Platform.environment);
     removeSanitizedEnvironmentKeys(environment);
+    removeAppImageEnvironmentKeys(environment);
     environment['FREECAD_USER_HOME'] = home;
     environment['FREECAD_USER_TEMP'] = temp;
     if (Platform.isWindows) {

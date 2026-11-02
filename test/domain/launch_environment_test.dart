@@ -112,7 +112,7 @@ void main() {
     final linux = LaunchEnvironment.build(
       platform: BuildPlatform.linux,
       paths: posixPaths,
-      inherited: const {},
+      inherited: const {'APPDIR': '/tmp/.mount_Launcher', 'APPIMAGE_EXTRACT_AND_RUN': '1'},
       appImageExtractAndRun: true,
     );
     expect(linux['APPIMAGE_EXTRACT_AND_RUN'], '1');
@@ -120,7 +120,7 @@ void main() {
     final macos = LaunchEnvironment.build(
       platform: BuildPlatform.macos,
       paths: posixPaths,
-      inherited: const {},
+      inherited: const {'APPDIR': '/tmp/.mount_Launcher', 'APPIMAGE_EXTRACT_AND_RUN': '1'},
       appImageExtractAndRun: true,
     );
     expect(macos.containsKey('APPIMAGE_EXTRACT_AND_RUN'), isFalse);
@@ -128,9 +128,49 @@ void main() {
     final linuxWithout = LaunchEnvironment.build(
       platform: BuildPlatform.linux,
       paths: posixPaths,
-      inherited: const {},
+      inherited: const {'APPDIR': '/tmp/.mount_Launcher', 'APPIMAGE_EXTRACT_AND_RUN': '1'},
     );
     expect(linuxWithout.containsKey('APPIMAGE_EXTRACT_AND_RUN'), isFalse);
+  });
+
+  test('strips the launcher AppImage environment from launches', () {
+    final env = LaunchEnvironment.build(
+      platform: BuildPlatform.linux,
+      paths: posixPaths,
+      inherited: const {
+        'DISPLAY': ':0',
+        'APPDIR': '/tmp/.mount_Launcher',
+        'APPIMAGE': '/home/u/FreeCADLauncher.AppImage',
+        'OWD': '/home/u',
+        'ARGV0': '/home/u/FreeCADLauncher.AppImage',
+        'LD_LIBRARY_PATH': '/tmp/.mount_Launcher/usr/lib:/opt/lib',
+        'LD_PRELOAD': '/tmp/.mount_Launcher/usr/lib/libpreload.so',
+        'XDG_DATA_DIRS': '/tmp/.mount_Launcher/usr/share:/usr/local/share:/usr/share',
+      },
+    );
+
+    expect(env['DISPLAY'], ':0');
+    for (final key in [
+      'APPDIR',
+      'APPIMAGE',
+      'OWD',
+      'ARGV0',
+      'LD_LIBRARY_PATH',
+      'LD_PRELOAD',
+    ]) {
+      expect(env.containsKey(key), isFalse, reason: key);
+    }
+    expect(env['XDG_DATA_DIRS'], '/usr/local/share:/usr/share');
+  });
+
+  test('keeps inherited LD_LIBRARY_PATH outside an AppImage', () {
+    final env = LaunchEnvironment.build(
+      platform: BuildPlatform.linux,
+      paths: posixPaths,
+      inherited: const {'LD_LIBRARY_PATH': '/opt/lib'},
+    );
+
+    expect(env['LD_LIBRARY_PATH'], '/opt/lib');
   });
 
   test('removeSanitizedEnvironmentKeys matches Windows-style key casing', () {

@@ -10,6 +10,16 @@ const Set<String> sanitizedEnvironmentKeys = {
   'PYTHONUSERBASE',
 };
 
+const Set<String> appImageEnvironmentKeys = {
+  'APPIMAGE',
+  'APPDIR',
+  'OWD',
+  'ARGV0',
+  'LD_LIBRARY_PATH',
+  'LD_PRELOAD',
+  'APPIMAGE_EXTRACT_AND_RUN',
+};
+
 /// Removes every sanitized Python variable from [environment] in place.
 ///
 /// Matching is case-insensitive because Windows environment variable names are
@@ -25,6 +35,37 @@ void removeSanitizedEnvironmentKeys(Map<String, String> environment) {
   }
 }
 
+/// Removes the launcher AppImage runtime from [environment] in place.
+///
+/// The launcher AppImage bundles system libraries older than the ones its
+/// children expect; leaking `LD_LIBRARY_PATH` shadows theirs (system `gio`
+/// hits undefined symbols, FreeCAD's `pyexpat` loads the wrong `libexpat`).
+/// Children run their own AppImage, so none of these variables apply (D-098).
+void removeAppImageEnvironmentKeys(Map<String, String> environment) {
+  final appDir = environment['APPDIR'];
+  final isAppImage = (appDir != null && appDir.isNotEmpty) || environment.containsKey('APPIMAGE');
+  if (!isAppImage) {
+    return;
+  }
+  final keys = [
+    for (final key in environment.keys)
+      if (appImageEnvironmentKeys.contains(key.toUpperCase())) key,
+  ];
+  for (final key in keys) {
+    environment.remove(key);
+  }
+  if (appDir == null || appDir.isEmpty) {
+    return;
+  }
+  final dataDirs = (environment['XDG_DATA_DIRS'] ?? '')
+      .split(':')
+      .where((entry) => entry.isNotEmpty && !entry.startsWith(appDir))
+      .toList(growable: false);
+  environment['XDG_DATA_DIRS'] = dataDirs.isEmpty
+      ? '/usr/local/share:/usr/share'
+      : dataDirs.join(':');
+}
+
 abstract final class LaunchEnvironment {
   static Map<String, String> build({
     required BuildPlatform platform,
@@ -38,6 +79,7 @@ abstract final class LaunchEnvironment {
         env[entry.key] = entry.value;
       }
     }
+    removeAppImageEnvironmentKeys(env);
 
     env['FREECAD_USER_HOME'] = paths.root;
     env['FREECAD_USER_TEMP'] = paths.temp;
