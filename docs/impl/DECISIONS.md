@@ -3032,3 +3032,28 @@ Template:
   loopback-HTTP test).
 - **Refs**: `TASKS.md` R-53, `lib/platform/downloader.dart`, `lib/platform/checksum.dart`,
   `test/platform/downloader_test.dart`, `docs/spec/04-architecture.md`
+
+### D-131 — Children of the launcher AppImage get a sanitized environment (R-54)
+- **Date**: 2026-11-02
+- **Status**: Accepted
+- **Context**: FreeCAD `weekly-2026.10.28` launched from the released launcher AppImage failed to
+  import `pyexpat` (`undefined symbol: XML_SetAllocTrackerActivationThreshold`), which broke the
+  MCP+ addon and the Addon Manager (GitHub issue #9). The weekly bundles expat 2.8.1 (the symbol
+  was added in 2.7.2), but the launcher AppImage is built on ubuntu-22.04, force-bundles its
+  `libexpat.so.1` (2.4.7) and `AppRun` exports `LD_LIBRARY_PATH=$APPDIR/usr/bin/lib:$APPDIR/usr/lib`.
+  `LaunchEnvironment` only stripped `PYTHON*`, so the child loaded the launcher's expat before
+  `pyexpat`. Reproduced with the real weekly by putting Ubuntu 22.04's `libexpat.so.1` on
+  `LD_LIBRARY_PATH`; without it the import works.
+- **Decision**: reuse the D-098 opener scrub as `removeAppImageEnvironmentKeys()` and apply it to
+  every child that can execute a build or its Python: `LaunchEnvironment.build`, the
+  `FreeCadMacroRunner` environment (pip, package probes, macros) and both `ProcessPythonProbe`
+  environment builders. When `APPDIR`/`APPIMAGE` is present it removes `APPIMAGE`, `APPDIR`,
+  `OWD`, `ARGV0`, `LD_LIBRARY_PATH`, `LD_PRELOAD`, `APPIMAGE_EXTRACT_AND_RUN` and `$APPDIR`
+  entries from `XDG_DATA_DIRS`; outside an AppImage nothing is removed. `LaunchEnvironment`
+  re-adds `APPIMAGE_EXTRACT_AND_RUN=1` only when FUSE is unavailable.
+- **Consequences**: builds launched from the AppImage use their own libraries (the weekly/MCP+
+  Python works); `LD_LIBRARY_PATH` supplied by the user outside an AppImage still passes through.
+  The launch-command preview keeps listing only the Python removals.
+- **Refs**: `TASKS.md` R-54, R-19, D-098, `lib/domain/profiles/launch_environment.dart`,
+  `lib/platform/{file_actions,freecad_macro_runner,python_probe}.dart`,
+  `test/domain/launch_environment_test.dart`, GitHub issue #9
